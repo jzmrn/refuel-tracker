@@ -36,8 +36,7 @@ class MetricDefinitionsStore:
                 id=definition_id,
                 title=definition_create.title,
                 description=definition_create.description,
-                category=definition_create.category,
-                unit=definition_create.unit,
+                category_id=definition_create.category_id,
                 fields=definition_create.fields,
                 created_at=now,
                 updated_at=now,
@@ -125,16 +124,16 @@ class MetricDefinitionsStore:
                 return False
 
     async def get_definitions_by_category(
-        self, category: str
+        self, category_id: str
     ) -> list[MetricDefinition]:
         """Get all metric definitions for a specific category"""
         all_definitions = await self.get_all_definitions()
-        return [d for d in all_definitions if d.category == category]
+        return [d for d in all_definitions if d.category_id == category_id]
 
     async def get_categories(self) -> list[str]:
-        """Get all unique categories"""
+        """Get all unique category IDs"""
         all_definitions = await self.get_all_definitions()
-        categories = list(set(d.category for d in all_definitions))
+        categories = list(set(d.category_id for d in all_definitions))
         return sorted(categories)
 
     async def definition_exists(self, definition_id: str) -> bool:

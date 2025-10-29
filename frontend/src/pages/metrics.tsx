@@ -3,12 +3,14 @@ import { format } from "date-fns";
 import MetricDefinitionForm from "@/components/MetricDefinitionForm";
 import MetricDefinitionList from "@/components/MetricDefinitionList";
 import AddMetricValueForm from "@/components/AddMetricValueForm";
+import ConfirmationDialog from "@/components/ConfirmationDialog";
 import apiService, {
   Metric,
   MetricSummary,
   MetricCreate,
   MetricDefinition,
   MetricDefinitionCreate,
+  Category,
 } from "@/lib/api";
 
 export default function Metrics() {
@@ -23,7 +25,9 @@ export default function Metrics() {
   const [summary, setSummary] = useState<MetricSummary | null>(null);
   const [recentMetrics, setRecentMetrics] = useState<Metric[]>([]);
   const [definitions, setDefinitions] = useState<MetricDefinition[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingMetric, setDeletingMetric] = useState<Metric | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -32,14 +36,17 @@ export default function Metrics() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [summaryData, metricsData, definitionsData] = await Promise.all([
-        apiService.getMetricsSummary(),
-        apiService.getMetrics({ limit: 10 }),
-        apiService.getMetricDefinitions(),
-      ]);
+      const [summaryData, metricsData, definitionsData, categoriesData] =
+        await Promise.all([
+          apiService.getMetricsSummary(),
+          apiService.getMetrics({ limit: 10 }),
+          apiService.getMetricDefinitions(),
+          apiService.getCategories(),
+        ]);
       setSummary(summaryData);
       setRecentMetrics(metricsData);
       setDefinitions(definitionsData);
+      setCategories(categoriesData);
     } catch (error) {
       console.error("Error fetching metrics data:", error);
     } finally {
@@ -75,8 +82,76 @@ export default function Metrics() {
     setIsValueFormOpen(true);
   };
 
+  const handleDeleteMetric = (metric: Metric) => {
+    setDeletingMetric(metric);
+  };
+
+  const confirmDeleteMetric = async () => {
+    if (!deletingMetric) return;
+
+    try {
+      await apiService.deleteMetric(
+        deletingMetric.timestamp,
+        deletingMetric.metric_id,
+        deletingMetric.data
+      );
+      setRefreshTrigger((prev) => prev + 1);
+      setDeletingMetric(null);
+    } catch (error) {
+      console.error("Error deleting metric:", error);
+      alert("Failed to delete metric. Please try again.");
+    }
+  };
+
   const getDefinitionById = (metricId: string) => {
     return definitions.find((d) => d.id === metricId);
+  };
+
+  const getCategoryById = (categoryId: string) => {
+    return categories.find((c) => c.id === categoryId);
+  };
+
+  const CategoryBadge = ({
+    category,
+    categoryName,
+  }: {
+    category?: Category;
+    categoryName: string;
+  }) => {
+    const backgroundColor = category?.color || "#3B82F6"; // Default to blue if no color
+    const textColor = getContrastColor(backgroundColor);
+
+    return (
+      <span
+        style={{
+          display: "inline-block",
+          fontSize: "0.75rem",
+          padding: "0.25rem 0.5rem",
+          borderRadius: "0.25rem",
+          backgroundColor: backgroundColor,
+          color: textColor,
+        }}
+      >
+        {categoryName}
+      </span>
+    );
+  };
+
+  // Helper function to determine text color based on background color
+  const getContrastColor = (hexColor: string): string => {
+    // Remove # if present
+    const hex = hexColor.replace("#", "");
+
+    // Parse RGB values
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    // Return white for dark backgrounds, black for light backgrounds
+    return luminance > 0.5 ? "#000000" : "#FFFFFF";
   };
 
   const formatMetricData = (
@@ -301,14 +376,13 @@ export default function Metrics() {
                             {definition?.title || "Unknown Metric"}
                           </h3>
                           {definition && (
-                            <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                              {definition.category}
-                            </span>
-                          )}
-                          {definition?.unit && (
-                            <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
-                              {definition.unit}
-                            </span>
+                            <CategoryBadge
+                              category={getCategoryById(definition.category_id)}
+                              categoryName={
+                                definition.category_name ||
+                                definition.category_id
+                              }
+                            />
                           )}
                         </div>
 
@@ -323,7 +397,14 @@ export default function Metrics() {
                         )}
                       </div>
 
-                      <div className="text-right">
+                      <div className="text-right flex flex-col items-end">
+                        <button
+                          onClick={() => handleDeleteMetric(metric)}
+                          className="btn bg-red-100 text-red-700 hover:bg-red-200 focus:ring-red-500 text-xs px-2 py-1 mb-2"
+                          title="Delete this metric value"
+                        >
+                          Delete
+                        </button>
                         <p className="text-sm text-gray-500">
                           {format(new Date(metric.timestamp), "MMM d, yyyy")}
                         </p>
@@ -355,6 +436,17 @@ export default function Metrics() {
         }}
         onSubmit={handleAddMetricValue}
         definition={selectedDefinition}
+      />
+
+      <ConfirmationDialog
+        isOpen={!!deletingMetric}
+        title="Delete Metric Value"
+        message={`Are you sure you want to delete this metric value? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDeleteMetric}
+        onCancel={() => setDeletingMetric(null)}
       />
     </div>
   );

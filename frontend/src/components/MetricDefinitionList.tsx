@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MetricDefinition } from "@/lib/api";
+import { MetricDefinition, Category } from "@/lib/api";
 import apiService from "@/lib/api";
 
 interface MetricDefinitionListProps {
@@ -14,7 +14,54 @@ export default function MetricDefinitionList({
   const [definitions, setDefinitions] = useState<MetricDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  const getCategoryById = (categoryId: string) => {
+    return categories.find((c) => c.id === categoryId);
+  };
+
+  const CategoryBadge = ({
+    category,
+    categoryName,
+  }: {
+    category?: Category;
+    categoryName: string;
+  }) => {
+    const backgroundColor = category?.color || "#3B82F6"; // Default to blue if no color
+    const textColor = getContrastColor(backgroundColor);
+
+    return (
+      <span
+        style={{
+          display: "inline-block",
+          fontSize: "0.75rem",
+          padding: "0.25rem 0.5rem",
+          borderRadius: "0.25rem",
+          backgroundColor: backgroundColor,
+          color: textColor,
+        }}
+      >
+        {categoryName}
+      </span>
+    );
+  };
+
+  // Helper function to determine text color based on background color
+  const getContrastColor = (hexColor: string): string => {
+    // Remove # if present
+    const hex = hexColor.replace("#", "");
+
+    // Parse RGB values
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    // Return white for dark backgrounds, black for light backgrounds
+    return luminance > 0.5 ? "#000000" : "#FFFFFF";
+  };
 
   useEffect(() => {
     fetchDefinitions();
@@ -37,7 +84,7 @@ export default function MetricDefinitionList({
 
   const fetchCategories = async () => {
     try {
-      const data = await apiService.getMetricDefinitionCategories();
+      const data = await apiService.getCategories();
       setCategories(data);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -80,8 +127,8 @@ export default function MetricDefinitionList({
         >
           <option value="">All Categories</option>
           {categories.map((category) => (
-            <option key={category} value={category}>
-              {category}
+            <option key={category.id} value={category.id}>
+              {category.name}
             </option>
           ))}
         </select>
@@ -119,14 +166,12 @@ export default function MetricDefinitionList({
                     <h3 className="font-medium text-gray-900">
                       {definition.title}
                     </h3>
-                    <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                      {definition.category}
-                    </span>
-                    {definition.unit && (
-                      <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
-                        {definition.unit}
-                      </span>
-                    )}
+                    <CategoryBadge
+                      category={getCategoryById(definition.category_id)}
+                      categoryName={
+                        definition.category_name || definition.category_id
+                      }
+                    />
                   </div>
 
                   {definition.description && (
@@ -147,8 +192,7 @@ export default function MetricDefinitionList({
                         >
                           <span className="font-medium">{field.name}</span>
                           <span className="text-gray-500 ml-1">
-                            ({field.type}
-                            {field.required && ", required"})
+                            {field.required && "(required)"}
                           </span>
                         </span>
                       ))}

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from datetime import datetime
+import json
 from ..models import Metric, MetricCreate, MetricSummaryResponse
 from ..storage.parquet_store import ParquetDataStore
 from ..storage.metric_definitions_store import MetricDefinitionsStore
@@ -28,20 +29,27 @@ async def create_metric(metric_data: MetricCreate):
         # Validate that the metric definition exists
         definition = await definitions_store.get_definition(metric_data.metric_id)
         if not definition:
-            raise HTTPException(status_code=404, detail="Metric definition not found")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Metric definition not found for ID: {metric_data.metric_id}",
+            )
 
         # Create metric with current timestamp
         metric = Metric(
             timestamp=datetime.now(),
+            metric_id=metric_data.metric_id,
             metric_name=definition.title,
-            category=definition.category,
+            category=definition.category_id,
             data=metric_data.data,
             notes=metric_data.notes,
         )
 
         success = await data_store.add_metric(metric)
         if success:
-            return {"message": "Metric value created successfully", "metric": metric}
+            return {
+                "message": "Metric value created successfully",
+                "metric": metric.model_dump(),
+            }
         else:
             raise HTTPException(status_code=500, detail="Failed to create metric value")
     except HTTPException:
@@ -100,5 +108,31 @@ async def get_metrics_by_definition(definition_id: str, limit: int | None = 100)
         return metrics
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/")
+async def delete_metric(
+    timestamp: str,
+    metric_id: str,
+    data: str,  # JSON string of the data
+):
+    """Delete a specific metric by timestamp, metric id, and data"""
+    try:
+        # Parse the timestamp and data
+        timestamp_dt = datetime.fromisoformat(timestamp)
+        data_dict = json.loads(data)
+
+        success = await data_store.delete_metric(timestamp_dt, metric_id, data_dict)
+
+        if success:
+            return {"message": "Metric deleted successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="Metric not found")
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400, detail=f"Invalid timestamp or data format: {str(e)}"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

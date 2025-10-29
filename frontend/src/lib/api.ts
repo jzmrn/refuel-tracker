@@ -33,9 +33,41 @@ export interface SpendingByCategory {
   avg_amount: number;
 }
 
+export interface Unit {
+  id: string;
+  name: string;
+  symbol: string;
+  type: "text" | "number" | "boolean";
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UnitCreate {
+  name: string;
+  symbol: string;
+  type: "text" | "number" | "boolean";
+  description?: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  color?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CategoryCreate {
+  name: string;
+  description?: string;
+  color?: string;
+}
+
 export interface MetricFieldDefinition {
   name: string;
-  type: "text" | "number" | "boolean";
+  unit_id: string;
   required: boolean;
   default_value?: string | number | boolean;
   description?: string;
@@ -45,8 +77,8 @@ export interface MetricDefinition {
   id: string;
   title: string;
   description?: string;
-  category: string;
-  unit?: string;
+  category_id: string;
+  category_name?: string; // Populated by frontend from category lookup
   fields: MetricFieldDefinition[];
   created_at: string;
   updated_at: string;
@@ -55,16 +87,14 @@ export interface MetricDefinition {
 export interface MetricDefinitionCreate {
   title: string;
   description?: string;
-  category: string;
-  unit?: string;
+  category_id: string;
   fields: MetricFieldDefinition[];
 }
 
 export interface MetricDefinitionUpdate {
   title?: string;
   description?: string;
-  category?: string;
-  unit?: string;
+  category_id?: string;
   fields?: MetricFieldDefinition[];
 }
 
@@ -95,6 +125,8 @@ class ApiService {
       "Content-Type": "application/json",
     },
   });
+
+  private categoriesCache: Category[] | null = null;
 
   // Transactions
   async addTransaction(transaction: TransactionCreate): Promise<void> {
@@ -170,12 +202,13 @@ class ApiService {
   async getMetricDefinitions(category?: string): Promise<MetricDefinition[]> {
     const params = category ? { category } : undefined;
     const response = await this.api.get("/api/metric-definitions/", { params });
-    return response.data;
+    return await this.populateCategoryNames(response.data);
   }
 
   async getMetricDefinition(id: string): Promise<MetricDefinition> {
     const response = await this.api.get(`/api/metric-definitions/${id}`);
-    return response.data;
+    const definitions = await this.populateCategoryNames([response.data]);
+    return definitions[0];
   }
 
   async updateMetricDefinition(
@@ -229,9 +262,109 @@ class ApiService {
     return response.data;
   }
 
+  async deleteMetric(
+    timestamp: string,
+    metricId: string,
+    data: Record<string, string | number | boolean>
+  ): Promise<void> {
+    await this.api.delete("/api/metrics/", {
+      params: {
+        timestamp,
+        metric_id: metricId,
+        data: JSON.stringify(data),
+      },
+    });
+  }
+
   async getMetricsSummary(): Promise<MetricSummary> {
     const response = await this.api.get("/api/metrics/summary");
     return response.data;
+  }
+
+  // Units
+  async getUnits(): Promise<Unit[]> {
+    const response = await this.api.get("/api/units");
+    return response.data;
+  }
+
+  async createUnit(unit: UnitCreate): Promise<Unit> {
+    const response = await this.api.post("/api/units", unit);
+    return response.data;
+  }
+
+  async getUnit(id: string): Promise<Unit> {
+    const response = await this.api.get(`/api/units/${id}`);
+    return response.data;
+  }
+
+  async updateUnit(id: string, unit: Partial<UnitCreate>): Promise<Unit> {
+    const response = await this.api.put(`/api/units/${id}`, unit);
+    return response.data;
+  }
+
+  async deleteUnit(id: string): Promise<void> {
+    await this.api.delete(`/api/units/${id}`);
+  }
+
+  async initializeDefaultUnits(): Promise<any> {
+    const response = await this.api.post("/api/units/initialize-defaults");
+    return response.data;
+  }
+
+  // Categories
+  async getCategories(): Promise<Category[]> {
+    const response = await this.api.get("/api/categories");
+    return response.data;
+  }
+
+  async createCategory(category: CategoryCreate): Promise<Category> {
+    const response = await this.api.post("/api/categories", category);
+    this.categoriesCache = null; // Invalidate cache
+    return response.data;
+  }
+
+  async getCategory(id: string): Promise<Category> {
+    const response = await this.api.get(`/api/categories/${id}`);
+    return response.data;
+  }
+
+  async updateCategory(
+    id: string,
+    category: Partial<CategoryCreate>
+  ): Promise<Category> {
+    const response = await this.api.put(`/api/categories/${id}`, category);
+    this.categoriesCache = null; // Invalidate cache
+    return response.data;
+  }
+
+  async deleteCategory(id: string): Promise<void> {
+    await this.api.delete(`/api/categories/${id}`);
+    this.categoriesCache = null; // Invalidate cache
+  }
+
+  async initializeDefaultCategories(): Promise<any> {
+    const response = await this.api.post("/api/categories/initialize-defaults");
+    this.categoriesCache = null; // Invalidate cache
+    return response.data;
+  }
+
+  // Helper methods for populating category names
+  private async ensureCategoriesCache(): Promise<void> {
+    if (!this.categoriesCache) {
+      this.categoriesCache = await this.getCategories();
+    }
+  }
+
+  private async populateCategoryNames(
+    definitions: MetricDefinition[]
+  ): Promise<MetricDefinition[]> {
+    await this.ensureCategoriesCache();
+    return definitions.map((def) => ({
+      ...def,
+      category_name: this.categoriesCache?.find(
+        (cat) => cat.id === def.category_id
+      )?.name,
+    }));
   }
 
   // Backup

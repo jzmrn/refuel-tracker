@@ -1,5 +1,11 @@
-import { useState } from "react";
-import { MetricDefinitionCreate, MetricFieldDefinition } from "@/lib/api";
+import { useState, useEffect } from "react";
+import {
+  MetricDefinitionCreate,
+  MetricFieldDefinition,
+  Unit,
+  Category,
+} from "@/lib/api";
+import apiService from "@/lib/api";
 
 interface MetricDefinitionFormProps {
   isOpen: boolean;
@@ -15,16 +21,55 @@ export default function MetricDefinitionForm({
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    category: "",
-    unit: "",
+    category_id: "",
   });
 
   const [fields, setFields] = useState<MetricFieldDefinition[]>([
-    { name: "", type: "text" as const, required: true },
+    { name: "", unit_id: "", required: true },
   ]);
 
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [loadingUnits, setLoadingUnits] = useState(true);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  useEffect(() => {
+    loadUnits();
+    loadCategories();
+  }, []);
+
+  const loadUnits = async () => {
+    try {
+      const data = await apiService.getUnits();
+      setUnits(data);
+      // Update initial field with first unit if available and field is still empty
+      if (data.length > 0 && fields.length === 1 && !fields[0].unit_id) {
+        setFields([{ name: "", unit_id: data[0].id, required: true }]);
+      }
+    } catch (error) {
+      console.error("Error loading units:", error);
+    } finally {
+      setLoadingUnits(false);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const data = await apiService.getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error("Error loading categories:", error);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
   const handleAddField = () => {
-    setFields([...fields, { name: "", type: "text", required: true }]);
+    const defaultUnitId = units.length > 0 ? units[0].id : "";
+    setFields([
+      ...fields,
+      { name: "", unit_id: defaultUnitId, required: true },
+    ]);
   };
 
   const handleRemoveField = (index: number) => {
@@ -47,7 +92,7 @@ export default function MetricDefinitionForm({
     e.preventDefault();
 
     // Validate form
-    if (!formData.title.trim() || !formData.category.trim()) {
+    if (!formData.title.trim() || !formData.category_id.trim()) {
       alert("Please fill in title and category");
       return;
     }
@@ -56,6 +101,13 @@ export default function MetricDefinitionForm({
     const validFields = fields.filter((f) => f.name.trim() !== "");
     if (validFields.length === 0) {
       alert("Please add at least one field");
+      return;
+    }
+
+    // Check for missing unit_id in valid fields
+    const fieldsWithoutUnit = validFields.filter((f) => !f.unit_id.trim());
+    if (fieldsWithoutUnit.length > 0) {
+      alert("Please select a unit for all fields");
       return;
     }
 
@@ -70,8 +122,7 @@ export default function MetricDefinitionForm({
     onSubmit({
       title: formData.title.trim(),
       description: formData.description.trim() || undefined,
-      category: formData.category.trim(),
-      unit: formData.unit.trim() || undefined,
+      category_id: formData.category_id.trim(),
       fields: validFields.map((field) => ({
         ...field,
         name: field.name.trim(),
@@ -79,8 +130,9 @@ export default function MetricDefinitionForm({
     });
 
     // Reset form
-    setFormData({ title: "", description: "", category: "", unit: "" });
-    setFields([{ name: "", type: "text", required: true }]);
+    setFormData({ title: "", description: "", category_id: "" });
+    const defaultUnitId = units.length > 0 ? units[0].id : "";
+    setFields([{ name: "", unit_id: defaultUnitId, required: true }]);
     onClose();
   };
 
@@ -137,33 +189,38 @@ export default function MetricDefinitionForm({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Category *
                 </label>
-                <input
-                  type="text"
+                <select
                   required
                   className="input"
-                  placeholder="e.g., Health, Fitness, Study"
-                  value={formData.category}
+                  value={formData.category_id}
                   onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
+                    setFormData({ ...formData, category_id: e.target.value })
                   }
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Unit (Optional)
-                </label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g., kg, minutes, hours"
-                  value={formData.unit}
-                  onChange={(e) =>
-                    setFormData({ ...formData, unit: e.target.value })
-                  }
-                />
+                  disabled={loadingCategories}
+                >
+                  {loadingCategories ? (
+                    <option value="">Loading...</option>
+                  ) : (
+                    <>
+                      <option value="">Select Category</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </select>
+                {categories.length === 0 && !loadingCategories && (
+                  <p className="text-sm text-amber-600 mt-1">
+                    <a
+                      href="/categories"
+                      className="underline hover:text-amber-800"
+                    >
+                      Create categories first
+                    </a>
+                  </p>
+                )}
               </div>
             </div>
 
@@ -188,13 +245,26 @@ export default function MetricDefinitionForm({
                 <label className="block text-sm font-medium text-gray-700">
                   Data Fields *
                 </label>
-                <button
-                  type="button"
-                  onClick={handleAddField}
-                  className="btn btn-secondary text-sm"
-                >
-                  Add Field
-                </button>
+                <div className="flex gap-2">
+                  {units.length === 0 && !loadingUnits && (
+                    <span className="text-sm text-amber-600">
+                      <a
+                        href="/units"
+                        className="underline hover:text-amber-800"
+                      >
+                        Create units first
+                      </a>
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleAddField}
+                    className="btn btn-secondary text-sm"
+                    disabled={units.length === 0}
+                  >
+                    Add Field
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -212,17 +282,27 @@ export default function MetricDefinitionForm({
                       />
                     </div>
 
-                    <div className="w-24">
+                    <div className="w-32">
                       <select
                         className="input"
-                        value={field.type}
+                        value={field.unit_id}
                         onChange={(e) =>
-                          handleFieldChange(index, "type", e.target.value)
+                          handleFieldChange(index, "unit_id", e.target.value)
                         }
+                        disabled={loadingUnits}
                       >
-                        <option value="text">Text</option>
-                        <option value="number">Number</option>
-                        <option value="boolean">Boolean</option>
+                        {loadingUnits ? (
+                          <option value="">Loading...</option>
+                        ) : (
+                          <>
+                            <option value="">Select Unit</option>
+                            {units.map((unit) => (
+                              <option key={unit.id} value={unit.id}>
+                                {unit.name} ({unit.symbol})
+                              </option>
+                            ))}
+                          </>
+                        )}
                       </select>
                     </div>
 

@@ -7,7 +7,14 @@ from pathlib import Path
 from app.storage.parquet_store import ParquetDataStore
 from app.storage.backup_manager import BackupManager
 from app.storage.metric_definitions_store import MetricDefinitionsStore
-from app.api import transactions, analytics, metrics, metric_definitions
+from app.api import (
+    transactions,
+    analytics,
+    metrics,
+    metric_definitions,
+    units,
+    categories,
+)
 
 # Global instances
 data_store: ParquetDataStore = None
@@ -41,6 +48,8 @@ async def lifespan(app: FastAPI):
     metrics.set_data_store(data_store)
     metrics.set_definitions_store(definitions_store)
     metric_definitions.set_definitions_store(definitions_store)
+    units.set_data_store(data_store)
+    categories.set_data_store(data_store)
 
     print(f"Data store initialized with path: {data_path}")
     print(f"Absolute data path: {Path(data_path).absolute()}")
@@ -86,6 +95,8 @@ app.include_router(
     prefix="/api/metric-definitions",
     tags=["metric-definitions"],
 )
+app.include_router(units.router, prefix="/api/units", tags=["units"])
+app.include_router(categories.router, prefix="/api/categories", tags=["categories"])
 
 
 @app.get("/")

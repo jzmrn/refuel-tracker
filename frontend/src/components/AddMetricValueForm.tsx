@@ -125,8 +125,7 @@ export default function AddMetricValueForm({
                 Add Value: {definition.title}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                {definition.category}{" "}
-                {definition.unit && `(${definition.unit})`}
+                {definition.category_name || definition.category_id}
               </p>
               {definition.description && (
                 <p className="text-sm text-gray-500 mt-1">

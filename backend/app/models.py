@@ -2,6 +2,51 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
+class Unit(BaseModel):
+    id: str  # Unique identifier for the unit
+    name: str  # Human-readable name (e.g., "Currency", "Percentage")
+    symbol: str  # Display symbol (e.g., "$", "%", "kg")
+    type: str  # Data type: "text", "number", "boolean"
+    description: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class UnitCreate(BaseModel):
+    name: str
+    symbol: str
+    type: str = Field(..., description="'text', 'number', 'boolean'")
+    description: str | None = None
+
+
+class UnitUpdate(BaseModel):
+    name: str | None = None
+    symbol: str | None = None
+    type: str | None = None
+    description: str | None = None
+
+
+class Category(BaseModel):
+    id: str  # Unique identifier for the category
+    name: str  # Category name (e.g., "Health", "Fitness", "Finance")
+    description: str | None = None
+    color: str | None = None  # Hex color code for UI (e.g., "#3B82F6")
+    created_at: datetime
+    updated_at: datetime
+
+
+class CategoryCreate(BaseModel):
+    name: str
+    description: str | None = None
+    color: str | None = None
+
+
+class CategoryUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    color: str | None = None
+
+
 class Transaction(BaseModel):
     timestamp: datetime
     account_id: str
@@ -19,7 +64,7 @@ class AccountBalance(BaseModel):
 
 class MetricFieldDefinition(BaseModel):
     name: str
-    type: str = Field(..., description="'text', 'number', 'boolean'")
+    unit_id: str  # References Unit.id
     required: bool = True
     default_value: str | int | float | bool | None = None
     description: str | None = None
@@ -29,8 +74,7 @@ class MetricDefinition(BaseModel):
     id: str  # Unique identifier for the metric definition
     title: str
     description: str | None = None
-    category: str
-    unit: str | None = None
+    category_id: str  # References Category.id
     fields: list[MetricFieldDefinition]
     created_at: datetime
     updated_at: datetime
@@ -39,25 +83,29 @@ class MetricDefinition(BaseModel):
 class MetricDefinitionCreate(BaseModel):
     title: str
     description: str | None = None
-    category: str
-    unit: str | None = None
+    category_id: str  # References Category.id
     fields: list[MetricFieldDefinition]
 
 
 class MetricDefinitionUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
-    category: str | None = None
-    unit: str | None = None
+    category_id: str | None = None
     fields: list[MetricFieldDefinition] | None = None
 
 
 class Metric(BaseModel):
     timestamp: datetime
+    metric_id: str  # The ID of the metric definition
     metric_name: str  # Will be populated from MetricDefinition.title
-    category: str  # Will be populated from MetricDefinition.category
+    category: (
+        str  # Will be populated from MetricDefinition.category_id or category name
+    )
     data: dict[str, str | int | float | bool]  # Field values
     notes: str | None = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
 
 
 class TransactionCreate(BaseModel):
