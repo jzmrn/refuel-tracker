@@ -490,10 +490,14 @@ class ParquetDataStore:
             if category:
                 df = df.filter(pl.col("category") == category)
 
-            # Apply metric_id filter (note: we don't have metric_id in storage, but metric_name)
+            # Apply metric_id filter
             if metric_id:
-                # For now, we'll ignore metric_id filter since we use metric_name in storage
-                pass
+                # Check if metric_id column exists (backward compatibility)
+                if "metric_id" in df.columns:
+                    df = df.filter(pl.col("metric_id") == metric_id)
+                else:
+                    # For backward compatibility, return empty result if no metric_id column
+                    return []
 
             # Apply limit
             if limit:

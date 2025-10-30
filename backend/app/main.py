@@ -48,7 +48,9 @@ async def lifespan(app: FastAPI):
     metrics.set_data_store(data_store)
     metrics.set_definitions_store(definitions_store)
     metric_definitions.set_definitions_store(definitions_store)
+    metric_definitions.set_data_store(data_store)
     units.set_data_store(data_store)
+    units.set_definitions_store(definitions_store)
     categories.set_data_store(data_store)
 
     print(f"Data store initialized with path: {data_path}")

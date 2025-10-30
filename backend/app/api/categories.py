@@ -82,6 +82,32 @@ async def delete_category(category_id: str) -> dict:
     if not existing_category:
         raise HTTPException(status_code=404, detail="Category not found")
 
+    # Check if there are any metric definitions using this category
+    from ..storage.metric_definitions_store import MetricDefinitionsStore
+
+    definitions_store = MetricDefinitionsStore()
+    definitions_with_category = await definitions_store.get_definitions_by_category(
+        category_id
+    )
+
+    if definitions_with_category:
+        metric_titles = [d.title for d in definitions_with_category]
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete category '{existing_category.name}' because it is used by {len(definitions_with_category)} metric definition(s): {', '.join(metric_titles[:3])}{'...' if len(metric_titles) > 3 else ''}",
+        )
+
+    # Check if there are any metric values using this category
+    metrics_with_category = await data_store.get_metrics(
+        category=existing_category.name
+    )
+
+    if metrics_with_category:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete category '{existing_category.name}' because it has {len(metrics_with_category)} metric value(s) assigned to it. Please delete or reassign these metrics first.",
+        )
+
     success = await data_store.delete_category(category_id)
     if not success:
         raise HTTPException(status_code=500, detail="Failed to delete category")

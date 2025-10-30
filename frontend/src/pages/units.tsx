@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import apiService, { Unit, UnitCreate } from "../lib/api";
 import ConfirmationDialog from "../components/ConfirmationDialog";
+import ErrorDialog from "../components/ErrorDialog";
 
 export default function UnitsPage() {
   const [units, setUnits] = useState<Unit[]>([]);
@@ -8,6 +9,8 @@ export default function UnitsPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
   const [deletingUnit, setDeletingUnit] = useState<Unit | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [showError, setShowError] = useState<boolean>(false);
 
   useEffect(() => {
     loadUnits();
@@ -30,8 +33,18 @@ export default function UnitsPage() {
       await apiService.createUnit(unitData);
       await loadUnits();
       setShowCreateForm(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating unit:", error);
+
+      let errorMsg = "Failed to create unit. Please try again.";
+      if (error?.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
+
+      setErrorMessage(errorMsg);
+      setShowError(true);
     }
   };
 
@@ -43,8 +56,18 @@ export default function UnitsPage() {
       await apiService.updateUnit(id, unitData);
       await loadUnits();
       setEditingUnit(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating unit:", error);
+
+      let errorMsg = "Failed to update unit. Please try again.";
+      if (error?.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
+
+      setErrorMessage(errorMsg);
+      setShowError(true);
     }
   };
 
@@ -59,8 +82,19 @@ export default function UnitsPage() {
       await apiService.deleteUnit(deletingUnit.id);
       await loadUnits();
       setDeletingUnit(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting unit:", error);
+
+      let errorMsg = "Failed to delete unit. Please try again.";
+      if (error?.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
+
+      setErrorMessage(errorMsg);
+      setShowError(true);
+      setDeletingUnit(null);
     }
   };
 
@@ -69,8 +103,18 @@ export default function UnitsPage() {
       setLoading(true);
       await apiService.initializeDefaultUnits();
       await loadUnits();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error initializing default units:", error);
+
+      let errorMsg = "Failed to initialize default units. Please try again.";
+      if (error?.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
+
+      setErrorMessage(errorMsg);
+      setShowError(true);
     } finally {
       setLoading(false);
     }
@@ -183,6 +227,14 @@ export default function UnitsPage() {
         variant="danger"
         onConfirm={confirmDeleteUnit}
         onCancel={() => setDeletingUnit(null)}
+      />
+
+      <ErrorDialog
+        isOpen={showError}
+        title="Cannot Delete Unit"
+        message={errorMessage}
+        onClose={() => setShowError(false)}
+        variant="error"
       />
     </div>
   );

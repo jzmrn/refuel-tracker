@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import apiService, { Category, CategoryCreate } from "../lib/api";
 import ConfirmationDialog from "../components/ConfirmationDialog";
+import ErrorDialog from "../components/ErrorDialog";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -10,6 +11,8 @@ export default function CategoriesPage() {
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(
     null
   );
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [showError, setShowError] = useState<boolean>(false);
 
   useEffect(() => {
     loadCategories();
@@ -32,8 +35,18 @@ export default function CategoriesPage() {
       await apiService.createCategory(categoryData);
       await loadCategories();
       setShowCreateForm(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating category:", error);
+
+      let errorMsg = "Failed to create category. Please try again.";
+      if (error?.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
+
+      setErrorMessage(errorMsg);
+      setShowError(true);
     }
   };
 
@@ -45,8 +58,18 @@ export default function CategoriesPage() {
       await apiService.updateCategory(id, categoryData);
       await loadCategories();
       setEditingCategory(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating category:", error);
+
+      let errorMsg = "Failed to update category. Please try again.";
+      if (error?.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
+
+      setErrorMessage(errorMsg);
+      setShowError(true);
     }
   };
 
@@ -61,8 +84,20 @@ export default function CategoriesPage() {
       await apiService.deleteCategory(deletingCategory.id);
       await loadCategories();
       setDeletingCategory(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting category:", error);
+
+      // Extract error message from the response
+      let errorMsg = "Failed to delete category. Please try again.";
+      if (error?.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
+
+      setErrorMessage(errorMsg);
+      setShowError(true);
+      setDeletingCategory(null);
     }
   };
 
@@ -71,8 +106,19 @@ export default function CategoriesPage() {
       setLoading(true);
       await apiService.initializeDefaultCategories();
       await loadCategories();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error initializing default categories:", error);
+
+      let errorMsg =
+        "Failed to initialize default categories. Please try again.";
+      if (error?.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
+
+      setErrorMessage(errorMsg);
+      setShowError(true);
     } finally {
       setLoading(false);
     }
@@ -182,6 +228,14 @@ export default function CategoriesPage() {
         variant="danger"
         onConfirm={confirmDeleteCategory}
         onCancel={() => setDeletingCategory(null)}
+      />
+
+      <ErrorDialog
+        isOpen={showError}
+        title="Cannot Delete Category"
+        message={errorMessage}
+        onClose={() => setShowError(false)}
+        variant="error"
       />
     </div>
   );

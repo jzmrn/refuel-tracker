@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { MetricDefinition, Category } from "@/lib/api";
 import apiService from "@/lib/api";
+import ConfirmationDialog from "./ConfirmationDialog";
+import ErrorDialog from "./ErrorDialog";
 
 interface MetricDefinitionListProps {
   onSelectDefinition: (definition: MetricDefinition) => void;
@@ -15,9 +17,18 @@ export default function MetricDefinitionList({
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [categories, setCategories] = useState<Category[]>([]);
+  const [units, setUnits] = useState<any[]>([]);
+  const [deletingDefinition, setDeletingDefinition] =
+    useState<MetricDefinition | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [showError, setShowError] = useState<boolean>(false);
 
   const getCategoryById = (categoryId: string) => {
     return categories.find((c) => c.id === categoryId);
+  };
+
+  const getUnitById = (unitId: string) => {
+    return units.find((u) => u.id === unitId);
   };
 
   const CategoryBadge = ({
@@ -66,6 +77,7 @@ export default function MetricDefinitionList({
   useEffect(() => {
     fetchDefinitions();
     fetchCategories();
+    fetchUnits();
   }, [refreshKey, selectedCategory]);
 
   const fetchDefinitions = async () => {
@@ -91,17 +103,40 @@ export default function MetricDefinitionList({
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this metric definition?")) {
-      return;
+  const fetchUnits = async () => {
+    try {
+      const data = await apiService.getUnits();
+      setUnits(data);
+    } catch (error) {
+      console.error("Error fetching units:", error);
     }
+  };
+
+  const handleDelete = (definition: MetricDefinition) => {
+    setDeletingDefinition(definition);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingDefinition) return;
 
     try {
-      await apiService.deleteMetricDefinition(id);
-      setDefinitions(definitions.filter((d) => d.id !== id));
-    } catch (error) {
+      await apiService.deleteMetricDefinition(deletingDefinition.id);
+      setDefinitions(definitions.filter((d) => d.id !== deletingDefinition.id));
+      setDeletingDefinition(null);
+    } catch (error: any) {
       console.error("Error deleting metric definition:", error);
-      alert("Failed to delete metric definition");
+
+      // Extract error message from the response
+      let errorMsg = "Failed to delete metric definition. Please try again.";
+      if (error?.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
+
+      setErrorMessage(errorMsg);
+      setShowError(true);
+      setDeletingDefinition(null);
     }
   };
 
@@ -185,17 +220,26 @@ export default function MetricDefinitionList({
                       Fields:
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {definition.fields.map((field, index) => (
-                        <span
-                          key={index}
-                          className="inline-block bg-gray-100 rounded px-2 py-1 text-xs"
-                        >
-                          <span className="font-medium">{field.name}</span>
-                          <span className="text-gray-500 ml-1">
-                            {field.required && "(required)"}
+                      {definition.fields.map((field, index) => {
+                        const unit = getUnitById(field.unit_id);
+                        return (
+                          <span
+                            key={index}
+                            className="inline-block bg-gray-100 rounded px-2 py-1 text-xs"
+                          >
+                            <span className="font-medium">{field.name}</span>
+                            {unit && (
+                              <span className="text-blue-600 ml-1">
+                                ({unit.type}
+                                {unit.symbol && ` - ${unit.symbol}`})
+                              </span>
+                            )}
+                            <span className="text-gray-500 ml-1">
+                              {field.required && "(required)"}
+                            </span>
                           </span>
-                        </span>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -207,7 +251,7 @@ export default function MetricDefinitionList({
                       Add Values
                     </button>
                     <button
-                      onClick={() => handleDelete(definition.id)}
+                      onClick={() => handleDelete(definition)}
                       className="btn btn-danger text-sm"
                     >
                       Delete
@@ -232,6 +276,25 @@ export default function MetricDefinitionList({
           ))}
         </div>
       )}
+
+      <ConfirmationDialog
+        isOpen={!!deletingDefinition}
+        title="Delete Metric Definition"
+        message={`Are you sure you want to delete "${deletingDefinition?.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeletingDefinition(null)}
+      />
+
+      <ErrorDialog
+        isOpen={showError}
+        title="Cannot Delete Metric Definition"
+        message={errorMessage}
+        onClose={() => setShowError(false)}
+        variant="error"
+      />
     </div>
   );
 }

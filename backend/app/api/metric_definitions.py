@@ -2,15 +2,23 @@ from fastapi import APIRouter, HTTPException
 
 from ..models import MetricDefinition, MetricDefinitionCreate, MetricDefinitionUpdate
 from ..storage.metric_definitions_store import MetricDefinitionsStore
+from ..storage.parquet_store import ParquetDataStore
 
 router = APIRouter()
 definitions_store: MetricDefinitionsStore = None
+data_store: ParquetDataStore = None
 
 
 def set_definitions_store(store: MetricDefinitionsStore):
     """Set the metric definitions store instance"""
     global definitions_store
     definitions_store = store
+
+
+def set_data_store(store: ParquetDataStore):
+    """Set the data store instance"""
+    global data_store
+    data_store = store
 
 
 @router.post("/", response_model=MetricDefinition)
@@ -72,9 +80,34 @@ async def update_metric_definition(
 async def delete_metric_definition(definition_id: str):
     """Delete a metric definition"""
     try:
+        # First check if the definition exists
+        existing_definition = await definitions_store.get_definition(definition_id)
+        if not existing_definition:
+            raise HTTPException(status_code=404, detail="Metric definition not found")
+
+        # Check if there are any metric values using this definition
+        # Get all metrics and check both metric_id and metric_name for backward compatibility
+        all_metrics = await data_store.get_metrics()
+
+        matching_metrics = []
+        for metric in all_metrics:
+            # Check by metric_id (new format) or metric_name (backward compatibility)
+            if (
+                hasattr(metric, "metric_id") and metric.metric_id == definition_id
+            ) or metric.metric_name == existing_definition.title:
+                matching_metrics.append(metric)
+
+        if matching_metrics:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot delete metric definition '{existing_definition.title}' because it has {len(matching_metrics)} metric value(s) assigned to it. Please delete these metric values first.",
+            )
+
         success = await definitions_store.delete_definition(definition_id)
         if not success:
-            raise HTTPException(status_code=404, detail="Metric definition not found")
+            raise HTTPException(
+                status_code=500, detail="Failed to delete metric definition"
+            )
         return {"message": "Metric definition deleted successfully"}
     except HTTPException:
         raise

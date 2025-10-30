@@ -3,15 +3,23 @@ from datetime import datetime
 import uuid
 from ..models import Unit, UnitCreate, UnitUpdate
 from ..storage.parquet_store import ParquetDataStore
+from ..storage.metric_definitions_store import MetricDefinitionsStore
 
 router = APIRouter()
 data_store: ParquetDataStore = None
+definitions_store: MetricDefinitionsStore = None
 
 
 def set_data_store(store: ParquetDataStore):
     """Set the data store instance"""
     global data_store
     data_store = store
+
+
+def set_definitions_store(store: MetricDefinitionsStore):
+    """Set the definitions store instance"""
+    global definitions_store
+    definitions_store = store
 
 
 @router.post("/", response_model=Unit)
@@ -80,6 +88,23 @@ async def delete_unit(unit_id: str) -> dict:
     existing_unit = await data_store.get_unit_by_id(unit_id)
     if not existing_unit:
         raise HTTPException(status_code=404, detail="Unit not found")
+
+    # Check if there are any metric definitions using this unit
+    all_definitions = await definitions_store.get_all_definitions()
+
+    definitions_using_unit = []
+    for definition in all_definitions:
+        for field in definition.fields:
+            if field.unit_id == unit_id:
+                definitions_using_unit.append(definition)
+                break  # No need to check other fields in the same definition
+
+    if definitions_using_unit:
+        definition_titles = [d.title for d in definitions_using_unit]
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete unit '{existing_unit.name}' because it is used by {len(definitions_using_unit)} metric definition(s): {', '.join(definition_titles[:3])}{'...' if len(definition_titles) > 3 else ''}. Please update or delete these metric definitions first.",
+        )
 
     success = await data_store.delete_unit(unit_id)
     if not success:
