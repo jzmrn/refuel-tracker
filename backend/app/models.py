@@ -141,3 +141,65 @@ class MonthlySummaryResponse(BaseModel):
     expenses: float
     net: float
     transaction_count: int
+
+
+class RefuelMetricCreate(BaseModel):
+    """Request model for creating a refuel entry"""
+
+    price: float = Field(..., gt=0, description="Price per liter in euros")
+    amount: float = Field(..., gt=0, description="Amount in liters")
+    notes: str | None = Field(None, description="Optional notes")
+
+
+class RefuelMetricResponse(BaseModel):
+    """Response model for refuel entries"""
+
+    timestamp: datetime
+    price: float
+    amount: float
+    notes: str | None = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class RefuelCostStatistics(BaseModel):
+    """Cost statistics for refuel data"""
+
+    total_cost: float
+    total_liters: float
+    average_price_per_liter: float
+    fill_up_count: int
+
+
+class RefuelPriceTrend(BaseModel):
+    """Price trend data point"""
+
+    date: str
+    timestamp: datetime
+    price: float
+    amount: float
+    total_cost: float
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class RefuelStatisticsResponse(BaseModel):
+    """Combined refuel statistics"""
+
+    cost_statistics: RefuelCostStatistics
+    price_trends: list[RefuelPriceTrend]
+
+
+class RefuelMonthlySummaryResponse(BaseModel):
+    """Monthly summary for refuel data"""
+
+    total_cost: float
+    total_liters: float
+    average_price_per_liter: float
+    fill_up_count: int
+    max_price: float
+    min_price: float
+    largest_fillup: float
+    smallest_fillup: float

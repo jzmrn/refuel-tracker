@@ -118,6 +118,46 @@ export interface MetricSummary {
   most_recent_date?: string;
 }
 
+export interface RefuelMetric {
+  timestamp: string;
+  price: number;
+  amount: number;
+  notes?: string;
+}
+
+export interface RefuelMetricCreate {
+  price: number;
+  amount: number;
+  notes?: string;
+}
+
+export interface RefuelStatistics {
+  cost_statistics: {
+    total_cost: number;
+    total_liters: number;
+    average_price_per_liter: number;
+    fill_up_count: number;
+  };
+  price_trends: Array<{
+    date: string;
+    timestamp: string;
+    price: number;
+    amount: number;
+    total_cost: number;
+  }>;
+}
+
+export interface RefuelMonthlySummary {
+  total_cost: number;
+  total_liters: number;
+  average_price_per_liter: number;
+  fill_up_count: number;
+  max_price: number;
+  min_price: number;
+  largest_fillup: number;
+  smallest_fillup: number;
+}
+
 class ApiService {
   private api = axios.create({
     baseURL: API_BASE_URL,
@@ -370,6 +410,42 @@ class ApiService {
   // Backup
   async createBackup(): Promise<any> {
     const response = await this.api.post("/backup");
+    return response.data;
+  }
+
+  async createRefuelMetric(metric: RefuelMetricCreate): Promise<any> {
+    const response = await this.api.post("/api/metrics/refuel", metric);
+    return response.data;
+  }
+
+  async getRefuelMetrics(params?: {
+    start_date?: string;
+    end_date?: string;
+    limit?: number;
+  }): Promise<RefuelMetric[]> {
+    const response = await this.api.get("/api/metrics/refuel", {
+      params,
+    });
+    return response.data;
+  }
+
+  async getRefuelStatistics(params?: {
+    start_date?: string;
+    end_date?: string;
+  }): Promise<RefuelStatistics> {
+    const response = await this.api.get("/api/metrics/refuel/statistics", {
+      params,
+    });
+    return response.data;
+  }
+
+  async getRefuelMonthlySummary(
+    year: number,
+    month: number
+  ): Promise<RefuelMonthlySummary> {
+    const response = await this.api.get(
+      `/api/metrics/refuel/monthly/${year}/${month}`
+    );
     return response.data;
   }
 }

@@ -7,6 +7,7 @@ from pathlib import Path
 from app.storage.parquet_store import ParquetDataStore
 from app.storage.backup_manager import BackupManager
 from app.storage.metric_definitions_store import MetricDefinitionsStore
+from app.storage.metric_registry import MetricRegistry
 from app.api import (
     transactions,
     analytics,
@@ -20,12 +21,13 @@ from app.api import (
 data_store: ParquetDataStore = None
 backup_manager: BackupManager = None
 definitions_store: MetricDefinitionsStore = None
+metric_registry: MetricRegistry = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    global data_store, backup_manager, definitions_store
+    global data_store, backup_manager, definitions_store, metric_registry
 
     # Initialize data store
     # Get the directory where this main.py file is located
@@ -38,6 +40,7 @@ async def lifespan(app: FastAPI):
 
     data_store = ParquetDataStore(data_path)
     definitions_store = MetricDefinitionsStore(data_path)
+    metric_registry = MetricRegistry(data_path)
     backup_manager = BackupManager(
         data_path=Path(data_path), backup_path=Path(backup_path)
     )
@@ -47,6 +50,7 @@ async def lifespan(app: FastAPI):
     analytics.set_data_store(data_store)
     metrics.set_data_store(data_store)
     metrics.set_definitions_store(definitions_store)
+    metrics.set_metric_registry(metric_registry)
     metric_definitions.set_definitions_store(definitions_store)
     metric_definitions.set_data_store(data_store)
     units.set_data_store(data_store)
