@@ -1,21 +1,22 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
-from app.storage.parquet_store import ParquetDataStore
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api import (
+    analytics,
+    categories,
+    metric_definitions,
+    metrics,
+    transactions,
+    units,
+)
 from app.storage.backup_manager import BackupManager
 from app.storage.metric_definitions_store import MetricDefinitionsStore
 from app.storage.metric_registry import MetricRegistry
-from app.api import (
-    transactions,
-    analytics,
-    metrics,
-    metric_definitions,
-    units,
-    categories,
-)
+from app.storage.parquet_store import ParquetDataStore
 
 # Global instances
 data_store: ParquetDataStore = None

@@ -13,6 +13,7 @@ A high-performance FastAPI backend with Parquet-based storage for personal finan
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Python 3.11+
 - UV package manager
 
@@ -30,6 +31,7 @@ uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Using Justfile (from project root)
+
 ```bash
 # Install dependencies
 just install
@@ -47,7 +49,8 @@ just format
 ## 📊 Data Storage
 
 ### Parquet File Structure
-```
+
+```sh
 data/
 ├── transactions/
 │   ├── year=2024/
@@ -66,6 +69,7 @@ data/
 ```
 
 ### Benefits
+
 - **90%+ compression** compared to JSON
 - **Columnar storage** for fast aggregations
 - **Predicate pushdown** - only reads relevant data
@@ -74,26 +78,31 @@ data/
 ## 🔌 API Endpoints
 
 ### Health & Status
+
 - `GET /` - Health check
 - `GET /health` - Detailed health status
 - `POST /backup` - Create manual backup
 
 ### Transactions
+
 - `POST /transactions/` - Add single transaction
 - `GET /transactions/` - Query transactions with filters
 - `POST /transactions/bulk` - Add multiple transactions
 
 ### Analytics
+
 - `GET /analytics/spending-by-category` - Spending by category
 - `GET /analytics/monthly-summary/{year}/{month}` - Monthly summary
 - `GET /analytics/account-balance-history/{account_id}` - Balance history
 
 ### API Documentation
-Visit http://localhost:8000/docs for interactive Swagger documentation.
+
+Visit the interactive [Swagger documentation](http://localhost:8000/docs).
 
 ## 🗃️ Data Models
 
 ### Transaction
+
 ```python
 {
     "timestamp": "2024-01-15T10:30:00Z",
@@ -106,15 +115,17 @@ Visit http://localhost:8000/docs for interactive Swagger documentation.
 ```
 
 ### Account Balance
+
 ```python
 {
     "timestamp": "2024-01-15T23:59:59Z",
-    "account_id": "checking", 
+    "account_id": "checking",
     "balance": 1250.50
 }
 ```
 
 ### Metric
+
 ```python
 {
     "timestamp": "2024-01-15T10:00:00Z",
@@ -128,7 +139,8 @@ Visit http://localhost:8000/docs for interactive Swagger documentation.
 ## 🛠️ Development
 
 ### Project Structure
-```
+
+```sh
 app/
 ├── main.py              # FastAPI application entry point
 ├── models.py            # Pydantic data models
@@ -172,13 +184,16 @@ uv run mypy app/
 ## 🔧 Configuration
 
 ### Development
+
 Create `.env` file in backend directory:
+
 ```env
 DATA_PATH=./data
 BACKUP_PATH=./backups
 ```
 
 ### Production
+
 ```env
 DATA_PATH=/app/data
 BACKUP_PATH=/app/backups
@@ -187,6 +202,7 @@ BACKUP_PATH=/app/backups
 ## 🧪 Testing
 
 ### Run Tests
+
 ```bash
 # All tests
 uv run pytest
@@ -202,7 +218,8 @@ uv run pytest --cov=app
 ```
 
 ### Test Structure
-```
+
+```sh
 tests/
 ├── test_main.py           # API endpoint tests
 ├── test_parquet_store.py  # Storage layer tests
@@ -213,11 +230,13 @@ tests/
 ## 📦 Docker
 
 ### Build Image
+
 ```bash
 docker build -t personal-data-tracker-backend .
 ```
 
 ### Run Container
+
 ```bash
 docker run -p 8000:8000 \
   -v $(pwd)/data:/app/data \
@@ -235,12 +254,14 @@ docker run -p 8000:8000 \
 ## 📈 Performance
 
 ### Expected Performance
+
 - **Writes**: 10,000+ transactions/second
 - **Reads**: Millions of rows scanned in milliseconds
 - **Storage**: ~1MB per 10,000 transactions (compressed)
 - **Memory**: Low memory footprint with lazy loading
 
 ### Optimization Tips
+
 - Use date range filters for large datasets
 - Batch transactions when possible
 - Monitor file sizes in data directory
@@ -251,12 +272,14 @@ docker run -p 8000:8000 \
 ### Common Issues
 
 **Port already in use:**
+
 ```bash
 # Kill process on port 8000
 lsof -ti:8000 | xargs kill -9
 ```
 
 **UV not found:**
+
 ```bash
 # Install UV
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -264,6 +287,7 @@ source ~/.bashrc  # or ~/.zshrc
 ```
 
 **Permission errors:**
+
 ```bash
 # Fix data directory permissions
 chmod -R 755 data/
@@ -271,6 +295,7 @@ chmod -R 755 backups/
 ```
 
 **Import errors:**
+
 ```bash
 # Ensure proper Python path
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
@@ -287,6 +312,7 @@ export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 ## 📝 API Examples
 
 ### Add Transaction
+
 ```bash
 curl -X POST "http://localhost:8000/transactions/" \
   -H "Content-Type: application/json" \
@@ -299,6 +325,7 @@ curl -X POST "http://localhost:8000/transactions/" \
 ```
 
 ### Query Transactions
+
 ```bash
 # Recent transactions
 curl "http://localhost:8000/transactions/?limit=10"
@@ -311,6 +338,7 @@ curl "http://localhost:8000/transactions/?category=groceries"
 ```
 
 ### Get Analytics
+
 ```bash
 # Monthly summary
 curl "http://localhost:8000/analytics/monthly-summary/2024/1"

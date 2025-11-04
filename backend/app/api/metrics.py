@@ -7,12 +7,12 @@ from ..models import (
     Metric,
     MetricCreate,
     MetricSummaryResponse,
+    RefuelCostStatistics,
     RefuelMetricCreate,
     RefuelMetricResponse,
-    RefuelStatisticsResponse,
     RefuelMonthlySummaryResponse,
-    RefuelCostStatistics,
     RefuelPriceTrend,
+    RefuelStatisticsResponse,
 )
 from ..storage.metric_definitions_store import MetricDefinitionsStore
 from ..storage.metric_registry import MetricRegistry

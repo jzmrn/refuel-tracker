@@ -212,12 +212,12 @@ export default function AddRefuelForm({
               className="block text-sm font-medium text-gray-700"
             >
               Price per Liter (€){" "}
-              <span className="text-xs text-gray-500">(0.001 - 10.000)</span>
+              <span className="text-xs text-gray-500">(0.01 - 10)</span>
             </label>
             <input
               type="number"
-              step="0.001"
-              min="0.001"
+              step="0.01"
+              min="0.01"
               max="10"
               id="price"
               name="price"

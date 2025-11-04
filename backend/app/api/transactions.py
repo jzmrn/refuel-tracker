@@ -1,13 +1,14 @@
-from fastapi import APIRouter, HTTPException
 from datetime import datetime
-from typing import Optional, List
+
+from fastapi import APIRouter, HTTPException
+
 from ..models import Transaction, TransactionCreate
 from ..storage.parquet_store import ParquetDataStore
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 # This will be injected by main.py
-data_store: Optional[ParquetDataStore] = None
+data_store: ParquetDataStore | None = None
 
 
 @router.post("/")
@@ -27,11 +28,11 @@ async def add_transaction(transaction_data: TransactionCreate):
 
 @router.get("/")
 async def get_transactions(
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-    account_id: Optional[str] = None,
-    category: Optional[str] = None,
-    limit: Optional[int] = 100,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    account_id: str | None = None,
+    category: str | None = None,
+    limit: int | None = 100,
 ):
     """Get transactions with optional filters"""
     if not data_store:
@@ -56,7 +57,7 @@ async def get_transactions(
 
 
 @router.post("/bulk")
-async def add_transactions_bulk(transactions: List[TransactionCreate]):
+async def add_transactions_bulk(transactions: list[TransactionCreate]):
     """Add multiple transactions at once"""
     if not data_store:
         raise HTTPException(status_code=500, detail="Data store not initialized")

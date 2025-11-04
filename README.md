@@ -16,19 +16,22 @@ A modern, self-hosted personal finance and metrics tracking application built wi
 ## 🏗️ Architecture
 
 ### Backend (Python)
+
 - **FastAPI**: High-performance async API framework
 - **Polars**: Blazing fast data processing library
 - **Parquet Storage**: Columnar file format for efficient storage and querying
 - **Pydantic**: Data validation and serialization
 
 ### Frontend (Next.js)
+
 - **React 18**: Modern UI framework
 - **TypeScript**: Type-safe development
 - **Tailwind CSS**: Utility-first styling
 - **Recharts**: Beautiful data visualizations
 
 ### Storage Strategy
-```
+
+```sh
 data/
 ├── transactions/
 │   ├── year=2024/
@@ -45,29 +48,33 @@ data/
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Docker and Docker Compose
 - OR Python 3.11+ and Node.js 18+
 
 ### Option 1: Docker Compose (Recommended)
 
 1. **Clone or download the project structure**
+
    ```bash
    cd /Users/janzimmermann/Developer/privat/personal-data-tracker
    ```
 
 2. **Start the application**
+
    ```bash
    docker-compose up --build
    ```
 
 3. **Access the application**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8000
-   - API Documentation: http://localhost:8000/docs
+   - [Frontend](http://localhost:3000)
+   - [Backend API](http://localhost:8000)
+   - [API Documentation](http://localhost:8000/docs)
 
 ### Option 2: Development Setup
 
 #### Backend Setup
+
 ```bash
 cd backend
 
@@ -85,6 +92,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 #### Frontend Setup
+
 ```bash
 cd frontend
 
@@ -182,7 +190,8 @@ npm run lint
 ```
 
 ### Project Structure
-```
+
+```sh
 personal-data-tracker/
 ├── backend/
 │   ├── app/
@@ -217,10 +226,12 @@ personal-data-tracker/
 ### Environment Variables
 
 **Backend:**
+
 - `DATA_PATH`: Path to store Parquet files (default: `data`)
 - `BACKUP_PATH`: Path to store backups (default: `backups`)
 
 **Frontend:**
+
 - `NEXT_PUBLIC_API_URL`: Backend API URL (default: `http://localhost:8000`)
 
 ### Docker Compose Override
@@ -228,7 +239,7 @@ personal-data-tracker/
 Create `docker-compose.override.yml` for custom configuration:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   backend:
     volumes:
@@ -243,6 +254,7 @@ services:
 ### Backup and Restore
 
 **Manual Backup:**
+
 ```bash
 # Create backup via API
 curl -X POST "http://localhost:8000/backup"
@@ -252,6 +264,7 @@ cp -r data/ backup-$(date +%Y%m%d)/
 ```
 
 **Restore:**
+
 ```bash
 # Stop services
 docker-compose down
@@ -266,6 +279,7 @@ docker-compose up
 ### Data Migration
 
 Since data is stored in portable Parquet files, migration is simple:
+
 1. Stop the application
 2. Copy the `data/` directory to the new location
 3. Update `DATA_PATH` environment variable
@@ -274,12 +288,14 @@ Since data is stored in portable Parquet files, migration is simple:
 ## 📈 Performance
 
 ### Parquet Benefits
+
 - **90%+ compression** compared to JSON/CSV
 - **Column-oriented** storage for fast aggregations
 - **Predicate pushdown** - only reads relevant data
 - **Cross-platform** compatibility
 
 ### Expected Performance
+
 - **Writes**: 10,000+ transactions/second
 - **Reads**: Millions of rows scanned in milliseconds
 - **Storage**: ~1MB per 10,000 transactions (compressed)
@@ -310,28 +326,32 @@ This project is open source and available under the [MIT License](LICENSE).
 ### Common Issues
 
 **Backend won't start:**
+
 - Check Python version (3.11+ required)
 - Verify all dependencies are installed
 - Check port 8000 isn't already in use
 
 **Frontend build fails:**
+
 - Check Node.js version (18+ required)
 - Clear npm cache: `npm cache clean --force`
 - Delete `node_modules` and reinstall
 
 **Data not persisting:**
+
 - Check Docker volume mounts
 - Verify `DATA_PATH` environment variable
 - Check file permissions
 
 **Performance issues:**
-- Monitor file sizes in `data/` directory  
+
+- Monitor file sizes in `data/` directory
 - Consider partitioning strategy for large datasets
 - Check available disk space
 
 ### Getting Help
 
-1. Check the API documentation at http://localhost:8000/docs
+1. Check the API [documentation](http://localhost:8000/docs)
 2. Review application logs: `docker-compose logs`
 3. Check GitHub issues
 4. Monitor system resources (CPU, memory, disk)

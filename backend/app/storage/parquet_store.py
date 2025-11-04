@@ -1,10 +1,11 @@
-from pathlib import Path
-from datetime import datetime, timedelta
-from typing import List, Dict, Optional
-import polars as pl
 import asyncio
 import json
-from ..models import Transaction, AccountBalance, Metric, Unit, Category
+from datetime import datetime, timedelta
+from pathlib import Path
+
+import polars as pl
+
+from ..models import Category, Metric, Transaction, Unit
 
 
 class ParquetDataStore:
@@ -51,7 +52,7 @@ class ParquetDataStore:
         """Add a single transaction"""
         return await self.add_transactions([transaction])
 
-    async def add_transactions(self, transactions: List[Transaction]) -> bool:
+    async def add_transactions(self, transactions: list[Transaction]) -> bool:
         """Add multiple transactions efficiently"""
         async with self._write_lock:
             try:
@@ -92,11 +93,11 @@ class ParquetDataStore:
 
     async def get_transactions(
         self,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-        account_id: Optional[str] = None,
-        category: Optional[str] = None,
-        limit: Optional[int] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        account_id: str | None = None,
+        category: str | None = None,
+        limit: int | None = None,
     ) -> pl.DataFrame:
         """Query transactions with optional filters"""
 
@@ -144,9 +145,9 @@ class ParquetDataStore:
     def _get_relevant_files(
         self,
         data_type: str,
-        start_date: Optional[datetime],
-        end_date: Optional[datetime],
-    ) -> List[Path]:
+        start_date: datetime | None,
+        end_date: datetime | None,
+    ) -> list[Path]:
         """Get list of files that might contain data in the date range"""
         files = []
 
@@ -309,7 +310,7 @@ class ParquetDataStore:
             .sort("total_spent", descending=True)
         )
 
-    async def get_monthly_summary(self, year: int, month: int) -> Dict:
+    async def get_monthly_summary(self, year: int, month: int) -> dict:
         """Get monthly financial summary"""
         start_date = datetime(year, month, 1)
         if month == 12:

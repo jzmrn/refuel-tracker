@@ -1,12 +1,13 @@
-from fastapi import APIRouter, HTTPException
 from datetime import datetime
+
+from fastapi import APIRouter, HTTPException
+
 from ..storage.parquet_store import ParquetDataStore
-from typing import Optional
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 # This will be injected by main.py
-data_store: Optional[ParquetDataStore] = None
+data_store: ParquetDataStore | None = None
 
 
 @router.get("/spending-by-category")

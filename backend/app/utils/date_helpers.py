@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta
-from typing import Tuple
 
 
-def get_month_range(year: int, month: int) -> Tuple[datetime, datetime]:
+def get_month_range(year: int, month: int) -> tuple[datetime, datetime]:
     """Get the start and end datetime for a given month"""
     start_date = datetime(year, month, 1)
     if month == 12:
@@ -12,7 +11,7 @@ def get_month_range(year: int, month: int) -> Tuple[datetime, datetime]:
     return start_date, end_date
 
 
-def get_week_range(date: datetime) -> Tuple[datetime, datetime]:
+def get_week_range(date: datetime) -> tuple[datetime, datetime]:
     """Get the start and end datetime for the week containing the given date"""
     week_start = date - timedelta(days=date.weekday())
     week_end = week_start + timedelta(days=6, hours=23, minutes=59, seconds=59)
