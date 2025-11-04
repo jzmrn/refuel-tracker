@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import (
     analytics,
     categories,
+    data_points,
     metric_definitions,
     metrics,
     transactions,
@@ -59,6 +60,7 @@ async def lifespan(app: FastAPI):
     units.set_data_store(data_store)
     units.set_definitions_store(definitions_store)
     categories.set_data_store(data_store)
+    data_points.set_data_store(data_store)
 
     print(f"Data store initialized with path: {data_path}")
     print(f"Absolute data path: {Path(data_path).absolute()}")
@@ -106,6 +108,7 @@ app.include_router(
 )
 app.include_router(units.router, prefix="/api/units", tags=["units"])
 app.include_router(categories.router, prefix="/api/categories", tags=["categories"])
+app.include_router(data_points.router, prefix="/api", tags=["data-points"])
 
 
 @app.get("/")

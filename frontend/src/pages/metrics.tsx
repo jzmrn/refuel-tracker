@@ -4,6 +4,7 @@ import MetricDefinitionForm from "@/components/MetricDefinitionForm";
 import MetricDefinitionList from "@/components/MetricDefinitionList";
 import AddMetricValueForm from "@/components/AddMetricValueForm";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
+import ErrorDialog from "@/components/ErrorDialog";
 import apiService, {
   Metric,
   MetricSummary,
@@ -28,6 +29,8 @@ export default function Metrics() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingMetric, setDeletingMetric] = useState<Metric | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -62,7 +65,8 @@ export default function Metrics() {
       setRefreshTrigger((prev) => prev + 1);
     } catch (error) {
       console.error("Error creating metric definition:", error);
-      alert("Failed to create metric definition. Please try again.");
+      setErrorMessage("Failed to create metric definition. Please try again.");
+      setShowError(true);
     }
   };
 
@@ -73,7 +77,8 @@ export default function Metrics() {
       setSelectedDefinition(null);
     } catch (error) {
       console.error("Error adding metric value:", error);
-      alert("Failed to add metric value. Please try again.");
+      setErrorMessage("Failed to add metric value. Please try again.");
+      setShowError(true);
     }
   };
 
@@ -99,7 +104,9 @@ export default function Metrics() {
       setDeletingMetric(null);
     } catch (error) {
       console.error("Error deleting metric:", error);
-      alert("Failed to delete metric. Please try again.");
+      setErrorMessage("Failed to delete metric. Please try again.");
+      setShowError(true);
+      setDeletingMetric(null);
     }
   };
 
@@ -447,6 +454,14 @@ export default function Metrics() {
         variant="danger"
         onConfirm={confirmDeleteMetric}
         onCancel={() => setDeletingMetric(null)}
+      />
+
+      <ErrorDialog
+        isOpen={showError}
+        title="Error"
+        message={errorMessage}
+        onClose={() => setShowError(false)}
+        variant="error"
       />
     </div>
   );

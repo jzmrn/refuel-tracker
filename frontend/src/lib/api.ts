@@ -163,6 +163,35 @@ export interface RefuelMonthlySummary {
   smallest_fillup: number;
 }
 
+export interface DataPointCreate {
+  timestamp: string;
+  value: number;
+  label: string;
+  notes?: string;
+}
+
+export interface DataPointResponse {
+  id: string;
+  timestamp: string;
+  value: number;
+  label: string;
+  notes?: string;
+}
+
+export interface DataSummaryResponse {
+  total_entries: number;
+  unique_labels: number;
+  date_range: {
+    earliest: string | null;
+    latest: string | null;
+  };
+  value_stats: {
+    min: number | null;
+    max: number | null;
+    average: number | null;
+  };
+}
+
 class ApiService {
   private api = axios.create({
     baseURL: API_BASE_URL,
@@ -451,6 +480,38 @@ class ApiService {
     const response = await this.api.get(
       `/api/metrics/refuel/monthly/${year}/${month}`
     );
+    return response.data;
+  }
+
+  // Data Points API
+  async createDataPoint(
+    dataPoint: DataPointCreate
+  ): Promise<DataPointResponse> {
+    const response = await this.api.post("/api/data-points", dataPoint);
+    return response.data;
+  }
+
+  async getDataPoints(params?: {
+    start_date?: string;
+    end_date?: string;
+    label?: string;
+    limit?: number;
+  }): Promise<DataPointResponse[]> {
+    const response = await this.api.get("/api/data-points", { params });
+    return response.data;
+  }
+
+  async deleteDataPoint(id: string): Promise<void> {
+    await this.api.delete(`/api/data-points/${id}`);
+  }
+
+  async getExistingLabels(): Promise<string[]> {
+    const response = await this.api.get("/api/data-points/labels");
+    return response.data;
+  }
+
+  async getDataSummary(): Promise<DataSummaryResponse> {
+    const response = await this.api.get("/api/data-points/summary");
     return response.data;
   }
 }

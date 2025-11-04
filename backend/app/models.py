@@ -239,3 +239,54 @@ class RefuelMonthlySummaryResponse(BaseModel):
     min_price: float
     largest_fillup: float
     smallest_fillup: float
+
+
+class DataPointCreate(BaseModel):
+    """Request model for creating a data point"""
+
+    timestamp: datetime
+    value: float = Field(..., description="Numerical value to track")
+    label: str = Field(
+        ..., min_length=1, max_length=100, description="Label/topic for the data point"
+    )
+    notes: str | None = Field(None, max_length=500, description="Optional notes")
+
+    @field_validator("timestamp")
+    @classmethod
+    def validate_timestamp(cls, v):
+        # Get current time - handle both timezone-aware and naive datetimes
+        now = datetime.now()
+
+        # If the input datetime has timezone info, compare with timezone-aware current time
+        if v.tzinfo is not None:
+            # Convert current time to UTC for comparison
+            now = datetime.now(UTC)
+            # If v is not in UTC, convert it
+            if v.tzinfo != UTC:
+                v = v.astimezone(UTC)
+
+        if v > now:
+            raise ValueError("Timestamp cannot be in the future")
+        return v
+
+
+class DataPointResponse(BaseModel):
+    """Response model for data points"""
+
+    id: str
+    timestamp: datetime
+    value: float
+    label: str
+    notes: str | None = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class DataSummaryResponse(BaseModel):
+    """Summary statistics for data points"""
+
+    total_entries: int
+    unique_labels: int
+    date_range: dict[str, datetime | None]
+    value_stats: dict[str, float | None]

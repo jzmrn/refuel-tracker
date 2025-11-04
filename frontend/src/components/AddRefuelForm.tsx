@@ -323,16 +323,6 @@ export default function AddRefuelForm({
           <div className="bg-blue-50 p-3 rounded-md">
             <p className="text-sm text-blue-800">
               <strong>Total Cost: {totalCost.toFixed(2)} €</strong>
-              {formData.price > 8 && (
-                <span className="ml-2 text-orange-600 text-xs">
-                  (High price!)
-                </span>
-              )}
-              {formData.amount > 80 && (
-                <span className="ml-2 text-orange-600 text-xs">
-                  (Large tank!)
-                </span>
-              )}
             </p>
             {formData.kilometers_since_last_refuel > 0 &&
               formData.amount > 0 && (
@@ -371,13 +361,6 @@ export default function AddRefuelForm({
                         formData.estimated_fuel_consumption
                       ).toFixed(1)}{" "}
                       vs estimated)
-                    </span>
-                  )}
-                  {(formData.amount / formData.kilometers_since_last_refuel) *
-                    100 >
-                    15 && (
-                    <span className="ml-2 text-red-600 text-xs">
-                      (Very high consumption!)
                     </span>
                   )}
                 </p>
