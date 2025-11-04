@@ -11,9 +11,11 @@ class RefuelMetric(MetricBase):
 
     price: float  # Price per liter in euros
     amount: float  # Amount in liters
+    kilometers_since_last_refuel: float  # Kilometers driven since last refuel
+    estimated_fuel_consumption: float  # Car's estimated fuel consumption in L/100km
 
     def __str__(self):
-        return f"Refuel: {self.amount:.2f}L @ {self.price:.3f}€/L (Total: {self.amount * self.price:.2f}€)"
+        return f"Refuel: {self.amount:.2f}L @ {self.price:.3f}€/L (Total: {self.amount * self.price:.2f}€) - {self.kilometers_since_last_refuel:.0f}km, Est: {self.estimated_fuel_consumption:.1f}L/100km"
 
 
 class RefuelStore(MetricStoreBase):
@@ -28,6 +30,8 @@ class RefuelStore(MetricStoreBase):
             "timestamp": pl.Datetime,
             "price": pl.Float64,
             "amount": pl.Float64,
+            "kilometers_since_last_refuel": pl.Float64,
+            "estimated_fuel_consumption": pl.Float64,
             "notes": pl.Utf8,
         }
 
@@ -37,6 +41,8 @@ class RefuelStore(MetricStoreBase):
             "timestamp": metric.timestamp,
             "price": metric.price,
             "amount": metric.amount,
+            "kilometers_since_last_refuel": metric.kilometers_since_last_refuel,
+            "estimated_fuel_consumption": metric.estimated_fuel_consumption,
             "notes": metric.notes if metric.notes is not None else "",
         }
 
@@ -46,6 +52,8 @@ class RefuelStore(MetricStoreBase):
             timestamp=row["timestamp"],
             price=row["price"],
             amount=row["amount"],
+            kilometers_since_last_refuel=row["kilometers_since_last_refuel"],
+            estimated_fuel_consumption=row["estimated_fuel_consumption"],
             notes=row["notes"] if row["notes"] else None,
         )
 

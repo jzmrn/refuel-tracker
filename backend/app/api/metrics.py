@@ -216,6 +216,8 @@ async def get_refuel_metrics(
                     timestamp=metric.timestamp,
                     price=metric.price,
                     amount=metric.amount,
+                    kilometers_since_last_refuel=metric.kilometers_since_last_refuel,
+                    estimated_fuel_consumption=metric.estimated_fuel_consumption,
                     notes=metric.notes,
                 )
             )

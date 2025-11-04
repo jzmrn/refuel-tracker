@@ -33,10 +33,22 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
 
   const formatDate = (timestamp: string) => {
     const date = new Date(timestamp);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+
+    if (isToday) {
+      return (
+        date.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }) + " (Today)"
+      );
+    }
+
     return date.toLocaleDateString("en-US", {
       year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
+      month: "short",
+      day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -80,6 +92,12 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
                 Total Cost
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Kilometers
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Consumption
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Notes
               </th>
             </tr>
@@ -87,9 +105,17 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
           <tbody className="bg-white divide-y divide-gray-200">
             {refuels?.map((refuel, index) => {
               const totalCost = refuel.price * refuel.amount;
+              const refuelDate = new Date(refuel.timestamp);
+              const now = new Date();
+              const isToday = refuelDate.toDateString() === now.toDateString();
 
               return (
-                <tr key={index} className="hover:bg-gray-50">
+                <tr
+                  key={index}
+                  className={`hover:bg-gray-50 ${
+                    !isToday ? "bg-blue-50/30" : ""
+                  }`}
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatDate(refuel.timestamp)}
                   </td>
@@ -101,6 +127,26 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {formatCurrency(totalCost)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {refuel.kilometers_since_last_refuel.toFixed(0)} km
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <div>
+                      <div className="text-xs text-gray-500">
+                        Est: {refuel.estimated_fuel_consumption.toFixed(1)}{" "}
+                        L/100km
+                      </div>
+                      <div className="font-medium">
+                        Act:{" "}
+                        {(
+                          (refuel.amount /
+                            refuel.kilometers_since_last_refuel) *
+                          100
+                        ).toFixed(1)}{" "}
+                        L/100km
+                      </div>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
                     {refuel.notes || "-"}

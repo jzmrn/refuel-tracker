@@ -1,5 +1,5 @@
-from datetime import datetime
-from pydantic import BaseModel, Field
+from datetime import UTC, datetime
+from pydantic import BaseModel, Field, field_validator
 
 
 class Unit(BaseModel):
@@ -146,9 +146,42 @@ class MonthlySummaryResponse(BaseModel):
 class RefuelMetricCreate(BaseModel):
     """Request model for creating a refuel entry"""
 
-    price: float = Field(..., gt=0, description="Price per liter in euros")
-    amount: float = Field(..., gt=0, description="Amount in liters")
+    price: float = Field(
+        ..., gt=0, le=10, description="Price per liter in euros (max 10€/L)"
+    )
+    amount: float = Field(..., gt=0, le=100, description="Amount in liters (max 100L)")
+    kilometers_since_last_refuel: float = Field(
+        ..., gt=0, description="Kilometers driven since last refuel"
+    )
+    estimated_fuel_consumption: float = Field(
+        ...,
+        gt=0,
+        le=20,
+        description="Car's estimated fuel consumption in L/100km (max 20L/100km)",
+    )
+    timestamp: datetime | None = Field(
+        None, description="Optional timestamp for historical entries"
+    )
     notes: str | None = Field(None, description="Optional notes")
+
+    @field_validator("timestamp")
+    @classmethod
+    def validate_timestamp(cls, v):
+        if v is not None:
+            # Get current time - handle both timezone-aware and naive datetimes
+            now = datetime.now()
+
+            # If the input datetime has timezone info, compare with timezone-aware current time
+            if v.tzinfo is not None:
+                # Convert current time to UTC for comparison
+                now = datetime.now(UTC)
+                # If v is not in UTC, convert it
+                if v.tzinfo != UTC:
+                    v = v.astimezone(UTC)
+
+            if v > now:
+                raise ValueError("Timestamp cannot be in the future")
+        return v
 
 
 class RefuelMetricResponse(BaseModel):
@@ -157,6 +190,8 @@ class RefuelMetricResponse(BaseModel):
     timestamp: datetime
     price: float
     amount: float
+    kilometers_since_last_refuel: float
+    estimated_fuel_consumption: float
     notes: str | None = None
 
     class Config:

@@ -122,12 +122,17 @@ export interface RefuelMetric {
   timestamp: string;
   price: number;
   amount: number;
+  kilometers_since_last_refuel: number;
+  estimated_fuel_consumption: number;
   notes?: string;
 }
 
 export interface RefuelMetricCreate {
   price: number;
   amount: number;
+  kilometers_since_last_refuel: number;
+  estimated_fuel_consumption: number;
+  timestamp?: string;
   notes?: string;
 }
 
