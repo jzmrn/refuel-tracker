@@ -32,10 +32,12 @@ async def lifespan(app: FastAPI):
     # Initialize data store
     # Get the directory where this main.py file is located
     current_dir = Path(__file__).parent.parent  # Go up from app/ to backend/
-    default_data_path = current_dir / "data"
-    default_backup_path = current_dir / "backups"
+    data_path = os.getenv("DATA_PATH", None)
 
-    data_path = os.getenv("DATA_PATH", str(default_data_path))
+    if not data_path:
+        raise ValueError("DATA_PATH environment variable is not set")
+
+    default_backup_path = current_dir / "backups"
     backup_path = os.getenv("BACKUP_PATH", str(default_backup_path))
 
     data_store = ParquetDataStore(data_path)
