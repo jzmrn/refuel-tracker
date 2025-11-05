@@ -52,14 +52,17 @@ export default function TimeSpanList({
   }
 
   // Group time spans by group for better organization
-  const groupedTimeSpans = timeSpans.reduce((groups, span) => {
-    const group = span.group || "General";
-    if (!groups[group]) {
-      groups[group] = [];
-    }
-    groups[group].push(span);
-    return groups;
-  }, {} as Record<string, TimeSpanResponse[]>);
+  const groupedTimeSpans = timeSpans.reduce(
+    (groups, span) => {
+      const group = span.group || "General";
+      if (!groups[group]) {
+        groups[group] = [];
+      }
+      groups[group].push(span);
+      return groups;
+    },
+    {} as Record<string, TimeSpanResponse[]>,
+  );
 
   // Get group color based on hash (consistent coloring)
   const getGroupColor = (group: string): string => {
@@ -144,7 +147,7 @@ export default function TimeSpanList({
                 <div className="flex items-center gap-2">
                   <span
                     className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getGroupColor(
-                      group
+                      group,
                     )}`}
                   >
                     {group}
@@ -166,7 +169,7 @@ export default function TimeSpanList({
                 .sort(
                   (a, b) =>
                     new Date(b.start_date).getTime() -
-                    new Date(a.start_date).getTime()
+                    new Date(a.start_date).getTime(),
                 )
                 .map((span) => (
                   <div
@@ -206,7 +209,7 @@ export default function TimeSpanList({
                               <span className="text-blue-600 font-semibold">
                                 {calculateDuration(
                                   span.start_date,
-                                  span.end_date || undefined
+                                  span.end_date || undefined,
                                 )}
                               </span>
                               {isOngoing(span) && (

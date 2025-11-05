@@ -118,7 +118,7 @@ export default function Layout({ children }: LayoutProps) {
                         "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
                         isActive
                           ? "bg-primary-50 text-primary-700 border-r-2 border-primary-700"
-                          : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                          : "text-gray-700 hover:bg-gray-50 hover:text-gray-900",
                       )}
                     >
                       <span className="mr-3">{item.icon}</span>

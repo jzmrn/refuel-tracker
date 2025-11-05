@@ -7,7 +7,7 @@ import apiService, { MonthlySummary } from "@/lib/api";
 export default function Home() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [monthlySummary, setMonthlySummary] = useState<MonthlySummary | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState(true);
 
@@ -21,7 +21,7 @@ export default function Home() {
       const now = new Date();
       const summary = await apiService.getMonthlySummary(
         now.getFullYear(),
-        now.getMonth() + 1
+        now.getMonth() + 1,
       );
       setMonthlySummary(summary);
     } catch (error) {

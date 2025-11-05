@@ -27,7 +27,7 @@ export default function AddTimeSpanForm({
   const [showGroupSuggestions, setShowGroupSuggestions] = useState(false);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
 
@@ -178,14 +178,14 @@ export default function AddTimeSpanForm({
     formData.label.trim() === ""
       ? existingLabels // Show all labels when no text is entered
       : existingLabels.filter((label) =>
-          label.toLowerCase().includes(formData.label.toLowerCase())
+          label.toLowerCase().includes(formData.label.toLowerCase()),
         );
 
   const filteredGroupSuggestions =
     !formData.group || formData.group.trim() === ""
       ? existingGroups // Show all groups when no text is entered
       : existingGroups.filter((group) =>
-          group.toLowerCase().includes((formData.group || "").toLowerCase())
+          group.toLowerCase().includes((formData.group || "").toLowerCase()),
         );
 
   const setEndDateToNow = () => {

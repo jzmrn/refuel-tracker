@@ -41,7 +41,7 @@ export default function DataTracking() {
     // Filter data points for values tab
     if (valuesSelectedLabel && valuesSelectedLabel !== "") {
       setFilteredDataPoints(
-        dataPoints.filter((point) => point.label === valuesSelectedLabel)
+        dataPoints.filter((point) => point.label === valuesSelectedLabel),
       );
     } else {
       setFilteredDataPoints(dataPoints);
@@ -52,7 +52,7 @@ export default function DataTracking() {
     // Filter data points for statistics tab
     if (statisticsSelectedLabel && statisticsSelectedLabel !== "") {
       setStatisticsFilteredDataPoints(
-        dataPoints.filter((point) => point.label === statisticsSelectedLabel)
+        dataPoints.filter((point) => point.label === statisticsSelectedLabel),
       );
     } else {
       setStatisticsFilteredDataPoints(dataPoints);

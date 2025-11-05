@@ -24,7 +24,7 @@ export default function AddDataPointForm({
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
 
@@ -145,7 +145,7 @@ export default function AddDataPointForm({
     formData.label.trim() === ""
       ? existingLabels // Show all labels when no text is entered
       : existingLabels.filter((label) =>
-          label.toLowerCase().includes(formData.label.toLowerCase())
+          label.toLowerCase().includes(formData.label.toLowerCase()),
         );
 
   return (

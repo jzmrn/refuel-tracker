@@ -41,7 +41,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
   const sortedData = [...priceData]
     .sort(
       (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
     )
     .map((item) => ({
       ...item,

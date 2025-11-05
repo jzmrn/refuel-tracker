@@ -15,4 +15,14 @@ repos:
     rev: v3.0.3
     hooks:
       - id: prettier
-        types_or: [markdown, yaml, json]
+        types_or: [markdown, yaml, json, javascript, tsx]
+        files: \.(js|jsx|ts|tsx|json|md|yaml|yml)$
+        exclude: node_modules/
+  - repo: local
+    hooks:
+      - id: typescript-check
+        name: TypeScript Check
+        entry: bash -c 'cd frontend && npm run type-check'
+        language: system
+        files: ^frontend/.*\.(ts|tsx)$
+        pass_filenames: false

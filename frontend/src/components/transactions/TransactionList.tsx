@@ -109,7 +109,7 @@ export default function TransactionList({
               <div className="text-right">
                 <p
                   className={`font-semibold ${getTransactionTypeColor(
-                    transaction.transaction_type
+                    transaction.transaction_type,
                   )}`}
                 >
                   {transaction.transaction_type === "expense" ? "-" : "+"}

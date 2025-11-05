@@ -44,7 +44,7 @@ const RefuelPage: NextPage = () => {
         showError(`API Error: ${err.response.data.detail}`);
       } else {
         showError(
-          `Error loading refuel data: ${err.message || "Unknown error"}`
+          `Error loading refuel data: ${err.message || "Unknown error"}`,
         );
       }
     } finally {

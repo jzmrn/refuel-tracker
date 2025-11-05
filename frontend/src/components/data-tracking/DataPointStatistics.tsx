@@ -74,7 +74,7 @@ export default function DataPointStatistics({
   const chartData = dataPoints
     .sort(
       (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
     )
     .map((point, index) => ({
       ...point,

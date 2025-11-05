@@ -22,7 +22,7 @@ export default function AddRefuelForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
 

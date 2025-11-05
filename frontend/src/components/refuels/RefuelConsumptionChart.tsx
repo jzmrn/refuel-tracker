@@ -47,7 +47,7 @@ export default function RefuelConsumptionChart({
     .filter((item) => item.kilometers_since_last_refuel > 0 && item.amount > 0)
     .sort(
       (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
     )
     .map((item) => {
       const actualConsumption =
@@ -62,10 +62,10 @@ export default function RefuelConsumptionChart({
         }),
         actualConsumption: parseFloat(actualConsumption.toFixed(2)),
         estimatedConsumption: parseFloat(
-          item.estimated_fuel_consumption.toFixed(2)
+          item.estimated_fuel_consumption.toFixed(2),
         ),
         difference: parseFloat(
-          (actualConsumption - item.estimated_fuel_consumption).toFixed(2)
+          (actualConsumption - item.estimated_fuel_consumption).toFixed(2),
         ),
       };
     });
@@ -155,7 +155,7 @@ export default function RefuelConsumptionChart({
     chartData.length;
   const avgDifference = avgActual - avgEstimated;
   const accurateEntries = chartData.filter(
-    (item) => Math.abs(item.difference) <= 0.5
+    (item) => Math.abs(item.difference) <= 0.5,
   ).length;
   const accuracyPercentage = (accurateEntries / chartData.length) * 100;
 

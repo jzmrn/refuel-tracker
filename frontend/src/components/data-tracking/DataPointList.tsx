@@ -47,14 +47,17 @@ export default function DataPointList({
   }
 
   // Group data points by label for better organization
-  const groupedData = dataPoints.reduce((groups, point) => {
-    const label = point.label;
-    if (!groups[label]) {
-      groups[label] = [];
-    }
-    groups[label].push(point);
-    return groups;
-  }, {} as Record<string, DataPoint[]>);
+  const groupedData = dataPoints.reduce(
+    (groups, point) => {
+      const label = point.label;
+      if (!groups[label]) {
+        groups[label] = [];
+      }
+      groups[label].push(point);
+      return groups;
+    },
+    {} as Record<string, DataPoint[]>,
+  );
 
   // Get label color based on hash (consistent coloring)
   const getLabelColor = (label: string): string => {
@@ -91,7 +94,7 @@ export default function DataPointList({
                 <div className="flex items-center gap-2">
                   <span
                     className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getLabelColor(
-                      label
+                      label,
                     )}`}
                   >
                     {label}
@@ -107,7 +110,7 @@ export default function DataPointList({
                       points.reduce((latest, point) =>
                         new Date(point.timestamp) > new Date(latest.timestamp)
                           ? point
-                          : latest
+                          : latest,
                       ).value
                     }
                   </div>
@@ -120,7 +123,7 @@ export default function DataPointList({
                 .sort(
                   (a, b) =>
                     new Date(b.timestamp).getTime() -
-                    new Date(a.timestamp).getTime()
+                    new Date(a.timestamp).getTime(),
                 )
                 .map((point) => (
                   <div

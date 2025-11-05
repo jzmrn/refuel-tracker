@@ -41,7 +41,7 @@ export default function TimeSpans() {
     // Filter time spans for values tab
     if (valuesSelectedGroup && valuesSelectedGroup !== "") {
       const filtered = timeSpans.filter(
-        (span) => span.group === valuesSelectedGroup
+        (span) => span.group === valuesSelectedGroup,
       );
       setFilteredTimeSpans(filtered);
     } else {

@@ -47,7 +47,7 @@ export default function TimeSpanStatistics({
   }, [timeSpans]);
 
   const [selectedGroup, setSelectedGroup] = useState<string>(
-    availableGroups[0] || "General"
+    availableGroups[0] || "General",
   );
 
   // For responsive chart width
@@ -69,7 +69,7 @@ export default function TimeSpanStatistics({
   // Filter timeSpans by selected group
   const filteredTimeSpans = useMemo(() => {
     return timeSpans.filter(
-      (span) => (span.group || "General") === selectedGroup
+      (span) => (span.group || "General") === selectedGroup,
     );
   }, [timeSpans, selectedGroup]);
 
@@ -139,7 +139,7 @@ export default function TimeSpanStatistics({
     const chartData = filteredTimeSpans
       .sort(
         (a, b) =>
-          new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+          new Date(a.start_date).getTime() - new Date(b.start_date).getTime(),
       )
       .map((span, index) => {
         const startTime = new Date(span.start_date).getTime();
@@ -317,7 +317,7 @@ export default function TimeSpanStatistics({
               ((item.startTime - swimlaneData.minTime) / timeRange) * plotWidth;
             const width = Math.max(
               3,
-              (item.durationMs / timeRange) * plotWidth
+              (item.durationMs / timeRange) * plotWidth,
             );
 
             return (
