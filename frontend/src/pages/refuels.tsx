@@ -3,6 +3,8 @@ import { NextPage } from "next";
 import AddRefuelForm from "../components/refuels/AddRefuelForm";
 import RefuelList from "../components/refuels/RefuelList";
 import RefuelStats from "../components/refuels/RefuelStats";
+import Snackbar from "../components/common/Snackbar";
+import { useSnackbar } from "../lib/useSnackbar";
 import {
   apiService,
   RefuelMetric,
@@ -18,14 +20,12 @@ const RefuelPage: NextPage = () => {
   const [statistics, setStatistics] = useState<RefuelStatistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { snackbar, showSuccess, showError, hideSnackbar } = useSnackbar();
 
   // Fetch refuel data
   const fetchRefuels = async () => {
     try {
       setLoading(true);
-      setError(null); // Clear previous errors
       console.log("Fetching refuel data...");
 
       const data = await apiService.getRefuelMetrics({ limit: 50 });
@@ -37,13 +37,13 @@ const RefuelPage: NextPage = () => {
 
       // More specific error messages
       if (err.response?.status === 404) {
-        setError("Refuel API not available");
+        showError("Refuel API not available");
       } else if (err.response?.status === 503) {
-        setError("Metric Registry not available - Server restart required");
+        showError("Metric Registry not available - Server restart required");
       } else if (err.response?.data?.detail) {
-        setError(`API Error: ${err.response.data.detail}`);
+        showError(`API Error: ${err.response.data.detail}`);
       } else {
-        setError(
+        showError(
           `Error loading refuel data: ${err.message || "Unknown error"}`
         );
       }
@@ -80,11 +80,9 @@ const RefuelPage: NextPage = () => {
   // Handle form submission
   const handleAddRefuel = async (refuelData: RefuelMetricCreate) => {
     try {
-      setError(null);
       await apiService.createRefuelMetric(refuelData);
 
-      setSuccessMessage("Refuel entry added successfully!");
-      setTimeout(() => setSuccessMessage(null), 3000);
+      showSuccess("Refuel entry added successfully!");
 
       // Refresh data
       await fetchRefuels();
@@ -94,7 +92,7 @@ const RefuelPage: NextPage = () => {
       setActiveTab("entries");
     } catch (err) {
       console.error("Error adding refuel entry:", err);
-      setError("Error adding refuel entry");
+      showError("Error adding refuel entry");
     }
   };
 
@@ -111,7 +109,7 @@ const RefuelPage: NextPage = () => {
       setRefuels(data);
     } catch (err) {
       console.error("Error filtering by month:", err);
-      setError("Error filtering data");
+      showError("Error filtering data");
     } finally {
       setLoading(false);
     }
@@ -129,7 +127,7 @@ const RefuelPage: NextPage = () => {
       setRefuels(data);
     } catch (err) {
       console.error("Error filtering by year:", err);
-      setError("Error filtering data");
+      showError("Error filtering data");
     } finally {
       setLoading(false);
     }
@@ -201,19 +199,13 @@ const RefuelPage: NextPage = () => {
         </p>
       </div>
 
-      {/* Success Message */}
-      {successMessage && (
-        <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-          {successMessage}
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
+      {/* Snackbar */}
+      <Snackbar
+        message={snackbar.message}
+        type={snackbar.type}
+        isVisible={snackbar.isVisible}
+        onClose={hideSnackbar}
+      />
 
       {/* Tab Navigation */}
       <div className="mb-8">

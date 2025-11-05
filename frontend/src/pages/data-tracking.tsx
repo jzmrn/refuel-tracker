@@ -4,7 +4,8 @@ import AddDataPointForm from "@/components/data-tracking/AddDataPointForm";
 import DataPointList from "@/components/data-tracking/DataPointList";
 import DataPointStatistics from "@/components/data-tracking/DataPointStatistics";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
-import ErrorDialog from "@/components/common/ErrorDialog";
+import Snackbar from "@/components/common/Snackbar";
+import { useSnackbar } from "@/lib/useSnackbar";
 import apiService, {
   DataPointResponse,
   DataPointCreate,
@@ -26,8 +27,7 @@ export default function DataTracking() {
   const [loading, setLoading] = useState(true);
   const [deletingPoint, setDeletingPoint] = useState<DataPoint | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  const [showError, setShowError] = useState(false);
+  const { snackbar, showSuccess, showError, hideSnackbar } = useSnackbar();
 
   useEffect(() => {
     fetchData();
@@ -62,6 +62,7 @@ export default function DataTracking() {
       }
     } catch (error) {
       console.error("Error fetching data:", error);
+      showError("Failed to load data.");
     } finally {
       setLoading(false);
     }
@@ -72,14 +73,15 @@ export default function DataTracking() {
       await apiService.createDataPoint(pointData);
       setRefreshTrigger((prev) => prev + 1);
 
+      showSuccess("Data point added successfully!");
+
       // Switch to values tab to show the newly added entry
       setActiveTab("values");
       // Set the selected label to the newly added point's label
       setSelectedLabel(pointData.label);
     } catch (error) {
       console.error("Error adding data point:", error);
-      setErrorMessage("Failed to add data point. Please try again.");
-      setShowError(true);
+      showError("Failed to add data point.");
     }
   };
 
@@ -94,10 +96,10 @@ export default function DataTracking() {
       await apiService.deleteDataPoint(deletingPoint.id);
       setRefreshTrigger((prev) => prev + 1);
       setDeletingPoint(null);
+      showSuccess("Data point deleted successfully!");
     } catch (error) {
       console.error("Error deleting data point:", error);
-      setErrorMessage("Failed to delete data point. Please try again.");
-      setShowError(true);
+      showError("Failed to delete data point.");
       setDeletingPoint(null);
     }
   };
@@ -397,13 +399,12 @@ export default function DataTracking() {
         onCancel={() => setDeletingPoint(null)}
       />
 
-      {/* Error Dialog */}
-      <ErrorDialog
-        isOpen={showError}
-        title="Error"
-        message={errorMessage}
-        onClose={() => setShowError(false)}
-        variant="error"
+      {/* Snackbar */}
+      <Snackbar
+        message={snackbar.message}
+        type={snackbar.type}
+        isVisible={snackbar.isVisible}
+        onClose={hideSnackbar}
       />
     </div>
   );

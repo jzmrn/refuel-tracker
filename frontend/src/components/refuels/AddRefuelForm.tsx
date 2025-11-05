@@ -191,7 +191,7 @@ export default function AddRefuelForm({
               }}
               className="mt-1 px-3 py-2 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 whitespace-nowrap"
             >
-              Set to Now
+              Now
             </button>
           </div>
           {errors.timestamp && (
@@ -216,7 +216,7 @@ export default function AddRefuelForm({
             </label>
             <input
               type="number"
-              step="0.01"
+              step="0.001"
               min="0.01"
               max="10"
               id="price"
