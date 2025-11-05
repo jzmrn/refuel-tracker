@@ -86,7 +86,7 @@ export default function DataPointList({
             key={label}
             className="border border-gray-200 rounded-lg overflow-hidden"
           >
-            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <div className="bg-white px-4 py-3 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span
@@ -125,7 +125,7 @@ export default function DataPointList({
                 .map((point) => (
                   <div
                     key={point.id}
-                    className="p-4 hover:bg-gray-50 transition-colors"
+                    className="p-4 bg-white hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -148,7 +148,7 @@ export default function DataPointList({
                         </div>
 
                         {point.notes && (
-                          <p className="text-sm text-gray-600 mt-2 bg-gray-50 p-2 rounded">
+                          <p className="text-sm text-gray-600 mt-2 bg-white p-2 rounded border border-gray-200">
                             {point.notes}
                           </p>
                         )}

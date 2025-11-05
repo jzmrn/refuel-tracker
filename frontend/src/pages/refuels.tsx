@@ -223,11 +223,6 @@ const RefuelPage: NextPage = () => {
               >
                 <span className="text-lg">{tab.icon}</span>
                 {tab.label}
-                {tab.id === "entries" && refuels.length > 0 && (
-                  <span className="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs font-medium">
-                    {refuels.length}
-                  </span>
-                )}
               </button>
             ))}
           </nav>

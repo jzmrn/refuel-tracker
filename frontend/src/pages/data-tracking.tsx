@@ -19,9 +19,13 @@ type TabType = "add" | "statistics" | "values";
 
 export default function DataTracking() {
   const [activeTab, setActiveTab] = useState<TabType>("add");
-  const [selectedLabel, setSelectedLabel] = useState<string>("");
+  const [statisticsSelectedLabel, setStatisticsSelectedLabel] =
+    useState<string>("");
+  const [valuesSelectedLabel, setValuesSelectedLabel] = useState<string>("");
   const [dataPoints, setDataPoints] = useState<DataPoint[]>([]);
   const [filteredDataPoints, setFilteredDataPoints] = useState<DataPoint[]>([]);
+  const [statisticsFilteredDataPoints, setStatisticsFilteredDataPoints] =
+    useState<DataPoint[]>([]);
   const [existingLabels, setExistingLabels] = useState<string[]>([]);
   const [summary, setSummary] = useState<DataSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,15 +38,26 @@ export default function DataTracking() {
   }, [refreshTrigger]);
 
   useEffect(() => {
-    // Filter data points when selected label changes
-    if (selectedLabel && selectedLabel !== "") {
+    // Filter data points for values tab
+    if (valuesSelectedLabel && valuesSelectedLabel !== "") {
       setFilteredDataPoints(
-        dataPoints.filter((point) => point.label === selectedLabel)
+        dataPoints.filter((point) => point.label === valuesSelectedLabel)
       );
     } else {
       setFilteredDataPoints(dataPoints);
     }
-  }, [selectedLabel, dataPoints]);
+  }, [valuesSelectedLabel, dataPoints]);
+
+  useEffect(() => {
+    // Filter data points for statistics tab
+    if (statisticsSelectedLabel && statisticsSelectedLabel !== "") {
+      setStatisticsFilteredDataPoints(
+        dataPoints.filter((point) => point.label === statisticsSelectedLabel)
+      );
+    } else {
+      setStatisticsFilteredDataPoints(dataPoints);
+    }
+  }, [statisticsSelectedLabel, dataPoints]);
 
   const fetchData = async () => {
     try {
@@ -56,9 +71,13 @@ export default function DataTracking() {
       setExistingLabels(labelsData);
       setSummary(summaryData);
 
-      // Set default selected label to first available label if none selected
-      if (!selectedLabel && labelsData.length > 0) {
-        setSelectedLabel(labelsData[0]);
+      // Set default selected labels to first available label if none selected
+      if (!statisticsSelectedLabel && labelsData.length > 0) {
+        setStatisticsSelectedLabel(labelsData[0]);
+      }
+      if (!valuesSelectedLabel && labelsData.length > 0) {
+        // Values tab starts with "All Metrics" selected (empty string)
+        setValuesSelectedLabel("");
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -78,7 +97,7 @@ export default function DataTracking() {
       // Switch to values tab to show the newly added entry
       setActiveTab("values");
       // Set the selected label to the newly added point's label
-      setSelectedLabel(pointData.label);
+      setValuesSelectedLabel(pointData.label);
     } catch (error) {
       console.error("Error adding data point:", error);
       showError("Failed to add data point.");
@@ -137,8 +156,8 @@ export default function DataTracking() {
                 </label>
                 <select
                   id="stats-label-select"
-                  value={selectedLabel}
-                  onChange={(e) => setSelectedLabel(e.target.value)}
+                  value={statisticsSelectedLabel}
+                  onChange={(e) => setStatisticsSelectedLabel(e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 >
                   {existingLabels.map((label) => (
@@ -149,10 +168,10 @@ export default function DataTracking() {
                 </select>
               </div>
             )}
-            {selectedLabel ? (
+            {statisticsSelectedLabel ? (
               <DataPointStatistics
-                dataPoints={filteredDataPoints}
-                label={selectedLabel}
+                dataPoints={statisticsFilteredDataPoints}
+                label={statisticsSelectedLabel}
                 loading={loading}
               />
             ) : (
@@ -170,6 +189,65 @@ export default function DataTracking() {
       case "values":
         return (
           <div>
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="card">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-purple-100 rounded-md flex items-center justify-center mr-3">
+                      <svg
+                        className="w-4 h-4 text-purple-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-sm font-medium text-gray-500">
+                      Unique Labels
+                    </p>
+                  </div>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {loading ? "..." : summary?.unique_labels || 0}
+                  </p>
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center mr-3">
+                      <svg
+                        className="w-4 h-4 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-sm font-medium text-gray-500">
+                      Total Entries
+                    </p>
+                  </div>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {loading ? "..." : summary?.total_entries || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {existingLabels.length > 0 && (
               <div className="mb-6 bg-white p-4 rounded-lg shadow">
                 <label
@@ -180,8 +258,8 @@ export default function DataTracking() {
                 </label>
                 <select
                   id="values-label-select"
-                  value={selectedLabel}
-                  onChange={(e) => setSelectedLabel(e.target.value)}
+                  value={valuesSelectedLabel}
+                  onChange={(e) => setValuesSelectedLabel(e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">All Metrics</option>
@@ -193,25 +271,12 @@ export default function DataTracking() {
                 </select>
               </div>
             )}
-            <div className="card">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {selectedLabel
-                    ? `${selectedLabel} Values`
-                    : "All Data Points"}
-                </h2>
-                <span className="text-sm text-gray-500">
-                  {filteredDataPoints.length}{" "}
-                  {filteredDataPoints.length === 1 ? "entry" : "entries"}
-                </span>
-              </div>
 
-              <DataPointList
-                dataPoints={filteredDataPoints}
-                onDelete={handleDeleteDataPoint}
-                loading={loading}
-              />
-            </div>
+            <DataPointList
+              dataPoints={filteredDataPoints}
+              onDelete={handleDeleteDataPoint}
+              loading={loading}
+            />
           </div>
         );
       default:
@@ -220,7 +285,7 @@ export default function DataTracking() {
   };
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8 flex justify-between items-start">
         <div>
@@ -228,132 +293,6 @@ export default function DataTracking() {
           <p className="text-gray-600 mt-2">
             Track numerical data over time with custom labels
           </p>
-        </div>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="card">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center">
-                <svg
-                  className="w-4 h-4 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Entries</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {loading ? "..." : summary?.total_entries || 0}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-purple-100 rounded-md flex items-center justify-center">
-                <svg
-                  className="w-4 h-4 text-purple-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Unique Labels</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {loading ? "..." : summary?.unique_labels || 0}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-green-100 rounded-md flex items-center justify-center">
-                <svg
-                  className="w-4 h-4 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Average Value</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {loading
-                  ? "..."
-                  : summary?.value_stats?.average
-                  ? summary.value_stats.average.toFixed(2)
-                  : "N/A"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-yellow-100 rounded-md flex items-center justify-center">
-                <svg
-                  className="w-4 h-4 text-yellow-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Value Range</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {loading
-                  ? "..."
-                  : summary?.value_stats?.min !== null &&
-                    summary?.value_stats?.max !== null &&
-                    summary?.value_stats?.min !== undefined &&
-                    summary?.value_stats?.max !== undefined
-                  ? `${summary.value_stats.min} - ${summary.value_stats.max}`
-                  : "N/A"}
-              </p>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -373,11 +312,6 @@ export default function DataTracking() {
               >
                 <span className="text-lg">{tab.icon}</span>
                 {tab.label}
-                {tab.id === "values" && filteredDataPoints.length > 0 && (
-                  <span className="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs font-medium">
-                    {filteredDataPoints.length}
-                  </span>
-                )}
               </button>
             ))}
           </nav>
