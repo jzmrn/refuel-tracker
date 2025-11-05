@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import AddDataPointForm from "@/components/AddDataPointForm";
 import DataPointList from "@/components/DataPointList";
+import DataPointStatistics from "@/components/DataPointStatistics";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import ErrorDialog from "@/components/ErrorDialog";
 import apiService, {
@@ -13,9 +14,13 @@ import apiService, {
 // Type aliases for easier usage
 export type DataPoint = DataPointResponse;
 export type DataSummary = DataSummaryResponse;
+type TabType = "add" | "statistics" | "values";
 
 export default function DataTracking() {
+  const [activeTab, setActiveTab] = useState<TabType>("add");
+  const [selectedLabel, setSelectedLabel] = useState<string>("");
   const [dataPoints, setDataPoints] = useState<DataPoint[]>([]);
+  const [filteredDataPoints, setFilteredDataPoints] = useState<DataPoint[]>([]);
   const [existingLabels, setExistingLabels] = useState<string[]>([]);
   const [summary, setSummary] = useState<DataSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,6 +33,17 @@ export default function DataTracking() {
     fetchData();
   }, [refreshTrigger]);
 
+  useEffect(() => {
+    // Filter data points when selected label changes
+    if (selectedLabel && selectedLabel !== "") {
+      setFilteredDataPoints(
+        dataPoints.filter((point) => point.label === selectedLabel)
+      );
+    } else {
+      setFilteredDataPoints(dataPoints);
+    }
+  }, [selectedLabel, dataPoints]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -39,6 +55,11 @@ export default function DataTracking() {
       setDataPoints(pointsData);
       setExistingLabels(labelsData);
       setSummary(summaryData);
+
+      // Set default selected label to first available label if none selected
+      if (!selectedLabel && labelsData.length > 0) {
+        setSelectedLabel(labelsData[0]);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -50,6 +71,11 @@ export default function DataTracking() {
     try {
       await apiService.createDataPoint(pointData);
       setRefreshTrigger((prev) => prev + 1);
+
+      // Switch to values tab to show the newly added entry
+      setActiveTab("values");
+      // Set the selected label to the newly added point's label
+      setSelectedLabel(pointData.label);
     } catch (error) {
       console.error("Error adding data point:", error);
       setErrorMessage("Failed to add data point. Please try again.");
@@ -73,6 +99,121 @@ export default function DataTracking() {
       setErrorMessage("Failed to delete data point. Please try again.");
       setShowError(true);
       setDeletingPoint(null);
+    }
+  };
+
+  const tabs = [
+    { id: "add" as TabType, label: "Add Data", icon: "+" },
+    { id: "statistics" as TabType, label: "Statistics", icon: "📊" },
+    { id: "values" as TabType, label: "All Values", icon: "📋" },
+  ];
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "add":
+        return (
+          <div className="card">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">
+              Add Data Point
+            </h2>
+            <AddDataPointForm
+              onSubmit={handleAddDataPoint}
+              existingLabels={existingLabels}
+            />
+          </div>
+        );
+      case "statistics":
+        return (
+          <div>
+            {existingLabels.length > 0 && (
+              <div className="mb-6 bg-white p-4 rounded-lg shadow">
+                <label
+                  htmlFor="stats-label-select"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Select Metric to View Statistics
+                </label>
+                <select
+                  id="stats-label-select"
+                  value={selectedLabel}
+                  onChange={(e) => setSelectedLabel(e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {existingLabels.map((label) => (
+                    <option key={label} value={label}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {selectedLabel ? (
+              <DataPointStatistics
+                dataPoints={filteredDataPoints}
+                label={selectedLabel}
+                loading={loading}
+              />
+            ) : (
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="text-center py-8 text-gray-500">
+                  <p>No metrics available.</p>
+                  <p className="text-sm mt-1">
+                    Add some data points first to see statistics.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      case "values":
+        return (
+          <div>
+            {existingLabels.length > 0 && (
+              <div className="mb-6 bg-white p-4 rounded-lg shadow">
+                <label
+                  htmlFor="values-label-select"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Filter by Metric
+                </label>
+                <select
+                  id="values-label-select"
+                  value={selectedLabel}
+                  onChange={(e) => setSelectedLabel(e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">All Metrics</option>
+                  {existingLabels.map((label) => (
+                    <option key={label} value={label}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className="card">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {selectedLabel
+                    ? `${selectedLabel} Values`
+                    : "All Data Points"}
+                </h2>
+                <span className="text-sm text-gray-500">
+                  {filteredDataPoints.length}{" "}
+                  {filteredDataPoints.length === 1 ? "entry" : "entries"}
+                </span>
+              </div>
+
+              <DataPointList
+                dataPoints={filteredDataPoints}
+                onDelete={handleDeleteDataPoint}
+                loading={loading}
+              />
+            </div>
+          </div>
+        );
+      default:
+        return null;
     }
   };
 
@@ -214,34 +355,35 @@ export default function DataTracking() {
         </div>
       </div>
 
-      {/* Add Data Point Form */}
-      <div className="card mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">
-          Add Data Point
-        </h2>
-        <AddDataPointForm
-          onSubmit={handleAddDataPoint}
-          existingLabels={existingLabels}
-        />
-      </div>
-
-      {/* Data Points List */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Recent Data Points
-          </h2>
-          <span className="text-sm text-gray-500">
-            {dataPoints.length} {dataPoints.length === 1 ? "entry" : "entries"}
-          </span>
+      {/* Tab Navigation */}
+      <div className="mb-8">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`${
+                  activeTab === tab.id
+                    ? "border-blue-500 text-blue-600 bg-blue-50"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                } whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm transition-all duration-200 rounded-t-lg flex items-center gap-2`}
+              >
+                <span className="text-lg">{tab.icon}</span>
+                {tab.label}
+                {tab.id === "values" && filteredDataPoints.length > 0 && (
+                  <span className="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs font-medium">
+                    {filteredDataPoints.length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
         </div>
-
-        <DataPointList
-          dataPoints={dataPoints}
-          onDelete={handleDeleteDataPoint}
-          loading={loading}
-        />
       </div>
+
+      {/* Tab Content */}
+      <div className="min-h-[400px]">{renderTabContent()}</div>
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog
