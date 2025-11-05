@@ -7,22 +7,17 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import (
     analytics,
-    categories,
     data_points,
-    metric_definitions,
-    metrics,
+    refuels,
     transactions,
-    units,
 )
 from app.storage.backup_manager import BackupManager
-from app.storage.metric_definitions_store import MetricDefinitionsStore
 from app.storage.metric_registry import MetricRegistry
 from app.storage.parquet_store import ParquetDataStore
 
 # Global instances
 data_store: ParquetDataStore = None
 backup_manager: BackupManager = None
-definitions_store: MetricDefinitionsStore = None
 metric_registry: MetricRegistry = None
 
 
@@ -43,7 +38,6 @@ async def lifespan(app: FastAPI):
     backup_path = os.getenv("BACKUP_PATH", str(default_backup_path))
 
     data_store = ParquetDataStore(data_path)
-    definitions_store = MetricDefinitionsStore(data_path)
     metric_registry = MetricRegistry(data_path)
     backup_manager = BackupManager(
         data_path=Path(data_path), backup_path=Path(backup_path)
@@ -52,14 +46,8 @@ async def lifespan(app: FastAPI):
     # Inject data store into API modules
     transactions.set_data_store(data_store)
     analytics.set_data_store(data_store)
-    metrics.set_data_store(data_store)
-    metrics.set_definitions_store(definitions_store)
-    metrics.set_metric_registry(metric_registry)
-    metric_definitions.set_definitions_store(definitions_store)
-    metric_definitions.set_data_store(data_store)
-    units.set_data_store(data_store)
-    units.set_definitions_store(definitions_store)
-    categories.set_data_store(data_store)
+    refuels.set_data_store(data_store)
+    refuels.set_metric_registry(metric_registry)
     data_points.set_data_store(data_store)
 
     print(f"Data store initialized with path: {data_path}")
@@ -100,14 +88,7 @@ app.add_middleware(
 # Include routers
 app.include_router(transactions.router)
 app.include_router(analytics.router)
-app.include_router(metrics.router, prefix="/api/metrics", tags=["metrics"])
-app.include_router(
-    metric_definitions.router,
-    prefix="/api/metric-definitions",
-    tags=["metric-definitions"],
-)
-app.include_router(units.router, prefix="/api/units", tags=["units"])
-app.include_router(categories.router, prefix="/api/categories", tags=["categories"])
+app.include_router(refuels.router, prefix="/api/metrics", tags=["metrics"])
 app.include_router(data_points.router, prefix="/api", tags=["data-points"])
 
 
