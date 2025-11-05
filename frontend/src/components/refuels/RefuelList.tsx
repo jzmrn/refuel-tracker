@@ -1,5 +1,5 @@
 import React from "react";
-import { RefuelMetric } from "../lib/api";
+import { RefuelMetric } from "../../lib/api";
 
 interface RefuelListProps {
   refuels: RefuelMetric[];

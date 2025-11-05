@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { MetricDefinition, Category } from "@/lib/api";
 import apiService from "@/lib/api";
-import ConfirmationDialog from "./ConfirmationDialog";
-import ErrorDialog from "./ErrorDialog";
+import ConfirmationDialog from "../common/ConfirmationDialog";
+import ErrorDialog from "../common/ErrorDialog";
 
 interface MetricDefinitionListProps {
   onSelectDefinition: (definition: MetricDefinition) => void;

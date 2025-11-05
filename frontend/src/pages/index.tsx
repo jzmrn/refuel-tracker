@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
-import TransactionList from "@/components/TransactionList";
-import AddTransactionForm from "@/components/AddTransactionForm";
+import TransactionList from "@/components/transactions/TransactionList";
+import AddTransactionForm from "@/components/transactions/AddTransactionForm";
 import apiService, { MonthlySummary } from "@/lib/api";
 
 export default function Home() {

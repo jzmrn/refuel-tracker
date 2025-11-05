@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import AddDataPointForm from "@/components/AddDataPointForm";
-import DataPointList from "@/components/DataPointList";
-import DataPointStatistics from "@/components/DataPointStatistics";
-import ConfirmationDialog from "@/components/ConfirmationDialog";
-import ErrorDialog from "@/components/ErrorDialog";
+import AddDataPointForm from "@/components/data-tracking/AddDataPointForm";
+import DataPointList from "@/components/data-tracking/DataPointList";
+import DataPointStatistics from "@/components/data-tracking/DataPointStatistics";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
+import ErrorDialog from "@/components/common/ErrorDialog";
 import apiService, {
   DataPointResponse,
   DataPointCreate,

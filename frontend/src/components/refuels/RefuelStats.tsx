@@ -1,5 +1,8 @@
 import React from "react";
-import { RefuelStatistics as RefuelStatistics, RefuelMetric } from "../lib/api";
+import {
+  RefuelStatistics as RefuelStatistics,
+  RefuelMetric,
+} from "../../lib/api";
 import RefuelPriceChart from "./RefuelPriceChart";
 import RefuelConsumptionChart from "./RefuelConsumptionChart";
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { NextPage } from "next";
-import AddRefuelForm from "../components/AddRefuelForm";
-import RefuelList from "../components/RefuelList";
-import RefuelStats from "../components/RefuelStats";
+import AddRefuelForm from "../components/refuels/AddRefuelForm";
+import RefuelList from "../components/refuels/RefuelList";
+import RefuelStats from "../components/refuels/RefuelStats";
 import {
   apiService,
   RefuelMetric,

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import MetricDefinitionForm from "@/components/MetricDefinitionForm";
-import MetricDefinitionList from "@/components/MetricDefinitionList";
-import AddMetricValueForm from "@/components/AddMetricValueForm";
-import ConfirmationDialog from "@/components/ConfirmationDialog";
-import ErrorDialog from "@/components/ErrorDialog";
+import MetricDefinitionForm from "@/components/metrics/MetricDefinitionForm";
+import MetricDefinitionList from "@/components/metrics/MetricDefinitionList";
+import AddMetricValueForm from "@/components/metrics/AddMetricValueForm";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
+import ErrorDialog from "@/components/common/ErrorDialog";
 import apiService, {
   Metric,
   MetricSummary,

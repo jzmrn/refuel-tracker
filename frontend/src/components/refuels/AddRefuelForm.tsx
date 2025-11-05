@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { RefuelMetricCreate } from "../lib/api";
+import { RefuelMetricCreate } from "../../lib/api";
 
 interface AddRefuelFormProps {
   onSubmit: (refuel: RefuelMetricCreate) => void;
