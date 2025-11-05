@@ -1,12 +1,19 @@
 import React from "react";
-import { RefuelStatistics as RefuelStatistics } from "../lib/api";
+import { RefuelStatistics as RefuelStatistics, RefuelMetric } from "../lib/api";
+import RefuelPriceChart from "./RefuelPriceChart";
+import RefuelConsumptionChart from "./RefuelConsumptionChart";
 
 interface RefuelStatsProps {
   statistics: RefuelStatistics | null;
+  refuelData?: RefuelMetric[];
   loading?: boolean;
 }
 
-export default function RefuelStats({ statistics, loading }: RefuelStatsProps) {
+export default function RefuelStats({
+  statistics,
+  refuelData,
+  loading,
+}: RefuelStatsProps) {
   if (loading) {
     return (
       <div className="bg-white p-6 rounded-lg shadow">
@@ -83,35 +90,11 @@ export default function RefuelStats({ statistics, loading }: RefuelStatsProps) {
         </div>
       </div>
 
-      {statistics.price_trends.length > 0 && (
-        <div className="mt-6">
-          <h4 className="text-md font-semibold mb-3 text-gray-700">
-            Price Trends (Recent Entries)
-          </h4>
+      {/* Price Chart */}
+      <RefuelPriceChart priceData={statistics.price_trends} />
 
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {statistics.price_trends.slice(0, 10).map((trend, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-2 bg-gray-50 rounded"
-              >
-                <div className="text-sm text-gray-600">
-                  {new Date(trend.timestamp).toLocaleDateString("en-US")}
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm">{formatLiters(trend.amount)}</span>
-                  <span className="text-sm font-medium">
-                    {formatPricePerLiter(trend.price)}
-                  </span>
-                  <span className="text-sm font-bold text-blue-600">
-                    {formatCurrency(trend.total_cost)}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Consumption Chart */}
+      {refuelData && <RefuelConsumptionChart refuelData={refuelData} />}
     </div>
   );
 }

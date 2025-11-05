@@ -10,7 +10,10 @@ import {
   RefuelMetricCreate,
 } from "../lib/api";
 
+type TabType = "add" | "statistics" | "entries";
+
 const RefuelPage: NextPage = () => {
+  const [activeTab, setActiveTab] = useState<TabType>("add");
   const [refuels, setRefuels] = useState<RefuelMetric[]>([]);
   const [statistics, setStatistics] = useState<RefuelStatistics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -86,6 +89,9 @@ const RefuelPage: NextPage = () => {
       // Refresh data
       await fetchRefuels();
       await fetchStatistics();
+
+      // Switch to entries tab to show the newly added entry
+      setActiveTab("entries");
     } catch (err) {
       console.error("Error adding refuel entry:", err);
       setError("Error adding refuel entry");
@@ -133,6 +139,59 @@ const RefuelPage: NextPage = () => {
     fetchRefuels();
   };
 
+  const tabs = [
+    { id: "add" as TabType, label: "Add Entry", icon: "+" },
+    { id: "statistics" as TabType, label: "Statistics", icon: "📊" },
+    { id: "entries" as TabType, label: "All Entries", icon: "📋" },
+  ];
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "add":
+        return <AddRefuelForm onSubmit={handleAddRefuel} />;
+      case "statistics":
+        return (
+          <RefuelStats
+            statistics={statistics}
+            refuelData={refuels}
+            loading={statsLoading}
+          />
+        );
+      case "entries":
+        return (
+          <div>
+            {/* Filter Options */}
+            <div className="mb-6 bg-white p-4 rounded-lg shadow">
+              <h3 className="text-lg font-semibold mb-3">Filter</h3>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={showAll}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                >
+                  Show All
+                </button>
+                <button
+                  onClick={filterThisMonth}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                >
+                  This Month
+                </button>
+                <button
+                  onClick={filterThisYear}
+                  className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+                >
+                  This Year
+                </button>
+              </div>
+            </div>
+            <RefuelList refuels={refuels} loading={loading} />
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
@@ -156,43 +215,35 @@ const RefuelPage: NextPage = () => {
         </div>
       )}
 
-      {/* Add Form */}
+      {/* Tab Navigation */}
       <div className="mb-8">
-        <AddRefuelForm onSubmit={handleAddRefuel} />
-      </div>
-
-      {/* Statistics */}
-      <div className="mb-8">
-        <RefuelStats statistics={statistics} loading={statsLoading} />
-      </div>
-
-      {/* Filter Options */}
-      <div className="mb-6 bg-white p-4 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-3">Filter</h3>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={showAll}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Show All
-          </button>
-          <button
-            onClick={filterThisMonth}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-          >
-            This Month
-          </button>
-          <button
-            onClick={filterThisYear}
-            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
-          >
-            This Year
-          </button>
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`${
+                  activeTab === tab.id
+                    ? "border-blue-500 text-blue-600 bg-blue-50"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                } whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm transition-all duration-200 rounded-t-lg flex items-center gap-2`}
+              >
+                <span className="text-lg">{tab.icon}</span>
+                {tab.label}
+                {tab.id === "entries" && refuels.length > 0 && (
+                  <span className="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2 rounded-full text-xs font-medium">
+                    {refuels.length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
         </div>
       </div>
 
-      {/* Refuel List */}
-      <RefuelList refuels={refuels} loading={loading} />
+      {/* Tab Content */}
+      <div className="min-h-[400px]">{renderTabContent()}</div>
     </div>
   );
 };
