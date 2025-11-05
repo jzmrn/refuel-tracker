@@ -192,6 +192,53 @@ export interface DataSummaryResponse {
   };
 }
 
+export interface TimeSpanCreate {
+  start_date: string;
+  end_date?: string | null;
+  label: string;
+  group: string;
+  notes?: string | null;
+}
+
+export interface TimeSpanUpdate {
+  start_date?: string;
+  end_date?: string | null;
+  label?: string;
+  group?: string | null;
+  notes?: string | null;
+}
+
+export interface TimeSpanResponse {
+  id: string;
+  start_date: string;
+  end_date?: string | null;
+  label: string;
+  group: string;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+  duration_days?: number;
+  duration_hours?: number;
+  duration_minutes?: number;
+}
+
+export interface TimeSpanSummaryResponse {
+  total_entries: number;
+  unique_labels: number;
+  completed_entries: number;
+  ongoing_entries: number;
+  date_range: {
+    earliest: string | null;
+    latest: string | null;
+  };
+  duration_stats: {
+    total_minutes: number | null;
+    average_minutes: number | null;
+    min_minutes: number | null;
+    max_minutes: number | null;
+  };
+}
+
 class ApiService {
   private api = axios.create({
     baseURL: API_BASE_URL,
@@ -512,6 +559,50 @@ class ApiService {
 
   async getDataSummary(): Promise<DataSummaryResponse> {
     const response = await this.api.get("/api/data-points/summary");
+    return response.data;
+  }
+
+  // Time Spans API
+  async createTimeSpan(timeSpan: TimeSpanCreate): Promise<TimeSpanResponse> {
+    const response = await this.api.post("/api/time-spans", timeSpan);
+    return response.data;
+  }
+
+  async getTimeSpans(params?: {
+    start_date?: string;
+    end_date?: string;
+    label?: string;
+    group?: string;
+    limit?: number;
+  }): Promise<TimeSpanResponse[]> {
+    const response = await this.api.get("/api/time-spans", { params });
+    return response.data;
+  }
+
+  async updateTimeSpan(
+    id: string,
+    update: TimeSpanUpdate
+  ): Promise<TimeSpanResponse> {
+    const response = await this.api.put(`/api/time-spans/${id}`, update);
+    return response.data;
+  }
+
+  async deleteTimeSpan(id: string): Promise<void> {
+    await this.api.delete(`/api/time-spans/${id}`);
+  }
+
+  async getExistingTimeSpanLabels(): Promise<string[]> {
+    const response = await this.api.get("/api/time-spans/labels");
+    return response.data;
+  }
+
+  async getExistingTimeSpanGroups(): Promise<string[]> {
+    const response = await this.api.get("/api/time-spans/groups");
+    return response.data;
+  }
+
+  async getTimeSpanSummary(): Promise<TimeSpanSummaryResponse> {
+    const response = await this.api.get("/api/time-spans/summary");
     return response.data;
   }
 }

@@ -9,6 +9,7 @@ from app.api import (
     analytics,
     data_points,
     refuels,
+    time_spans,
     transactions,
 )
 from app.storage.backup_manager import BackupManager
@@ -49,6 +50,7 @@ async def lifespan(app: FastAPI):
     refuels.set_data_store(data_store)
     refuels.set_metric_registry(metric_registry)
     data_points.set_data_store(data_store)
+    time_spans.set_data_store(data_store)
 
     print(f"Data store initialized with path: {data_path}")
     print(f"Absolute data path: {Path(data_path).absolute()}")
@@ -90,6 +92,7 @@ app.include_router(transactions.router)
 app.include_router(analytics.router)
 app.include_router(refuels.router, prefix="/api/metrics", tags=["metrics"])
 app.include_router(data_points.router, prefix="/api", tags=["data-points"])
+app.include_router(time_spans.router, prefix="/api", tags=["time-spans"])
 
 
 @app.get("/")

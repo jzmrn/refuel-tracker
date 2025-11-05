@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class Transaction(BaseModel):
@@ -186,3 +186,116 @@ class DataSummaryResponse(BaseModel):
     unique_labels: int
     date_range: dict[str, datetime | None]
     value_stats: dict[str, float | None]
+
+
+class TimeSpanCreate(BaseModel):
+    """Request model for creating a time span"""
+
+    start_date: datetime = Field(..., description="Start date/time of the time span")
+    end_date: datetime | None = Field(
+        None, description="End date/time (optional for ongoing)"
+    )
+    label: str = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+        description="Label/activity for the time span",
+    )
+    group: str = Field(
+        ...,
+        min_length=1,
+        max_length=50,
+        description="Group for categorizing time spans",
+    )
+    notes: str | None = Field(None, max_length=500, description="Optional notes")
+
+
+class TimeSpanUpdate(BaseModel):
+    """Request model for updating a time span"""
+
+    start_date: datetime | None = Field(
+        None, description="Start date/time of the time span"
+    )
+    end_date: datetime | None = Field(
+        None, description="End date/time (optional for ongoing)"
+    )
+    label: str | None = Field(
+        None,
+        min_length=1,
+        max_length=100,
+        description="Label/activity for the time span",
+    )
+    group: str | None = Field(
+        None, max_length=50, description="Group for categorizing time spans"
+    )
+    notes: str | None = Field(None, max_length=500, description="Optional notes")
+
+    @field_validator("start_date")
+    @classmethod
+    def validate_start_date(cls, v):
+        if v is not None:
+            # Convert current time to UTC for comparison if needed
+            now = datetime.now()
+            if v.tzinfo is not None:
+                now = datetime.now(UTC)
+                if v.tzinfo != UTC:
+                    v = v.astimezone(UTC)
+
+            # Allow start dates in the past and present, but not future
+            if v > now:
+                raise ValueError("Start date cannot be in the future")
+        return v
+
+    @field_validator("end_date")
+    @classmethod
+    def validate_end_date(cls, v):
+        if v is not None:
+            # Convert current time to UTC for comparison if needed
+            now = datetime.now()
+            if v.tzinfo is not None:
+                now = datetime.now(UTC)
+                if v.tzinfo != UTC:
+                    v = v.astimezone(UTC)
+
+            # End date should not be in the future
+            if v > now:
+                raise ValueError("End date cannot be in the future")
+        return v
+
+    @model_validator(mode="after")
+    def validate_date_relationship(self):
+        """Validate that end_date is after start_date"""
+        if self.end_date is not None and self.start_date is not None:
+            if self.end_date < self.start_date:
+                raise ValueError("End date cannot be before start date")
+        return self
+
+
+class TimeSpanResponse(BaseModel):
+    """Response model for time spans"""
+
+    id: str
+    start_date: datetime
+    end_date: datetime | None = None
+    label: str
+    group: str
+    notes: str | None = None
+    created_at: datetime
+    updated_at: datetime
+    duration_days: int | None = None
+    duration_hours: int | None = None
+    duration_minutes: int | None = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class TimeSpanSummaryResponse(BaseModel):
+    """Summary statistics for time spans"""
+
+    total_entries: int
+    unique_labels: int
+    completed_entries: int
+    ongoing_entries: int
+    date_range: dict[str, datetime | None]
+    duration_stats: dict[str, float | None]
