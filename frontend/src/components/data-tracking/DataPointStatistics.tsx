@@ -78,6 +78,7 @@ export default function DataPointStatistics({
     )
     .map((point, index) => ({
       ...point,
+      timestampMs: new Date(point.timestamp).getTime(),
       displayDate: format(new Date(point.timestamp), "MMM d"),
       fullDate: format(new Date(point.timestamp), "MMM d, yyyy 'at' h:mm a"),
       index: index + 1,
@@ -90,9 +91,24 @@ export default function DataPointStatistics({
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
+      const date = new Date(label);
+      const formattedDate = date.toLocaleDateString("en-GB", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      const formattedTime = date.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-900 mb-2">{data.fullDate}</p>
+          <div className="mb-2">
+            <p className="font-medium text-gray-900">{formattedDate}</p>
+            <p className="text-sm text-gray-600">{formattedTime}</p>
+          </div>
           <div className="space-y-1 text-sm">
             <p className="text-blue-600">
               <span className="font-medium">Value:</span>{" "}
@@ -238,10 +254,21 @@ export default function DataPointStatistics({
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis
-                dataKey="displayDate"
+                type="number"
+                dataKey="timestampMs"
+                scale="time"
+                domain={["dataMin", "dataMax"]}
                 stroke="#666"
                 fontSize={12}
                 tickMargin={10}
+                tickFormatter={(value) => {
+                  const date = new Date(value);
+                  return date.toLocaleDateString("en-GB", {
+                    month: "short",
+                    day: "numeric",
+                    year: "2-digit",
+                  });
+                }}
               />
               <YAxis
                 stroke="#666"

@@ -45,7 +45,8 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
     )
     .map((item) => ({
       ...item,
-      displayDate: new Date(item.timestamp).toLocaleDateString("en-US", {
+      timestampMs: new Date(item.timestamp).getTime(),
+      displayDate: new Date(item.timestamp).toLocaleDateString("en-GB", {
         month: "short",
         day: "numeric",
         year: "2-digit",
@@ -70,9 +71,24 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
+      const date = new Date(label);
+      const formattedDate = date.toLocaleDateString("en-GB", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      const formattedTime = date.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-900 mb-2">{label}</p>
+          <div className="mb-2">
+            <p className="font-medium text-gray-900">{formattedDate}</p>
+            <p className="text-sm text-gray-600">{formattedTime}</p>
+          </div>
           <div className="space-y-1 text-sm">
             <p className="text-blue-600">
               <span className="font-medium">Price per Liter:</span>{" "}
@@ -120,10 +136,21 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis
-              dataKey="displayDate"
+              type="number"
+              dataKey="timestampMs"
+              scale="time"
+              domain={["dataMin", "dataMax"]}
               stroke="#666"
               fontSize={12}
               tickMargin={10}
+              tickFormatter={(value) => {
+                const date = new Date(value);
+                return date.toLocaleDateString("en-GB", {
+                  month: "short",
+                  day: "numeric",
+                  year: "2-digit",
+                });
+              }}
             />
             <YAxis
               domain={[yAxisMin, yAxisMax]}
