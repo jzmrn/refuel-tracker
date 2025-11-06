@@ -6,6 +6,7 @@ import TimeSpanList from "@/components/time-spans/TimeSpanList";
 import TimeSpanStatistics from "@/components/time-spans/TimeSpanStatistics";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import Snackbar from "@/components/common/Snackbar";
+import FloatingActionButton from "@/components/common/FloatingActionButton";
 import { useSnackbar } from "@/lib/useSnackbar";
 import apiService, {
   TimeSpanResponse,
@@ -31,6 +32,7 @@ export default function TimeSpans() {
   const [deletingSpan, setDeletingSpan] = useState<TimeSpan | null>(null);
   const [editingSpan, setEditingSpan] = useState<TimeSpan | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isMobileFormOpen, setIsMobileFormOpen] = useState(false);
   const { snackbar, showSuccess, showError, hideSnackbar } = useSnackbar();
 
   useEffect(() => {
@@ -87,7 +89,8 @@ export default function TimeSpans() {
 
       showSuccess("Time span added successfully!");
 
-      // Switch to values tab to show the newly added entry
+      // Close mobile form and switch to values tab to show the newly added entry
+      setIsMobileFormOpen(false);
       setActiveTab("values");
       // Set the selected group to the newly added span's group
       setValuesSelectedGroup(spanData.group);
@@ -271,19 +274,21 @@ export default function TimeSpans() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       {/* Header */}
-      <div className="mb-8 flex justify-between items-start">
+      <div className="mb-6 md:mb-8 flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Time Spans</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            Time Spans
+          </h1>
+          <p className="text-gray-600 mt-2 text-sm md:text-base">
             Track activities and events with start and end dates
           </p>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="mb-8">
+      {/* Desktop Tab Navigation - Hidden on mobile */}
+      <div className="mb-8 hidden md:block">
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8" aria-label="Tabs">
             {tabs.map((tab) => (
@@ -304,8 +309,141 @@ export default function TimeSpans() {
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="min-h-[400px]">{renderTabContent()}</div>
+      {/* Desktop Tab Content */}
+      <div className="min-h-[400px] hidden md:block">{renderTabContent()}</div>
+
+      {/* Mobile Unified View - Visible only on mobile */}
+      <div className="md:hidden space-y-6">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="card">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-6 h-6 bg-purple-100 rounded-md flex items-center justify-center mr-2">
+                  <svg
+                    className="w-3 h-3 text-purple-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                    />
+                  </svg>
+                </div>
+                <p className="text-xs font-medium text-gray-500">Labels</p>
+              </div>
+              <p className="text-lg font-semibold text-gray-900">
+                {loading ? "..." : summary?.unique_labels || 0}
+              </p>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center mr-2">
+                  <svg
+                    className="w-3 h-3 text-blue-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <p className="text-xs font-medium text-gray-500">Entries</p>
+              </div>
+              <p className="text-lg font-semibold text-gray-900">
+                {loading ? "..." : summary?.total_entries || 0}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Statistics Section */}
+        <TimeSpanStatistics
+          timeSpans={timeSpans}
+          label="All Time Spans"
+          loading={loading}
+        />
+
+        {/* Time Spans List */}
+        {existingGroups.length > 0 && (
+          <div>
+            <div className="mb-4 bg-white p-4 rounded-lg shadow">
+              <label
+                htmlFor="mobile-values-group-select"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Filter by Group
+              </label>
+              <select
+                id="mobile-values-group-select"
+                value={valuesSelectedGroup}
+                onChange={(e) => setValuesSelectedGroup(e.target.value)}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">All Groups</option>
+                {existingGroups.map((group) => (
+                  <option key={group} value={group}>
+                    {group}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {editingSpan ? (
+              <EditTimeSpanForm
+                timeSpan={editingSpan}
+                onSubmit={handleUpdateTimeSpan}
+                existingLabels={existingLabels}
+                existingGroups={existingGroups}
+                onCancel={() => setEditingSpan(null)}
+              />
+            ) : (
+              <TimeSpanList
+                timeSpans={filteredTimeSpans}
+                onDelete={handleDeleteTimeSpan}
+                onEdit={handleEditTimeSpan}
+                loading={loading}
+              />
+            )}
+          </div>
+        )}
+
+        {existingGroups.length === 0 && !loading && (
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-center py-8 text-gray-500">
+              <p>No time spans yet.</p>
+              <p className="text-sm mt-1">
+                Add your first time span using the + button below.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Floating Action Button for Mobile */}
+      <FloatingActionButton
+        onAddClick={() => setIsMobileFormOpen(true)}
+        isOpen={isMobileFormOpen}
+        onClose={() => setIsMobileFormOpen(false)}
+      >
+        <AddTimeSpanForm
+          onSubmit={handleAddTimeSpan}
+          existingLabels={existingLabels}
+          existingGroups={existingGroups}
+        />
+      </FloatingActionButton>
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog

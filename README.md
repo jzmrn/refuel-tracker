@@ -11,6 +11,7 @@ A modern, self-hosted personal finance and metrics tracking application built wi
 - **File-based Storage**: No database server required - your data stays in portable files
 - **REST API**: Full-featured API for data access and manipulation
 - **Modern UI**: Responsive web interface built with Next.js and Tailwind CSS
+- **Mobile-First Design**: Beautiful mobile experience with bottom navigation and floating action buttons
 - **Docker Ready**: Easy deployment with Docker Compose
 
 ## 🏗️ Architecture
@@ -24,10 +25,12 @@ A modern, self-hosted personal finance and metrics tracking application built wi
 
 ### Frontend (Next.js)
 
-- **React 18**: Modern UI framework
+- **React 18**: Modern UI framework with mobile-responsive design
 - **TypeScript**: Type-safe development
-- **Tailwind CSS**: Utility-first styling
+- **Tailwind CSS**: Utility-first styling with mobile breakpoints
 - **Recharts**: Beautiful data visualizations
+- **Mobile UX**: Bottom navigation, floating action buttons, and unified content views
+- **Headless UI**: Accessible modal components for mobile forms
 
 ### Storage Strategy
 
@@ -103,49 +106,30 @@ npm install
 npm run dev
 ```
 
-## 📊 Usage Examples
+## Mobile Experience
 
-### Adding Transactions via API
+The application is designed with a mobile-first approach, offering a completely different user experience on mobile devices:
 
-```bash
-# Add an expense
-curl -X POST "http://localhost:8000/transactions/" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "account_id": "checking",
-    "amount": 50.00,
-    "category": "groceries",
-    "description": "Weekly grocery shopping",
-    "transaction_type": "expense"
-  }'
+### Desktop Features
 
-# Add income
-curl -X POST "http://localhost:8000/transactions/" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "account_id": "checking",
-    "amount": 3000.00,
-    "category": "salary",
-    "description": "Monthly salary",
-    "transaction_type": "income"
-  }'
-```
+- **Sidebar Navigation**: Traditional left-side navigation menu
+- **Tabbed Interface**: Separate tabs for adding data, viewing statistics, and browsing entries
+- **Side-by-side Layouts**: Forms and data lists displayed simultaneously
 
-### Querying Data
+### Mobile Features
 
-```bash
-# Get recent transactions
-curl "http://localhost:8000/transactions/?limit=10"
+- **Bottom Navigation**: Easy-to-reach navigation bar at the bottom of the screen
+- **Floating Action Button (FAB)**: Quick access to add new entries via a floating + button
+- **Unified Views**: All content (statistics, data, forms) displayed in a single scrollable page
+- **Modal Forms**: Add/edit forms appear in slide-up modals for better mobile UX
+- **Touch-Optimized**: Larger touch targets and mobile-friendly spacing
 
-# Get transactions for a specific month
-curl "http://localhost:8000/transactions/?start_date=2024-01-01&end_date=2024-01-31"
+### Responsive Breakpoints
 
-# Get monthly summary
-curl "http://localhost:8000/analytics/monthly-summary/2024/1"
+- **Mobile**: < 768px (md breakpoint)
+- **Desktop**: ≥ 768px
 
-# Get spending by category
-curl "http://localhost:8000/analytics/spending-by-category?start_date=2024-01-01&end_date=2024-01-31"
-```
+The app automatically detects screen size and switches between mobile and desktop layouts seamlessly.
 
 ## 🛠️ Development
 

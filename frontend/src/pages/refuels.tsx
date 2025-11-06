@@ -4,6 +4,7 @@ import AddRefuelForm from "../components/refuels/AddRefuelForm";
 import RefuelList from "../components/refuels/RefuelList";
 import RefuelStats from "../components/refuels/RefuelStats";
 import Snackbar from "../components/common/Snackbar";
+import FloatingActionButton from "../components/common/FloatingActionButton";
 import { useSnackbar } from "../lib/useSnackbar";
 import {
   apiService,
@@ -20,6 +21,7 @@ const RefuelPage: NextPage = () => {
   const [statistics, setStatistics] = useState<RefuelStatistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [isMobileFormOpen, setIsMobileFormOpen] = useState(false);
   const { snackbar, showSuccess, showError, hideSnackbar } = useSnackbar();
 
   // Fetch refuel data
@@ -88,7 +90,8 @@ const RefuelPage: NextPage = () => {
       await fetchRefuels();
       await fetchStatistics();
 
-      // Switch to entries tab to show the newly added entry
+      // Close mobile form and switch to entries tab to show the newly added entry
+      setIsMobileFormOpen(false);
       setActiveTab("entries");
     } catch (err) {
       console.error("Error adding refuel entry:", err);
@@ -191,10 +194,12 @@ const RefuelPage: NextPage = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Refuel Tracking</h1>
-        <p className="mt-2 text-gray-600">
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+          Refuel Tracking
+        </h1>
+        <p className="mt-2 text-gray-600 text-sm md:text-base">
           Manage your fuel data and track fuel costs
         </p>
       </div>
@@ -207,8 +212,8 @@ const RefuelPage: NextPage = () => {
         onClose={hideSnackbar}
       />
 
-      {/* Tab Navigation */}
-      <div className="mb-8">
+      {/* Desktop Tab Navigation - Hidden on mobile */}
+      <div className="mb-8 hidden md:block">
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8" aria-label="Tabs">
             {tabs.map((tab) => (
@@ -229,8 +234,55 @@ const RefuelPage: NextPage = () => {
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="min-h-[400px]">{renderTabContent()}</div>
+      {/* Desktop Tab Content */}
+      <div className="min-h-[400px] hidden md:block">{renderTabContent()}</div>
+
+      {/* Mobile Unified View - Visible only on mobile */}
+      <div className="md:hidden space-y-6">
+        {/* Statistics Section */}
+        <RefuelStats
+          statistics={statistics}
+          refuelData={refuels}
+          loading={statsLoading}
+        />
+
+        {/* Filter Options */}
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-3">Filter</h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={showAll}
+              className="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
+            >
+              Show All
+            </button>
+            <button
+              onClick={filterThisMonth}
+              className="px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+            >
+              This Month
+            </button>
+            <button
+              onClick={filterThisYear}
+              className="px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors"
+            >
+              This Year
+            </button>
+          </div>
+        </div>
+
+        {/* Refuel Entries */}
+        <RefuelList refuels={refuels} loading={loading} />
+      </div>
+
+      {/* Floating Action Button for Mobile */}
+      <FloatingActionButton
+        onAddClick={() => setIsMobileFormOpen(true)}
+        isOpen={isMobileFormOpen}
+        onClose={() => setIsMobileFormOpen(false)}
+      >
+        <AddRefuelForm onSubmit={handleAddRefuel} />
+      </FloatingActionButton>
     </div>
   );
 };
