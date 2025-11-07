@@ -149,13 +149,10 @@ export default function AddDataPointForm({
         );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label
-            htmlFor="timestamp"
-            className="block text-sm font-medium text-gray-700"
-          >
+    <form onSubmit={handleSubmit} className="form-container">
+      <div className="form-row">
+        <div className="form-group">
+          <label htmlFor="timestamp" className="label">
             Date & Time *
           </label>
           <div className="flex gap-2">
@@ -166,7 +163,7 @@ export default function AddDataPointForm({
               value={formData.timestamp || ""}
               max={new Date().toISOString().slice(0, 16)}
               onChange={handleChange}
-              className={`mt-1 flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+              className={`input flex-1 ${
                 errors.timestamp ? "border-red-300" : ""
               }`}
               required
@@ -183,21 +180,16 @@ export default function AddDataPointForm({
                   setErrors((prev) => ({ ...prev, timestamp: "" }));
                 }
               }}
-              className="mt-1 px-3 py-2 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 whitespace-nowrap"
+              className="btn-sm-secondary whitespace-nowrap"
             >
               Now
             </button>
           </div>
-          {errors.timestamp && (
-            <p className="mt-1 text-sm text-red-600">{errors.timestamp}</p>
-          )}
+          {errors.timestamp && <p className="error-text">{errors.timestamp}</p>}
         </div>
 
-        <div>
-          <label
-            htmlFor="value"
-            className="block text-sm font-medium text-gray-700"
-          >
+        <div className="form-group">
+          <label htmlFor="value" className="label">
             Numerical Value *
           </label>
           <input
@@ -207,23 +199,16 @@ export default function AddDataPointForm({
             name="value"
             value={formData.value || ""}
             onChange={handleChange}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-              errors.value ? "border-red-300" : ""
-            }`}
+            className={`input ${errors.value ? "border-red-300" : ""}`}
             placeholder="0"
             required
           />
-          {errors.value && (
-            <p className="mt-1 text-sm text-red-600">{errors.value}</p>
-          )}
+          {errors.value && <p className="error-text">{errors.value}</p>}
         </div>
       </div>
 
-      <div className="relative">
-        <label
-          htmlFor="label"
-          className="block text-sm font-medium text-gray-700"
-        >
+      <div className="form-group relative">
+        <label htmlFor="label" className="label">
           Label/Topic *
         </label>
         <input
@@ -237,9 +222,7 @@ export default function AddDataPointForm({
             // Delay hiding suggestions to allow clicks
             setTimeout(() => setShowSuggestions(false), 200);
           }}
-          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-            errors.label ? "border-red-300" : ""
-          }`}
+          className={`input ${errors.label ? "border-red-300" : ""}`}
           placeholder="e.g., Weight, Blood Pressure, Steps, Temperature..."
           maxLength={100}
           required
@@ -247,13 +230,13 @@ export default function AddDataPointForm({
 
         {/* Suggestions Dropdown */}
         {showSuggestions && filteredSuggestions.length > 0 && (
-          <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+          <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-40 overflow-y-auto">
             {filteredSuggestions.slice(0, 10).map((label, index) => (
               <button
                 key={index}
                 type="button"
                 onClick={() => handleLabelSuggestionClick(label)}
-                className="w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-sm"
+                className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none text-sm text-primary"
               >
                 {label}
               </button>
@@ -261,21 +244,16 @@ export default function AddDataPointForm({
           </div>
         )}
 
-        {errors.label && (
-          <p className="mt-1 text-sm text-red-600">{errors.label}</p>
-        )}
+        {errors.label && <p className="error-text">{errors.label}</p>}
         {!errors.label && existingLabels.length > 0 && (
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-secondary">
             Click on the field to see suggestions from your existing labels
           </p>
         )}
       </div>
 
-      <div>
-        <label
-          htmlFor="notes"
-          className="block text-sm font-medium text-gray-700"
-        >
+      <div className="form-group">
+        <label htmlFor="notes" className="label">
           Notes (optional)
         </label>
         <textarea
@@ -284,27 +262,20 @@ export default function AddDataPointForm({
           rows={3}
           value={formData.notes || ""}
           onChange={handleChange}
-          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-            errors.notes ? "border-red-300" : ""
-          }`}
+          className={`input ${errors.notes ? "border-red-300" : ""}`}
           placeholder="Additional context or details about this measurement..."
           maxLength={500}
         />
-        {errors.notes && (
-          <p className="mt-1 text-sm text-red-600">{errors.notes}</p>
-        )}
+        {errors.notes && <p className="error-text">{errors.notes}</p>}
         {formData.notes && (
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-secondary">
             {formData.notes.length}/500 characters
           </p>
         )}
       </div>
 
-      <div className="flex gap-3">
-        <button
-          type="submit"
-          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
-        >
+      <div className="form-actions">
+        <button type="submit" className="btn-primary flex-1">
           Add Data Point
         </button>
 
@@ -312,7 +283,7 @@ export default function AddDataPointForm({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium"
+            className="btn-secondary flex-1"
           >
             Cancel
           </button>

@@ -7,6 +7,7 @@ import TimeSpanStatistics from "@/components/time-spans/TimeSpanStatistics";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import Snackbar from "@/components/common/Snackbar";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
+import SummaryCard from "@/components/common/SummaryCard";
 import { useSnackbar } from "@/lib/useSnackbar";
 import apiService, {
   TimeSpanResponse,
@@ -146,9 +147,7 @@ export default function TimeSpans() {
       case "add":
         return (
           <div className="card">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              Add Time Span
-            </h2>
+            <h2 className="heading-2 mb-6">Add Time Span</h2>
             <AddTimeSpanForm
               onSubmit={handleAddTimeSpan}
               existingLabels={existingLabels}
@@ -169,76 +168,61 @@ export default function TimeSpans() {
           <div>
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="card">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-purple-100 rounded-md flex items-center justify-center mr-3">
-                      <svg
-                        className="w-4 h-4 text-purple-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                        />
-                      </svg>
-                    </div>
-                    <p className="text-sm font-medium text-gray-500">
-                      Unique Labels
-                    </p>
-                  </div>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {loading ? "..." : summary?.unique_labels || 0}
-                  </p>
-                </div>
-              </div>
+              <SummaryCard
+                title="Unique Labels"
+                value={summary?.unique_labels || 0}
+                loading={loading}
+                iconBgColor="purple"
+                icon={
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                    />
+                  </svg>
+                }
+              />
 
-              <div className="card">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center mr-3">
-                      <svg
-                        className="w-4 h-4 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                    <p className="text-sm font-medium text-gray-500">
-                      Total Entries
-                    </p>
-                  </div>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {loading ? "..." : summary?.total_entries || 0}
-                  </p>
-                </div>
-              </div>
+              <SummaryCard
+                title="Total Entries"
+                value={summary?.total_entries || 0}
+                loading={loading}
+                iconBgColor="blue"
+                icon={
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                }
+              />
             </div>
 
             {existingGroups.length > 0 && (
-              <div className="mb-6 bg-white p-4 rounded-lg shadow">
-                <label
-                  htmlFor="values-group-select"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
+              <div className="mb-6 panel">
+                <label htmlFor="values-group-select" className="label">
                   Filter by Group
                 </label>
                 <select
                   id="values-group-select"
                   value={valuesSelectedGroup}
                   onChange={(e) => setValuesSelectedGroup(e.target.value)}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="input"
                 >
                   <option value="">All Groups</option>
                   {existingGroups.map((group) => (
@@ -278,30 +262,28 @@ export default function TimeSpans() {
       {/* Header */}
       <div className="mb-6 md:mb-8 flex justify-between items-start">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Time Spans
-          </h1>
-          <p className="text-gray-600 mt-2 text-sm md:text-base">
+          <h1 className="heading-1">Time Spans</h1>
+          <p className="text-secondary mt-2 text-sm md:text-base">
             Track activities and events with start and end dates
           </p>
         </div>
       </div>
 
       {/* Desktop Tab Navigation - Hidden on mobile */}
-      <div className="mb-8 hidden md:block">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+      <div className="tab-container">
+        <div className="tab-border">
+          <nav className="tab-nav" aria-label="Tabs">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`${
+                className={`tab-button ${
                   activeTab === tab.id
-                    ? "border-blue-500 text-blue-600 bg-blue-50"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                } whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm transition-all duration-200 rounded-t-lg flex items-center gap-2`}
+                    ? "tab-button-active"
+                    : "tab-button-inactive"
+                }`}
               >
-                <span className="text-lg">{tab.icon}</span>
+                <span className="tab-icon">{tab.icon}</span>
                 {tab.label}
               </button>
             ))}
@@ -316,57 +298,49 @@ export default function TimeSpans() {
       <div className="md:hidden space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="card">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-6 h-6 bg-purple-100 rounded-md flex items-center justify-center mr-2">
-                  <svg
-                    className="w-3 h-3 text-purple-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                    />
-                  </svg>
-                </div>
-                <p className="text-xs font-medium text-gray-500">Labels</p>
-              </div>
-              <p className="text-lg font-semibold text-gray-900">
-                {loading ? "..." : summary?.unique_labels || 0}
-              </p>
-            </div>
-          </div>
+          <SummaryCard
+            title="Labels"
+            value={summary?.unique_labels || 0}
+            loading={loading}
+            iconBgColor="purple"
+            icon={
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                />
+              </svg>
+            }
+          />
 
-          <div className="card">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center mr-2">
-                  <svg
-                    className="w-3 h-3 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <p className="text-xs font-medium text-gray-500">Entries</p>
-              </div>
-              <p className="text-lg font-semibold text-gray-900">
-                {loading ? "..." : summary?.total_entries || 0}
-              </p>
-            </div>
-          </div>
+          <SummaryCard
+            title="Entries"
+            value={summary?.total_entries || 0}
+            loading={loading}
+            iconBgColor="blue"
+            icon={
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            }
+          />
         </div>
 
         {/* Statistics Section */}
@@ -379,18 +353,15 @@ export default function TimeSpans() {
         {/* Time Spans List */}
         {existingGroups.length > 0 && (
           <div>
-            <div className="mb-4 bg-white p-4 rounded-lg shadow">
-              <label
-                htmlFor="mobile-values-group-select"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
+            <div className="mb-4 panel">
+              <label htmlFor="mobile-values-group-select" className="label">
                 Filter by Group
               </label>
               <select
                 id="mobile-values-group-select"
                 value={valuesSelectedGroup}
                 onChange={(e) => setValuesSelectedGroup(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="input"
               >
                 <option value="">All Groups</option>
                 {existingGroups.map((group) => (
@@ -421,8 +392,8 @@ export default function TimeSpans() {
         )}
 
         {existingGroups.length === 0 && !loading && (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-center py-8 text-gray-500">
+          <div className="panel">
+            <div className="text-center py-8 text-secondary">
               <p>No time spans yet.</p>
               <p className="text-sm mt-1">
                 Add your first time span using the + button below.

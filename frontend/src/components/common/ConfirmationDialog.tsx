@@ -27,7 +27,7 @@ export default function ConfirmationDialog({
         return {
           icon: (
             <svg
-              className="w-6 h-6 text-red-600"
+              className="w-6 h-6 text-red-600 dark:text-red-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -41,13 +41,13 @@ export default function ConfirmationDialog({
             </svg>
           ),
           confirmBtn:
-            "btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
+            "btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 dark:bg-red-500 dark:hover:bg-red-600",
         };
       case "warning":
         return {
           icon: (
             <svg
-              className="w-6 h-6 text-yellow-600"
+              className="w-6 h-6 text-yellow-600 dark:text-yellow-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -61,13 +61,13 @@ export default function ConfirmationDialog({
             </svg>
           ),
           confirmBtn:
-            "btn bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500",
+            "btn bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500 dark:bg-yellow-500 dark:hover:bg-yellow-600",
         };
       default:
         return {
           icon: (
             <svg
-              className="w-6 h-6 text-blue-600"
+              className="w-6 h-6 text-blue-600 dark:text-blue-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -89,15 +89,17 @@ export default function ConfirmationDialog({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-md w-full">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full">
         <div className="p-6">
           <div className="flex items-start space-x-4">
             <div className="flex-shrink-0">{styles.icon}</div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                 {title}
               </h3>
-              <p className="text-sm text-gray-600">{message}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                {message}
+              </p>
             </div>
           </div>
 

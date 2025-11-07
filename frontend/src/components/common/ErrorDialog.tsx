@@ -21,7 +21,7 @@ export default function ErrorDialog({
         return {
           icon: (
             <svg
-              className="w-6 h-6 text-yellow-600"
+              className="w-6 h-6 text-yellow-600 dark:text-yellow-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -34,14 +34,14 @@ export default function ErrorDialog({
               />
             </svg>
           ),
-          iconBg: "bg-yellow-100",
+          iconBg: "bg-yellow-100 dark:bg-yellow-900/20",
         };
       case "error":
       default:
         return {
           icon: (
             <svg
-              className="w-6 h-6 text-red-600"
+              className="w-6 h-6 text-red-600 dark:text-red-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -54,7 +54,7 @@ export default function ErrorDialog({
               />
             </svg>
           ),
-          iconBg: "bg-red-100",
+          iconBg: "bg-red-100 dark:bg-red-900/20",
         };
     }
   };
@@ -62,28 +62,23 @@ export default function ErrorDialog({
   const styles = getVariantStyles();
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-md w-full">
+    <div className="modal-overlay">
+      <div className="modal">
         <div className="p-6">
           <div className="flex items-start space-x-4">
             <div className={`flex-shrink-0 p-2 rounded-full ${styles.iconBg}`}>
               {styles.icon}
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {title}
-              </h3>
-              <p className="text-sm text-gray-600 whitespace-pre-wrap">
+              <h3 className="heading-3 mb-2">{title}</h3>
+              <p className="text-sm text-secondary whitespace-pre-wrap">
                 {message}
               </p>
             </div>
           </div>
 
           <div className="flex justify-end mt-6">
-            <button
-              onClick={onClose}
-              className="btn bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500"
-            >
+            <button onClick={onClose} className="btn-secondary">
               Close
             </button>
           </div>

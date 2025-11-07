@@ -35,33 +35,33 @@ const Snackbar: React.FC<SnackbarProps> = ({
     switch (type) {
       case "success":
         return {
-          container: "bg-green-500 text-white",
-          progressBar: "bg-green-200",
-          progressFill: "bg-green-300",
+          container: "snackbar-success",
+          progressBar: "snackbar-progress-success",
+          progressFill: "snackbar-progress-fill-success",
         };
       case "error":
         return {
-          container: "bg-red-500 text-white",
-          progressBar: "bg-red-200",
-          progressFill: "bg-red-300",
+          container: "snackbar-error",
+          progressBar: "snackbar-progress-error",
+          progressFill: "snackbar-progress-fill-error",
         };
       case "warning":
         return {
-          container: "bg-yellow-500 text-white",
-          progressBar: "bg-yellow-200",
-          progressFill: "bg-yellow-300",
+          container: "snackbar-warning",
+          progressBar: "snackbar-progress-warning",
+          progressFill: "snackbar-progress-fill-warning",
         };
       case "info":
         return {
-          container: "bg-blue-500 text-white",
-          progressBar: "bg-blue-200",
-          progressFill: "bg-blue-300",
+          container: "snackbar-info",
+          progressBar: "snackbar-progress-info",
+          progressFill: "snackbar-progress-fill-info",
         };
       default:
         return {
-          container: "bg-gray-500 text-white",
-          progressBar: "bg-gray-200",
-          progressFill: "bg-gray-300",
+          container: "snackbar-error",
+          progressBar: "snackbar-progress-error",
+          progressFill: "snackbar-progress-fill-error",
         };
     }
   };
@@ -131,9 +131,7 @@ const Snackbar: React.FC<SnackbarProps> = ({
 
   return (
     <div className={`fixed ${getPositionStyles()} z-50 max-w-md`}>
-      <div
-        className={`${styles.container} rounded-lg shadow-lg animate-slide-in relative overflow-hidden`}
-      >
+      <div className={styles.container}>
         {/* Main content */}
         <div className="px-6 py-4 flex items-center justify-between relative z-10">
           <div className="flex items-center">
@@ -162,11 +160,9 @@ const Snackbar: React.FC<SnackbarProps> = ({
         </div>
 
         {/* Progress bar integrated at the bottom */}
-        <div
-          className={`absolute bottom-0 left-0 right-0 h-1 ${styles.progressBar}`}
-        >
+        <div className={styles.progressBar}>
           <div
-            className={`h-full ${styles.progressFill} animate-progress-bar`}
+            className={styles.progressFill}
             style={{
               animationDuration: `${duration}ms`,
             }}

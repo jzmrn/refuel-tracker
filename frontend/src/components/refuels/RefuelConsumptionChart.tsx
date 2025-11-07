@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -9,6 +9,35 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import SummaryCard from "../common/SummaryCard";
+
+// Hook to get theme-appropriate colors
+const useChartTheme = () => {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkTheme = () => {
+      setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
+    };
+
+    checkTheme();
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    mediaQuery.addEventListener("change", checkTheme);
+
+    return () => mediaQuery.removeEventListener("change", checkTheme);
+  }, []);
+
+  return {
+    grid: isDark ? "#374151" : "#f0f0f0",
+    axis: isDark ? "#9CA3AF" : "#666666",
+    primaryLine: isDark ? "#3B82F6" : "#3b82f6",
+    primaryDot: isDark ? "#3B82F6" : "#3b82f6",
+    secondaryLine: isDark ? "#10B981" : "#10b981",
+    secondaryDot: isDark ? "#10B981" : "#10b981",
+    secondaryActiveDot: isDark ? "#059669" : "#059669",
+    activeDotStroke: isDark ? "#1F2937" : "#ffffff",
+  };
+};
 
 interface RefuelDataForChart {
   timestamp: string;
@@ -26,13 +55,15 @@ interface RefuelConsumptionChartProps {
 export default function RefuelConsumptionChart({
   refuelData,
 }: RefuelConsumptionChartProps) {
+  const chartTheme = useChartTheme();
+
   if (!refuelData || refuelData.length === 0) {
     return (
       <div className="mt-6">
-        <h4 className="text-md font-semibold mb-3 text-gray-700">
+        <h4 className="heading-4 mb-3">
           Fuel Consumption: Estimated vs Actual
         </h4>
-        <div className="bg-gray-50 p-8 rounded-lg text-center text-gray-500">
+        <div className="empty-state">
           <p>No consumption data available</p>
           <p className="text-sm mt-1">
             Add more refuel entries to see consumption trends
@@ -106,10 +137,10 @@ export default function RefuelConsumptionChart({
         hour12: false,
       });
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+        <div className="panel">
           <div className="mb-2">
-            <p className="font-medium text-gray-900">{formattedDate}</p>
-            <p className="text-sm text-gray-600">{formattedTime}</p>
+            <p className="text-primary font-medium">{formattedDate}</p>
+            <p className="text-sm text-secondary">{formattedTime}</p>
           </div>
           <div className="space-y-1 text-sm">
             <p className="text-blue-600">
@@ -130,11 +161,11 @@ export default function RefuelConsumptionChart({
               {formatConsumption(Math.abs(data.difference))}
             </p>
             <div className="border-t pt-2 mt-2">
-              <p className="text-gray-600">
+              <p className="text-secondary">
                 <span className="font-medium">Distance:</span>{" "}
                 {data.kilometers_since_last_refuel} km
               </p>
-              <p className="text-gray-600">
+              <p className="text-secondary">
                 <span className="font-medium">Fuel:</span>{" "}
                 {data.amount.toFixed(2)} L
               </p>
@@ -172,11 +203,9 @@ export default function RefuelConsumptionChart({
 
   return (
     <div className="mt-6">
-      <h4 className="text-md font-semibold mb-3 text-gray-700">
-        Fuel Consumption: Estimated vs Actual
-      </h4>
+      <h4 className="heading-4 mb-3">Fuel Consumption: Estimated vs Actual</h4>
 
-      <div className="bg-white p-4 rounded-lg border border-gray-200">
+      <div className="chart-container">
         <ResponsiveContainer width="100%" height={350}>
           <LineChart
             data={chartData}
@@ -187,13 +216,13 @@ export default function RefuelConsumptionChart({
               bottom: 20,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} />
             <XAxis
               type="number"
               dataKey="timestampMs"
               scale="time"
               domain={["dataMin", "dataMax"]}
-              stroke="#666"
+              stroke={chartTheme.axis}
               fontSize={12}
               tickMargin={10}
               tickFormatter={(value) => {
@@ -207,7 +236,7 @@ export default function RefuelConsumptionChart({
             />
             <YAxis
               domain={[yAxisMin, yAxisMax]}
-              stroke="#666"
+              stroke={chartTheme.axis}
               fontSize={12}
               tickFormatter={(value) => `${value.toFixed(1)}`}
               label={{
@@ -222,11 +251,11 @@ export default function RefuelConsumptionChart({
             <Line
               type="monotone"
               dataKey="estimatedConsumption"
-              stroke="#3b82f6"
+              stroke={chartTheme.primaryLine}
               strokeWidth={2}
               strokeDasharray="5 5"
               dot={{
-                fill: "#3b82f6",
+                fill: chartTheme.primaryDot,
                 strokeWidth: 2,
                 r: 3,
               }}
@@ -235,18 +264,18 @@ export default function RefuelConsumptionChart({
             <Line
               type="monotone"
               dataKey="actualConsumption"
-              stroke="#10b981"
+              stroke={chartTheme.secondaryLine}
               strokeWidth={3}
               dot={{
-                fill: "#10b981",
+                fill: chartTheme.secondaryDot,
                 strokeWidth: 2,
                 r: 4,
               }}
               activeDot={{
                 r: 6,
-                fill: "#059669",
+                fill: chartTheme.secondaryActiveDot,
                 strokeWidth: 2,
-                stroke: "#fff",
+                stroke: chartTheme.activeDotStroke,
               }}
               name="Actual Consumption"
             />
@@ -254,46 +283,94 @@ export default function RefuelConsumptionChart({
         </ResponsiveContainer>
 
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div className="bg-green-50 p-3 rounded">
-            <div className="font-medium text-green-900">Avg Actual</div>
-            <div className="text-green-700">{formatConsumption(avgActual)}</div>
-          </div>
-          <div className="bg-blue-50 p-3 rounded">
-            <div className="font-medium text-blue-900">Avg Estimated</div>
-            <div className="text-blue-700">
-              {formatConsumption(avgEstimated)}
-            </div>
-          </div>
-          <div
-            className={`${
-              avgDifference > 0 ? "bg-red-50" : "bg-green-50"
-            } p-3 rounded`}
-          >
-            <div
-              className={`font-medium ${
-                avgDifference > 0 ? "text-red-900" : "text-green-900"
-              }`}
-            >
-              Avg Difference
-            </div>
-            <div
-              className={`${
-                avgDifference > 0 ? "text-red-700" : "text-green-700"
-              }`}
-            >
-              {avgDifference > 0 ? "+" : ""}
-              {formatConsumption(Math.abs(avgDifference))}
-            </div>
-          </div>
-          <div className="bg-purple-50 p-3 rounded">
-            <div className="font-medium text-purple-900">Accuracy</div>
-            <div className="text-purple-700">
-              {accuracyPercentage.toFixed(0)}%
-            </div>
-          </div>
+          <SummaryCard
+            title="Avg Actual"
+            value={formatConsumption(avgActual)}
+            icon={
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+            }
+            iconBgColor="green"
+          />
+
+          <SummaryCard
+            title="Avg Estimated"
+            value={formatConsumption(avgEstimated)}
+            icon={
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 7h6m0 10v-3m-3-4h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                />
+              </svg>
+            }
+            iconBgColor="blue"
+          />
+
+          <SummaryCard
+            title="Avg Difference"
+            value={`${avgDifference > 0 ? "+" : ""}${formatConsumption(
+              Math.abs(avgDifference),
+            )}`}
+            icon={
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+                />
+              </svg>
+            }
+            iconBgColor={avgDifference > 0 ? "red" : "green"}
+          />
+
+          <SummaryCard
+            title="Accuracy"
+            value={`${accuracyPercentage.toFixed(0)}%`}
+            icon={
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            }
+            iconBgColor="purple"
+          />
         </div>
 
-        <div className="mt-3 text-xs text-gray-600">
+        <div className="mt-3 text-xs text-secondary">
           <p>
             • <span className="font-medium">Accuracy</span> shows percentage of
             entries within ±0.5 L/100km of estimate

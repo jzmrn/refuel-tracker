@@ -60,8 +60,10 @@ export default function AddRefuelForm({
       } else if (name === "timestamp") {
         const selectedDate = new Date(value);
         isValid = !isNaN(selectedDate.getTime()) && selectedDate <= new Date();
+      } else if (name === "notes") {
+        isValid = value.length <= 500;
       } else {
-        isValid = true; // For notes and other text fields
+        isValid = true; // For other text fields
       }
 
       if (isValid) {
@@ -120,6 +122,13 @@ export default function AddRefuelForm({
       } else if (selectedDate > now) {
         newErrors.timestamp = "Date cannot be in the future";
       }
+    } else {
+      newErrors.timestamp = "Date and time is required";
+    }
+
+    // Notes validation (optional but with length limit)
+    if (formData.notes && formData.notes.length > 500) {
+      newErrors.notes = "Notes must be 500 characters or less";
     }
 
     setErrors(newErrors);
@@ -135,7 +144,8 @@ export default function AddRefuelForm({
         ...formData,
         timestamp: formData.timestamp
           ? new Date(formData.timestamp).toISOString()
-          : undefined,
+          : new Date().toISOString(),
+        notes: formData.notes?.trim() || undefined,
       };
       onSubmit(submissionData);
 
@@ -154,16 +164,11 @@ export default function AddRefuelForm({
   const totalCost = formData.price * formData.amount;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h3 className="text-lg font-semibold mb-4">Add Refuel Entry</h3>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label
-            htmlFor="timestamp"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Date & Time
+    <div className="panel">
+      <form onSubmit={handleSubmit} className="form-container">
+        <div className="form-group">
+          <label htmlFor="timestamp" className="label">
+            Date & Time *
           </label>
           <div className="flex gap-2">
             <input
@@ -173,9 +178,10 @@ export default function AddRefuelForm({
               value={formData.timestamp || ""}
               max={new Date().toISOString().slice(0, 16)}
               onChange={handleChange}
-              className={`mt-1 flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+              className={`input flex-1 ${
                 errors.timestamp ? "border-red-300" : ""
               }`}
+              required
             />
             <button
               type="button"
@@ -189,30 +195,19 @@ export default function AddRefuelForm({
                   setErrors((prev) => ({ ...prev, timestamp: "" }));
                 }
               }}
-              className="mt-1 px-3 py-2 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 whitespace-nowrap"
+              className="btn-sm-secondary whitespace-nowrap"
             >
               Now
             </button>
           </div>
-          {errors.timestamp && (
-            <p className="mt-1 text-sm text-red-600">{errors.timestamp}</p>
-          )}
-          {!errors.timestamp && (
-            <p className="mt-1 text-xs text-gray-500">
-              Set the date and time when you refueled. Defaults to now for
-              current entries.
-            </p>
-          )}
+          {errors.timestamp && <p className="error-text">{errors.timestamp}</p>}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="price"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Price per Liter (€){" "}
-              <span className="text-xs text-gray-500">(0.01 - 10)</span>
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="price" className="label">
+              Price per Liter (€) *{" "}
+              <span className="text-xs text-secondary">(0.01 - 10)</span>
             </label>
             <input
               type="number"
@@ -223,23 +218,17 @@ export default function AddRefuelForm({
               name="price"
               value={formData.price || ""}
               onChange={handleChange}
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-                errors.price ? "border-red-300" : ""
-              }`}
+              className={`input ${errors.price ? "border-red-300" : ""}`}
               placeholder="1.589"
+              required
             />
-            {errors.price && (
-              <p className="mt-1 text-sm text-red-600">{errors.price}</p>
-            )}
+            {errors.price && <p className="error-text">{errors.price}</p>}
           </div>
 
-          <div>
-            <label
-              htmlFor="amount"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Amount (Liters){" "}
-              <span className="text-xs text-gray-500">(0.01 - 100)</span>
+          <div className="form-group">
+            <label htmlFor="amount" className="label">
+              Amount (Liters) *{" "}
+              <span className="text-xs text-secondary">(0.01 - 100)</span>
             </label>
             <input
               type="number"
@@ -250,24 +239,18 @@ export default function AddRefuelForm({
               name="amount"
               value={formData.amount || ""}
               onChange={handleChange}
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-                errors.amount ? "border-red-300" : ""
-              }`}
+              className={`input ${errors.amount ? "border-red-300" : ""}`}
               placeholder="45.20"
+              required
             />
-            {errors.amount && (
-              <p className="mt-1 text-sm text-red-600">{errors.amount}</p>
-            )}
+            {errors.amount && <p className="error-text">{errors.amount}</p>}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="kilometers_since_last_refuel"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Kilometers Since Last Refuel
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="kilometers_since_last_refuel" className="label">
+              Kilometers Since Last Refuel *
             </label>
             <input
               type="number"
@@ -277,25 +260,23 @@ export default function AddRefuelForm({
               name="kilometers_since_last_refuel"
               value={formData.kilometers_since_last_refuel || ""}
               onChange={handleChange}
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+              className={`input ${
                 errors.kilometers_since_last_refuel ? "border-red-300" : ""
               }`}
               placeholder="450"
+              required
             />
             {errors.kilometers_since_last_refuel && (
-              <p className="mt-1 text-sm text-red-600">
+              <p className="error-text">
                 {errors.kilometers_since_last_refuel}
               </p>
             )}
           </div>
 
-          <div>
-            <label
-              htmlFor="estimated_fuel_consumption"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Estimated Fuel Consumption (L/100km){" "}
-              <span className="text-xs text-gray-500">(0.1 - 20.0)</span>
+          <div className="form-group">
+            <label htmlFor="estimated_fuel_consumption" className="label">
+              Estimated Fuel Consumption (L/100km) *{" "}
+              <span className="text-xs text-secondary">(0.1 - 20.0)</span>
             </label>
             <input
               type="number"
@@ -306,36 +287,37 @@ export default function AddRefuelForm({
               name="estimated_fuel_consumption"
               value={formData.estimated_fuel_consumption || ""}
               onChange={handleChange}
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+              className={`input ${
                 errors.estimated_fuel_consumption ? "border-red-300" : ""
               }`}
               placeholder="7.5"
+              required
             />
             {errors.estimated_fuel_consumption && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.estimated_fuel_consumption}
-              </p>
+              <p className="error-text">{errors.estimated_fuel_consumption}</p>
             )}
           </div>
         </div>
 
         {formData.price > 0 && formData.amount > 0 && (
-          <div className="bg-blue-50 p-3 rounded-md">
-            <p className="text-sm text-blue-800">
-              <strong>Total Cost: {totalCost.toFixed(2)} €</strong>
+          <div className="calculation-box">
+            <p className="calculation-text">
+              <span className="calculation-highlight">
+                Total Cost: {totalCost.toFixed(2)} €
+              </span>
             </p>
             {formData.kilometers_since_last_refuel > 0 &&
               formData.amount > 0 && (
-                <p className="text-sm text-blue-800 mt-1">
+                <p className="calculation-text mt-1">
                   Actual Consumption:{" "}
-                  <strong>
+                  <span className="calculation-highlight">
                     {(
                       (formData.amount /
                         formData.kilometers_since_last_refuel) *
                       100
                     ).toFixed(1)}{" "}
                     L/100km
-                  </strong>
+                  </span>
                   {formData.estimated_fuel_consumption > 0 && (
                     <span
                       className={`ml-2 ${
@@ -343,8 +325,8 @@ export default function AddRefuelForm({
                           formData.kilometers_since_last_refuel) *
                           100 >
                         formData.estimated_fuel_consumption
-                          ? "text-red-600"
-                          : "text-green-600"
+                          ? "text-red-600 dark:text-red-400"
+                          : "text-green-600 dark:text-green-400"
                       }`}
                     >
                       (
@@ -368,29 +350,30 @@ export default function AddRefuelForm({
           </div>
         )}
 
-        <div>
-          <label
-            htmlFor="notes"
-            className="block text-sm font-medium text-gray-700"
-          >
+        <div className="form-group">
+          <label htmlFor="notes" className="label">
             Notes (optional)
           </label>
           <textarea
             id="notes"
             name="notes"
-            rows={2}
+            rows={3}
             value={formData.notes || ""}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className={`input ${errors.notes ? "border-red-300" : ""}`}
             placeholder="e.g. Shell gas station, A1 rest stop..."
+            maxLength={500}
           />
+          {errors.notes && <p className="error-text">{errors.notes}</p>}
+          {formData.notes && (
+            <p className="mt-1 text-xs text-secondary">
+              {formData.notes.length}/500 characters
+            </p>
+          )}
         </div>
 
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
+        <div className="form-actions">
+          <button type="submit" className="btn-primary flex-1">
             Add Entry
           </button>
 
@@ -398,7 +381,7 @@ export default function AddRefuelForm({
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              className="btn-secondary flex-1"
             >
               Cancel
             </button>

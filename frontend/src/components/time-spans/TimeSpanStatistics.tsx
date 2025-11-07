@@ -20,6 +20,32 @@ import {
   max as dateMax,
 } from "date-fns";
 import { TimeSpanResponse } from "@/lib/api";
+import SummaryCard from "../common/SummaryCard";
+
+// Hook to get theme-appropriate colors
+const useChartTheme = () => {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkTheme = () => {
+      setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
+    };
+
+    checkTheme();
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    mediaQuery.addEventListener("change", checkTheme);
+
+    return () => mediaQuery.removeEventListener("change", checkTheme);
+  }, []);
+
+  return {
+    background: isDark ? "#1F2937" : "#FAFAFA",
+    border: isDark ? "#374151" : "#E5E7EB",
+    text: isDark ? "#F9FAFB" : "#374151",
+    textSecondary: isDark ? "#9CA3AF" : "#6B7280",
+    gridLine: isDark ? "#374151" : "#E5E7EB",
+  };
+};
 
 interface TimeSpanStatisticsProps {
   timeSpans: TimeSpanResponse[];
@@ -32,6 +58,8 @@ export default function TimeSpanStatistics({
   label,
   loading,
 }: TimeSpanStatisticsProps) {
+  const chartTheme = useChartTheme();
+
   // Calculate durations in minutes for easier calculations
   const calculateDurationMinutes = (startDate: string, endDate?: string) => {
     const start = new Date(startDate);
@@ -46,9 +74,18 @@ export default function TimeSpanStatistics({
     return groups.sort();
   }, [timeSpans]);
 
-  const [selectedGroup, setSelectedGroup] = useState<string>(
-    availableGroups[0] || "General",
-  );
+  const [selectedGroup, setSelectedGroup] = useState<string>("General");
+
+  // Update selected group when available groups change
+  useEffect(() => {
+    if (availableGroups.length > 0) {
+      // Find the first group that has time spans, or use the first available
+      const groupWithData = availableGroups.find((group) =>
+        timeSpans.some((span) => (span.group || "General") === group),
+      );
+      setSelectedGroup(groupWithData || availableGroups[0]);
+    }
+  }, [availableGroups, timeSpans]);
 
   // For responsive chart width
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,13 +94,30 @@ export default function TimeSpanStatistics({
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth);
+        // Use clientWidth for the inner width excluding scrollbars
+        const width =
+          containerRef.current.clientWidth || containerRef.current.offsetWidth;
+        setContainerWidth(width);
       }
     };
 
-    updateWidth();
+    // Use a slight delay to ensure the container is fully rendered
+    const timer = setTimeout(updateWidth, 100);
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateWidth();
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
     window.addEventListener("resize", updateWidth);
-    return () => window.removeEventListener("resize", updateWidth);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", updateWidth);
+      resizeObserver.disconnect();
+    };
   }, []);
 
   // Filter timeSpans by selected group
@@ -73,13 +127,13 @@ export default function TimeSpanStatistics({
     );
   }, [timeSpans, selectedGroup]);
 
-  // Prepare all calculated data
-  const durations = filteredTimeSpans
+  // Prepare all calculated data - use ALL time spans for statistics, not just filtered
+  const durations = timeSpans
     .filter((span) => span.end_date) // Only completed spans for statistics
     .map((span) => calculateDurationMinutes(span.start_date, span.end_date!));
 
-  const completedSpans = filteredTimeSpans.filter((span) => span.end_date);
-  const ongoingSpans = filteredTimeSpans.filter((span) => !span.end_date);
+  const completedSpans = timeSpans.filter((span) => span.end_date);
+  const ongoingSpans = timeSpans.filter((span) => !span.end_date);
 
   // Calculate statistics
   const count = completedSpans.length;
@@ -186,16 +240,31 @@ export default function TimeSpanStatistics({
     if (swimlaneData.chartData.length === 0) return null;
 
     const chartHeight = Math.max(300, swimlaneData.chartData.length * 40 + 100);
-    const chartWidth = width;
-    const padding = { top: 20, right: 50, bottom: 60, left: 150 };
+    const chartWidth = Math.max(width - 32, 400); // Use full container width minus padding, minimum 400px
+
+    // Calculate dynamic left padding based on longest label
+    const maxLabelLength = Math.max(
+      ...swimlaneData.chartData.map((item) => item.label.length),
+    );
+    const dynamicLeftPadding = Math.max(
+      80,
+      Math.min(200, maxLabelLength * 7 + 20),
+    ); // Min 80px, max 200px, ~7px per character
+
+    const padding = {
+      top: 20,
+      right: 20,
+      bottom: 60,
+      left: dynamicLeftPadding,
+    };
     const plotWidth = chartWidth - padding.left - padding.right;
     const plotHeight = chartHeight - padding.top - padding.bottom;
 
     const timeRange = swimlaneData.maxTime - swimlaneData.minTime;
 
-    // Color scheme for different spans
+    // Color scheme for different spans - theme aware
     const getColor = (index: number, isOngoing: boolean) => {
-      const colors = [
+      const lightColors = [
         "#3b82f6",
         "#ef4444",
         "#10b981",
@@ -207,8 +276,26 @@ export default function TimeSpanStatistics({
         "#ec4899",
         "#6b7280",
       ];
+      const darkColors = [
+        "#60A5FA",
+        "#F87171",
+        "#34D399",
+        "#FBBF24",
+        "#A78BFA",
+        "#22D3EE",
+        "#FB923C",
+        "#A3E635",
+        "#F472B6",
+        "#9CA3AF",
+      ];
+      const colors =
+        chartTheme.background === "#1F2937" ? darkColors : lightColors;
       const baseColor = colors[index % colors.length];
-      return isOngoing ? "#22c55e" : baseColor;
+      return isOngoing
+        ? chartTheme.background === "#1F2937"
+          ? "#34D399"
+          : "#22c55e"
+        : baseColor;
     };
 
     const formatTimeAxis = (timestamp: number) => {
@@ -225,36 +312,52 @@ export default function TimeSpanStatistics({
     };
 
     return (
-      <div className="w-full">
+      <div className="w-full overflow-x-auto">
         <svg
           width={chartWidth}
           height={chartHeight}
-          className="border border-gray-200 rounded w-full"
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          className="border border-gray-200 rounded dark:border-gray-700"
+          style={{ width: "100%", height: "auto", minWidth: "400px" }}
         >
           {/* Background */}
-          <rect width={chartWidth} height={chartHeight} fill="#fafafa" />
+          <rect
+            width={chartWidth}
+            height={chartHeight}
+            fill={chartTheme.background}
+          />
 
           {/* Y-axis labels */}
-          {swimlaneData.chartData.map((item, index) => (
-            <text
-              key={`y-label-${index}`}
-              x={padding.left - 10}
-              y={
-                padding.top +
-                index * (plotHeight / swimlaneData.chartData.length) +
-                plotHeight / swimlaneData.chartData.length / 2
-              }
-              textAnchor="end"
-              dominantBaseline="middle"
-              fontSize="12"
-              fill="#374151"
-              className="font-medium"
-            >
-              {item.label.length > 15
-                ? item.label.substring(0, 15) + "..."
-                : item.label}
-            </text>
-          ))}
+          {swimlaneData.chartData.map((item, index) => {
+            // Calculate max characters that fit in the available space
+            const maxChars = Math.max(
+              10,
+              Math.floor((dynamicLeftPadding - 20) / 7),
+            );
+            const displayLabel =
+              item.label.length > maxChars
+                ? item.label.substring(0, maxChars) + "..."
+                : item.label;
+
+            return (
+              <text
+                key={`y-label-${index}`}
+                x={padding.left - 10}
+                y={
+                  padding.top +
+                  index * (plotHeight / swimlaneData.chartData.length) +
+                  plotHeight / swimlaneData.chartData.length / 2
+                }
+                textAnchor="end"
+                dominantBaseline="middle"
+                fontSize="12"
+                fill={chartTheme.text}
+                className="font-medium"
+              >
+                {displayLabel}
+              </text>
+            );
+          })}
 
           {/* Grid lines */}
           {swimlaneData.chartData.map((_, index) => (
@@ -272,7 +375,7 @@ export default function TimeSpanStatistics({
                 index * (plotHeight / swimlaneData.chartData.length) +
                 plotHeight / swimlaneData.chartData.length
               }
-              stroke="#e5e7eb"
+              stroke={chartTheme.gridLine}
               strokeWidth="1"
             />
           ))}
@@ -288,7 +391,7 @@ export default function TimeSpanStatistics({
                   y1={padding.top}
                   x2={x}
                   y2={padding.top + plotHeight}
-                  stroke="#e5e7eb"
+                  stroke={chartTheme.gridLine}
                   strokeWidth="1"
                   strokeDasharray="2,2"
                 />
@@ -297,7 +400,7 @@ export default function TimeSpanStatistics({
                   y={padding.top + plotHeight + 20}
                   textAnchor="middle"
                   fontSize="11"
-                  fill="#6b7280"
+                  fill={chartTheme.textSecondary}
                 >
                   {formatTimeAxis(timePoint)}
                 </text>
@@ -359,7 +462,7 @@ export default function TimeSpanStatistics({
             textAnchor="middle"
             fontSize="14"
             fontWeight="600"
-            fill="#1f2937"
+            fill={chartTheme.text}
           >
             Timeline for "{selectedGroup}" Group
           </text>
@@ -371,11 +474,11 @@ export default function TimeSpanStatistics({
   // Render conditions after all hooks
   if (loading) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">Statistics for {label}</h3>
+      <div className="panel">
+        <h3 className="heading-3 mb-4">Statistics for {label}</h3>
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">Loading statistics...</span>
+          <span className="ml-2 text-secondary">Loading statistics...</span>
         </div>
       </div>
     );
@@ -383,9 +486,9 @@ export default function TimeSpanStatistics({
 
   if (!timeSpans || timeSpans.length === 0) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">Statistics for {label}</h3>
-        <div className="text-center py-8 text-gray-500">
+      <div className="panel">
+        <h3 className="heading-3 mb-4">Statistics for {label}</h3>
+        <div className="text-center py-8 text-secondary">
           <p>No time spans available for "{label}".</p>
           <p className="text-sm mt-1">Add some time spans to see statistics.</p>
         </div>
@@ -393,60 +496,20 @@ export default function TimeSpanStatistics({
     );
   }
 
-  if (filteredTimeSpans.length === 0) {
-    return (
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">Statistics for {label}</h3>
-
-        {/* Group Selection */}
-        <div className="mb-6">
-          <label
-            htmlFor="group-select"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Select Group
-          </label>
-          <select
-            id="group-select"
-            value={selectedGroup}
-            onChange={(e) => setSelectedGroup(e.target.value)}
-            className="block w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          >
-            {availableGroups.map((group) => (
-              <option key={group} value={group}>
-                {group}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="text-center py-8 text-gray-500">
-          <p>No time spans available for group "{selectedGroup}".</p>
-          <p className="text-sm mt-1">
-            Try selecting a different group or add some time spans.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h3 className="text-lg font-semibold mb-4">Statistics for "{label}"</h3>
+    <div className="panel">
+      <h3 className="heading-3 mb-4">Statistics for "{label}"</h3>
 
       {/* Group Selection */}
       <div className="mb-6">
-        <label
-          htmlFor="group-select"
-          className="block text-sm font-medium text-gray-700 mb-2"
-        >
+        <label htmlFor="group-select" className="label">
           Select Group for Timeline
         </label>
         <select
           id="group-select"
           value={selectedGroup}
           onChange={(e) => setSelectedGroup(e.target.value)}
-          className="block w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="input w-48"
         >
           {availableGroups.map((group) => (
             <option key={group} value={group}>
@@ -459,74 +522,199 @@ export default function TimeSpanStatistics({
             </option>
           ))}
         </select>
-        <p className="mt-1 text-sm text-gray-500">
-          Showing statistics and timeline for "{selectedGroup}" group (
-          {filteredTimeSpans.length} spans)
+        <p className="mt-1 text-sm text-secondary">
+          Statistics show all spans ({timeSpans.length} total) • Timeline shows
+          "{selectedGroup}" group only ({filteredTimeSpans.length} spans)
         </p>
       </div>
 
       {/* Summary Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-blue-600">
-            {formatDuration(stats.average)}
-          </div>
-          <div className="text-sm text-blue-600 font-medium">Avg Duration</div>
-        </div>
+      <div className="grid grid-cols-2 2xl:grid-cols-4 gap-4 mb-6">
+        <SummaryCard
+          title="Avg Duration"
+          value={formatDuration(stats.average)}
+          icon={
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          }
+          iconBgColor="blue"
+        />
 
-        <div className="bg-green-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-green-600">
-            {formatDuration(stats.total)}
-          </div>
-          <div className="text-sm text-green-600 font-medium">Total Time</div>
-        </div>
+        <SummaryCard
+          title="Total Time"
+          value={formatDuration(stats.total)}
+          icon={
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+          }
+          iconBgColor="green"
+        />
 
-        <div className="bg-yellow-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-yellow-600">
-            {formatDuration(stats.max)}
-          </div>
-          <div className="text-sm text-yellow-600 font-medium">Longest</div>
-        </div>
+        <SummaryCard
+          title="Longest"
+          value={formatDuration(stats.max)}
+          icon={
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              />
+            </svg>
+          }
+          iconBgColor="yellow"
+        />
 
-        <div className="bg-purple-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-purple-600">{count}</div>
-          <div className="text-sm text-purple-600 font-medium">Completed</div>
-        </div>
+        <SummaryCard
+          title="Completed"
+          value={count.toString()}
+          icon={
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          }
+          iconBgColor="purple"
+        />
       </div>
 
       {/* Additional Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-red-50 p-3 rounded">
-          <div className="font-medium text-red-900">Shortest</div>
-          <div className="text-red-700">{formatDuration(stats.min)}</div>
-        </div>
-        <div className="bg-indigo-50 p-3 rounded">
-          <div className="font-medium text-indigo-900">Median</div>
-          <div className="text-indigo-700">{formatDuration(stats.median)}</div>
-        </div>
-        <div className="bg-orange-50 p-3 rounded">
-          <div className="font-medium text-orange-900">Ongoing</div>
-          <div className="text-orange-700">{ongoingCount}</div>
-        </div>
-        <div className="bg-gray-50 p-3 rounded">
-          <div className="font-medium text-gray-900">Total Entries</div>
-          <div className="text-gray-700">{count + ongoingCount}</div>
-        </div>
+      <div className="grid grid-cols-2 2xl:grid-cols-4 gap-4 mb-6">
+        <SummaryCard
+          title="Shortest"
+          value={formatDuration(stats.min)}
+          icon={
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+              />
+            </svg>
+          }
+          iconBgColor="red"
+        />
+
+        <SummaryCard
+          title="Median"
+          value={formatDuration(stats.median)}
+          icon={
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+              />
+            </svg>
+          }
+          iconBgColor="indigo"
+        />
+
+        <SummaryCard
+          title="Ongoing"
+          value={ongoingCount.toString()}
+          icon={
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          }
+          iconBgColor="orange"
+        />
+
+        <SummaryCard
+          title="Total Entries"
+          value={(count + ongoingCount).toString()}
+          icon={
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+              />
+            </svg>
+          }
+          iconBgColor="gray"
+        />
       </div>
 
       {/* Gantt Chart - Timeline with swimlanes for individual entries */}
       {swimlaneData.chartData.length > 0 && (
         <div className="mt-6">
-          <h4 className="text-md font-semibold mb-3 text-gray-700">
+          <h4 className="heading-4 mb-3">
             Timeline Swimlanes for "{selectedGroup}" Group
           </h4>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="chart-container">
             <div ref={containerRef} className="w-full">
               <GanttChart width={containerWidth} />
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-600">
+            <div className="mt-4 flex flex-wrap gap-4 text-xs text-secondary">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-3 bg-blue-500 rounded opacity-80"></div>
                 <span>Completed spans</span>
@@ -541,7 +729,7 @@ export default function TimeSpanStatistics({
               </div>
             </div>
 
-            <div className="mt-3 text-xs text-gray-600">
+            <div className="mt-3 text-xs text-secondary">
               <p>• Each row represents one time span entry</p>
               <p>• Hover over bars to see detailed information</p>
               <p>• Time is shown on the X-axis, individual entries on Y-axis</p>
@@ -551,35 +739,55 @@ export default function TimeSpanStatistics({
         </div>
       )}
 
-      {swimlaneData.chartData.length === 0 && filteredTimeSpans.length > 0 && (
-        <div className="mt-6 bg-yellow-50 p-4 rounded-lg">
-          <h4 className="text-md font-semibold mb-2 text-yellow-800">
-            No Timeline Data Available
-          </h4>
-          <p className="text-sm text-yellow-700">
-            No time spans available for the "{selectedGroup}" group. Try
-            selecting a different group.
+      {filteredTimeSpans.length === 0 && (
+        <div className="mt-6 status-yellow p-4 rounded-lg">
+          <h4 className="heading-4 mb-2">No Timeline Data Available</h4>
+          <p className="text-sm mb-3">
+            No time spans available for the "{selectedGroup}" group.
           </p>
+          <div className="flex flex-wrap gap-2">
+            {availableGroups
+              .filter((group) =>
+                timeSpans.some((span) => (span.group || "General") === group),
+              )
+              .map((group) => (
+                <button
+                  key={group}
+                  onClick={() => setSelectedGroup(group)}
+                  className="btn-sm-secondary"
+                >
+                  Switch to "{group}" (
+                  {
+                    timeSpans.filter(
+                      (span) => (span.group || "General") === group,
+                    ).length
+                  }{" "}
+                  spans)
+                </button>
+              ))}
+          </div>
         </div>
       )}
 
-      {/* Ongoing Activities */}
-      {ongoingCount > 0 && (
-        <div className="mt-6 bg-green-50 p-4 rounded-lg">
-          <h4 className="text-md font-semibold mb-2 text-green-800">
-            Current Ongoing Activities
+      {/* Ongoing Activities - show filtered ongoing spans for the selected group */}
+      {filteredTimeSpans.filter((span) => !span.end_date).length > 0 && (
+        <div className="mt-6 status-green p-4 rounded-lg">
+          <h4 className="heading-4 mb-2">
+            Current Ongoing Activities in "{selectedGroup}"
           </h4>
           <div className="space-y-2">
-            {ongoingSpans.map((span) => (
-              <div key={span.id} className="text-sm text-green-700">
-                Started:{" "}
-                {format(new Date(span.start_date), "MMM d, yyyy 'at' h:mm a")}
-                <span className="ml-2 font-medium">
-                  (Running for{" "}
-                  {formatDuration(calculateDurationMinutes(span.start_date))})
-                </span>
-              </div>
-            ))}
+            {filteredTimeSpans
+              .filter((span) => !span.end_date)
+              .map((span) => (
+                <div key={span.id} className="text-sm">
+                  Started:{" "}
+                  {format(new Date(span.start_date), "MMM d, yyyy 'at' h:mm a")}
+                  <span className="ml-2 font-medium">
+                    (Running for{" "}
+                    {formatDuration(calculateDurationMinutes(span.start_date))})
+                  </span>
+                </div>
+              ))}
           </div>
         </div>
       )}

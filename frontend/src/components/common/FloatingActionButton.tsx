@@ -19,11 +19,11 @@ export default function FloatingActionButton({
       {/* FAB Button - Only visible on mobile */}
       <button
         onClick={onAddClick}
-        className="md:hidden fixed bottom-20 right-4 w-14 h-14 bg-primary-600 hover:bg-primary-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center z-40"
+        className="md:hidden fixed bottom-20 right-4 w-14 h-14 btn-primary rounded-full shadow-lg hover:shadow-xl flex items-center justify-center z-40"
         aria-label="Add new entry"
       >
         <svg
-          className="w-6 h-6"
+          className="w-6 h-6 !w-6 !h-6"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -67,21 +67,18 @@ export default function FloatingActionButton({
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white text-left align-middle shadow-xl transition-all">
+                <Dialog.Panel className="modal">
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-4">
-                      <Dialog.Title
-                        as="h3"
-                        className="text-lg font-medium leading-6 text-gray-900"
-                      >
+                      <Dialog.Title as="h3" className="heading-3">
                         Add New Entry
                       </Dialog.Title>
                       <button
                         onClick={onClose}
-                        className="rounded-md p-2 hover:bg-gray-100 transition-colors"
+                        className="rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                       >
                         <svg
-                          className="w-5 h-5 text-gray-500"
+                          className="w-5 h-5 text-gray-500 dark:text-gray-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"

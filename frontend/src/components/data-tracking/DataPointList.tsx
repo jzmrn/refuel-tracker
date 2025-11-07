@@ -19,16 +19,17 @@ export default function DataPointList({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="text-gray-500">Loading data points...</div>
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-2"></div>
+        <div className="text-secondary">Loading data points...</div>
       </div>
     );
   }
 
   if (dataPoints.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="empty-state">
         <svg
-          className="w-12 h-12 mx-auto mb-4 text-gray-300"
+          className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -62,14 +63,14 @@ export default function DataPointList({
   // Get label color based on hash (consistent coloring)
   const getLabelColor = (label: string): string => {
     const colors = [
-      "bg-blue-100 text-blue-800",
-      "bg-green-100 text-green-800",
-      "bg-purple-100 text-purple-800",
-      "bg-yellow-100 text-yellow-800",
-      "bg-red-100 text-red-800",
-      "bg-indigo-100 text-indigo-800",
-      "bg-pink-100 text-pink-800",
-      "bg-gray-100 text-gray-800",
+      "group-badge-blue",
+      "group-badge-green",
+      "group-badge-purple",
+      "group-badge-yellow",
+      "group-badge-red",
+      "group-badge-indigo",
+      "group-badge-pink",
+      "group-badge-gray",
     ];
 
     let hash = 0;
@@ -85,26 +86,19 @@ export default function DataPointList({
       {Object.entries(groupedData)
         .sort(([, a], [, b]) => b.length - a.length) // Sort by number of entries
         .map(([label, points]) => (
-          <div
-            key={label}
-            className="border border-gray-200 rounded-lg overflow-hidden"
-          >
-            <div className="bg-white px-4 py-3 border-b border-gray-200">
+          <div key={label} className="group-card">
+            <div className="group-header">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getLabelColor(
-                      label,
-                    )}`}
-                  >
+                  <span className={`group-badge ${getLabelColor(label)}`}>
                     {label}
                   </span>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-secondary">
                     {points.length} {points.length === 1 ? "entry" : "entries"}
                   </span>
                 </div>
                 {points.length > 0 && (
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-secondary">
                     Latest:{" "}
                     {
                       points.reduce((latest, point) =>
@@ -118,7 +112,7 @@ export default function DataPointList({
               </div>
             </div>
 
-            <div className="divide-y divide-gray-200">
+            <div className="list-divider">
               {points
                 .sort(
                   (a, b) =>
@@ -126,21 +120,18 @@ export default function DataPointList({
                     new Date(a.timestamp).getTime(),
                 )
                 .map((point) => (
-                  <div
-                    key={point.id}
-                    className="p-4 bg-white hover:bg-gray-50 transition-colors"
-                  >
+                  <div key={point.id} className="list-item">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-4 mb-2">
-                          <div className="text-2xl font-bold text-gray-900">
+                          <div className="text-2xl font-bold text-primary">
                             {typeof point.value === "number"
                               ? Number.isInteger(point.value)
                                 ? point.value.toString()
                                 : point.value.toFixed(2)
                               : point.value}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-secondary">
                             <div>
                               {format(new Date(point.timestamp), "MMM d, yyyy")}
                             </div>
@@ -151,16 +142,14 @@ export default function DataPointList({
                         </div>
 
                         {point.notes && (
-                          <p className="text-sm text-gray-600 mt-2 bg-white p-2 rounded border border-gray-200">
-                            {point.notes}
-                          </p>
+                          <p className="notes-box mt-2">{point.notes}</p>
                         )}
                       </div>
 
                       <div className="ml-4">
                         <button
                           onClick={() => onDelete(point)}
-                          className="btn bg-red-100 text-red-700 hover:bg-red-200 focus:ring-red-500 text-xs px-2 py-1"
+                          className="btn bg-red-100 text-red-700 hover:bg-red-200 focus:ring-red-500 text-xs px-2 py-1 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
                           title="Delete this data point"
                         >
                           <svg

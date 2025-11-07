@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { DataPointResponse } from "@/lib/api";
+import SummaryCard from "../common/SummaryCard";
 
 interface DataPointStatisticsProps {
   dataPoints: DataPointResponse[];
@@ -25,11 +26,11 @@ export default function DataPointStatistics({
 }: DataPointStatisticsProps) {
   if (loading) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">Statistics for {label}</h3>
+      <div className="panel">
+        <h3 className="heading-3 mb-4">Statistics for {label}</h3>
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">Loading statistics...</span>
+          <span className="ml-2 text-secondary">Loading statistics...</span>
         </div>
       </div>
     );
@@ -37,9 +38,9 @@ export default function DataPointStatistics({
 
   if (!dataPoints || dataPoints.length === 0) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">Statistics for {label}</h3>
-        <div className="text-center py-8 text-gray-500">
+      <div className="panel">
+        <h3 className="heading-3 mb-4">Statistics for {label}</h3>
+        <div className="text-center py-8 text-secondary">
           <p>No data points available for "{label}".</p>
           <p className="text-sm mt-1">
             Add some data points to see statistics.
@@ -104,18 +105,18 @@ export default function DataPointStatistics({
         hour12: false,
       });
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+        <div className="card p-3 shadow-lg">
           <div className="mb-2">
-            <p className="font-medium text-gray-900">{formattedDate}</p>
-            <p className="text-sm text-gray-600">{formattedTime}</p>
+            <p className="font-medium text-primary">{formattedDate}</p>
+            <p className="text-sm text-secondary">{formattedTime}</p>
           </div>
           <div className="space-y-1 text-sm">
-            <p className="text-blue-600">
+            <p className="status-blue">
               <span className="font-medium">Value:</span>{" "}
               {formatValue(data.value)}
             </p>
             {data.notes && (
-              <p className="text-gray-600 mt-2 max-w-xs">
+              <p className="text-secondary mt-2 max-w-xs">
                 <span className="font-medium">Notes:</span> {data.notes}
               </p>
             )}
@@ -149,70 +150,126 @@ export default function DataPointStatistics({
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h3 className="text-lg font-semibold mb-4">Statistics for "{label}"</h3>
+    <div className="panel p-6">
+      <h3 className="heading-3 mb-4">Statistics for "{label}"</h3>
 
       {/* Summary Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-blue-600">
-            {formatValue(average)}
-          </div>
-          <div className="text-sm text-blue-600 font-medium">Average</div>
-        </div>
+        <SummaryCard
+          title="Average"
+          value={formatValue(average)}
+          icon={
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+          }
+          iconBgColor="blue"
+        />
 
-        <div className="bg-green-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-green-600">
-            {formatValue(median)}
-          </div>
-          <div className="text-sm text-green-600 font-medium">Median</div>
-        </div>
+        <SummaryCard
+          title="Median"
+          value={formatValue(median)}
+          icon={
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+              />
+            </svg>
+          }
+          iconBgColor="green"
+        />
 
-        <div className="bg-yellow-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-yellow-600">
-            {formatValue(range)}
-          </div>
-          <div className="text-sm text-yellow-600 font-medium">Range</div>
-        </div>
+        <SummaryCard
+          title="Range"
+          value={formatValue(range)}
+          icon={
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          }
+          iconBgColor="yellow"
+        />
 
-        <div className="bg-purple-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-purple-600">{count}</div>
-          <div className="text-sm text-purple-600 font-medium">
-            Total Entries
-          </div>
-        </div>
+        <SummaryCard
+          title="Total Entries"
+          value={count.toString()}
+          icon={
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+              />
+            </svg>
+          }
+          iconBgColor="purple"
+        />
       </div>
 
       {/* Additional Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-red-50 p-3 rounded">
-          <div className="font-medium text-red-900">Maximum</div>
-          <div className="text-red-700">{formatValue(max)}</div>
+        <div className="status-red p-3 rounded">
+          <div className="font-medium">Maximum</div>
+          <div>{formatValue(max)}</div>
         </div>
-        <div className="bg-green-50 p-3 rounded">
-          <div className="font-medium text-green-900">Minimum</div>
-          <div className="text-green-700">{formatValue(min)}</div>
+        <div className="status-green p-3 rounded">
+          <div className="font-medium">Minimum</div>
+          <div>{formatValue(min)}</div>
         </div>
-        <div className="bg-gray-50 p-3 rounded">
-          <div className="font-medium text-gray-900">Std. Deviation</div>
-          <div className="text-gray-700">{formatValue(standardDeviation)}</div>
+        <div className="status-gray p-3 rounded">
+          <div className="font-medium">Std. Deviation</div>
+          <div>{formatValue(standardDeviation)}</div>
         </div>
         <div
           className={`p-3 rounded ${
             trend === "increasing"
-              ? "bg-green-50"
+              ? "bg-green-50 dark:bg-green-900/20"
               : trend === "decreasing"
-              ? "bg-red-50"
-              : "bg-gray-50"
+              ? "bg-red-50 dark:bg-red-900/20"
+              : "bg-gray-50 dark:bg-gray-700"
           }`}
         >
           <div
             className={`font-medium ${
               trend === "increasing"
-                ? "text-green-900"
+                ? "text-green-900 dark:text-green-400"
                 : trend === "decreasing"
-                ? "text-red-900"
-                : "text-gray-900"
+                ? "text-red-900 dark:text-red-400"
+                : "text-gray-900 dark:text-gray-100"
             }`}
           >
             Trend
@@ -220,10 +277,10 @@ export default function DataPointStatistics({
           <div
             className={`${
               trend === "increasing"
-                ? "text-green-700"
+                ? "text-green-700 dark:text-green-300"
                 : trend === "decreasing"
-                ? "text-red-700"
-                : "text-gray-700"
+                ? "text-red-700 dark:text-red-300"
+                : "text-gray-700 dark:text-gray-300"
             }`}
           >
             {trend === "stable"
@@ -237,11 +294,9 @@ export default function DataPointStatistics({
 
       {/* Chart */}
       <div className="mt-6">
-        <h4 className="text-md font-semibold mb-3 text-gray-700">
-          Values Over Time
-        </h4>
+        <h4 className="heading-4 mb-3">Values Over Time</h4>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="chart-container">
           <ResponsiveContainer width="100%" height={300}>
             <LineChart
               data={chartData}
@@ -304,7 +359,7 @@ export default function DataPointStatistics({
             </LineChart>
           </ResponsiveContainer>
 
-          <div className="mt-3 text-xs text-gray-600">
+          <div className="mt-3 text-xs text-secondary">
             <p>
               • Hover over data points to see detailed information including
               notes

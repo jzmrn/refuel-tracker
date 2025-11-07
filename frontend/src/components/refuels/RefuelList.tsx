@@ -9,11 +9,11 @@ interface RefuelListProps {
 export default function RefuelList({ refuels, loading }: RefuelListProps) {
   if (loading) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">Refuel Entries</h3>
+      <div className="panel">
+        <h3 className="heading-3 mb-4">Refuel Entries</h3>
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">Loading data...</span>
+          <div className="loading-spinner"></div>
+          <span className="loading-text">Loading data...</span>
         </div>
       </div>
     );
@@ -21,9 +21,9 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
 
   if (!refuels || refuels.length === 0) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">Refuel Entries</h3>
-        <div className="text-center py-8 text-gray-500">
+      <div className="panel">
+        <h3 className="heading-3 mb-4">Refuel Entries</h3>
+        <div className="empty-state">
           <p>No refuel entries recorded yet.</p>
           <p className="text-sm mt-1">Add your first refuel entry above.</p>
         </div>
@@ -70,39 +70,39 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h3 className="text-lg font-semibold mb-4">
+    <div className="panel">
+      <h3 className="heading-3 mb-4">
         Refuel Entries ({refuels?.length || 0})
       </h3>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
                 Date
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Price/L
+              <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
+                €/L
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Amount
+              <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
+                Liters
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total Cost
+              <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
+                Total
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Kilometers
+              <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden md:table-cell">
+                Km
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Consumption
+              <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
+                L/100km
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden lg:table-cell">
                 Notes
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {refuels?.map((refuel, index) => {
               const totalCost = refuel.price * refuel.amount;
               const refuelDate = new Date(refuel.timestamp);
@@ -112,43 +112,50 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
               return (
                 <tr
                   key={index}
-                  className={`hover:bg-gray-50 ${
-                    !isToday ? "bg-blue-50/30" : ""
+                  className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                    isToday ? "bg-blue-50/30 dark:bg-blue-900/20" : ""
                   }`}
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatDate(refuel.timestamp)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatPricePerLiter(refuel.price)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatLiters(refuel.amount)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {formatCurrency(totalCost)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {refuel.kilometers_since_last_refuel.toFixed(0)} km
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div>
-                      <div className="text-xs text-gray-500">
-                        Est: {refuel.estimated_fuel_consumption.toFixed(1)}{" "}
-                        L/100km
+                  <td className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-primary">
+                    <div className="font-medium">
+                      <div className="sm:hidden">
+                        {new Date(refuel.timestamp).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                          },
+                        )}
                       </div>
-                      <div className="font-medium">
-                        Act:{" "}
-                        {(
-                          (refuel.amount /
-                            refuel.kilometers_since_last_refuel) *
-                          100
-                        ).toFixed(1)}{" "}
-                        L/100km
+                      <div className="hidden sm:block">
+                        {formatDate(refuel.timestamp)}
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                  <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
+                    {formatPricePerLiter(refuel.price)}
+                  </td>
+                  <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
+                    {formatLiters(refuel.amount)}
+                  </td>
+                  <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm font-bold text-primary">
+                    {formatCurrency(totalCost)}
+                  </td>
+                  <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary hidden md:table-cell">
+                    {refuel.kilometers_since_last_refuel.toFixed(0)}
+                  </td>
+                  <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary">
+                    <div className="font-medium">
+                      {(
+                        (refuel.amount / refuel.kilometers_since_last_refuel) *
+                        100
+                      ).toFixed(1)}
+                    </div>
+                    <div className="text-xs text-secondary md:hidden">
+                      {refuel.kilometers_since_last_refuel.toFixed(0)}km
+                    </div>
+                  </td>
+                  <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-secondary max-w-xs truncate hidden lg:table-cell">
                     {refuel.notes || "-"}
                   </td>
                 </tr>

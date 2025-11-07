@@ -58,11 +58,13 @@ export default function AddTransactionForm({
 
   return (
     <div className="card">
-      <h3 className="text-lg font-semibold mb-4">Add Transaction</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+        Add Transaction
+      </h3>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-600 text-sm">{error}</p>
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+          <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
         </div>
       )}
 
@@ -71,7 +73,7 @@ export default function AddTransactionForm({
           <div>
             <label
               htmlFor="transaction_type"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               Type
             </label>
@@ -92,7 +94,7 @@ export default function AddTransactionForm({
           <div>
             <label
               htmlFor="amount"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               Amount
             </label>
@@ -114,7 +116,7 @@ export default function AddTransactionForm({
           <div>
             <label
               htmlFor="account_id"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               Account
             </label>
@@ -133,7 +135,7 @@ export default function AddTransactionForm({
           <div>
             <label
               htmlFor="category"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               Category
             </label>
@@ -153,7 +155,7 @@ export default function AddTransactionForm({
         <div>
           <label
             htmlFor="description"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
             Description (optional)
           </label>
@@ -172,7 +174,7 @@ export default function AddTransactionForm({
           <button
             type="submit"
             disabled={loading}
-            className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Adding..." : "Add Transaction"}
           </button>

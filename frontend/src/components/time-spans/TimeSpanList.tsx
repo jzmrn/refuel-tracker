@@ -24,16 +24,16 @@ export default function TimeSpanList({
     return (
       <div className="flex items-center justify-center py-8">
         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Loading time spans...</span>
+        <span className="ml-2 text-secondary">Loading time spans...</span>
       </div>
     );
   }
 
   if (!timeSpans || timeSpans.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="empty-state">
         <svg
-          className="w-12 h-12 mx-auto mb-4 text-gray-300"
+          className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -67,14 +67,14 @@ export default function TimeSpanList({
   // Get group color based on hash (consistent coloring)
   const getGroupColor = (group: string): string => {
     const colors = [
-      "bg-blue-100 text-blue-800",
-      "bg-green-100 text-green-800",
-      "bg-purple-100 text-purple-800",
-      "bg-yellow-100 text-yellow-800",
-      "bg-red-100 text-red-800",
-      "bg-indigo-100 text-indigo-800",
-      "bg-pink-100 text-pink-800",
-      "bg-gray-100 text-gray-800",
+      "group-badge-blue",
+      "group-badge-green",
+      "group-badge-purple",
+      "group-badge-yellow",
+      "group-badge-red",
+      "group-badge-indigo",
+      "group-badge-pink",
+      "group-badge-gray",
     ];
 
     let hash = 0;
@@ -138,33 +138,26 @@ export default function TimeSpanList({
       {Object.entries(groupedTimeSpans)
         .sort(([, a], [, b]) => b.length - a.length) // Sort by number of entries
         .map(([group, spans]) => (
-          <div
-            key={group}
-            className="border border-gray-200 rounded-lg overflow-hidden"
-          >
-            <div className="bg-white px-4 py-3 border-b border-gray-200">
+          <div key={group} className="group-card">
+            <div className="group-header">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getGroupColor(
-                      group,
-                    )}`}
-                  >
+                  <span className={`group-badge ${getGroupColor(group)}`}>
                     {group}
                   </span>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-secondary">
                     {spans.length} {spans.length === 1 ? "span" : "spans"}
                   </span>
                 </div>
                 {spans.length > 0 && (
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-secondary">
                     Total: {calculateTotalDuration(spans)}
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="divide-y divide-gray-200">
+            <div className="list-divider">
               {spans
                 .sort(
                   (a, b) =>
@@ -172,24 +165,21 @@ export default function TimeSpanList({
                     new Date(a.start_date).getTime(),
                 )
                 .map((span) => (
-                  <div
-                    key={span.id}
-                    className="p-4 bg-white hover:bg-gray-50 transition-colors"
-                  >
+                  <div key={span.id} className="list-item">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="text-lg font-medium text-gray-900">
+                          <div className="text-lg font-medium text-primary">
                             {span.label}
                           </div>
                           {isOngoing(span) && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span className="status-badge-ongoing">
                               Ongoing
                             </span>
                           )}
                         </div>
 
-                        <div className="space-y-1 text-sm text-gray-600">
+                        <div className="space-y-1 text-sm text-secondary">
                           <div className="flex items-center gap-4">
                             <div>
                               <span className="font-medium">Started:</span>{" "}
@@ -206,14 +196,14 @@ export default function TimeSpanList({
                           <div className="flex items-center gap-4">
                             <div>
                               <span className="font-medium">Duration:</span>{" "}
-                              <span className="text-blue-600 font-semibold">
+                              <span className="text-blue-600 font-semibold dark:text-blue-400">
                                 {calculateDuration(
                                   span.start_date,
                                   span.end_date || undefined,
                                 )}
                               </span>
                               {isOngoing(span) && (
-                                <span className="text-gray-500">
+                                <span className="text-secondary">
                                   {" "}
                                   (and counting...)
                                 </span>
@@ -223,9 +213,7 @@ export default function TimeSpanList({
 
                           {span.notes && (
                             <div className="mt-2">
-                              <p className="text-sm text-gray-600 bg-white p-2 rounded border border-gray-200">
-                                {span.notes}
-                              </p>
+                              <p className="notes-box">{span.notes}</p>
                             </div>
                           )}
                         </div>
@@ -235,7 +223,7 @@ export default function TimeSpanList({
                         {onEdit && (
                           <button
                             onClick={() => onEdit(span)}
-                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20"
                             title="Edit time span"
                           >
                             <svg
@@ -255,7 +243,7 @@ export default function TimeSpanList({
                         )}
                         <button
                           onClick={() => onDelete(span)}
-                          className="btn bg-red-100 text-red-700 hover:bg-red-200 focus:ring-red-500 text-xs px-2 py-1"
+                          className="btn bg-red-100 text-red-700 hover:bg-red-200 focus:ring-red-500 text-xs px-2 py-1 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
                           title="Delete time span"
                         >
                           <svg

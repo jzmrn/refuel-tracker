@@ -227,18 +227,13 @@ export default function EditTimeSpanForm({
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
-        Edit Time Span
-      </h3>
+    <div className="panel">
+      <h3 className="heading-3 mb-4">Edit Time Span</h3>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="start_date"
-              className="block text-sm font-medium text-gray-700"
-            >
+      <form onSubmit={handleSubmit} className="form-container">
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="start_date" className="label">
               Start Date & Time *
             </label>
             <div className="flex gap-2">
@@ -248,7 +243,7 @@ export default function EditTimeSpanForm({
                 name="start_date"
                 value={formData.start_date || ""}
                 onChange={handleChange}
-                className={`mt-1 flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+                className={`input flex-1 ${
                   errors.start_date ? "border-red-300" : ""
                 }`}
                 required
@@ -265,21 +260,18 @@ export default function EditTimeSpanForm({
                     setErrors((prev) => ({ ...prev, start_date: "" }));
                   }
                 }}
-                className="mt-1 px-3 py-2 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 whitespace-nowrap"
+                className="btn-sm-secondary whitespace-nowrap"
               >
                 Now
               </button>
             </div>
             {errors.start_date && (
-              <p className="mt-1 text-sm text-red-600">{errors.start_date}</p>
+              <p className="error-text">{errors.start_date}</p>
             )}
           </div>
 
-          <div>
-            <label
-              htmlFor="end_date"
-              className="block text-sm font-medium text-gray-700"
-            >
+          <div className="form-group">
+            <label htmlFor="end_date" className="label">
               End Date & Time
             </label>
             <div className="flex gap-2">
@@ -289,32 +281,27 @@ export default function EditTimeSpanForm({
                 name="end_date"
                 value={formData.end_date || ""}
                 onChange={handleChange}
-                className={`mt-1 flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+                className={`input flex-1 ${
                   errors.end_date ? "border-red-300" : ""
                 }`}
               />
               <button
                 type="button"
                 onClick={setEndDateToNow}
-                className="mt-1 px-3 py-2 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 whitespace-nowrap"
+                className="btn-sm-secondary whitespace-nowrap"
               >
                 Now
               </button>
             </div>
-            {errors.end_date && (
-              <p className="mt-1 text-sm text-red-600">{errors.end_date}</p>
-            )}
-            <p className="mt-1 text-xs text-gray-500">
+            {errors.end_date && <p className="error-text">{errors.end_date}</p>}
+            <p className="mt-1 text-xs text-secondary">
               Leave empty if the activity is ongoing
             </p>
           </div>
         </div>
 
-        <div className="relative">
-          <label
-            htmlFor="label"
-            className="block text-sm font-medium text-gray-700"
-          >
+        <div className="form-group relative">
+          <label htmlFor="label" className="label">
             Label/Activity *
           </label>
           <input
@@ -328,9 +315,7 @@ export default function EditTimeSpanForm({
               // Delay hiding suggestions to allow clicks
               setTimeout(() => setShowSuggestions(false), 200);
             }}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-              errors.label ? "border-red-300" : ""
-            }`}
+            className={`input ${errors.label ? "border-red-300" : ""}`}
             placeholder="e.g., Workout, Reading, Project Work, Sleep..."
             maxLength={100}
             required
@@ -338,13 +323,13 @@ export default function EditTimeSpanForm({
 
           {/* Suggestions Dropdown */}
           {showSuggestions && filteredSuggestions.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-40 overflow-y-auto">
               {filteredSuggestions.slice(0, 10).map((label, index) => (
                 <button
                   key={index}
                   type="button"
                   onClick={() => handleLabelSuggestionClick(label)}
-                  className="w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-sm"
+                  className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none text-sm text-primary"
                 >
                   {label}
                 </button>
@@ -352,16 +337,11 @@ export default function EditTimeSpanForm({
             </div>
           )}
 
-          {errors.label && (
-            <p className="mt-1 text-sm text-red-600">{errors.label}</p>
-          )}
+          {errors.label && <p className="error-text">{errors.label}</p>}
         </div>
 
-        <div className="relative">
-          <label
-            htmlFor="group"
-            className="block text-sm font-medium text-gray-700"
-          >
+        <div className="form-group relative">
+          <label htmlFor="group" className="label">
             Group *
           </label>
           <input
@@ -375,9 +355,7 @@ export default function EditTimeSpanForm({
               // Delay hiding suggestions to allow clicks
               setTimeout(() => setShowGroupSuggestions(false), 200);
             }}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-              errors.group ? "border-red-300" : ""
-            }`}
+            className={`input ${errors.group ? "border-red-300" : ""}`}
             placeholder="e.g., Work, Personal, Health, Hobbies..."
             maxLength={50}
             required
@@ -385,13 +363,13 @@ export default function EditTimeSpanForm({
 
           {/* Group Suggestions Dropdown */}
           {showGroupSuggestions && filteredGroupSuggestions.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-40 overflow-y-auto">
               {filteredGroupSuggestions.slice(0, 10).map((group, index) => (
                 <button
                   key={index}
                   type="button"
                   onClick={() => handleGroupSuggestionClick(group)}
-                  className="w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none text-sm"
+                  className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none text-sm text-primary"
                 >
                   {group}
                 </button>
@@ -399,16 +377,11 @@ export default function EditTimeSpanForm({
             </div>
           )}
 
-          {errors.group && (
-            <p className="mt-1 text-sm text-red-600">{errors.group}</p>
-          )}
+          {errors.group && <p className="error-text">{errors.group}</p>}
         </div>
 
-        <div>
-          <label
-            htmlFor="notes"
-            className="block text-sm font-medium text-gray-700"
-          >
+        <div className="form-group">
+          <label htmlFor="notes" className="label">
             Notes (optional)
           </label>
           <textarea
@@ -417,34 +390,27 @@ export default function EditTimeSpanForm({
             rows={3}
             value={formData.notes || ""}
             onChange={handleChange}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-              errors.notes ? "border-red-300" : ""
-            }`}
+            className={`input ${errors.notes ? "border-red-300" : ""}`}
             placeholder="Additional context or details about this activity..."
             maxLength={500}
           />
-          {errors.notes && (
-            <p className="mt-1 text-sm text-red-600">{errors.notes}</p>
-          )}
+          {errors.notes && <p className="error-text">{errors.notes}</p>}
           {formData.notes && (
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-secondary">
               {formData.notes.length}/500 characters
             </p>
           )}
         </div>
 
-        <div className="flex gap-3 pt-4">
-          <button
-            type="submit"
-            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
-          >
+        <div className="form-actions">
+          <button type="submit" className="btn-primary flex-1">
             Update Time Span
           </button>
 
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium"
+            className="btn-secondary flex-1"
           >
             Cancel
           </button>

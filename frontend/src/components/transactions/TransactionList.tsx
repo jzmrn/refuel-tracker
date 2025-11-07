@@ -70,7 +70,7 @@ export default function TransactionList({
       <div className="card">
         <div className="text-center py-8">
           <p className="text-red-600 mb-4">{error}</p>
-          <button onClick={fetchTransactions} className="btn btn-primary">
+          <button onClick={fetchTransactions} className="btn-primary">
             Try Again
           </button>
         </div>

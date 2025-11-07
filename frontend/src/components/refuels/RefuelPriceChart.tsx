@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -9,6 +9,33 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import SummaryCard from "../common/SummaryCard";
+
+// Hook to get theme-appropriate colors
+const useChartTheme = () => {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkTheme = () => {
+      setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
+    };
+
+    checkTheme();
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    mediaQuery.addEventListener("change", checkTheme);
+
+    return () => mediaQuery.removeEventListener("change", checkTheme);
+  }, []);
+
+  return {
+    grid: isDark ? "#374151" : "#f0f0f0",
+    axis: isDark ? "#9CA3AF" : "#666666",
+    line: isDark ? "#3B82F6" : "#2563eb",
+    dot: isDark ? "#3B82F6" : "#2563eb",
+    activeDot: isDark ? "#1D4ED8" : "#1d4ed8",
+    activeDotStroke: isDark ? "#1F2937" : "#ffffff",
+  };
+};
 
 interface PriceTrend {
   date: string;
@@ -23,13 +50,13 @@ interface RefuelPriceChartProps {
 }
 
 export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
+  const chartTheme = useChartTheme();
+
   if (!priceData || priceData.length === 0) {
     return (
-      <div className="mt-6">
-        <h4 className="text-md font-semibold mb-3 text-gray-700">
-          Price Trends Over Time
-        </h4>
-        <div className="bg-gray-50 p-8 rounded-lg text-center text-gray-500">
+      <div className="content-section">
+        <h4 className="heading-4 mb-3">Price Trends Over Time</h4>
+        <div className="empty-state">
           <p>No price trend data available</p>
           <p className="text-sm mt-1">Add more refuel entries to see trends</p>
         </div>
@@ -84,21 +111,21 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
         hour12: false,
       });
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+        <div className="panel">
           <div className="mb-2">
-            <p className="font-medium text-gray-900">{formattedDate}</p>
-            <p className="text-sm text-gray-600">{formattedTime}</p>
+            <p className="font-medium text-primary">{formattedDate}</p>
+            <p className="text-sm text-secondary">{formattedTime}</p>
           </div>
           <div className="space-y-1 text-sm">
-            <p className="text-blue-600">
+            <p className="text-blue-600 dark:text-blue-400">
               <span className="font-medium">Price per Liter:</span>{" "}
               {formatPricePerLiter(data.price)}
             </p>
-            <p className="text-green-600">
+            <p className="text-green-600 dark:text-green-400">
               <span className="font-medium">Amount:</span>{" "}
               {data.amount.toFixed(2)} L
             </p>
-            <p className="text-purple-600">
+            <p className="text-purple-600 dark:text-purple-400">
               <span className="font-medium">Total Cost:</span>{" "}
               {formatCurrency(data.total_cost)}
             </p>
@@ -118,12 +145,10 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
   const yAxisMax = maxPrice + priceRange * 0.1;
 
   return (
-    <div className="mt-6">
-      <h4 className="text-md font-semibold mb-3 text-gray-700">
-        Price Trends Over Time
-      </h4>
+    <div className="content-section">
+      <h4 className="heading-4 mb-3">Price Trends Over Time</h4>
 
-      <div className="bg-white p-4 rounded-lg border border-gray-200">
+      <div className="chart-container">
         <ResponsiveContainer width="100%" height={300}>
           <LineChart
             data={sortedData}
@@ -134,13 +159,13 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
               bottom: 20,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} />
             <XAxis
               type="number"
               dataKey="timestampMs"
               scale="time"
               domain={["dataMin", "dataMax"]}
-              stroke="#666"
+              stroke={chartTheme.axis}
               fontSize={12}
               tickMargin={10}
               tickFormatter={(value) => {
@@ -154,7 +179,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             />
             <YAxis
               domain={[yAxisMin, yAxisMax]}
-              stroke="#666"
+              stroke={chartTheme.axis}
               fontSize={12}
               tickFormatter={(value) => `${value.toFixed(2)}`}
               label={{
@@ -169,18 +194,18 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             <Line
               type="monotone"
               dataKey="priceFormatted"
-              stroke="#2563eb"
+              stroke={chartTheme.line}
               strokeWidth={3}
               dot={{
-                fill: "#2563eb",
+                fill: chartTheme.dot,
                 strokeWidth: 2,
                 r: 4,
               }}
               activeDot={{
                 r: 6,
-                fill: "#1d4ed8",
+                fill: chartTheme.activeDot,
                 strokeWidth: 2,
-                stroke: "#fff",
+                stroke: chartTheme.activeDotStroke,
               }}
               name="Price per Liter (€/L)"
             />
@@ -189,30 +214,91 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
 
         {sortedData.length > 0 && (
           <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div className="bg-blue-50 p-3 rounded">
-              <div className="font-medium text-blue-900">Current Price</div>
-              <div className="text-blue-700">
-                {formatPricePerLiter(sortedData[sortedData.length - 1].price)}
-              </div>
-            </div>
-            <div className="bg-green-50 p-3 rounded">
-              <div className="font-medium text-green-900">Lowest Price</div>
-              <div className="text-green-700">
-                {formatPricePerLiter(minPrice)}
-              </div>
-            </div>
-            <div className="bg-red-50 p-3 rounded">
-              <div className="font-medium text-red-900">Highest Price</div>
-              <div className="text-red-700">
-                {formatPricePerLiter(maxPrice)}
-              </div>
-            </div>
-            <div className="bg-gray-50 p-3 rounded">
-              <div className="font-medium text-gray-900">Price Range</div>
-              <div className="text-gray-700">
-                {formatPricePerLiter(priceRange)}
-              </div>
-            </div>
+            <SummaryCard
+              title="Current Price"
+              value={formatPricePerLiter(
+                sortedData[sortedData.length - 1].price,
+              )}
+              icon={
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                  />
+                </svg>
+              }
+              iconBgColor="blue"
+            />
+
+            <SummaryCard
+              title="Lowest Price"
+              value={formatPricePerLiter(minPrice)}
+              icon={
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                  />
+                </svg>
+              }
+              iconBgColor="green"
+            />
+
+            <SummaryCard
+              title="Highest Price"
+              value={formatPricePerLiter(maxPrice)}
+              icon={
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                  />
+                </svg>
+              }
+              iconBgColor="red"
+            />
+
+            <SummaryCard
+              title="Price Range"
+              value={formatPricePerLiter(priceRange)}
+              icon={
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              }
+              iconBgColor="gray"
+            />
           </div>
         )}
       </div>
