@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 import { DataPointCreate } from "@/lib/api";
+import { StandardForm } from "../common/StandardForm";
 
 interface AddDataPointFormProps {
   onSubmit: (dataPoint: DataPointCreate) => void;
@@ -149,7 +150,26 @@ export default function AddDataPointForm({
         );
 
   return (
-    <form onSubmit={handleSubmit} className="form-container">
+    <StandardForm
+      title="Add Data Point"
+      onSubmit={handleSubmit}
+      actions={
+        <>
+          <button type="submit" className="btn-primary flex-1">
+            Add Data Point
+          </button>
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="btn-secondary flex-1"
+            >
+              Cancel
+            </button>
+          )}
+        </>
+      }
+    >
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="timestamp" className="label">
@@ -230,7 +250,7 @@ export default function AddDataPointForm({
 
         {/* Suggestions Dropdown */}
         {showSuggestions && filteredSuggestions.length > 0 && (
-          <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-40 overflow-y-auto">
+          <div className="suggestions-dropdown">
             {filteredSuggestions.slice(0, 10).map((label, index) => (
               <button
                 key={index}
@@ -273,22 +293,6 @@ export default function AddDataPointForm({
           </p>
         )}
       </div>
-
-      <div className="form-actions">
-        <button type="submit" className="btn-primary flex-1">
-          Add Data Point
-        </button>
-
-        {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="btn-secondary flex-1"
-          >
-            Cancel
-          </button>
-        )}
-      </div>
-    </form>
+    </StandardForm>
   );
 }

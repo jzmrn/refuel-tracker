@@ -20,7 +20,17 @@ import {
   max as dateMax,
 } from "date-fns";
 import { TimeSpanResponse } from "@/lib/api";
-import SummaryCard from "../common/SummaryCard";
+import SummaryCard, { type ValueUnit } from "../common/SummaryCard";
+import LoadingSpinner from "../common/LoadingSpinner";
+import {
+  ClockIcon,
+  ChartIcon,
+  TrendingUpIcon,
+  CheckCircleIcon,
+  TrendingDownIcon,
+  HashIcon,
+} from "../common/Icons";
+import { GridLayout } from "../common/GridLayout";
 
 // Hook to get theme-appropriate colors
 const useChartTheme = () => {
@@ -167,13 +177,15 @@ export default function TimeSpanStatistics({
     const hours = Math.floor((minutes % (24 * 60)) / 60);
     const mins = Math.floor(minutes % 60);
 
-    if (days > 0) {
-      return `${days}d ${hours}h ${mins}m`;
-    } else if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    } else {
-      return `${mins}m`;
-    }
+    const values: ValueUnit[] = [];
+    if (days > 0) values.push({ value: days, unit: "d" });
+    if (hours > 0) values.push({ value: hours, unit: "h" });
+    if (mins > 0) values.push({ value: mins, unit: "m" });
+    return values;
+  };
+
+  const formatDurationString = (values: ValueUnit[]) => {
+    return values.map((item) => `${item.value}${item.unit}`).join(" ");
   };
 
   // Prepare swimlane chart data - show individual time spans as bars on a timeline
@@ -438,7 +450,9 @@ export default function TimeSpanStatistics({
                   <title>
                     {`${item.label}\nStart: ${item.startDisplay}\nEnd: ${
                       item.endDisplay
-                    }\nDuration: ${formatDuration(item.durationMinutes)}`}
+                    }\nDuration: ${formatDurationString(
+                      formatDuration(item.durationMinutes),
+                    )}`}
                     {item.notes ? `\nNotes: ${item.notes}` : ""}
                   </title>
                 </rect>
@@ -476,10 +490,7 @@ export default function TimeSpanStatistics({
     return (
       <div className="panel">
         <h3 className="heading-3 mb-4">Statistics for {label}</h3>
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-secondary">Loading statistics...</span>
-        </div>
+        <LoadingSpinner text="Loading statistics..." />
       </div>
     );
   }
@@ -529,178 +540,66 @@ export default function TimeSpanStatistics({
       </div>
 
       {/* Summary Statistics */}
-      <div className="grid grid-cols-2 2xl:grid-cols-4 gap-4 mb-6">
+      <GridLayout variant="stats" className="mb-6">
         <SummaryCard
           title="Avg Duration"
           value={formatDuration(stats.average)}
-          icon={
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          }
+          icon={<ClockIcon size="lg" color="blue" />}
           iconBgColor="blue"
         />
 
         <SummaryCard
           title="Total Time"
           value={formatDuration(stats.total)}
-          icon={
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
-            </svg>
-          }
+          icon={<ChartIcon size="lg" color="green" />}
           iconBgColor="green"
         />
 
         <SummaryCard
           title="Longest"
           value={formatDuration(stats.max)}
-          icon={
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-              />
-            </svg>
-          }
+          icon={<TrendingUpIcon size="lg" color="yellow" />}
           iconBgColor="yellow"
         />
 
         <SummaryCard
           title="Completed"
-          value={count.toString()}
-          icon={
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          }
+          value={{ value: count.toString(), unit: "" }}
+          icon={<CheckCircleIcon size="lg" color="purple" />}
           iconBgColor="purple"
         />
-      </div>
+      </GridLayout>
 
       {/* Additional Statistics */}
-      <div className="grid grid-cols-2 2xl:grid-cols-4 gap-4 mb-6">
+      <GridLayout variant="stats" className="mb-6">
         <SummaryCard
           title="Shortest"
           value={formatDuration(stats.min)}
-          icon={
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-              />
-            </svg>
-          }
+          icon={<TrendingDownIcon size="lg" color="red" />}
           iconBgColor="red"
         />
 
         <SummaryCard
           title="Median"
           value={formatDuration(stats.median)}
-          icon={
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
-              />
-            </svg>
-          }
+          icon={<ChartIcon size="lg" color="indigo" />}
           iconBgColor="indigo"
         />
 
         <SummaryCard
           title="Ongoing"
-          value={ongoingCount.toString()}
-          icon={
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          }
+          value={{ value: ongoingCount.toString(), unit: "" }}
+          icon={<ClockIcon size="lg" color="orange" />}
           iconBgColor="orange"
         />
 
         <SummaryCard
           title="Total Entries"
-          value={(count + ongoingCount).toString()}
-          icon={
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
-              />
-            </svg>
-          }
+          value={{ value: (count + ongoingCount).toString(), unit: "" }}
+          icon={<HashIcon size="lg" color="gray" />}
           iconBgColor="gray"
         />
-      </div>
+      </GridLayout>
 
       {/* Gantt Chart - Timeline with swimlanes for individual entries */}
       {swimlaneData.chartData.length > 0 && (
@@ -784,7 +683,10 @@ export default function TimeSpanStatistics({
                   {format(new Date(span.start_date), "MMM d, yyyy 'at' h:mm a")}
                   <span className="ml-2 font-medium">
                     (Running for{" "}
-                    {formatDuration(calculateDurationMinutes(span.start_date))})
+                    {formatDurationString(
+                      formatDuration(calculateDurationMinutes(span.start_date)),
+                    )}
+                    )
                   </span>
                 </div>
               ))}

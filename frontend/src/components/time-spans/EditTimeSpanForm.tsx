@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TimeSpanUpdate, TimeSpanResponse } from "@/lib/api";
+import { StandardForm } from "../common/StandardForm";
 
 interface EditTimeSpanFormProps {
   timeSpan: TimeSpanResponse;
@@ -227,186 +228,15 @@ export default function EditTimeSpanForm({
   };
 
   return (
-    <div className="panel">
-      <h3 className="heading-3 mb-4">Edit Time Span</h3>
-
-      <form onSubmit={handleSubmit} className="form-container">
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="start_date" className="label">
-              Start Date & Time *
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="datetime-local"
-                id="start_date"
-                name="start_date"
-                value={formData.start_date || ""}
-                onChange={handleChange}
-                className={`input flex-1 ${
-                  errors.start_date ? "border-red-300" : ""
-                }`}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    start_date: new Date().toISOString().slice(0, 16),
-                  }));
-                  // Clear error when setting to now
-                  if (errors.start_date) {
-                    setErrors((prev) => ({ ...prev, start_date: "" }));
-                  }
-                }}
-                className="btn-sm-secondary whitespace-nowrap"
-              >
-                Now
-              </button>
-            </div>
-            {errors.start_date && (
-              <p className="error-text">{errors.start_date}</p>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="end_date" className="label">
-              End Date & Time
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="datetime-local"
-                id="end_date"
-                name="end_date"
-                value={formData.end_date || ""}
-                onChange={handleChange}
-                className={`input flex-1 ${
-                  errors.end_date ? "border-red-300" : ""
-                }`}
-              />
-              <button
-                type="button"
-                onClick={setEndDateToNow}
-                className="btn-sm-secondary whitespace-nowrap"
-              >
-                Now
-              </button>
-            </div>
-            {errors.end_date && <p className="error-text">{errors.end_date}</p>}
-            <p className="mt-1 text-xs text-secondary">
-              Leave empty if the activity is ongoing
-            </p>
-          </div>
-        </div>
-
-        <div className="form-group relative">
-          <label htmlFor="label" className="label">
-            Label/Activity *
-          </label>
-          <input
-            type="text"
-            id="label"
-            name="label"
-            value={formData.label || ""}
-            onChange={handleChange}
-            onFocus={() => setShowSuggestions(existingLabels.length > 0)}
-            onBlur={() => {
-              // Delay hiding suggestions to allow clicks
-              setTimeout(() => setShowSuggestions(false), 200);
-            }}
-            className={`input ${errors.label ? "border-red-300" : ""}`}
-            placeholder="e.g., Workout, Reading, Project Work, Sleep..."
-            maxLength={100}
-            required
-          />
-
-          {/* Suggestions Dropdown */}
-          {showSuggestions && filteredSuggestions.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-40 overflow-y-auto">
-              {filteredSuggestions.slice(0, 10).map((label, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => handleLabelSuggestionClick(label)}
-                  className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none text-sm text-primary"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {errors.label && <p className="error-text">{errors.label}</p>}
-        </div>
-
-        <div className="form-group relative">
-          <label htmlFor="group" className="label">
-            Group *
-          </label>
-          <input
-            type="text"
-            id="group"
-            name="group"
-            value={formData.group || ""}
-            onChange={handleChange}
-            onFocus={() => setShowGroupSuggestions(existingGroups.length > 0)}
-            onBlur={() => {
-              // Delay hiding suggestions to allow clicks
-              setTimeout(() => setShowGroupSuggestions(false), 200);
-            }}
-            className={`input ${errors.group ? "border-red-300" : ""}`}
-            placeholder="e.g., Work, Personal, Health, Hobbies..."
-            maxLength={50}
-            required
-          />
-
-          {/* Group Suggestions Dropdown */}
-          {showGroupSuggestions && filteredGroupSuggestions.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-40 overflow-y-auto">
-              {filteredGroupSuggestions.slice(0, 10).map((group, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => handleGroupSuggestionClick(group)}
-                  className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none text-sm text-primary"
-                >
-                  {group}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {errors.group && <p className="error-text">{errors.group}</p>}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="notes" className="label">
-            Notes (optional)
-          </label>
-          <textarea
-            id="notes"
-            name="notes"
-            rows={3}
-            value={formData.notes || ""}
-            onChange={handleChange}
-            className={`input ${errors.notes ? "border-red-300" : ""}`}
-            placeholder="Additional context or details about this activity..."
-            maxLength={500}
-          />
-          {errors.notes && <p className="error-text">{errors.notes}</p>}
-          {formData.notes && (
-            <p className="mt-1 text-xs text-secondary">
-              {formData.notes.length}/500 characters
-            </p>
-          )}
-        </div>
-
-        <div className="form-actions">
+    <StandardForm
+      title="Edit Time Span"
+      onSubmit={handleSubmit}
+      containerClass="panel"
+      actions={
+        <>
           <button type="submit" className="btn-primary flex-1">
             Update Time Span
           </button>
-
           <button
             type="button"
             onClick={onCancel}
@@ -414,8 +244,179 @@ export default function EditTimeSpanForm({
           >
             Cancel
           </button>
+        </>
+      }
+    >
+      <div className="form-row">
+        <div className="form-group">
+          <label htmlFor="start_date" className="label">
+            Start Date & Time *
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="datetime-local"
+              id="start_date"
+              name="start_date"
+              value={formData.start_date || ""}
+              onChange={handleChange}
+              className={`input flex-1 ${
+                errors.start_date ? "border-red-300" : ""
+              }`}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setFormData((prev) => ({
+                  ...prev,
+                  start_date: new Date().toISOString().slice(0, 16),
+                }));
+                // Clear error when setting to now
+                if (errors.start_date) {
+                  setErrors((prev) => ({ ...prev, start_date: "" }));
+                }
+              }}
+              className="btn-sm-secondary whitespace-nowrap"
+            >
+              Now
+            </button>
+          </div>
+          {errors.start_date && (
+            <p className="error-text">{errors.start_date}</p>
+          )}
         </div>
-      </form>
-    </div>
+
+        <div className="form-group">
+          <label htmlFor="end_date" className="label">
+            End Date & Time
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="datetime-local"
+              id="end_date"
+              name="end_date"
+              value={formData.end_date || ""}
+              onChange={handleChange}
+              className={`input flex-1 ${
+                errors.end_date ? "border-red-300" : ""
+              }`}
+            />
+            <button
+              type="button"
+              onClick={setEndDateToNow}
+              className="btn-sm-secondary whitespace-nowrap"
+            >
+              Now
+            </button>
+          </div>
+          {errors.end_date && <p className="error-text">{errors.end_date}</p>}
+          <p className="mt-1 text-xs text-secondary">
+            Leave empty if the activity is ongoing
+          </p>
+        </div>
+      </div>
+
+      <div className="form-group relative">
+        <label htmlFor="label" className="label">
+          Label/Activity *
+        </label>
+        <input
+          type="text"
+          id="label"
+          name="label"
+          value={formData.label || ""}
+          onChange={handleChange}
+          onFocus={() => setShowSuggestions(existingLabels.length > 0)}
+          onBlur={() => {
+            // Delay hiding suggestions to allow clicks
+            setTimeout(() => setShowSuggestions(false), 200);
+          }}
+          className={`input ${errors.label ? "border-red-300" : ""}`}
+          placeholder="e.g., Workout, Reading, Project Work, Sleep..."
+          maxLength={100}
+          required
+        />
+
+        {/* Suggestions Dropdown */}
+        {showSuggestions && filteredSuggestions.length > 0 && (
+          <div className="suggestions-dropdown">
+            {filteredSuggestions.slice(0, 10).map((label, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => handleLabelSuggestionClick(label)}
+                className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none text-sm text-primary"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {errors.label && <p className="error-text">{errors.label}</p>}
+      </div>
+
+      <div className="form-group relative">
+        <label htmlFor="group" className="label">
+          Group *
+        </label>
+        <input
+          type="text"
+          id="group"
+          name="group"
+          value={formData.group || ""}
+          onChange={handleChange}
+          onFocus={() => setShowGroupSuggestions(existingGroups.length > 0)}
+          onBlur={() => {
+            // Delay hiding suggestions to allow clicks
+            setTimeout(() => setShowGroupSuggestions(false), 200);
+          }}
+          className={`input ${errors.group ? "border-red-300" : ""}`}
+          placeholder="e.g., Work, Personal, Health, Hobbies..."
+          maxLength={50}
+          required
+        />
+
+        {/* Group Suggestions Dropdown */}
+        {showGroupSuggestions && filteredGroupSuggestions.length > 0 && (
+          <div className="suggestions-dropdown">
+            {filteredGroupSuggestions.slice(0, 10).map((group, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => handleGroupSuggestionClick(group)}
+                className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none text-sm text-primary"
+              >
+                {group}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {errors.group && <p className="error-text">{errors.group}</p>}
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="notes" className="label">
+          Notes (optional)
+        </label>
+        <textarea
+          id="notes"
+          name="notes"
+          rows={3}
+          value={formData.notes || ""}
+          onChange={handleChange}
+          className={`input ${errors.notes ? "border-red-300" : ""}`}
+          placeholder="Additional context or details about this activity..."
+          maxLength={500}
+        />
+        {errors.notes && <p className="error-text">{errors.notes}</p>}
+        {formData.notes && (
+          <p className="mt-1 text-xs text-secondary">
+            {formData.notes.length}/500 characters
+          </p>
+        )}
+      </div>
+    </StandardForm>
   );
 }

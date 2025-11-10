@@ -1,5 +1,6 @@
 import { useState } from "react";
 import apiService, { TransactionCreate } from "@/lib/api";
+import { StandardForm } from "../common/StandardForm";
 
 interface AddTransactionFormProps {
   onTransactionAdded: () => void;
@@ -57,129 +58,109 @@ export default function AddTransactionForm({
   };
 
   return (
-    <div className="card">
-      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-        Add Transaction
-      </h3>
-
+    <StandardForm
+      title="Add Transaction"
+      onSubmit={handleSubmit}
+      actions={
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? "Adding..." : "Add Transaction"}
+        </button>
+      }
+    >
       {error && (
         <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
           <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
         </div>
       )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="transaction_type"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Type
-            </label>
-            <select
-              id="transaction_type"
-              name="transaction_type"
-              value={formData.transaction_type}
-              onChange={handleInputChange}
-              className="input"
-              required
-            >
-              <option value="income">Income</option>
-              <option value="expense">Expense</option>
-              <option value="transfer">Transfer</option>
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor="amount"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Amount
-            </label>
-            <input
-              type="number"
-              id="amount"
-              name="amount"
-              step="0.01"
-              min="0"
-              value={formData.amount}
-              onChange={handleInputChange}
-              className="input"
-              required
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="account_id"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Account
-            </label>
-            <input
-              type="text"
-              id="account_id"
-              name="account_id"
-              value={formData.account_id}
-              onChange={handleInputChange}
-              placeholder="e.g., checking, savings"
-              className="input"
-              required
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="category"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Category
-            </label>
-            <input
-              type="text"
-              id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleInputChange}
-              placeholder="e.g., groceries, salary"
-              className="input"
-              required
-            />
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="transaction_type" className="label-compact">
+            Type
+          </label>
+          <select
+            id="transaction_type"
+            name="transaction_type"
+            value={formData.transaction_type}
+            onChange={handleInputChange}
+            className="input"
+            required
+          >
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+            <option value="transfer">Transfer</option>
+          </select>
         </div>
 
         <div>
-          <label
-            htmlFor="description"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Description (optional)
+          <label htmlFor="amount" className="label-compact">
+            Amount
           </label>
-          <textarea
-            id="description"
-            name="description"
-            value={formData.description}
+          <input
+            type="number"
+            id="amount"
+            name="amount"
+            step="0.01"
+            min="0"
+            value={formData.amount}
             onChange={handleInputChange}
-            rows={2}
             className="input"
-            placeholder="Additional details..."
+            required
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="account_id" className="label-compact">
+            Account
+          </label>
+          <input
+            type="text"
+            id="account_id"
+            name="account_id"
+            value={formData.account_id}
+            onChange={handleInputChange}
+            placeholder="e.g., checking, savings"
+            className="input"
+            required
           />
         </div>
 
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Adding..." : "Add Transaction"}
-          </button>
+        <div>
+          <label htmlFor="category" className="label-compact">
+            Category
+          </label>
+          <input
+            type="text"
+            id="category"
+            name="category"
+            value={formData.category}
+            onChange={handleInputChange}
+            placeholder="e.g., groceries, salary"
+            className="input"
+            required
+          />
         </div>
-      </form>
-    </div>
+      </div>
+
+      <div>
+        <label htmlFor="description" className="label-compact">
+          Description (optional)
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          value={formData.description}
+          onChange={handleInputChange}
+          rows={2}
+          className="input"
+          placeholder="Additional details..."
+        />
+      </div>
+    </StandardForm>
   );
 }

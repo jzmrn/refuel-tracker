@@ -67,6 +67,11 @@
     @apply bg-white rounded-lg shadow-xl p-6 dark:bg-gray-800;
   }
 
+  /* Modal Overlay */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50;
+  }
+
   /* Layout Containers */
   .page-container {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6;
@@ -87,6 +92,11 @@
 
   .label {
     @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2;
+  }
+
+  /* Remove margin when label is in a flex container for proper vertical centering */
+  .flex .label {
+    @apply mb-0;
   }
 
   /* Form Layout */
@@ -238,6 +248,54 @@
     @apply bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300;
   }
 
+  /* Action Button Styles - For inline action buttons */
+  .action-btn-edit {
+    @apply p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20;
+  }
+
+  .action-btn-delete {
+    @apply btn bg-red-100 text-red-700 hover:bg-red-200 focus:ring-red-500 text-xs px-2 py-1 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40;
+  }
+
+  /* Common Flex Layouts */
+  .flex-between {
+    @apply flex items-center justify-between;
+  }
+
+  .flex-start {
+    @apply flex items-start;
+  }
+
+  .flex-center {
+    @apply flex items-center;
+  }
+
+  /* Text Utilities */
+  .text-highlight {
+    @apply font-semibold text-blue-600 dark:text-blue-400;
+  }
+
+  .text-value {
+    @apply text-xl font-bold text-primary lg:text-2xl;
+  }
+
+  /* Commonly Used Spacing */
+  .space-y-1 > * + * {
+    margin-top: 0.25rem;
+  }
+
+  .gap-2 {
+    gap: 0.5rem;
+  }
+
+  .gap-3 {
+    gap: 0.75rem;
+  }
+
+  .gap-4 {
+    gap: 1rem;
+  }
+
   /* Chart Container */
   .chart-container {
     @apply bg-white dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600;
@@ -254,6 +312,19 @@
 
   .loading-text {
     @apply ml-2 text-gray-600 dark:text-gray-300;
+  }
+
+  /* Consolidated Loading Component */
+  .loading-state {
+    @apply flex items-center justify-center py-8;
+  }
+
+  .loading-state .spinner {
+    @apply animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600;
+  }
+
+  .loading-state .text {
+    @apply ml-2 text-secondary;
   }
 
   /* Empty state styling */
@@ -297,6 +368,11 @@
 
   .filter-title {
     @apply heading-4 mb-3;
+  }
+
+  /* Remove margin when filter-title is in a flex container for proper vertical centering */
+  .flex .filter-title {
+    @apply mb-0;
   }
 
   .filter-buttons {
@@ -381,26 +457,12 @@
   }
 
   /* Status Message Styles */
-  .status-green {
+  .status-message-green {
     @apply bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800;
   }
 
-  .status-yellow {
+  .status-message-yellow {
     @apply bg-yellow-50 border border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800;
-  }
-
-  /* Additional Stat Card Styles */
-  .stat-card-orange {
-    @apply bg-orange-50 p-3 rounded dark:bg-orange-900/20;
-  }
-
-  .stat-card-orange .stat-label {
-    @apply font-medium text-orange-900 dark:text-orange-200;
-  }
-
-  .stat-card-orange .stat-value,
-  .stat-card-orange .stat-value-sm {
-    @apply text-orange-700 dark:text-orange-300;
   }
 
   /* Error State */
@@ -530,4 +592,48 @@
 
 .calculation-highlight {
   @apply font-semibold text-blue-900 dark:text-blue-100;
+}
+
+/* Commonly Used SVG Icon Styles */
+.icon-sm {
+  @apply w-4 h-4;
+}
+
+.icon-md {
+  @apply w-5 h-5;
+}
+
+.icon-lg {
+  @apply w-8 h-8;
+}
+
+.icon-xl {
+  @apply w-12 h-12;
+}
+
+/* Status Indicators */
+.status-dot {
+  @apply inline-block w-2 h-2 rounded-full;
+}
+
+.status-dot-green {
+  @apply status-dot bg-green-500;
+}
+
+.status-dot-yellow {
+  @apply status-dot bg-yellow-500;
+}
+
+.status-dot-red {
+  @apply status-dot bg-red-500;
+}
+
+/* Form field suggestions dropdown */
+.suggestions-dropdown {
+  @apply absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-40 overflow-y-auto;
+}
+
+/* Form label variants */
+.label-compact {
+  @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
 }

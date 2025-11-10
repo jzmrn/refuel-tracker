@@ -40,8 +40,7 @@ export default function ConfirmationDialog({
               />
             </svg>
           ),
-          confirmBtn:
-            "btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 dark:bg-red-500 dark:hover:bg-red-600",
+          confirmBtn: "btn-danger",
         };
       case "warning":
         return {
@@ -60,8 +59,7 @@ export default function ConfirmationDialog({
               />
             </svg>
           ),
-          confirmBtn:
-            "btn bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500 dark:bg-yellow-500 dark:hover:bg-yellow-600",
+          confirmBtn: "btn-warning",
         };
       default:
         return {
@@ -80,7 +78,7 @@ export default function ConfirmationDialog({
               />
             </svg>
           ),
-          confirmBtn: "btn btn-primary",
+          confirmBtn: "btn-primary",
         };
     }
   };
@@ -88,10 +86,10 @@ export default function ConfirmationDialog({
   const styles = getVariantStyles();
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="modal-overlay">
       <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full">
         <div className="p-6">
-          <div className="flex items-start space-x-4">
+          <div className="flex-start space-x-4">
             <div className="flex-shrink-0">{styles.icon}</div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
@@ -104,7 +102,7 @@ export default function ConfirmationDialog({
           </div>
 
           <div className="flex justify-end space-x-3 mt-6">
-            <button onClick={onCancel} className="btn btn-secondary">
+            <button onClick={onCancel} className="btn-secondary">
               {cancelText}
             </button>
             <button onClick={onConfirm} className={styles.confirmBtn}>

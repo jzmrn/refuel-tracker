@@ -1,5 +1,6 @@
 import React from "react";
 import { RefuelMetric } from "../../lib/api";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 interface RefuelListProps {
   refuels: RefuelMetric[];
@@ -11,10 +12,7 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
     return (
       <div className="panel">
         <h3 className="heading-3 mb-4">Refuel Entries</h3>
-        <div className="flex items-center justify-center py-8">
-          <div className="loading-spinner"></div>
-          <span className="loading-text">Loading data...</span>
-        </div>
+        <LoadingSpinner text="Loading data..." />
       </div>
     );
   }

@@ -2,6 +2,8 @@ import React from "react";
 import { format } from "date-fns";
 
 import { DataPointResponse } from "@/lib/api";
+import LoadingSpinner from "../common/LoadingSpinner";
+import { ChartIcon, TrashIcon } from "../common/Icons";
 
 export type DataPoint = DataPointResponse;
 
@@ -17,30 +19,13 @@ export default function DataPointList({
   loading,
 }: DataPointListProps) {
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-2"></div>
-        <div className="text-secondary">Loading data points...</div>
-      </div>
-    );
+    return <LoadingSpinner text="Loading data points..." />;
   }
 
   if (dataPoints.length === 0) {
     return (
       <div className="empty-state">
-        <svg
-          className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-          />
-        </svg>
+        <ChartIcon size="xl" color="gray" className="mx-auto mb-4" />
         <p className="text-lg font-medium mb-2">No data points yet</p>
         <p>Start tracking by adding your first data point above</p>
       </div>
@@ -149,22 +134,10 @@ export default function DataPointList({
                       <div className="ml-4">
                         <button
                           onClick={() => onDelete(point)}
-                          className="btn bg-red-100 text-red-700 hover:bg-red-200 focus:ring-red-500 text-xs px-2 py-1 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
+                          className="action-btn-delete"
                           title="Delete this data point"
                         >
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
+                          <TrashIcon size="sm" color="red" />
                           Delete
                         </button>
                       </div>

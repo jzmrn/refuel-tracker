@@ -39,13 +39,6 @@ export default function Home() {
     setRefreshTrigger((prev) => prev + 1);
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
-
   return (
     <div>
       {/* Header */}
@@ -62,7 +55,7 @@ export default function Home() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
         <SummaryCard
           title="Income"
-          value={loading ? "..." : formatCurrency(monthlySummary?.income || 0)}
+          value={{ value: monthlySummary?.income || 0, unit: "€" }}
           icon={<span className="font-semibold text-sm md:text-base">+</span>}
           iconBgColor="green"
           loading={loading}
@@ -70,9 +63,7 @@ export default function Home() {
 
         <SummaryCard
           title="Expenses"
-          value={
-            loading ? "..." : formatCurrency(monthlySummary?.expenses || 0)
-          }
+          value={{ value: monthlySummary?.expenses || 0, unit: "€" }}
           icon={<span className="font-semibold text-sm md:text-base">-</span>}
           iconBgColor="red"
           loading={loading}
@@ -80,7 +71,7 @@ export default function Home() {
 
         <SummaryCard
           title="Net"
-          value={loading ? "..." : formatCurrency(monthlySummary?.net || 0)}
+          value={{ value: monthlySummary?.net || 0, unit: "€" }}
           icon={<span className="font-semibold text-sm md:text-base">=</span>}
           iconBgColor={(monthlySummary?.net || 0) >= 0 ? "green" : "red"}
           loading={loading}
@@ -88,11 +79,7 @@ export default function Home() {
 
         <SummaryCard
           title="Transactions"
-          value={
-            loading
-              ? "..."
-              : (monthlySummary?.transaction_count || 0).toString()
-          }
+          value={{ value: (monthlySummary?.transaction_count || 0).toString() }}
           icon={<span className="font-semibold text-sm md:text-base">#</span>}
           iconBgColor="blue"
           loading={loading}

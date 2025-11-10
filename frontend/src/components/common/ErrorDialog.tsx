@@ -65,7 +65,7 @@ export default function ErrorDialog({
     <div className="modal-overlay">
       <div className="modal">
         <div className="p-6">
-          <div className="flex items-start space-x-4">
+          <div className="flex-start space-x-4">
             <div className={`flex-shrink-0 p-2 rounded-full ${styles.iconBg}`}>
               {styles.icon}
             </div>

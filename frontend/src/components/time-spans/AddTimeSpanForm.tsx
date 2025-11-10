@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { TimeSpanCreate } from "@/lib/api";
+import { StandardForm } from "../common/StandardForm";
 
 interface AddTimeSpanFormProps {
   onSubmit: (timeSpan: TimeSpanCreate) => void;
@@ -201,7 +202,26 @@ export default function AddTimeSpanForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="form-container">
+    <StandardForm
+      title="Add Time Span"
+      onSubmit={handleSubmit}
+      actions={
+        <>
+          <button type="submit" className="btn-primary flex-1">
+            Add Time Span
+          </button>
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="btn-secondary flex-1"
+            >
+              Cancel
+            </button>
+          )}
+        </>
+      }
+    >
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="start_date" className="label">
@@ -294,7 +314,7 @@ export default function AddTimeSpanForm({
 
         {/* Suggestions Dropdown */}
         {showSuggestions && filteredSuggestions.length > 0 && (
-          <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-40 overflow-y-auto">
+          <div className="suggestions-dropdown">
             {filteredSuggestions.slice(0, 10).map((label, index) => (
               <button
                 key={index}
@@ -339,7 +359,7 @@ export default function AddTimeSpanForm({
 
         {/* Group Suggestions Dropdown */}
         {showGroupSuggestions && filteredGroupSuggestions.length > 0 && (
-          <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-40 overflow-y-auto">
+          <div className="suggestions-dropdown">
             {filteredGroupSuggestions.slice(0, 10).map((group, index) => (
               <button
                 key={index}
@@ -382,22 +402,6 @@ export default function AddTimeSpanForm({
           </p>
         )}
       </div>
-
-      <div className="form-actions">
-        <button type="submit" className="btn-primary flex-1">
-          Add Time Span
-        </button>
-
-        {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="btn-secondary flex-1"
-          >
-            Cancel
-          </button>
-        )}
-      </div>
-    </form>
+    </StandardForm>
   );
 }

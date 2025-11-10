@@ -7,6 +7,7 @@ import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import Snackbar from "@/components/common/Snackbar";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import SummaryCard from "@/components/common/SummaryCard";
+import { TagIcon, ChartIcon } from "@/components/common/Icons";
 import { useSnackbar } from "@/lib/useSnackbar";
 import apiService, {
   DataPointResponse,
@@ -137,19 +138,16 @@ export default function DataTracking() {
     switch (activeTab) {
       case "add":
         return (
-          <div className="card">
-            <h2 className="heading-2 mb-6">Add Data Point</h2>
-            <AddDataPointForm
-              onSubmit={handleAddDataPoint}
-              existingLabels={existingLabels}
-            />
-          </div>
+          <AddDataPointForm
+            onSubmit={handleAddDataPoint}
+            existingLabels={existingLabels}
+          />
         );
       case "statistics":
         return (
           <div>
             {existingLabels.length > 0 && (
-              <div className="panel mb-6">
+              <div className="panel mb-6 flex justify-between items-center">
                 <label htmlFor="stats-label-select" className="label">
                   Select Metric to View Statistics
                 </label>
@@ -157,7 +155,7 @@ export default function DataTracking() {
                   id="stats-label-select"
                   value={statisticsSelectedLabel}
                   onChange={(e) => setStatisticsSelectedLabel(e.target.value)}
-                  className="input"
+                  className="input w-1/4"
                 >
                   {existingLabels.map((label) => (
                     <option key={label} value={label}>
@@ -192,51 +190,23 @@ export default function DataTracking() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <SummaryCard
                 title="Unique Labels"
-                value={summary?.unique_labels || 0}
+                value={{ value: summary?.unique_labels || 0 }}
                 loading={loading}
                 iconBgColor="purple"
-                icon={
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                    />
-                  </svg>
-                }
+                icon={<TagIcon size="lg" color="purple" />}
               />
 
               <SummaryCard
                 title="Total Entries"
-                value={summary?.total_entries || 0}
+                value={{ value: summary?.total_entries || 0 }}
                 loading={loading}
                 iconBgColor="blue"
-                icon={
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                }
+                icon={<ChartIcon size="lg" color="blue" />}
               />
             </div>
 
             {existingLabels.length > 0 && (
-              <div className="panel mb-6">
+              <div className="panel mb-6 flex justify-between items-center">
                 <label htmlFor="values-label-select" className="label">
                   Filter by Metric
                 </label>
@@ -244,7 +214,7 @@ export default function DataTracking() {
                   id="values-label-select"
                   value={valuesSelectedLabel}
                   onChange={(e) => setValuesSelectedLabel(e.target.value)}
-                  className="input"
+                  className="input w-1/4"
                 >
                   <option value="">All Metrics</option>
                   {existingLabels.map((label) => (
@@ -311,44 +281,16 @@ export default function DataTracking() {
         <div className="grid grid-cols-2 gap-4">
           <SummaryCard
             title="Labels"
-            value={loading ? "..." : summary?.unique_labels?.toString() || "0"}
-            icon={
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                />
-              </svg>
-            }
+            value={{ value: summary?.unique_labels?.toString() || "0" }}
+            icon={<TagIcon size="lg" color="purple" />}
             iconBgColor="purple"
             loading={loading}
           />
 
           <SummaryCard
             title="Entries"
-            value={loading ? "..." : summary?.total_entries?.toString() || "0"}
-            icon={
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
-            }
+            value={{ value: summary?.total_entries?.toString() || "0" }}
+            icon={<ChartIcon size="lg" color="blue" />}
             iconBgColor="blue"
             loading={loading}
           />
@@ -357,7 +299,7 @@ export default function DataTracking() {
         {/* Statistics Section */}
         {existingLabels.length > 0 && (
           <div>
-            <div className="panel mb-4">
+            <div className="panel mb-4 flex justify-between items-center">
               <label htmlFor="mobile-stats-label-select" className="label">
                 Select Metric to View Statistics
               </label>
@@ -365,7 +307,7 @@ export default function DataTracking() {
                 id="mobile-stats-label-select"
                 value={statisticsSelectedLabel}
                 onChange={(e) => setStatisticsSelectedLabel(e.target.value)}
-                className="input"
+                className="input w-1/4"
               >
                 {existingLabels.map((label) => (
                   <option key={label} value={label}>
@@ -387,7 +329,7 @@ export default function DataTracking() {
         {/* Data Points List */}
         {existingLabels.length > 0 && (
           <div>
-            <div className="panel mb-4">
+            <div className="panel mb-4 flex justify-between items-center">
               <label htmlFor="mobile-values-label-select" className="label">
                 Filter by Metric
               </label>
@@ -395,7 +337,7 @@ export default function DataTracking() {
                 id="mobile-values-label-select"
                 value={valuesSelectedLabel}
                 onChange={(e) => setValuesSelectedLabel(e.target.value)}
-                className="input"
+                className="input w-1/4"
               >
                 <option value="">All Metrics</option>
                 {existingLabels.map((label) => (

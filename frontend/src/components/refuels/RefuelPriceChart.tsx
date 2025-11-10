@@ -10,6 +10,13 @@ import {
   Legend,
 } from "recharts";
 import SummaryCard from "../common/SummaryCard";
+import { GridLayout } from "../common/GridLayout";
+import {
+  CurrencyIcon,
+  TrendingDownIcon,
+  TrendingUpIcon,
+  ChartIcon,
+} from "../common/Icons";
 
 // Hook to get theme-appropriate colors
 const useChartTheme = () => {
@@ -91,9 +98,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
     }).format(value);
   };
 
-  const formatPricePerLiter = (value: number) => {
-    return `${value.toFixed(3)} €/L`;
-  };
+  const formatPricePerLiter = (value: number) => value.toFixed(3);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -213,93 +218,49 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
         </ResponsiveContainer>
 
         {sortedData.length > 0 && (
-          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <GridLayout variant="stats" className="mt-4 text-sm">
             <SummaryCard
               title="Current Price"
-              value={formatPricePerLiter(
-                sortedData[sortedData.length - 1].price,
-              )}
-              icon={
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                  />
-                </svg>
-              }
+              value={{
+                value: formatPricePerLiter(
+                  sortedData[sortedData.length - 1].price,
+                ),
+                unit: "€/L",
+              }}
+              icon={<CurrencyIcon size="lg" color="blue" />}
               iconBgColor="blue"
             />
 
             <SummaryCard
               title="Lowest Price"
-              value={formatPricePerLiter(minPrice)}
-              icon={
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-                  />
-                </svg>
-              }
+              value={{
+                value: formatPricePerLiter(minPrice),
+                unit: "€/L",
+              }}
+              icon={<TrendingDownIcon size="lg" color="green" />}
               iconBgColor="green"
             />
 
             <SummaryCard
               title="Highest Price"
-              value={formatPricePerLiter(maxPrice)}
-              icon={
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                  />
-                </svg>
-              }
+              value={{
+                value: formatPricePerLiter(maxPrice),
+                unit: "€/L",
+              }}
+              icon={<TrendingUpIcon size="lg" color="red" />}
               iconBgColor="red"
             />
 
             <SummaryCard
               title="Price Range"
-              value={formatPricePerLiter(priceRange)}
-              icon={
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              }
+              value={{
+                value: formatPricePerLiter(priceRange),
+                unit: "€/L",
+              }}
+              icon={<ChartIcon size="lg" color="gray" />}
               iconBgColor="gray"
             />
-          </div>
+          </GridLayout>
         )}
       </div>
     </div>

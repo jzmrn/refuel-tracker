@@ -100,52 +100,52 @@ export default function Layout({ children }: LayoutProps) {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="flex flex-col md:flex-row">
-        {/* Desktop Sidebar - Hidden on mobile */}
-        <div className="hidden md:block w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 min-h-screen">
-          <div className="p-6">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-              Personal Data Tracker
-            </h1>
-          </div>
-
-          <nav className="px-3 pb-4">
-            <ul className="space-y-1">
-              {navigation.map((item) => {
-                const isActive = router.pathname === item.href;
-                return (
-                  <li key={item.name}>
-                    <Link
-                      href={item.href}
-                      className={clsx(
-                        "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                        isActive
-                          ? "bg-primary-50 text-primary-700 border-r-2 border-primary-700 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-300"
-                          : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
-                      )}
-                    >
-                      <span className="mr-3">{item.icon}</span>
-                      {item.name}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-        </div>
-
-        {/* Mobile Header - Visible only on mobile */}
-        <div className="md:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-          <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:flex">
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <div className="hidden md:block w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0 overflow-y-auto">
+        <div className="p-6">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             Personal Data Tracker
           </h1>
         </div>
 
-        {/* Main content */}
-        <div className="flex-1 flex flex-col">
-          <main className="flex-1 p-4 md:p-8 pb-20 md:pb-8">{children}</main>
-        </div>
+        <nav className="px-3 pb-4">
+          <ul className="space-y-1">
+            {navigation.map((item) => {
+              const isActive = router.pathname === item.href;
+              return (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
+                    className={clsx(
+                      "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary-50 text-primary-700 border-r-2 border-primary-700 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-300"
+                        : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
+                    )}
+                  >
+                    <span className="mr-3">{item.icon}</span>
+                    {item.name}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </div>
+
+      {/* Mobile Header - Visible only on mobile */}
+      <div className="md:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+        <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+          Personal Data Tracker
+        </h1>
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col md:overflow-hidden">
+        <main className="flex-1 p-4 md:p-8 pb-20 md:pb-8 md:overflow-y-auto">
+          {children}
+        </main>
       </div>
 
       {/* Mobile Bottom Navigation - Visible only on mobile */}

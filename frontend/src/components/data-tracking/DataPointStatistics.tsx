@@ -12,6 +12,15 @@ import {
 import { format } from "date-fns";
 import { DataPointResponse } from "@/lib/api";
 import SummaryCard from "../common/SummaryCard";
+import LoadingSpinner from "../common/LoadingSpinner";
+import {
+  ChartIcon,
+  TagIcon,
+  HashIcon,
+  TrendingUpIcon,
+  TrendingDownIcon,
+} from "../common/Icons";
+import { GridLayout } from "../common/GridLayout";
 
 interface DataPointStatisticsProps {
   dataPoints: DataPointResponse[];
@@ -28,10 +37,7 @@ export default function DataPointStatistics({
     return (
       <div className="panel">
         <h3 className="heading-3 mb-4">Statistics for {label}</h3>
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-secondary">Loading statistics...</span>
-        </div>
+        <LoadingSpinner text="Loading statistics..." />
       </div>
     );
   }
@@ -154,94 +160,38 @@ export default function DataPointStatistics({
       <h3 className="heading-3 mb-4">Statistics for "{label}"</h3>
 
       {/* Summary Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <GridLayout variant="stats" className="mb-6">
         <SummaryCard
           title="Average"
-          value={formatValue(average)}
-          icon={
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
-            </svg>
-          }
+          value={{ value: formatValue(average) }}
+          icon={<ChartIcon size="md" color="blue" />}
           iconBgColor="blue"
         />
 
         <SummaryCard
           title="Median"
-          value={formatValue(median)}
-          icon={
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
-              />
-            </svg>
-          }
+          value={{ value: formatValue(median) }}
+          icon={<ChartIcon size="md" color="green" />}
           iconBgColor="green"
         />
 
         <SummaryCard
           title="Range"
-          value={formatValue(range)}
-          icon={
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          }
+          value={{ value: formatValue(range) }}
+          icon={<TagIcon size="md" color="yellow" />}
           iconBgColor="yellow"
         />
 
         <SummaryCard
           title="Total Entries"
-          value={count.toString()}
-          icon={
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
-              />
-            </svg>
-          }
+          value={{ value: count.toString() }}
+          icon={<HashIcon size="md" color="purple" />}
           iconBgColor="purple"
         />
-      </div>
+      </GridLayout>
 
       {/* Additional Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <GridLayout variant="stats" className="mb-6">
         <div className="status-red p-3 rounded">
           <div className="font-medium">Maximum</div>
           <div>{formatValue(max)}</div>
@@ -290,7 +240,7 @@ export default function DataPointStatistics({
               : `↘ -${trendPercentage.toFixed(1)}%`}
           </div>
         </div>
-      </div>
+      </GridLayout>
 
       {/* Chart */}
       <div className="mt-6">

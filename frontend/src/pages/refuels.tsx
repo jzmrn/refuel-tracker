@@ -162,7 +162,7 @@ const RefuelPage: NextPage = () => {
         return (
           <div>
             {/* Filter Options */}
-            <div className="filter-container">
+            <div className="filter-container flex justify-between items-center">
               <h3 className="filter-title">Filter</h3>
               <div className="filter-buttons">
                 <button
@@ -247,7 +247,7 @@ const RefuelPage: NextPage = () => {
         />
 
         {/* Filter Options */}
-        <div className="filter-container">
+        <div className="filter-container flex justify-between items-center">
           <h3 className="filter-title">Filter</h3>
           <div className="filter-buttons">
             <button

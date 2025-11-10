@@ -6,6 +6,8 @@ import {
   differenceInMinutes,
 } from "date-fns";
 import { TimeSpanResponse } from "@/lib/api";
+import LoadingSpinner from "../common/LoadingSpinner";
+import { ClockIcon, EditIcon, TrashIcon } from "../common/Icons";
 
 interface TimeSpanListProps {
   timeSpans: TimeSpanResponse[];
@@ -21,30 +23,13 @@ export default function TimeSpanList({
   loading,
 }: TimeSpanListProps) {
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-secondary">Loading time spans...</span>
-      </div>
-    );
+    return <LoadingSpinner text="Loading time spans..." />;
   }
 
   if (!timeSpans || timeSpans.length === 0) {
     return (
       <div className="empty-state">
-        <svg
-          className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
+        <ClockIcon size="xl" color="gray" className="mx-auto mb-4" />
         <p className="text-lg font-medium mb-2">No time spans yet</p>
         <p>Start tracking by adding your first time span above</p>
       </div>
@@ -140,8 +125,8 @@ export default function TimeSpanList({
         .map(([group, spans]) => (
           <div key={group} className="group-card">
             <div className="group-header">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+              <div className="flex-between">
+                <div className="flex-center gap-2">
                   <span className={`group-badge ${getGroupColor(group)}`}>
                     {group}
                   </span>
@@ -166,9 +151,9 @@ export default function TimeSpanList({
                 )
                 .map((span) => (
                   <div key={span.id} className="list-item">
-                    <div className="flex items-start justify-between">
+                    <div className="flex-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
+                        <div className="flex-center gap-3 mb-2">
                           <div className="text-lg font-medium text-primary">
                             {span.label}
                           </div>
@@ -180,7 +165,7 @@ export default function TimeSpanList({
                         </div>
 
                         <div className="space-y-1 text-sm text-secondary">
-                          <div className="flex items-center gap-4">
+                          <div className="flex-center gap-4">
                             <div>
                               <span className="font-medium">Started:</span>{" "}
                               {formatDateTime(span.start_date)}
@@ -193,7 +178,7 @@ export default function TimeSpanList({
                             )}
                           </div>
 
-                          <div className="flex items-center gap-4">
+                          <div className="flex-center gap-4">
                             <div>
                               <span className="font-medium">Duration:</span>{" "}
                               <span className="text-blue-600 font-semibold dark:text-blue-400">
@@ -219,46 +204,22 @@ export default function TimeSpanList({
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 ml-4">
+                      <div className="flex-center gap-2 ml-4">
                         {onEdit && (
                           <button
                             onClick={() => onEdit(span)}
-                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20"
+                            className="action-btn-edit"
                             title="Edit time span"
                           >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                              />
-                            </svg>
+                            <EditIcon size="sm" color="indigo" />
                           </button>
                         )}
                         <button
                           onClick={() => onDelete(span)}
-                          className="btn bg-red-100 text-red-700 hover:bg-red-200 focus:ring-red-500 text-xs px-2 py-1 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
+                          className="action-btn-delete"
                           title="Delete time span"
                         >
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
+                          <TrashIcon size="sm" color="red" />
                           Delete
                         </button>
                       </div>
