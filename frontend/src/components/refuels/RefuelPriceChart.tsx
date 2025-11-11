@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   LineChart,
   Line,
@@ -18,32 +18,7 @@ import {
   ChartIcon,
 } from "../common/Icons";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
-
-// Hook to get theme-appropriate colors
-const useChartTheme = () => {
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    const checkTheme = () => {
-      setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
-    };
-
-    checkTheme();
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    mediaQuery.addEventListener("change", checkTheme);
-
-    return () => mediaQuery.removeEventListener("change", checkTheme);
-  }, []);
-
-  return {
-    grid: isDark ? "#374151" : "#f0f0f0",
-    axis: isDark ? "#9CA3AF" : "#666666",
-    line: isDark ? "#3B82F6" : "#2563eb",
-    dot: isDark ? "#3B82F6" : "#2563eb",
-    activeDot: isDark ? "#1D4ED8" : "#1d4ed8",
-    activeDotStroke: isDark ? "#1F2937" : "#ffffff",
-  };
-};
+import { useChartTheme } from "../../lib/theme";
 
 interface PriceTrend {
   date: string;
@@ -203,16 +178,16 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             <Line
               type="monotone"
               dataKey="priceFormatted"
-              stroke={chartTheme.line}
+              stroke={chartTheme.primaryLine}
               strokeWidth={3}
               dot={{
-                fill: chartTheme.dot,
+                fill: chartTheme.primaryDot,
                 strokeWidth: 2,
                 r: 4,
               }}
               activeDot={{
                 r: 6,
-                fill: chartTheme.activeDot,
+                fill: chartTheme.primaryDot,
                 strokeWidth: 2,
                 stroke: chartTheme.activeDotStroke,
               }}

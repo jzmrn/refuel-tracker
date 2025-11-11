@@ -34,6 +34,7 @@ export interface TranslationStructure {
     refuel: string;
     dataTracking: string;
     timeSpans: string;
+    settings: string;
     home: string;
     fuel: string;
     data: string;
@@ -337,6 +338,23 @@ export interface TranslationStructure {
       value: string;
       label: string;
       notes: string;
+    };
+  };
+
+  // Settings
+  settings: {
+    title: string;
+    description: string;
+    language: {
+      title: string;
+      description: string;
+    };
+    theme: {
+      title: string;
+      description: string;
+      light: string;
+      dark: string;
+      system: string;
     };
   };
 

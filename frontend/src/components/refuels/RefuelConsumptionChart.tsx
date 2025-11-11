@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   LineChart,
   Line,
@@ -22,34 +22,7 @@ import {
   useTranslation,
   useLocalization,
 } from "../../lib/i18n/LanguageContext";
-
-// Hook to get theme-appropriate colors
-const useChartTheme = () => {
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    const checkTheme = () => {
-      setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
-    };
-
-    checkTheme();
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    mediaQuery.addEventListener("change", checkTheme);
-
-    return () => mediaQuery.removeEventListener("change", checkTheme);
-  }, []);
-
-  return {
-    grid: isDark ? "#374151" : "#f0f0f0",
-    axis: isDark ? "#9CA3AF" : "#666666",
-    primaryLine: isDark ? "#3B82F6" : "#3b82f6",
-    primaryDot: isDark ? "#3B82F6" : "#3b82f6",
-    secondaryLine: isDark ? "#10B981" : "#10b981",
-    secondaryDot: isDark ? "#10B981" : "#10b981",
-    secondaryActiveDot: isDark ? "#059669" : "#059669",
-    activeDotStroke: isDark ? "#1F2937" : "#ffffff",
-  };
-};
+import { useChartTheme } from "../../lib/theme";
 
 interface RefuelDataForChart {
   timestamp: string;

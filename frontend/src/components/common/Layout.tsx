@@ -3,7 +3,6 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { clsx } from "clsx";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import LanguageSwitcher from "./LanguageSwitcher";
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,7 +12,7 @@ export default function Layout({ children }: LayoutProps) {
   const router = useRouter();
   const { t } = useTranslation();
 
-  const navigation = [
+  const mainNavigation = [
     {
       name: t.navigation.dashboard,
       href: "/",
@@ -102,23 +101,76 @@ export default function Layout({ children }: LayoutProps) {
     },
   ];
 
+  const bottomNavigation = [
+    {
+      name: t.navigation.settings,
+      href: "/settings",
+      shortName: t.navigation.settings,
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
+      ),
+    },
+  ];
+
+  const allNavigation = [...mainNavigation, ...bottomNavigation];
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:flex">
       {/* Desktop Sidebar - Hidden on mobile */}
-      <div className="hidden md:block w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0 overflow-y-auto">
-        <div className="p-6 flex items-center justify-between">
+      <div className="hidden md:flex md:flex-col w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0">
+        <div className="p-6">
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             {t.layout.appTitle}
           </h1>
         </div>
 
-        <div className="px-3 mb-4">
-          <LanguageSwitcher />
-        </div>
+        {/* Main Navigation */}
+        <nav className="flex-1 px-3">
+          <ul className="space-y-1">
+            {mainNavigation.map((item) => {
+              const isActive = router.pathname === item.href;
+              return (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
+                    className={clsx(
+                      "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary-50 text-primary-700 border-r-2 border-primary-700 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-300"
+                        : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
+                    )}
+                  >
+                    <span className="mr-3">{item.icon}</span>
+                    {item.name}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
 
+        {/* Bottom Navigation */}
         <nav className="px-3 pb-4">
           <ul className="space-y-1">
-            {navigation.map((item) => {
+            {bottomNavigation.map((item) => {
               const isActive = router.pathname === item.href;
               return (
                 <li key={item.name}>
@@ -143,11 +195,10 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Mobile Header - Visible only on mobile */}
       <div className="md:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-center">
           <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
             {t.layout.appTitle}
           </h1>
-          <LanguageSwitcher />
         </div>
       </div>
 
@@ -161,7 +212,7 @@ export default function Layout({ children }: LayoutProps) {
       {/* Mobile Bottom Navigation - Visible only on mobile */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-2 py-1">
         <nav className="flex justify-around">
-          {navigation.map((item) => {
+          {allNavigation.map((item) => {
             const isActive = router.pathname === item.href;
             return (
               <Link

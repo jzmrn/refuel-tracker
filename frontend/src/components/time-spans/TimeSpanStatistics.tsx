@@ -34,30 +34,8 @@ import { EmptyState } from "../common";
 import { GridLayout } from "../common/GridLayout";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
-// Hook to get theme-appropriate colors
-const useChartTheme = () => {
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    const checkTheme = () => {
-      setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
-    };
-
-    checkTheme();
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    mediaQuery.addEventListener("change", checkTheme);
-
-    return () => mediaQuery.removeEventListener("change", checkTheme);
-  }, []);
-
-  return {
-    background: isDark ? "#1F2937" : "#FAFAFA",
-    border: isDark ? "#374151" : "#E5E7EB",
-    text: isDark ? "#F9FAFB" : "#374151",
-    textSecondary: isDark ? "#9CA3AF" : "#6B7280",
-    gridLine: isDark ? "#374151" : "#E5E7EB",
-  };
-};
+// Import the chart theme hook
+import { useChartTheme } from "../../lib/theme";
 
 interface TimeSpanStatisticsProps {
   timeSpans: TimeSpanResponse[];

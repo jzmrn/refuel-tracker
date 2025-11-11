@@ -32,6 +32,7 @@ export const de: TranslationStructure = {
     refuel: "Tanken",
     dataTracking: "Datenverfolgung",
     timeSpans: "Zeitspannen",
+    settings: "Einstellungen",
     home: "Start",
     fuel: "Kraftstoff",
     data: "Daten",
@@ -351,6 +352,24 @@ export const de: TranslationStructure = {
       value: "0",
       label: "z.B. Gewicht, Blutdruck, Schritte, Temperatur...",
       notes: "Zusätzlicher Kontext oder Details zu dieser Messung...",
+    },
+  },
+
+  // Settings
+  settings: {
+    title: "Einstellungen",
+    description:
+      "Passen Sie Ihre Einstellungen und das Erscheinungsbild der App an",
+    language: {
+      title: "Sprache",
+      description: "Wählen Sie Ihre bevorzugte Sprache",
+    },
+    theme: {
+      title: "Design",
+      description: "Wählen Sie Ihr bevorzugtes Erscheinungsbild",
+      light: "Hell",
+      dark: "Dunkel",
+      system: "System",
     },
   },
 
