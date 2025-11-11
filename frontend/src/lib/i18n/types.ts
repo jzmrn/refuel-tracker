@@ -311,36 +311,6 @@ export interface TranslationStructure {
     timelineFor: string;
   };
 
-  // Transactions
-  transactions: {
-    title: string;
-    addTransaction: string;
-    amount: string;
-    description: string;
-    category: string;
-    date: string;
-    income: string;
-    expenses: string;
-    net: string;
-    transactions: string;
-    type: string;
-    account: string;
-    expense: string;
-    transfer: string;
-    descriptionOptional: string;
-    adding: string;
-    failedToAdd: string;
-    failedToFetch: string;
-    recentTransactions: string;
-    noTransactions: string;
-    tryAgain: string;
-    placeholders: {
-      account: string;
-      category: string;
-      description: string;
-    };
-  };
-
   // Forms
   forms: {
     required: string;

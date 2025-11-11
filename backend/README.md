@@ -52,18 +52,19 @@ just format
 
 ```sh
 data/
-├── transactions/
+├── data_points/
 │   ├── year=2024/
 │   │   ├── month=01/
-│   │   │   ├── transactions_2024-01-01_2024-01-07.parquet
-│   │   │   └── transactions_2024-01-08_2024-01-14.parquet
+│   │   │   ├── data_points_2024-01-01_2024-01-07.parquet
+│   │   │   └── data_points_2024-01-08_2024-01-14.parquet
 │   │   └── month=02/
 │   └── year=2025/
-├── account_balances/
-│   ├── daily_snapshots_2024-01.parquet
-│   └── daily_snapshots_2024-02.parquet
+├── time_spans/
+│   ├── time_spans_2024-01.parquet
+│   └── time_spans_2024-02.parquet
 ├── metrics/
-│   └── metrics_2024-01.parquet
+│   └── refuel/
+│       └── refuel_2024-01.parquet
 └── metadata/
     └── schemas.json
 ```
@@ -83,17 +84,24 @@ data/
 - `GET /health` - Detailed health status
 - `POST /backup` - Create manual backup
 
-### Transactions
+### Data Points
 
-- `POST /transactions/` - Add single transaction
-- `GET /transactions/` - Query transactions with filters
-- `POST /transactions/bulk` - Add multiple transactions
+- `POST /api/data-points/` - Add single data point
+- `GET /api/data-points/` - Query data points with filters
+- `DELETE /api/data-points/{id}` - Delete data point
 
-### Analytics
+### Refuel Tracking
 
-- `GET /analytics/spending-by-category` - Spending by category
-- `GET /analytics/monthly-summary/{year}/{month}` - Monthly summary
-- `GET /analytics/account-balance-history/{account_id}` - Balance history
+- `POST /api/metrics/refuel` - Add refuel entry
+- `GET /api/metrics/refuel` - Query refuel data
+- `GET /api/metrics/refuel/statistics` - Get fuel statistics
+
+### Time Spans
+
+- `POST /api/time-spans/` - Add time span
+- `GET /api/time-spans/` - Query time spans
+- `PUT /api/time-spans/{id}` - Update time span
+- `DELETE /api/time-spans/{id}` - Delete time span
 
 ### API Documentation
 
@@ -101,36 +109,39 @@ Visit the interactive [Swagger documentation](http://localhost:8000/docs).
 
 ## 🗃️ Data Models
 
-### Transaction
+### Data Point
 
 ```python
 {
     "timestamp": "2024-01-15T10:30:00Z",
-    "account_id": "checking",
-    "amount": 50.00,
-    "category": "groceries",
-    "description": "Weekly grocery shopping",
-    "transaction_type": "expense"  # "income", "expense", "transfer"
+    "label": "weight",
+    "value": 75.5,
+    "notes": "Morning measurement"
 }
 ```
 
-### Account Balance
-
-```python
-{
-    "timestamp": "2024-01-15T23:59:59Z",
-    "account_id": "checking",
-    "balance": 1250.50
-}
-```
-
-### Metric
+### Refuel Metric
 
 ```python
 {
     "timestamp": "2024-01-15T10:00:00Z",
-    "metric_type": "car_kilometers",
-    "value": 152340.5,
+    "price": 1.589,
+    "amount": 45.2,
+    "kilometers_since_last_refuel": 450,
+    "estimated_fuel_consumption": 7.5,
+    "notes": "Shell station"
+}
+```
+
+### Time Span
+
+```python
+{
+    "start_date": "2024-01-15T09:00:00Z",
+    "end_date": "2024-01-15T17:30:00Z",
+    "label": "Work",
+    "group": "Professional",
+    "notes": "Regular work day"
     "unit": "km",
     "metadata": {"vehicle": "toyota_prius"}
 }
@@ -148,7 +159,9 @@ app/
 │   ├── parquet_store.py # Main storage implementation
 │   └── backup_manager.py # Backup functionality
 ├── api/
-│   ├── transactions.py  # Transaction endpoints
+│   ├── data_points.py   # Data tracking endpoints
+│   ├── refuels.py       # Refuel tracking endpoints
+│   ├── time_spans.py    # Time span endpoints
 │   └── analytics.py     # Analytics endpoints
 └── utils/
     └── date_helpers.py  # Utility functions
@@ -255,15 +268,15 @@ docker run -p 8000:8000 \
 
 ### Expected Performance
 
-- **Writes**: 10,000+ transactions/second
+- **Writes**: 10,000+ records/second
 - **Reads**: Millions of rows scanned in milliseconds
-- **Storage**: ~1MB per 10,000 transactions (compressed)
+- **Storage**: ~1MB per 10,000 records (compressed)
 - **Memory**: Low memory footprint with lazy loading
 
 ### Optimization Tips
 
 - Use date range filters for large datasets
-- Batch transactions when possible
+- Batch data operations when possible
 - Monitor file sizes in data directory
 - Regular backups to prevent data loss
 
@@ -311,38 +324,45 @@ export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
 ## 📝 API Examples
 
-### Add Transaction
+### Add Data Point
 
 ```bash
-curl -X POST "http://localhost:8000/transactions/" \
+curl -X POST "http://localhost:8000/api/data-points/" \
   -H "Content-Type: application/json" \
   -d '{
-    "account_id": "checking",
-    "amount": 50.00,
-    "category": "groceries",
-    "transaction_type": "expense"
+    "label": "weight",
+    "value": 75.5,
+    "timestamp": "2024-01-15T08:00:00Z",
+    "notes": "Morning measurement"
   }'
 ```
 
-### Query Transactions
+### Query Data Points
 
 ```bash
-# Recent transactions
-curl "http://localhost:8000/transactions/?limit=10"
+# Recent data points
+curl "http://localhost:8000/api/data-points/?limit=10"
 
-# Transactions by date range
-curl "http://localhost:8000/transactions/?start_date=2024-01-01&end_date=2024-01-31"
+# Data points by date range
+curl "http://localhost:8000/api/data-points/?start_date=2024-01-01&end_date=2024-01-31"
 
-# Transactions by category
-curl "http://localhost:8000/transactions/?category=groceries"
+# Data points by label
+curl "http://localhost:8000/api/data-points/?label=weight"
 ```
 
-### Get Analytics
+### Add Refuel Entry
 
 ```bash
-# Monthly summary
-curl "http://localhost:8000/analytics/monthly-summary/2024/1"
+# Add refuel entry
+curl -X POST "http://localhost:8000/api/metrics/refuel" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "price": 1.589,
+    "amount": 45.2,
+    "kilometers_since_last_refuel": 450,
+    "estimated_fuel_consumption": 7.5
+  }'
 
-# Spending by category
-curl "http://localhost:8000/analytics/spending-by-category?start_date=2024-01-01&end_date=2024-01-31"
+# Get refuel statistics
+curl "http://localhost:8000/api/metrics/refuel/statistics"
 ```

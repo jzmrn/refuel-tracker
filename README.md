@@ -1,11 +1,10 @@
 # Personal Data Tracker
 
-A modern, self-hosted personal finance and metrics tracking application built with **Parquet-based storage** for maximum performance and data ownership.
+A modern, self-hosted personal metrics tracking application built with **Parquet-based storage** for maximum performance and data ownership.
 
 ## 🎯 Features
 
-- **Financial Tracking**: Track income, expenses, and transfers across multiple accounts
-- **Metrics Tracking**: Monitor any quantifiable data (car kilometers, weight, etc.)
+- **Metrics Tracking**: Monitor any quantifiable data (fuel consumption, weight, activity tracking, etc.)
 - **Fast Analytics**: Lightning-fast queries thanks to Parquet columnar storage
 - **Data Visualization**: Beautiful charts and graphs for insights
 - **File-based Storage**: No database server required - your data stays in portable files
@@ -36,15 +35,16 @@ A modern, self-hosted personal finance and metrics tracking application built wi
 
 ```sh
 data/
-├── transactions/
+├── data_points/
 │   ├── year=2024/
 │   │   ├── month=01/
-│   │   │   ├── transactions_2024-01-01_2024-01-07.parquet
-│   │   │   └── transactions_2024-01-08_2024-01-14.parquet
+│   │   │   ├── data_points_2024-01-01_2024-01-07.parquet
+│   │   │   └── data_points_2024-01-08_2024-01-14.parquet
 │   │   └── month=02/
 │   └── year=2025/
-├── account_balances/
+├── time_spans/
 ├── metrics/
+│   └── refuel/
 └── metadata/
 ```
 
@@ -185,7 +185,9 @@ personal-data-tracker/
 │   │   │   ├── parquet_store.py # Main storage implementation
 │   │   │   └── backup_manager.py # Backup functionality
 │   │   ├── api/
-│   │   │   ├── transactions.py  # Transaction endpoints
+│   │   │   ├── data_points.py   # Data tracking endpoints
+│   │   │   ├── refuels.py       # Refuel tracking endpoints
+│   │   │   ├── time_spans.py    # Time span endpoints
 │   │   │   └── analytics.py     # Analytics endpoints
 │   │   └── utils/
 │   │       └── date_helpers.py  # Utility functions
@@ -280,9 +282,9 @@ Since data is stored in portable Parquet files, migration is simple:
 
 ### Expected Performance
 
-- **Writes**: 10,000+ transactions/second
+- **Writes**: 10,000+ records/second
 - **Reads**: Millions of rows scanned in milliseconds
-- **Storage**: ~1MB per 10,000 transactions (compressed)
+- **Storage**: ~1MB per 10,000 records (compressed)
 
 ## 🔒 Security
 

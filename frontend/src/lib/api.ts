@@ -2,37 +2,6 @@ import axios from "axios";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export interface Transaction {
-  timestamp: string;
-  account_id: string;
-  amount: number;
-  category: string;
-  description?: string;
-  transaction_type: "income" | "expense" | "transfer";
-}
-
-export interface TransactionCreate {
-  account_id: string;
-  amount: number;
-  category: string;
-  description?: string;
-  transaction_type: "income" | "expense" | "transfer";
-}
-
-export interface MonthlySummary {
-  income: number;
-  expenses: number;
-  net: number;
-  transaction_count: number;
-}
-
-export interface SpendingByCategory {
-  category: string;
-  total_spent: number;
-  transaction_count: number;
-  avg_amount: number;
-}
-
 export interface Unit {
   id: string;
   name: string;
@@ -248,60 +217,6 @@ class ApiService {
   });
 
   private categoriesCache: Category[] | null = null;
-
-  // Transactions
-  async addTransaction(transaction: TransactionCreate): Promise<void> {
-    await this.api.post("/transactions/", transaction);
-  }
-
-  async getTransactions(params?: {
-    start_date?: string;
-    end_date?: string;
-    account_id?: string;
-    category?: string;
-    limit?: number;
-  }): Promise<Transaction[]> {
-    const response = await this.api.get("/transactions/", { params });
-    return response.data;
-  }
-
-  async addTransactionsBulk(transactions: TransactionCreate[]): Promise<void> {
-    await this.api.post("/transactions/bulk", transactions);
-  }
-
-  // Analytics
-  async getSpendingByCategory(
-    startDate: string,
-    endDate: string
-  ): Promise<SpendingByCategory[]> {
-    const response = await this.api.get("/analytics/spending-by-category", {
-      params: { start_date: startDate, end_date: endDate },
-    });
-    return response.data;
-  }
-
-  async getMonthlySummary(
-    year: number,
-    month: number
-  ): Promise<MonthlySummary> {
-    const response = await this.api.get(
-      `/analytics/monthly-summary/${year}/${month}`
-    );
-    return response.data;
-  }
-
-  async getAccountBalanceHistory(
-    accountId: string,
-    days: number = 30
-  ): Promise<any[]> {
-    const response = await this.api.get(
-      `/analytics/account-balance-history/${accountId}`,
-      {
-        params: { days },
-      }
-    );
-    return response.data;
-  }
 
   // Health check
   async healthCheck(): Promise<any> {

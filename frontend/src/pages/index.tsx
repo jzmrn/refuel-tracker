@@ -1,122 +1,100 @@
-import { useState, useEffect } from "react";
-import { format, startOfMonth, endOfMonth } from "date-fns";
-import TransactionList from "@/components/transactions/TransactionList";
-import AddTransactionForm from "@/components/transactions/AddTransactionForm";
-import FloatingActionButton from "@/components/common/FloatingActionButton";
-import SummaryCard from "@/components/common/SummaryCard";
+import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import apiService, { MonthlySummary } from "@/lib/api";
+import {
+  ChartBarIcon,
+  ClockIcon,
+  DocumentChartBarIcon,
+  TruckIcon,
+} from "@heroicons/react/24/outline";
 
 export default function Home() {
   const { t } = useTranslation();
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [monthlySummary, setMonthlySummary] = useState<MonthlySummary | null>(
-    null,
-  );
-  const [loading, setLoading] = useState(true);
-  const [isMobileFormOpen, setIsMobileFormOpen] = useState(false);
 
-  useEffect(() => {
-    fetchMonthlySummary();
-  }, [refreshTrigger]);
-
-  const fetchMonthlySummary = async () => {
-    try {
-      setLoading(true);
-      const now = new Date();
-      const summary = await apiService.getMonthlySummary(
-        now.getFullYear(),
-        now.getMonth() + 1,
-      );
-      setMonthlySummary(summary);
-    } catch (error) {
-      console.error("Error fetching monthly summary:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleTransactionAdded = () => {
-    setIsMobileFormOpen(false);
-    setRefreshTrigger((prev) => prev + 1);
-  };
+  const features = [
+    {
+      name: t.navigation.refuel,
+      description: "Track fuel consumption, prices, and costs",
+      href: "/refuels",
+      icon: TruckIcon,
+      color: "text-blue-600",
+      bgColor: "bg-blue-100",
+    },
+    {
+      name: t.navigation.dataTracking,
+      description: "Monitor numerical data with custom labels",
+      href: "/data-tracking",
+      icon: ChartBarIcon,
+      color: "text-green-600",
+      bgColor: "bg-green-100",
+    },
+    {
+      name: t.navigation.timeSpans,
+      description: "Log activities and time periods",
+      href: "/time-spans",
+      icon: ClockIcon,
+      color: "text-purple-600",
+      bgColor: "bg-purple-100",
+    },
+  ];
 
   return (
     <div>
       {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
+      <div className="mb-8 md:mb-12">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100">
           {t.navigation.dashboard}
         </h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-2 text-sm md:text-base">
+        <p className="text-gray-600 dark:text-gray-300 mt-4 text-lg">
           {t.dashboard.welcome}
         </p>
       </div>
 
-      {/* Monthly Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
-        <SummaryCard
-          title={t.transactions.income}
-          value={{ value: monthlySummary?.income || 0, unit: "€" }}
-          icon={<span className="font-semibold text-sm md:text-base">+</span>}
-          iconBgColor="green"
-          loading={loading}
-        />
-
-        <SummaryCard
-          title={t.transactions.expenses}
-          value={{ value: monthlySummary?.expenses || 0, unit: "€" }}
-          icon={<span className="font-semibold text-sm md:text-base">-</span>}
-          iconBgColor="red"
-          loading={loading}
-        />
-
-        <SummaryCard
-          title={t.transactions.net}
-          value={{ value: monthlySummary?.net || 0, unit: "€" }}
-          icon={<span className="font-semibold text-sm md:text-base">=</span>}
-          iconBgColor={(monthlySummary?.net || 0) >= 0 ? "green" : "red"}
-          loading={loading}
-        />
-
-        <SummaryCard
-          title={t.transactions.transactions}
-          value={{ value: (monthlySummary?.transaction_count || 0).toString() }}
-          icon={<span className="font-semibold text-sm md:text-base">#</span>}
-          iconBgColor="blue"
-          loading={loading}
-        />
+      {/* Feature Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {features.map((feature) => (
+          <Link
+            key={feature.name}
+            href={feature.href}
+            className="group relative rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-6 hover:shadow-lg transition-shadow duration-200"
+          >
+            <div className="flex items-center">
+              <div
+                className={`rounded-lg ${feature.bgColor} dark:bg-gray-700 p-3`}
+              >
+                <feature.icon
+                  className={`h-6 w-6 ${feature.color} dark:text-gray-300`}
+                  aria-hidden="true"
+                />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                  {feature.name}
+                </h3>
+              </div>
+            </div>
+            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+              {feature.description}
+            </p>
+          </Link>
+        ))}
       </div>
 
-      {/* Desktop Layout - Side by side */}
-      <div className="hidden lg:grid lg:grid-cols-2 lg:gap-8">
-        {/* Add Transaction Form */}
-        <div>
-          <AddTransactionForm onTransactionAdded={handleTransactionAdded} />
-        </div>
-
-        {/* Transaction List */}
-        <div>
-          <TransactionList refreshTrigger={refreshTrigger} />
-        </div>
-      </div>
-
-      {/* Mobile Layout - Stacked */}
-      <div className="lg:hidden space-y-6">
-        {/* Transaction List */}
-        <div>
-          <TransactionList refreshTrigger={refreshTrigger} />
+      {/* Getting Started */}
+      <div className="mt-12 rounded-lg bg-blue-50 dark:bg-blue-900/20 p-6">
+        <div className="flex items-center">
+          <DocumentChartBarIcon className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+          <div className="ml-4">
+            <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+              Getting Started
+            </h3>
+            <p className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+              Choose a tracking category above to begin monitoring your personal
+              data. Each section provides specialized tools for different types
+              of information.
+            </p>
+          </div>
         </div>
       </div>
-
-      {/* Floating Action Button for Mobile */}
-      <FloatingActionButton
-        onAddClick={() => setIsMobileFormOpen(true)}
-        isOpen={isMobileFormOpen}
-        onClose={() => setIsMobileFormOpen(false)}
-      >
-        <AddTransactionForm onTransactionAdded={handleTransactionAdded} />
-      </FloatingActionButton>
     </div>
   );
 }

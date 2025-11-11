@@ -6,11 +6,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import (
-    analytics,
     data_points,
     refuels,
     time_spans,
-    transactions,
 )
 from app.storage.backup_manager import BackupManager
 from app.storage.metric_registry import MetricRegistry
@@ -45,8 +43,6 @@ async def lifespan(app: FastAPI):
     )
 
     # Inject data store into API modules
-    transactions.set_data_store(data_store)
-    analytics.set_data_store(data_store)
     refuels.set_data_store(data_store)
     refuels.set_metric_registry(metric_registry)
     data_points.set_data_store(data_store)
@@ -88,8 +84,6 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(transactions.router)
-app.include_router(analytics.router)
 app.include_router(refuels.router, prefix="/api/metrics", tags=["metrics"])
 app.include_router(data_points.router, prefix="/api", tags=["data-points"])
 app.include_router(time_spans.router, prefix="/api", tags=["time-spans"])
