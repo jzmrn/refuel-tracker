@@ -10,6 +10,7 @@ import FloatingActionButton from "@/components/common/FloatingActionButton";
 import SummaryCard from "@/components/common/SummaryCard";
 import { TagIcon, ClockIcon } from "@/components/common/Icons";
 import { useSnackbar } from "@/lib/useSnackbar";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 import apiService, {
   TimeSpanResponse,
   TimeSpanCreate,
@@ -23,6 +24,7 @@ export type TimeSpanSummary = TimeSpanSummaryResponse;
 type TabType = "add" | "statistics" | "values";
 
 export default function TimeSpans() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>("add");
   const [valuesSelectedGroup, setValuesSelectedGroup] = useState<string>("");
   const [timeSpans, setTimeSpans] = useState<TimeSpan[]>([]);
@@ -76,9 +78,7 @@ export default function TimeSpans() {
       }
     } catch (error) {
       console.error("Error fetching data:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      showError(`Failed to load data: ${errorMessage}`);
+      showError(t.timeSpans.failedToLoad);
     } finally {
       setLoading(false);
     }
@@ -89,7 +89,7 @@ export default function TimeSpans() {
       await apiService.createTimeSpan(spanData);
       setRefreshTrigger((prev) => prev + 1);
 
-      showSuccess("Time span added successfully!");
+      showSuccess(t.timeSpans.addedSuccessfully);
 
       // Close mobile form and switch to values tab to show the newly added entry
       setIsMobileFormOpen(false);
@@ -98,7 +98,7 @@ export default function TimeSpans() {
       setValuesSelectedGroup(spanData.group);
     } catch (error) {
       console.error("Error adding time span:", error);
-      showError("Failed to add time span.");
+      showError(t.timeSpans.failedToAdd);
     }
   };
 
@@ -115,10 +115,10 @@ export default function TimeSpans() {
       await apiService.updateTimeSpan(id, update);
       setRefreshTrigger((prev) => prev + 1);
       setEditingSpan(null);
-      showSuccess("Time span updated successfully!");
+      showSuccess(t.timeSpans.updatedSuccessfully);
     } catch (error) {
       console.error("Error updating time span:", error);
-      showError("Failed to update time span.");
+      showError(t.timeSpans.failedToUpdate);
     }
   };
 
@@ -129,18 +129,18 @@ export default function TimeSpans() {
       await apiService.deleteTimeSpan(deletingSpan.id);
       setRefreshTrigger((prev) => prev + 1);
       setDeletingSpan(null);
-      showSuccess("Time span deleted successfully!");
+      showSuccess(t.timeSpans.deletedSuccessfully);
     } catch (error) {
       console.error("Error deleting time span:", error);
-      showError("Failed to delete time span.");
+      showError(t.timeSpans.failedToDelete);
       setDeletingSpan(null);
     }
   };
 
   const tabs = [
-    { id: "add" as TabType, label: "Add Time Span", icon: "⏱️" },
-    { id: "statistics" as TabType, label: "Statistics", icon: "📊" },
-    { id: "values" as TabType, label: "All Values", icon: "📋" },
+    { id: "add" as TabType, label: t.timeSpans.addTimeSpan, icon: "⏱️" },
+    { id: "statistics" as TabType, label: t.timeSpans.statistics, icon: "📊" },
+    { id: "values" as TabType, label: t.timeSpans.allValues, icon: "📋" },
   ];
 
   const renderTabContent = () => {
@@ -157,7 +157,7 @@ export default function TimeSpans() {
         return (
           <TimeSpanStatistics
             timeSpans={timeSpans}
-            label="All Time Spans"
+            label={t.timeSpans.allTimeSpans}
             loading={loading}
           />
         );
@@ -167,7 +167,7 @@ export default function TimeSpans() {
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <SummaryCard
-                title="Unique Labels"
+                title={t.timeSpans.uniqueLabels}
                 value={{ value: summary?.unique_labels || 0 }}
                 loading={loading}
                 iconBgColor="purple"
@@ -175,7 +175,7 @@ export default function TimeSpans() {
               />
 
               <SummaryCard
-                title="Total Entries"
+                title={t.timeSpans.totalEntries}
                 value={{ value: summary?.total_entries || 0 }}
                 loading={loading}
                 iconBgColor="blue"
@@ -186,7 +186,7 @@ export default function TimeSpans() {
             {existingGroups.length > 0 && (
               <div className="mb-6 panel">
                 <label htmlFor="values-group-select" className="label">
-                  Filter by Group
+                  {t.timeSpans.filterByGroup}
                 </label>
                 <select
                   id="values-group-select"
@@ -194,7 +194,7 @@ export default function TimeSpans() {
                   onChange={(e) => setValuesSelectedGroup(e.target.value)}
                   className="input"
                 >
-                  <option value="">All Groups</option>
+                  <option value="">{t.timeSpans.allGroups}</option>
                   {existingGroups.map((group) => (
                     <option key={group} value={group}>
                       {group}
@@ -232,9 +232,9 @@ export default function TimeSpans() {
       {/* Header */}
       <div className="mb-6 md:mb-8 flex justify-between items-start">
         <div>
-          <h1 className="heading-1">Time Spans</h1>
+          <h1 className="heading-1">{t.timeSpans.title}</h1>
           <p className="text-secondary mt-2 text-sm md:text-base">
-            Track activities and events with start and end dates
+            {t.timeSpans.trackActivities}
           </p>
         </div>
       </div>
@@ -269,7 +269,7 @@ export default function TimeSpans() {
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-4">
           <SummaryCard
-            title="Labels"
+            title={t.timeSpans.labels}
             value={{ value: summary?.unique_labels || 0 }}
             loading={loading}
             iconBgColor="purple"
@@ -277,7 +277,7 @@ export default function TimeSpans() {
           />
 
           <SummaryCard
-            title="Entries"
+            title={t.timeSpans.entries}
             value={{ value: summary?.total_entries || 0 }}
             loading={loading}
             iconBgColor="blue"
@@ -288,7 +288,7 @@ export default function TimeSpans() {
         {/* Statistics Section */}
         <TimeSpanStatistics
           timeSpans={timeSpans}
-          label="All Time Spans"
+          label={t.timeSpans.allTimeSpans}
           loading={loading}
         />
 
@@ -296,8 +296,8 @@ export default function TimeSpans() {
         {existingGroups.length > 0 && (
           <div>
             <div className="mb-4 panel">
-              <label htmlFor="mobile-values-group-select" className="label">
-                Filter by Group
+              <label htmlFor="mobile-values-search" className="label">
+                {t.timeSpans.searchTimeSpans}
               </label>
               <select
                 id="mobile-values-group-select"
@@ -305,7 +305,7 @@ export default function TimeSpans() {
                 onChange={(e) => setValuesSelectedGroup(e.target.value)}
                 className="input"
               >
-                <option value="">All Groups</option>
+                <option value="">{t.timeSpans.allGroups}</option>
                 {existingGroups.map((group) => (
                   <option key={group} value={group}>
                     {group}

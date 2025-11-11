@@ -7,6 +7,8 @@ export { default as FloatingActionButton } from "./FloatingActionButton";
 export { default as ConfirmationDialog } from "./ConfirmationDialog";
 export { default as ErrorDialog } from "./ErrorDialog";
 export { default as Snackbar } from "./Snackbar";
+export { default as LanguageSwitcher } from "./LanguageSwitcher";
+export { default as EmptyState } from "./EmptyState";
 
 // Export new centralized components
 export * from "./Icons";

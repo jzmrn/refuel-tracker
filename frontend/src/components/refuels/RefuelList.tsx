@@ -1,6 +1,8 @@
 import React from "react";
 import { RefuelMetric } from "../../lib/api";
 import LoadingSpinner from "../common/LoadingSpinner";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
+import { EmptyState, ChartIcon, CollectionIcon } from "../common";
 
 interface RefuelListProps {
   refuels: RefuelMetric[];
@@ -8,24 +10,24 @@ interface RefuelListProps {
 }
 
 export default function RefuelList({ refuels, loading }: RefuelListProps) {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <div className="panel">
-        <h3 className="heading-3 mb-4">Refuel Entries</h3>
-        <LoadingSpinner text="Loading data..." />
+        <h3 className="heading-3 mb-4">{t.refuels.refuelEntries}</h3>
+        <LoadingSpinner text={t.refuels.loadingData} />
       </div>
     );
   }
 
   if (!refuels || refuels.length === 0) {
     return (
-      <div className="panel">
-        <h3 className="heading-3 mb-4">Refuel Entries</h3>
-        <div className="empty-state">
-          <p>No refuel entries recorded yet.</p>
-          <p className="text-sm mt-1">Add your first refuel entry above.</p>
-        </div>
-      </div>
+      <EmptyState
+        icon={
+          <CollectionIcon size="xl" color="gray" className="mx-auto mb-4" />
+        }
+        title={t.refuels.noRefuelEntriesYet}
+      />
     );
   }
 
@@ -39,7 +41,7 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
         date.toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
-        }) + " (Today)"
+        }) + ` (${t.refuels.today})`
       );
     }
 
@@ -70,7 +72,7 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
   return (
     <div className="panel">
       <h3 className="heading-3 mb-4">
-        Refuel Entries ({refuels?.length || 0})
+        {t.refuels.refuelEntries} ({refuels?.length || 0})
       </h3>
 
       <div className="overflow-x-auto">
@@ -78,25 +80,25 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
               <th className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                Date
+                {t.refuels.dateHeader}
               </th>
               <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
                 €/L
               </th>
               <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                Liters
+                {t.refuels.litersHeader}
               </th>
               <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                Total
+                {t.refuels.totalHeader}
               </th>
               <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden md:table-cell">
-                Km
+                {t.refuels.kmHeader}
               </th>
               <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
                 L/100km
               </th>
               <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden lg:table-cell">
-                Notes
+                {t.refuels.notesHeader}
               </th>
             </tr>
           </thead>

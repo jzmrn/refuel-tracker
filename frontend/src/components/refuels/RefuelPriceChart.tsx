@@ -17,6 +17,7 @@ import {
   TrendingUpIcon,
   ChartIcon,
 } from "../common/Icons";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 // Hook to get theme-appropriate colors
 const useChartTheme = () => {
@@ -57,15 +58,16 @@ interface RefuelPriceChartProps {
 }
 
 export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
+  const { t } = useTranslation();
   const chartTheme = useChartTheme();
 
   if (!priceData || priceData.length === 0) {
     return (
       <div className="content-section">
-        <h4 className="heading-4 mb-3">Price Trends Over Time</h4>
+        <h4 className="heading-4 mb-3">{t.refuels.priceTrendsOverTime}</h4>
         <div className="empty-state">
-          <p>No price trend data available</p>
-          <p className="text-sm mt-1">Add more refuel entries to see trends</p>
+          <p>{t.refuels.noPriceTrendData}</p>
+          <p className="text-sm mt-1">{t.refuels.addMoreRefuelEntries}</p>
         </div>
       </div>
     );
@@ -123,15 +125,17 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
           </div>
           <div className="space-y-1 text-sm">
             <p className="text-blue-600 dark:text-blue-400">
-              <span className="font-medium">Price per Liter:</span>{" "}
+              <span className="font-medium">
+                {t.refuels.pricePerLiterTooltip}
+              </span>{" "}
               {formatPricePerLiter(data.price)}
             </p>
             <p className="text-green-600 dark:text-green-400">
-              <span className="font-medium">Amount:</span>{" "}
+              <span className="font-medium">{t.refuels.amountTooltip}</span>{" "}
               {data.amount.toFixed(2)} L
             </p>
             <p className="text-purple-600 dark:text-purple-400">
-              <span className="font-medium">Total Cost:</span>{" "}
+              <span className="font-medium">{t.refuels.totalCostTooltip}</span>{" "}
               {formatCurrency(data.total_cost)}
             </p>
           </div>
@@ -151,7 +155,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
 
   return (
     <div className="content-section">
-      <h4 className="heading-4 mb-3">Price Trends Over Time</h4>
+      <h4 className="heading-4 mb-3">{t.refuels.priceTrendsOverTime}</h4>
 
       <div className="chart-container">
         <ResponsiveContainer width="100%" height={300}>
@@ -188,7 +192,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
               fontSize={12}
               tickFormatter={(value) => `${value.toFixed(2)}`}
               label={{
-                value: "Price (€/L)",
+                value: t.refuels.priceLabel,
                 angle: -90,
                 position: "insideLeft",
                 style: { textAnchor: "middle" },
@@ -212,7 +216,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
                 strokeWidth: 2,
                 stroke: chartTheme.activeDotStroke,
               }}
-              name="Price per Liter (€/L)"
+              name={t.refuels.pricePerLiterChart}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -220,7 +224,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
         {sortedData.length > 0 && (
           <GridLayout variant="stats" className="mt-4 text-sm">
             <SummaryCard
-              title="Current Price"
+              title={t.refuels.currentPrice}
               value={{
                 value: formatPricePerLiter(
                   sortedData[sortedData.length - 1].price,
@@ -232,7 +236,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             />
 
             <SummaryCard
-              title="Lowest Price"
+              title={t.refuels.lowestPrice}
               value={{
                 value: formatPricePerLiter(minPrice),
                 unit: "€/L",
@@ -242,7 +246,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             />
 
             <SummaryCard
-              title="Highest Price"
+              title={t.refuels.highestPrice}
               value={{
                 value: formatPricePerLiter(maxPrice),
                 unit: "€/L",
@@ -252,7 +256,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             />
 
             <SummaryCard
-              title="Price Range"
+              title={t.refuels.priceRange}
               value={{
                 value: formatPricePerLiter(priceRange),
                 unit: "€/L",

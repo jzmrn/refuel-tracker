@@ -20,7 +20,9 @@ import {
   TrendingUpIcon,
   TrendingDownIcon,
 } from "../common/Icons";
+import { EmptyState } from "../common";
 import { GridLayout } from "../common/GridLayout";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 interface DataPointStatisticsProps {
   dataPoints: DataPointResponse[];
@@ -33,26 +35,26 @@ export default function DataPointStatistics({
   label,
   loading,
 }: DataPointStatisticsProps) {
+  const { t } = useTranslation();
+
   if (loading) {
     return (
       <div className="panel">
-        <h3 className="heading-3 mb-4">Statistics for {label}</h3>
-        <LoadingSpinner text="Loading statistics..." />
+        <h3 className="heading-3 mb-4">
+          {t.dataTracking.statisticsFor} {label}
+        </h3>
+        <LoadingSpinner text={t.dataTracking.loadingStatistics} />
       </div>
     );
   }
 
   if (!dataPoints || dataPoints.length === 0) {
     return (
-      <div className="panel">
-        <h3 className="heading-3 mb-4">Statistics for {label}</h3>
-        <div className="text-center py-8 text-secondary">
-          <p>No data points available for "{label}".</p>
-          <p className="text-sm mt-1">
-            Add some data points to see statistics.
-          </p>
-        </div>
-      </div>
+      <EmptyState
+        icon={<ChartIcon size="xl" color="gray" className="mx-auto mb-4" />}
+        title={t.common.noData}
+        className="empty-state py-8"
+      />
     );
   }
 
@@ -118,12 +120,13 @@ export default function DataPointStatistics({
           </div>
           <div className="space-y-1 text-sm">
             <p className="status-blue">
-              <span className="font-medium">Value:</span>{" "}
+              <span className="font-medium">{t.dataTracking.value}:</span>{" "}
               {formatValue(data.value)}
             </p>
             {data.notes && (
               <p className="text-secondary mt-2 max-w-xs">
-                <span className="font-medium">Notes:</span> {data.notes}
+                <span className="font-medium">{t.dataTracking.notes}:</span>{" "}
+                {data.notes}
               </p>
             )}
           </div>
@@ -157,33 +160,35 @@ export default function DataPointStatistics({
 
   return (
     <div className="panel p-6">
-      <h3 className="heading-3 mb-4">Statistics for "{label}"</h3>
+      <h3 className="heading-3 mb-4">
+        {t.dataTracking.statisticsFor} "{label}"
+      </h3>
 
       {/* Summary Statistics */}
       <GridLayout variant="stats" className="mb-6">
         <SummaryCard
-          title="Average"
+          title={t.dataTracking.average}
           value={{ value: formatValue(average) }}
           icon={<ChartIcon size="md" color="blue" />}
           iconBgColor="blue"
         />
 
         <SummaryCard
-          title="Median"
+          title={t.dataTracking.median}
           value={{ value: formatValue(median) }}
           icon={<ChartIcon size="md" color="green" />}
           iconBgColor="green"
         />
 
         <SummaryCard
-          title="Range"
+          title={t.dataTracking.range}
           value={{ value: formatValue(range) }}
           icon={<TagIcon size="md" color="yellow" />}
           iconBgColor="yellow"
         />
 
         <SummaryCard
-          title="Total Entries"
+          title={t.dataTracking.totalEntries}
           value={{ value: count.toString() }}
           icon={<HashIcon size="md" color="purple" />}
           iconBgColor="purple"
@@ -193,15 +198,15 @@ export default function DataPointStatistics({
       {/* Additional Statistics */}
       <GridLayout variant="stats" className="mb-6">
         <div className="status-red p-3 rounded">
-          <div className="font-medium">Maximum</div>
+          <div className="font-medium">{t.dataTracking.maximum}</div>
           <div>{formatValue(max)}</div>
         </div>
         <div className="status-green p-3 rounded">
-          <div className="font-medium">Minimum</div>
+          <div className="font-medium">{t.dataTracking.minimum}</div>
           <div>{formatValue(min)}</div>
         </div>
         <div className="status-gray p-3 rounded">
-          <div className="font-medium">Std. Deviation</div>
+          <div className="font-medium">{t.dataTracking.stdDeviation}</div>
           <div>{formatValue(standardDeviation)}</div>
         </div>
         <div
@@ -222,7 +227,7 @@ export default function DataPointStatistics({
                 : "text-gray-900 dark:text-gray-100"
             }`}
           >
-            Trend
+            {t.dataTracking.trend}
           </div>
           <div
             className={`${
@@ -234,7 +239,7 @@ export default function DataPointStatistics({
             }`}
           >
             {trend === "stable"
-              ? "Stable"
+              ? t.dataTracking.stable
               : trend === "increasing"
               ? `↗ +${trendPercentage.toFixed(1)}%`
               : `↘ -${trendPercentage.toFixed(1)}%`}
@@ -244,7 +249,7 @@ export default function DataPointStatistics({
 
       {/* Chart */}
       <div className="mt-6">
-        <h4 className="heading-4 mb-3">Values Over Time</h4>
+        <h4 className="heading-4 mb-3">{t.dataTracking.valuesOverTime}</h4>
 
         <div className="chart-container">
           <ResponsiveContainer width="100%" height={300}>
@@ -280,7 +285,7 @@ export default function DataPointStatistics({
                 fontSize={12}
                 tickFormatter={(value) => formatValue(value)}
                 label={{
-                  value: "Value",
+                  value: t.dataTracking.value,
                   angle: -90,
                   position: "insideLeft",
                   style: { textAnchor: "middle" },
@@ -310,10 +315,7 @@ export default function DataPointStatistics({
           </ResponsiveContainer>
 
           <div className="mt-3 text-xs text-secondary">
-            <p>
-              • Hover over data points to see detailed information including
-              notes
-            </p>
+            <p>• {t.dataTracking.hoverForDetails}</p>
           </div>
         </div>
       </div>

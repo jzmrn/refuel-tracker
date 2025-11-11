@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { TimeSpanUpdate, TimeSpanResponse } from "@/lib/api";
 import { StandardForm } from "../common/StandardForm";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 interface EditTimeSpanFormProps {
   timeSpan: TimeSpanResponse;
@@ -17,6 +18,7 @@ export default function EditTimeSpanForm({
   existingGroups,
   onCancel,
 }: EditTimeSpanFormProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<TimeSpanUpdate>({
     start_date: "",
     end_date: "",
@@ -38,7 +40,7 @@ export default function EditTimeSpanForm({
           ? new Date(timeSpan.end_date).toISOString().slice(0, 16)
           : "",
         label: timeSpan.label,
-        group: timeSpan.group || "General",
+        group: timeSpan.group || t.timeSpans.general,
         notes: timeSpan.notes || "",
       });
     }
@@ -91,44 +93,44 @@ export default function EditTimeSpanForm({
 
     // Label validation
     if (!formData.label || formData.label.trim().length === 0) {
-      newErrors.label = "Label is required";
+      newErrors.label = t.timeSpans.labelRequired;
     } else if (formData.label.trim().length > 100) {
-      newErrors.label = "Label must be 100 characters or less";
+      newErrors.label = t.timeSpans.labelTooLong;
     }
 
     // Start date validation
     if (formData.start_date) {
       const startDate = new Date(formData.start_date);
       if (isNaN(startDate.getTime())) {
-        newErrors.start_date = "Invalid start date format";
+        newErrors.start_date = t.timeSpans.invalidStartDate;
       }
     } else {
-      newErrors.start_date = "Start date is required";
+      newErrors.start_date = t.timeSpans.startDateRequired;
     }
 
     // End date validation
     if (formData.end_date) {
       const endDate = new Date(formData.end_date);
       if (isNaN(endDate.getTime())) {
-        newErrors.end_date = "Invalid end date format";
+        newErrors.end_date = t.timeSpans.invalidEndDate;
       } else if (formData.start_date) {
         const startDate = new Date(formData.start_date);
         if (endDate < startDate) {
-          newErrors.end_date = "End date cannot be before start date";
+          newErrors.end_date = t.timeSpans.endBeforeStart;
         }
       }
     }
 
     // Notes validation (optional but with length limit)
     if (formData.notes && formData.notes.length > 500) {
-      newErrors.notes = "Notes must be 500 characters or less";
+      newErrors.notes = t.timeSpans.notesTooLong;
     }
 
     // Group validation (required with length limit)
     if (!formData.group || formData.group.trim().length === 0) {
-      newErrors.group = "Group is required";
+      newErrors.group = t.timeSpans.groupRequired;
     } else if (formData.group.length > 50) {
-      newErrors.group = "Group must be 50 characters or less";
+      newErrors.group = t.timeSpans.groupTooLong;
     }
 
     setErrors(newErrors);
@@ -163,9 +165,9 @@ export default function EditTimeSpanForm({
         updateData.label = formData.label?.trim();
       }
 
-      const originalGroup = timeSpan.group || "General";
+      const originalGroup = timeSpan.group || t.timeSpans.general;
       if ((formData.group || "").trim() !== originalGroup) {
-        updateData.group = (formData.group || "").trim() || "General";
+        updateData.group = (formData.group || "").trim() || t.timeSpans.general;
       }
 
       const originalNotes = timeSpan.notes || "";
@@ -229,20 +231,20 @@ export default function EditTimeSpanForm({
 
   return (
     <StandardForm
-      title="Edit Time Span"
+      title={t.timeSpans.editTimeSpan}
       onSubmit={handleSubmit}
       containerClass="panel"
       actions={
         <>
           <button type="submit" className="btn-primary flex-1">
-            Update Time Span
+            {t.timeSpans.updateTimeSpan}
           </button>
           <button
             type="button"
             onClick={onCancel}
             className="btn-secondary flex-1"
           >
-            Cancel
+            {t.common.cancel}
           </button>
         </>
       }
@@ -250,7 +252,7 @@ export default function EditTimeSpanForm({
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="start_date" className="label">
-            Start Date & Time *
+            {t.timeSpans.startDateTime} *
           </label>
           <div className="flex gap-2">
             <input
@@ -278,7 +280,7 @@ export default function EditTimeSpanForm({
               }}
               className="btn-sm-secondary whitespace-nowrap"
             >
-              Now
+              {t.timeSpans.now}
             </button>
           </div>
           {errors.start_date && (
@@ -288,7 +290,7 @@ export default function EditTimeSpanForm({
 
         <div className="form-group">
           <label htmlFor="end_date" className="label">
-            End Date & Time
+            {t.timeSpans.endDateTime}
           </label>
           <div className="flex gap-2">
             <input
@@ -306,19 +308,19 @@ export default function EditTimeSpanForm({
               onClick={setEndDateToNow}
               className="btn-sm-secondary whitespace-nowrap"
             >
-              Now
+              {t.timeSpans.now}
             </button>
           </div>
           {errors.end_date && <p className="error-text">{errors.end_date}</p>}
           <p className="mt-1 text-xs text-secondary">
-            Leave empty if the activity is ongoing
+            {t.timeSpans.leaveEmptyOngoing}
           </p>
         </div>
       </div>
 
       <div className="form-group relative">
         <label htmlFor="label" className="label">
-          Label/Activity *
+          {t.timeSpans.labelActivity} *
         </label>
         <input
           type="text"
@@ -332,7 +334,7 @@ export default function EditTimeSpanForm({
             setTimeout(() => setShowSuggestions(false), 200);
           }}
           className={`input ${errors.label ? "border-red-300" : ""}`}
-          placeholder="e.g., Workout, Reading, Project Work, Sleep..."
+          placeholder={t.timeSpans.placeholders.labelActivity}
           maxLength={100}
           required
         />
@@ -358,7 +360,7 @@ export default function EditTimeSpanForm({
 
       <div className="form-group relative">
         <label htmlFor="group" className="label">
-          Group *
+          {t.timeSpans.group} *
         </label>
         <input
           type="text"
@@ -372,7 +374,7 @@ export default function EditTimeSpanForm({
             setTimeout(() => setShowGroupSuggestions(false), 200);
           }}
           className={`input ${errors.group ? "border-red-300" : ""}`}
-          placeholder="e.g., Work, Personal, Health, Hobbies..."
+          placeholder={t.timeSpans.placeholders.group}
           maxLength={50}
           required
         />
@@ -398,7 +400,7 @@ export default function EditTimeSpanForm({
 
       <div className="form-group">
         <label htmlFor="notes" className="label">
-          Notes (optional)
+          {t.timeSpans.notesOptional}
         </label>
         <textarea
           id="notes"
@@ -407,13 +409,13 @@ export default function EditTimeSpanForm({
           value={formData.notes || ""}
           onChange={handleChange}
           className={`input ${errors.notes ? "border-red-300" : ""}`}
-          placeholder="Additional context or details about this activity..."
+          placeholder={t.timeSpans.placeholders.notes}
           maxLength={500}
         />
         {errors.notes && <p className="error-text">{errors.notes}</p>}
         {formData.notes && (
           <p className="mt-1 text-xs text-secondary">
-            {formData.notes.length}/500 characters
+            {formData.notes.length}/500 {t.timeSpans.charactersUsed}
           </p>
         )}
       </div>

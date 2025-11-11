@@ -9,6 +9,7 @@ import FloatingActionButton from "@/components/common/FloatingActionButton";
 import SummaryCard from "@/components/common/SummaryCard";
 import { TagIcon, ChartIcon } from "@/components/common/Icons";
 import { useSnackbar } from "@/lib/useSnackbar";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 import apiService, {
   DataPointResponse,
   DataPointCreate,
@@ -21,6 +22,7 @@ export type DataSummary = DataSummaryResponse;
 type TabType = "add" | "statistics" | "values";
 
 export default function DataTracking() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>("add");
   const [statisticsSelectedLabel, setStatisticsSelectedLabel] =
     useState<string>("");
@@ -85,7 +87,7 @@ export default function DataTracking() {
       }
     } catch (error) {
       console.error("Error fetching data:", error);
-      showError("Failed to load data.");
+      showError(t.dataTracking.failedToLoadData);
     } finally {
       setLoading(false);
     }
@@ -96,7 +98,7 @@ export default function DataTracking() {
       await apiService.createDataPoint(pointData);
       setRefreshTrigger((prev) => prev + 1);
 
-      showSuccess("Data point added successfully!");
+      showSuccess(`${t.common.success}: ${t.dataTracking.dataPointAdded}`);
 
       // Close mobile form and switch to values tab to show the newly added entry
       setIsMobileFormOpen(false);
@@ -105,7 +107,7 @@ export default function DataTracking() {
       setValuesSelectedLabel(pointData.label);
     } catch (error) {
       console.error("Error adding data point:", error);
-      showError("Failed to add data point.");
+      showError(`${t.common.error}: ${t.dataTracking.failedToAddDataPoint}`);
     }
   };
 
@@ -120,18 +122,22 @@ export default function DataTracking() {
       await apiService.deleteDataPoint(deletingPoint.id);
       setRefreshTrigger((prev) => prev + 1);
       setDeletingPoint(null);
-      showSuccess("Data point deleted successfully!");
+      showSuccess(`${t.common.success}: ${t.dataTracking.dataPointDeleted}`);
     } catch (error) {
       console.error("Error deleting data point:", error);
-      showError("Failed to delete data point.");
+      showError(`${t.common.error}: ${t.dataTracking.failedToDeleteDataPoint}`);
       setDeletingPoint(null);
     }
   };
 
   const tabs = [
-    { id: "add" as TabType, label: "Add Data", icon: "+" },
-    { id: "statistics" as TabType, label: "Statistics", icon: "📊" },
-    { id: "values" as TabType, label: "All Values", icon: "📋" },
+    { id: "add" as TabType, label: t.dataTracking.addDataPoint, icon: "+" },
+    {
+      id: "statistics" as TabType,
+      label: t.dataTracking.statistics,
+      icon: "📊",
+    },
+    { id: "values" as TabType, label: t.timeSpans.allValues, icon: "📋" },
   ];
 
   const renderTabContent = () => {
@@ -149,7 +155,8 @@ export default function DataTracking() {
             {existingLabels.length > 0 && (
               <div className="panel mb-6 flex justify-between items-center">
                 <label htmlFor="stats-label-select" className="label">
-                  Select Metric to View Statistics
+                  {t.dataTracking.selectMetricToView}{" "}
+                  {t.dataTracking.statistics}
                 </label>
                 <select
                   id="stats-label-select"
@@ -165,22 +172,11 @@ export default function DataTracking() {
                 </select>
               </div>
             )}
-            {statisticsSelectedLabel ? (
-              <DataPointStatistics
-                dataPoints={statisticsFilteredDataPoints}
-                label={statisticsSelectedLabel}
-                loading={loading}
-              />
-            ) : (
-              <div className="panel">
-                <div className="empty-state">
-                  <p>No metrics available.</p>
-                  <p className="text-sm mt-1">
-                    Add some data points first to see statistics.
-                  </p>
-                </div>
-              </div>
-            )}
+            <DataPointStatistics
+              dataPoints={statisticsFilteredDataPoints}
+              label={statisticsSelectedLabel}
+              loading={loading}
+            />
           </div>
         );
       case "values":
@@ -189,7 +185,7 @@ export default function DataTracking() {
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <SummaryCard
-                title="Unique Labels"
+                title={t.dataTracking.uniqueLabels}
                 value={{ value: summary?.unique_labels || 0 }}
                 loading={loading}
                 iconBgColor="purple"
@@ -197,7 +193,7 @@ export default function DataTracking() {
               />
 
               <SummaryCard
-                title="Total Entries"
+                title={t.dataTracking.totalEntries}
                 value={{ value: summary?.total_entries || 0 }}
                 loading={loading}
                 iconBgColor="blue"
@@ -208,7 +204,7 @@ export default function DataTracking() {
             {existingLabels.length > 0 && (
               <div className="panel mb-6 flex justify-between items-center">
                 <label htmlFor="values-label-select" className="label">
-                  Filter by Metric
+                  {t.dataTracking.filterByMetric}
                 </label>
                 <select
                   id="values-label-select"
@@ -216,7 +212,7 @@ export default function DataTracking() {
                   onChange={(e) => setValuesSelectedLabel(e.target.value)}
                   className="input w-1/4"
                 >
-                  <option value="">All Metrics</option>
+                  <option value="">{t.dataTracking.allMetrics}</option>
                   {existingLabels.map((label) => (
                     <option key={label} value={label}>
                       {label}
@@ -243,13 +239,12 @@ export default function DataTracking() {
       {/* Header */}
       <div className="mb-6 md:mb-8 flex justify-between items-start">
         <div>
-          <h1 className="heading-1">Data Tracking</h1>
+          <h1 className="heading-1">{t.dataTracking.title}</h1>
           <p className="text-secondary mt-2 text-sm md:text-base">
-            Track numerical data over time with custom labels
+            {t.dataTracking.trackNumericalData}
           </p>
         </div>
       </div>
-
       {/* Desktop Tab Navigation - Hidden on mobile */}
       <div className="tab-container">
         <div className="tab-border">
@@ -271,16 +266,14 @@ export default function DataTracking() {
           </nav>
         </div>
       </div>
-
       {/* Desktop Tab Content */}
       <div className="min-h-[400px] hidden md:block">{renderTabContent()}</div>
-
       {/* Mobile Unified View - Visible only on mobile */}
       <div className="md:hidden space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-4">
           <SummaryCard
-            title="Labels"
+            title={t.dataTracking.labels}
             value={{ value: summary?.unique_labels?.toString() || "0" }}
             icon={<TagIcon size="lg" color="purple" />}
             iconBgColor="purple"
@@ -288,7 +281,7 @@ export default function DataTracking() {
           />
 
           <SummaryCard
-            title="Entries"
+            title={t.dataTracking.entries}
             value={{ value: summary?.total_entries?.toString() || "0" }}
             icon={<ChartIcon size="lg" color="blue" />}
             iconBgColor="blue"
@@ -301,7 +294,7 @@ export default function DataTracking() {
           <div>
             <div className="panel mb-4 flex justify-between items-center">
               <label htmlFor="mobile-stats-label-select" className="label">
-                Select Metric to View Statistics
+                {t.dataTracking.selectMetricToViewStats}
               </label>
               <select
                 id="mobile-stats-label-select"
@@ -331,7 +324,7 @@ export default function DataTracking() {
           <div>
             <div className="panel mb-4 flex justify-between items-center">
               <label htmlFor="mobile-values-label-select" className="label">
-                Filter by Metric
+                {t.dataTracking.filterByMetric}
               </label>
               <select
                 id="mobile-values-label-select"
@@ -339,7 +332,7 @@ export default function DataTracking() {
                 onChange={(e) => setValuesSelectedLabel(e.target.value)}
                 className="input w-1/4"
               >
-                <option value="">All Metrics</option>
+                <option value="">{t.dataTracking.allMetrics}</option>
                 {existingLabels.map((label) => (
                   <option key={label} value={label}>
                     {label}
@@ -359,15 +352,12 @@ export default function DataTracking() {
         {existingLabels.length === 0 && !loading && (
           <div className="panel">
             <div className="empty-state">
-              <p>No data points yet.</p>
-              <p className="text-sm mt-1">
-                Add your first data point using the + button below.
-              </p>
+              <p>{t.dataTracking.noDataPointsYetMobile}</p>
+              <p className="text-sm mt-1">{t.dataTracking.addFirstDataPoint}</p>
             </div>
           </div>
         )}
       </div>
-
       {/* Floating Action Button for Mobile */}
       <FloatingActionButton
         onAddClick={() => setIsMobileFormOpen(true)}
@@ -379,19 +369,17 @@ export default function DataTracking() {
           existingLabels={existingLabels}
         />
       </FloatingActionButton>
-
       {/* Confirmation Dialog */}
       <ConfirmationDialog
         isOpen={!!deletingPoint}
-        title="Delete Data Point"
-        message={`Are you sure you want to delete this data point (${deletingPoint?.label}: ${deletingPoint?.value})? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={`${t.common.delete} Data Point`}
+        message={`${t.dataTracking.dataPointDeleteConfirm} (${deletingPoint?.label}: ${deletingPoint?.value})? ${t.dataTracking.actionCannotBeUndone}`}
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
         variant="danger"
         onConfirm={confirmDeleteDataPoint}
         onCancel={() => setDeletingPoint(null)}
-      />
-
+      />{" "}
       {/* Snackbar */}
       <Snackbar
         message={snackbar.message}

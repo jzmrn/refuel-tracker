@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { RefuelMetricCreate } from "../../lib/api";
 import { StandardForm } from "../common/StandardForm";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface AddRefuelFormProps {
   onSubmit: (refuel: RefuelMetricCreate) => void;
@@ -11,6 +12,7 @@ export default function AddRefuelForm({
   onSubmit,
   onCancel,
 }: AddRefuelFormProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<RefuelMetricCreate>({
     price: 0,
     amount: 0,
@@ -81,16 +83,16 @@ export default function AddRefuelForm({
 
     // Price validation
     if (!formData.price || formData.price < 0.001) {
-      newErrors.price = "Price must be at least 0.001 €/L";
+      newErrors.price = t.refuels.priceMinRequired;
     } else if (formData.price > 10) {
-      newErrors.price = "Price cannot exceed 10 €/L";
+      newErrors.price = t.refuels.priceMaxExceeded;
     }
 
     // Amount validation
     if (!formData.amount || formData.amount <= 0) {
-      newErrors.amount = "Amount must be greater than 0";
+      newErrors.amount = t.refuels.amountMinRequired;
     } else if (formData.amount > 100) {
-      newErrors.amount = "Amount cannot exceed 100 liters";
+      newErrors.amount = t.refuels.amountMaxExceeded;
     }
 
     // Kilometers validation
@@ -98,8 +100,7 @@ export default function AddRefuelForm({
       !formData.kilometers_since_last_refuel ||
       formData.kilometers_since_last_refuel <= 0
     ) {
-      newErrors.kilometers_since_last_refuel =
-        "Kilometers must be greater than 0";
+      newErrors.kilometers_since_last_refuel = t.refuels.kilometersRequired;
     }
 
     // Estimated fuel consumption validation
@@ -107,11 +108,10 @@ export default function AddRefuelForm({
       !formData.estimated_fuel_consumption ||
       formData.estimated_fuel_consumption <= 0
     ) {
-      newErrors.estimated_fuel_consumption =
-        "Estimated fuel consumption must be greater than 0";
+      newErrors.estimated_fuel_consumption = t.refuels.fuelConsumptionRequired;
     } else if (formData.estimated_fuel_consumption > 20) {
       newErrors.estimated_fuel_consumption =
-        "Estimated fuel consumption cannot exceed 20 L/100km";
+        t.refuels.fuelConsumptionMaxExceeded;
     }
 
     // Timestamp validation
@@ -119,17 +119,17 @@ export default function AddRefuelForm({
       const selectedDate = new Date(formData.timestamp);
       const now = new Date();
       if (isNaN(selectedDate.getTime())) {
-        newErrors.timestamp = "Invalid date format";
+        newErrors.timestamp = t.refuels.invalidDateFormat;
       } else if (selectedDate > now) {
-        newErrors.timestamp = "Date cannot be in the future";
+        newErrors.timestamp = t.refuels.dateCannotBeFuture;
       }
     } else {
-      newErrors.timestamp = "Date and time is required";
+      newErrors.timestamp = t.refuels.dateTimeRequired;
     }
 
     // Notes validation (optional but with length limit)
     if (formData.notes && formData.notes.length > 500) {
-      newErrors.notes = "Notes must be 500 characters or less";
+      newErrors.notes = t.refuels.notesMaxLength;
     }
 
     setErrors(newErrors);
@@ -167,7 +167,7 @@ export default function AddRefuelForm({
   const formActions = (
     <>
       <button type="submit" className="btn-primary flex-1">
-        Add Entry
+        {t.refuels.addEntry}
       </button>
       {onCancel && (
         <button
@@ -175,7 +175,7 @@ export default function AddRefuelForm({
           onClick={onCancel}
           className="btn-secondary flex-1"
         >
-          Cancel
+          {t.refuels.cancel}
         </button>
       )}
     </>
@@ -189,7 +189,7 @@ export default function AddRefuelForm({
     >
       <div className="form-group">
         <label htmlFor="timestamp" className="label">
-          Date & Time *
+          {t.refuels.dateTime} *
         </label>
         <div className="flex gap-2">
           <input
@@ -218,7 +218,7 @@ export default function AddRefuelForm({
             }}
             className="btn-sm-secondary whitespace-nowrap"
           >
-            Now
+            {t.refuels.now}
           </button>
         </div>
         {errors.timestamp && <p className="error-text">{errors.timestamp}</p>}
@@ -227,7 +227,7 @@ export default function AddRefuelForm({
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="price" className="label">
-            Price per Liter (€) *{" "}
+            {t.refuels.pricePerLiterForm} *{" "}
             <span className="text-xs text-secondary">(0.01 - 10)</span>
           </label>
           <input
@@ -248,7 +248,7 @@ export default function AddRefuelForm({
 
         <div className="form-group">
           <label htmlFor="amount" className="label">
-            Amount (Liters) *{" "}
+            {t.refuels.amountLiters} *{" "}
             <span className="text-xs text-secondary">(0.01 - 100)</span>
           </label>
           <input
@@ -271,7 +271,7 @@ export default function AddRefuelForm({
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="kilometers_since_last_refuel" className="label">
-            Kilometers Since Last Refuel *
+            {t.refuels.kilometersSinceLastRefuel} *
           </label>
           <input
             type="number"
@@ -294,7 +294,7 @@ export default function AddRefuelForm({
 
         <div className="form-group">
           <label htmlFor="estimated_fuel_consumption" className="label">
-            Estimated Fuel Consumption (L/100km) *{" "}
+            {t.refuels.estimatedFuelConsumption} *{" "}
             <span className="text-xs text-secondary">(0.1 - 20.0)</span>
           </label>
           <input
@@ -322,12 +322,12 @@ export default function AddRefuelForm({
         <div className="calculation-box">
           <p className="calculation-text">
             <span className="calculation-highlight">
-              Total Cost: {totalCost.toFixed(2)} €
+              {t.refuels.totalCostCalc}: {totalCost.toFixed(2)} €
             </span>
           </p>
           {formData.kilometers_since_last_refuel > 0 && formData.amount > 0 && (
             <p className="calculation-text mt-1">
-              Actual Consumption:{" "}
+              {t.refuels.actualConsumption}:{" "}
               <span className="calculation-highlight">
                 {(
                   (formData.amount / formData.kilometers_since_last_refuel) *
@@ -356,7 +356,7 @@ export default function AddRefuelForm({
                       100 -
                     formData.estimated_fuel_consumption
                   ).toFixed(1)}{" "}
-                  vs estimated)
+                  {t.refuels.vsEstimated})
                 </span>
               )}
             </p>
@@ -366,7 +366,7 @@ export default function AddRefuelForm({
 
       <div className="form-group">
         <label htmlFor="notes" className="label">
-          Notes (optional)
+          {t.refuels.notes} ({t.refuels.optional})
         </label>
         <textarea
           id="notes"
@@ -375,13 +375,13 @@ export default function AddRefuelForm({
           value={formData.notes || ""}
           onChange={handleChange}
           className={`input ${errors.notes ? "border-red-300" : ""}`}
-          placeholder="e.g. Shell gas station, A1 rest stop..."
+          placeholder={t.refuels.placeholders.notes}
           maxLength={500}
         />
         {errors.notes && <p className="error-text">{errors.notes}</p>}
         {formData.notes && (
           <p className="mt-1 text-xs text-secondary">
-            {formData.notes.length}/500 characters
+            {formData.notes.length}/500 {t.refuels.charactersCount}
           </p>
         )}
       </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 interface LoadingSpinnerProps {
   text?: string;
@@ -6,13 +7,16 @@ interface LoadingSpinnerProps {
 }
 
 export default function LoadingSpinner({
-  text = "Loading...",
+  text,
   className = "",
 }: LoadingSpinnerProps) {
+  const { t } = useTranslation();
+  const displayText = text || t.common.loading;
+
   return (
     <div className={`loading-state ${className}`}>
       <div className="spinner"></div>
-      <span className="text">{text}</span>
+      <span className="text">{displayText}</span>
     </div>
   );
 }

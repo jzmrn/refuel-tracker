@@ -8,7 +8,9 @@ import RefuelConsumptionChart from "./RefuelConsumptionChart";
 import SummaryCard from "../common/SummaryCard";
 import LoadingSpinner from "../common/LoadingSpinner";
 import { CurrencyIcon, BeakerIcon, ChartIcon, HashIcon } from "../common/Icons";
+import { EmptyState } from "../common";
 import { GridLayout } from "../common/GridLayout";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface RefuelStatsProps {
   statistics: RefuelStatistics | null;
@@ -21,23 +23,23 @@ export default function RefuelStats({
   refuelData,
   loading,
 }: RefuelStatsProps) {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <div className="panel">
-        <h3 className="heading-3 mb-4">Statistics</h3>
-        <LoadingSpinner text="Loading statistics..." />
+        <h3 className="heading-3 mb-4">{t.refuels.statistics}</h3>
+        <LoadingSpinner text={t.refuels.loadingData} />
       </div>
     );
   }
 
   if (!statistics) {
     return (
-      <div className="panel">
-        <h3 className="heading-3 mb-4">Statistics</h3>
-        <div className="empty-state">
-          <p>No statistics available.</p>
-        </div>
-      </div>
+      <EmptyState
+        icon={<ChartIcon size="xl" color="gray" className="mx-auto mb-4" />}
+        title={t.common.noData}
+        className="empty-state py-8"
+      />
     );
   }
 
@@ -50,17 +52,17 @@ export default function RefuelStats({
     <div className="space-y-6">
       {/* Summary Statistics Panel */}
       <div className="panel">
-        <h3 className="heading-3 mb-4">Summary Statistics</h3>
+        <h3 className="heading-3 mb-4">{t.refuels.statistics}</h3>
         <GridLayout variant="stats">
           <SummaryCard
-            title="Total Cost"
+            title={t.refuels.totalCost}
             value={{ value: cost_statistics.total_cost, unit: "€" }}
             icon={<CurrencyIcon size="lg" color="blue" />}
             iconBgColor="blue"
           />
 
           <SummaryCard
-            title="Total Liters"
+            title={t.refuels.amount}
             value={{
               value: formatLiters(cost_statistics.total_liters),
               unit: "L",
@@ -70,7 +72,7 @@ export default function RefuelStats({
           />
 
           <SummaryCard
-            title="Avg Price/L"
+            title={t.refuels.pricePerLiter}
             value={{
               value: formatPricePerLiter(
                 cost_statistics.average_price_per_liter,
@@ -82,7 +84,7 @@ export default function RefuelStats({
           />
 
           <SummaryCard
-            title="Refuel Count"
+            title={t.refuels.refuelEntries}
             value={{ value: cost_statistics.fill_up_count.toString() }}
             icon={<HashIcon size="lg" color="purple" />}
             iconBgColor="purple"
@@ -92,7 +94,7 @@ export default function RefuelStats({
 
       {/* Charts Panel */}
       <div className="panel">
-        <h3 className="heading-3 mb-4">Charts & Analysis</h3>
+        <h3 className="heading-3 mb-4">{t.refuels.priceTrendsOverTime}</h3>
 
         {/* Price Chart */}
         <RefuelPriceChart priceData={statistics.price_trends} />

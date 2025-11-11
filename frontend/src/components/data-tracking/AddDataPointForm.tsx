@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 import { DataPointCreate } from "@/lib/api";
 import { StandardForm } from "../common/StandardForm";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 interface AddDataPointFormProps {
   onSubmit: (dataPoint: DataPointCreate) => void;
@@ -14,6 +15,7 @@ export default function AddDataPointForm({
   existingLabels,
   onCancel,
 }: AddDataPointFormProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<DataPointCreate>({
     timestamp: new Date().toISOString().slice(0, 16), // Current date/time in YYYY-MM-DDTHH:mm format
     value: 0,
@@ -74,14 +76,14 @@ export default function AddDataPointForm({
 
     // Value validation
     if (isNaN(formData.value)) {
-      newErrors.value = "Value must be a valid number";
+      newErrors.value = t.forms.valueMustBeNumber;
     }
 
     // Label validation
     if (!formData.label || formData.label.trim().length === 0) {
-      newErrors.label = "Label is required";
+      newErrors.label = t.forms.labelRequired;
     } else if (formData.label.trim().length > 100) {
-      newErrors.label = "Label must be 100 characters or less";
+      newErrors.label = t.forms.labelTooLong;
     }
 
     // Timestamp validation
@@ -89,17 +91,17 @@ export default function AddDataPointForm({
       const selectedDate = new Date(formData.timestamp);
       const now = new Date();
       if (isNaN(selectedDate.getTime())) {
-        newErrors.timestamp = "Invalid date format";
+        newErrors.timestamp = t.forms.invalidDateFormat;
       } else if (selectedDate > now) {
-        newErrors.timestamp = "Date cannot be in the future";
+        newErrors.timestamp = t.forms.dateCannotBeFuture;
       }
     } else {
-      newErrors.timestamp = "Date and time is required";
+      newErrors.timestamp = t.forms.dateTimeRequired;
     }
 
     // Notes validation (optional but with length limit)
     if (formData.notes && formData.notes.length > 500) {
-      newErrors.notes = "Notes must be 500 characters or less";
+      newErrors.notes = t.forms.notesTooLong;
     }
 
     setErrors(newErrors);
@@ -151,12 +153,12 @@ export default function AddDataPointForm({
 
   return (
     <StandardForm
-      title="Add Data Point"
+      title={t.dataTracking.addDataPoint}
       onSubmit={handleSubmit}
       actions={
         <>
           <button type="submit" className="btn-primary flex-1">
-            Add Data Point
+            {t.dataTracking.addDataPoint}
           </button>
           {onCancel && (
             <button
@@ -164,7 +166,7 @@ export default function AddDataPointForm({
               onClick={onCancel}
               className="btn-secondary flex-1"
             >
-              Cancel
+              {t.common.cancel}
             </button>
           )}
         </>
@@ -173,7 +175,7 @@ export default function AddDataPointForm({
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="timestamp" className="label">
-            Date & Time *
+            {t.forms.dateTime} *
           </label>
           <div className="flex gap-2">
             <input
@@ -202,7 +204,7 @@ export default function AddDataPointForm({
               }}
               className="btn-sm-secondary whitespace-nowrap"
             >
-              Now
+              {t.forms.now}
             </button>
           </div>
           {errors.timestamp && <p className="error-text">{errors.timestamp}</p>}
@@ -210,7 +212,7 @@ export default function AddDataPointForm({
 
         <div className="form-group">
           <label htmlFor="value" className="label">
-            Numerical Value *
+            {t.forms.numericalValue} *
           </label>
           <input
             type="number"
@@ -220,7 +222,7 @@ export default function AddDataPointForm({
             value={formData.value || ""}
             onChange={handleChange}
             className={`input ${errors.value ? "border-red-300" : ""}`}
-            placeholder="0"
+            placeholder={t.forms.placeholders.value}
             required
           />
           {errors.value && <p className="error-text">{errors.value}</p>}
@@ -229,7 +231,7 @@ export default function AddDataPointForm({
 
       <div className="form-group relative">
         <label htmlFor="label" className="label">
-          Label/Topic *
+          {t.forms.labelTopic} *
         </label>
         <input
           type="text"
@@ -243,7 +245,7 @@ export default function AddDataPointForm({
             setTimeout(() => setShowSuggestions(false), 200);
           }}
           className={`input ${errors.label ? "border-red-300" : ""}`}
-          placeholder="e.g., Weight, Blood Pressure, Steps, Temperature..."
+          placeholder={t.forms.placeholders.label}
           maxLength={100}
           required
         />
@@ -267,14 +269,14 @@ export default function AddDataPointForm({
         {errors.label && <p className="error-text">{errors.label}</p>}
         {!errors.label && existingLabels.length > 0 && (
           <p className="mt-1 text-xs text-secondary">
-            Click on the field to see suggestions from your existing labels
+            {t.forms.clickForSuggestions}
           </p>
         )}
       </div>
 
       <div className="form-group">
         <label htmlFor="notes" className="label">
-          Notes (optional)
+          {t.forms.notesOptional}
         </label>
         <textarea
           id="notes"
@@ -283,13 +285,13 @@ export default function AddDataPointForm({
           value={formData.notes || ""}
           onChange={handleChange}
           className={`input ${errors.notes ? "border-red-300" : ""}`}
-          placeholder="Additional context or details about this measurement..."
+          placeholder={t.forms.placeholders.notes}
           maxLength={500}
         />
         {errors.notes && <p className="error-text">{errors.notes}</p>}
         {formData.notes && (
           <p className="mt-1 text-xs text-secondary">
-            {formData.notes.length}/500 characters
+            {formData.notes.length}/500 {t.forms.charactersUsed}
           </p>
         )}
       </div>

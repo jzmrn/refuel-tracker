@@ -1,6 +1,7 @@
 import { useState } from "react";
 import apiService, { TransactionCreate } from "@/lib/api";
 import { StandardForm } from "../common/StandardForm";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 interface AddTransactionFormProps {
   onTransactionAdded: () => void;
@@ -9,6 +10,7 @@ interface AddTransactionFormProps {
 export default function AddTransactionForm({
   onTransactionAdded,
 }: AddTransactionFormProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<TransactionCreate>({
     account_id: "",
     amount: 0,
@@ -38,7 +40,7 @@ export default function AddTransactionForm({
 
       onTransactionAdded();
     } catch (err) {
-      setError("Failed to add transaction");
+      setError(t.transactions.failedToAdd);
       console.error("Error adding transaction:", err);
     } finally {
       setLoading(false);
@@ -59,7 +61,7 @@ export default function AddTransactionForm({
 
   return (
     <StandardForm
-      title="Add Transaction"
+      title={t.transactions.addTransaction}
       onSubmit={handleSubmit}
       actions={
         <button
@@ -67,7 +69,7 @@ export default function AddTransactionForm({
           disabled={loading}
           className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Adding..." : "Add Transaction"}
+          {loading ? t.transactions.adding : t.transactions.addTransaction}
         </button>
       }
     >
@@ -79,7 +81,7 @@ export default function AddTransactionForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="transaction_type" className="label-compact">
-            Type
+            {t.transactions.type}
           </label>
           <select
             id="transaction_type"
@@ -89,15 +91,15 @@ export default function AddTransactionForm({
             className="input"
             required
           >
-            <option value="income">Income</option>
-            <option value="expense">Expense</option>
-            <option value="transfer">Transfer</option>
+            <option value="income">{t.transactions.income}</option>
+            <option value="expense">{t.transactions.expense}</option>
+            <option value="transfer">{t.transactions.transfer}</option>
           </select>
         </div>
 
         <div>
           <label htmlFor="amount" className="label-compact">
-            Amount
+            {t.transactions.amount}
           </label>
           <input
             type="number"
@@ -116,7 +118,7 @@ export default function AddTransactionForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="account_id" className="label-compact">
-            Account
+            {t.transactions.account}
           </label>
           <input
             type="text"
@@ -124,7 +126,7 @@ export default function AddTransactionForm({
             name="account_id"
             value={formData.account_id}
             onChange={handleInputChange}
-            placeholder="e.g., checking, savings"
+            placeholder={t.transactions.placeholders.account}
             className="input"
             required
           />
@@ -132,7 +134,7 @@ export default function AddTransactionForm({
 
         <div>
           <label htmlFor="category" className="label-compact">
-            Category
+            {t.transactions.category}
           </label>
           <input
             type="text"
@@ -140,7 +142,7 @@ export default function AddTransactionForm({
             name="category"
             value={formData.category}
             onChange={handleInputChange}
-            placeholder="e.g., groceries, salary"
+            placeholder={t.transactions.placeholders.category}
             className="input"
             required
           />
@@ -149,7 +151,7 @@ export default function AddTransactionForm({
 
       <div>
         <label htmlFor="description" className="label-compact">
-          Description (optional)
+          {t.transactions.descriptionOptional}
         </label>
         <textarea
           id="description"
@@ -158,7 +160,7 @@ export default function AddTransactionForm({
           onChange={handleInputChange}
           rows={2}
           className="input"
-          placeholder="Additional details..."
+          placeholder={t.transactions.placeholders.description}
         />
       </div>
     </StandardForm>

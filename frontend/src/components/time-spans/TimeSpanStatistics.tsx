@@ -30,7 +30,9 @@ import {
   TrendingDownIcon,
   HashIcon,
 } from "../common/Icons";
+import { EmptyState } from "../common";
 import { GridLayout } from "../common/GridLayout";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 // Hook to get theme-appropriate colors
 const useChartTheme = () => {
@@ -68,6 +70,7 @@ export default function TimeSpanStatistics({
   label,
   loading,
 }: TimeSpanStatisticsProps) {
+  const { t } = useTranslation();
   const chartTheme = useChartTheme();
 
   // Calculate durations in minutes for easier calculations
@@ -225,7 +228,7 @@ export default function TimeSpanStatistics({
           startDisplay: format(new Date(startTime), "MMM d, h:mm a"),
           endDisplay: span.end_date
             ? format(new Date(endTime), "MMM d, h:mm a")
-            : "Ongoing",
+            : t.timeSpans.ongoing,
           isOngoing: !span.end_date,
           notes: span.notes,
           // For the scatter plot, we'll use start time as x and swimlane as y
@@ -489,32 +492,34 @@ export default function TimeSpanStatistics({
   if (loading) {
     return (
       <div className="panel">
-        <h3 className="heading-3 mb-4">Statistics for {label}</h3>
-        <LoadingSpinner text="Loading statistics..." />
+        <h3 className="heading-3 mb-4">
+          {t.timeSpans.statisticsFor} {label}
+        </h3>
+        <LoadingSpinner text={t.dataTracking.loadingStatistics} />
       </div>
     );
   }
 
   if (!timeSpans || timeSpans.length === 0) {
     return (
-      <div className="panel">
-        <h3 className="heading-3 mb-4">Statistics for {label}</h3>
-        <div className="text-center py-8 text-secondary">
-          <p>No time spans available for "{label}".</p>
-          <p className="text-sm mt-1">Add some time spans to see statistics.</p>
-        </div>
-      </div>
+      <EmptyState
+        icon={<ClockIcon size="xl" color="gray" className="mx-auto mb-4" />}
+        title={t.common.noData}
+        className="empty-state py-8"
+      />
     );
   }
 
   return (
     <div className="panel">
-      <h3 className="heading-3 mb-4">Statistics for "{label}"</h3>
+      <h3 className="heading-3 mb-4">
+        {t.timeSpans.statisticsFor} "{label}"
+      </h3>
 
       {/* Group Selection */}
       <div className="mb-6">
         <label htmlFor="group-select" className="label">
-          Select Group for Timeline
+          {t.timeSpans.selectGroupTimeline}
         </label>
         <select
           id="group-select"
@@ -529,41 +534,43 @@ export default function TimeSpanStatistics({
                 timeSpans.filter((span) => (span.group || "General") === group)
                   .length
               }{" "}
-              spans)
+              {t.common.spans})
             </option>
           ))}
         </select>
         <p className="mt-1 text-sm text-secondary">
-          Statistics show all spans ({timeSpans.length} total) • Timeline shows
-          "{selectedGroup}" group only ({filteredTimeSpans.length} spans)
+          {t.timeSpans.statisticsShowAllSpans} ({timeSpans.length}{" "}
+          {t.common.total}) • {t.timeSpans.timelineShows}"{selectedGroup}"{" "}
+          {t.timeSpans.groupOnly} ({filteredTimeSpans.length}{" "}
+          {t.timeSpans.spans})
         </p>
       </div>
 
       {/* Summary Statistics */}
       <GridLayout variant="stats" className="mb-6">
         <SummaryCard
-          title="Avg Duration"
+          title={t.timeSpans.avgDuration}
           value={formatDuration(stats.average)}
           icon={<ClockIcon size="lg" color="blue" />}
           iconBgColor="blue"
         />
 
         <SummaryCard
-          title="Total Time"
+          title={t.timeSpans.totalTime}
           value={formatDuration(stats.total)}
           icon={<ChartIcon size="lg" color="green" />}
           iconBgColor="green"
         />
 
         <SummaryCard
-          title="Longest"
+          title={t.timeSpans.longest}
           value={formatDuration(stats.max)}
           icon={<TrendingUpIcon size="lg" color="yellow" />}
           iconBgColor="yellow"
         />
 
         <SummaryCard
-          title="Completed"
+          title={t.timeSpans.completed}
           value={{ value: count.toString(), unit: "" }}
           icon={<CheckCircleIcon size="lg" color="purple" />}
           iconBgColor="purple"
@@ -573,28 +580,28 @@ export default function TimeSpanStatistics({
       {/* Additional Statistics */}
       <GridLayout variant="stats" className="mb-6">
         <SummaryCard
-          title="Shortest"
+          title={t.timeSpans.shortest}
           value={formatDuration(stats.min)}
           icon={<TrendingDownIcon size="lg" color="red" />}
           iconBgColor="red"
         />
 
         <SummaryCard
-          title="Median"
+          title={t.timeSpans.median}
           value={formatDuration(stats.median)}
           icon={<ChartIcon size="lg" color="indigo" />}
           iconBgColor="indigo"
         />
 
         <SummaryCard
-          title="Ongoing"
+          title={t.timeSpans.ongoing}
           value={{ value: ongoingCount.toString(), unit: "" }}
           icon={<ClockIcon size="lg" color="orange" />}
           iconBgColor="orange"
         />
 
         <SummaryCard
-          title="Total Entries"
+          title={t.timeSpans.totalSpansCount}
           value={{ value: (count + ongoingCount).toString(), unit: "" }}
           icon={<HashIcon size="lg" color="gray" />}
           iconBgColor="gray"
@@ -605,7 +612,8 @@ export default function TimeSpanStatistics({
       {swimlaneData.chartData.length > 0 && (
         <div className="mt-6">
           <h4 className="heading-4 mb-3">
-            Timeline Swimlanes for "{selectedGroup}" Group
+            {t.timeSpans.timelineSwimlanes} "{selectedGroup}"{" "}
+            {t.timeSpans.group}
           </h4>
 
           <div className="chart-container">
@@ -616,23 +624,23 @@ export default function TimeSpanStatistics({
             <div className="mt-4 flex flex-wrap gap-4 text-xs text-secondary">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-3 bg-blue-500 rounded opacity-80"></div>
-                <span>Completed spans</span>
+                <span>{t.timeSpans.completedSpans}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-3 bg-green-500 rounded opacity-80"></div>
-                <span>Ongoing spans</span>
+                <span>{t.timeSpans.ongoingSpans}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>Active indicator</span>
+                <span>{t.timeSpans.activeIndicator}</span>
               </div>
             </div>
 
             <div className="mt-3 text-xs text-secondary">
-              <p>• Each row represents one time span entry</p>
-              <p>• Hover over bars to see detailed information</p>
-              <p>• Time is shown on the X-axis, individual entries on Y-axis</p>
-              <p>• Green bars indicate ongoing activities</p>
+              <p>• {t.timeSpans.chartHelpRow}</p>
+              <p>• {t.timeSpans.chartHelpHover}</p>
+              <p>• {t.timeSpans.chartHelpAxes}</p>
+              <p>• {t.timeSpans.chartHelpGreen}</p>
             </div>
           </div>
         </div>
@@ -640,9 +648,10 @@ export default function TimeSpanStatistics({
 
       {filteredTimeSpans.length === 0 && (
         <div className="mt-6 status-yellow p-4 rounded-lg">
-          <h4 className="heading-4 mb-2">No Timeline Data Available</h4>
+          <h4 className="heading-4 mb-2">{t.timeSpans.noTimelineData}</h4>
           <p className="text-sm mb-3">
-            No time spans available for the "{selectedGroup}" group.
+            {t.timeSpans.noTimeSpansForGroup} "{selectedGroup}"{" "}
+            {t.timeSpans.group}.
           </p>
           <div className="flex flex-wrap gap-2">
             {availableGroups
@@ -655,13 +664,13 @@ export default function TimeSpanStatistics({
                   onClick={() => setSelectedGroup(group)}
                   className="btn-sm-secondary"
                 >
-                  Switch to "{group}" (
+                  {t.timeSpans.switchTo} "{group}" (
                   {
                     timeSpans.filter(
                       (span) => (span.group || "General") === group,
                     ).length
                   }{" "}
-                  spans)
+                  {t.common.spans})
                 </button>
               ))}
           </div>
@@ -672,17 +681,17 @@ export default function TimeSpanStatistics({
       {filteredTimeSpans.filter((span) => !span.end_date).length > 0 && (
         <div className="mt-6 status-green p-4 rounded-lg">
           <h4 className="heading-4 mb-2">
-            Current Ongoing Activities in "{selectedGroup}"
+            {t.timeSpans.currentOngoingActivities} "{selectedGroup}"
           </h4>
           <div className="space-y-2">
             {filteredTimeSpans
               .filter((span) => !span.end_date)
               .map((span) => (
                 <div key={span.id} className="text-sm">
-                  Started:{" "}
+                  {t.timeSpans.started}:{" "}
                   {format(new Date(span.start_date), "MMM d, yyyy 'at' h:mm a")}
                   <span className="ml-2 font-medium">
-                    (Running for{" "}
+                    ({t.timeSpans.runningFor}{" "}
                     {formatDurationString(
                       formatDuration(calculateDurationMinutes(span.start_date)),
                     )}

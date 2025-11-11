@@ -6,6 +6,7 @@ import RefuelStats from "../components/refuels/RefuelStats";
 import Snackbar from "../components/common/Snackbar";
 import FloatingActionButton from "../components/common/FloatingActionButton";
 import { useSnackbar } from "../lib/useSnackbar";
+import { useTranslation } from "../lib/i18n/LanguageContext";
 import {
   apiService,
   RefuelMetric,
@@ -16,6 +17,7 @@ import {
 type TabType = "add" | "statistics" | "entries";
 
 const RefuelPage: NextPage = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>("add");
   const [refuels, setRefuels] = useState<RefuelMetric[]>([]);
   const [statistics, setStatistics] = useState<RefuelStatistics | null>(null);
@@ -34,21 +36,9 @@ const RefuelPage: NextPage = () => {
       console.log("Refuel data received:", data);
 
       setRefuels(data);
-    } catch (err: any) {
-      console.error("Error fetching refuel data:", err);
-
-      // More specific error messages
-      if (err.response?.status === 404) {
-        showError("Refuel API not available");
-      } else if (err.response?.status === 503) {
-        showError("Metric Registry not available - Server restart required");
-      } else if (err.response?.data?.detail) {
-        showError(`API Error: ${err.response.data.detail}`);
-      } else {
-        showError(
-          `Error loading refuel data: ${err.message || "Unknown error"}`,
-        );
-      }
+    } catch (error: any) {
+      console.error("Error fetching data:", error);
+      showError(t.refuels.errorLoadingData);
     } finally {
       setLoading(false);
     }
@@ -84,7 +74,7 @@ const RefuelPage: NextPage = () => {
     try {
       await apiService.createRefuelMetric(refuelData);
 
-      showSuccess("Refuel entry added successfully!");
+      showSuccess(t.refuels.refuelAddedSuccess);
 
       // Refresh data
       await fetchRefuels();
@@ -95,7 +85,7 @@ const RefuelPage: NextPage = () => {
       setActiveTab("entries");
     } catch (err) {
       console.error("Error adding refuel entry:", err);
-      showError("Error adding refuel entry");
+      showError(t.refuels.errorAddingRefuel);
     }
   };
 
@@ -112,7 +102,7 @@ const RefuelPage: NextPage = () => {
       setRefuels(data);
     } catch (err) {
       console.error("Error filtering by month:", err);
-      showError("Error filtering data");
+      showError(t.refuels.errorFiltering);
     } finally {
       setLoading(false);
     }
@@ -130,7 +120,7 @@ const RefuelPage: NextPage = () => {
       setRefuels(data);
     } catch (err) {
       console.error("Error filtering by year:", err);
-      showError("Error filtering data");
+      showError(t.refuels.errorFiltering);
     } finally {
       setLoading(false);
     }
@@ -141,9 +131,9 @@ const RefuelPage: NextPage = () => {
   };
 
   const tabs = [
-    { id: "add" as TabType, label: "Add Entry", icon: "+" },
-    { id: "statistics" as TabType, label: "Statistics", icon: "📊" },
-    { id: "entries" as TabType, label: "All Entries", icon: "📋" },
+    { id: "add" as TabType, label: t.refuels.addEntry, icon: "+" },
+    { id: "statistics" as TabType, label: t.refuels.statistics, icon: "📊" },
+    { id: "entries" as TabType, label: t.refuels.allEntries, icon: "📋" },
   ];
 
   const renderTabContent = () => {
@@ -163,25 +153,25 @@ const RefuelPage: NextPage = () => {
           <div>
             {/* Filter Options */}
             <div className="filter-container flex justify-between items-center">
-              <h3 className="filter-title">Filter</h3>
+              <h3 className="filter-title">{t.refuels.filter}</h3>
               <div className="filter-buttons">
                 <button
                   onClick={showAll}
                   className="filter-button filter-button-primary"
                 >
-                  Show All
+                  {t.refuels.showAll}
                 </button>
                 <button
                   onClick={filterThisMonth}
                   className="filter-button filter-button-success"
                 >
-                  This Month
+                  {t.refuels.thisMonth}
                 </button>
                 <button
                   onClick={filterThisYear}
                   className="filter-button filter-button-accent"
                 >
-                  This Year
+                  {t.refuels.thisYear}
                 </button>
               </div>
             </div>
@@ -197,10 +187,10 @@ const RefuelPage: NextPage = () => {
     <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       <div className="mb-6 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
-          Refuel Tracking
+          {t.refuels.refuelTracking}
         </h1>
         <p className="mt-2 text-gray-600 dark:text-gray-300 text-sm md:text-base">
-          Manage your fuel data and track fuel costs
+          {t.refuels.manageFuelData}
         </p>
       </div>
 
@@ -248,25 +238,25 @@ const RefuelPage: NextPage = () => {
 
         {/* Filter Options */}
         <div className="filter-container flex justify-between items-center">
-          <h3 className="filter-title">Filter</h3>
+          <h3 className="filter-title">{t.refuels.filter}</h3>
           <div className="filter-buttons">
             <button
               onClick={showAll}
               className="filter-button filter-button-primary"
             >
-              Show All
+              {t.refuels.showAll}
             </button>
             <button
               onClick={filterThisMonth}
               className="filter-button filter-button-success"
             >
-              This Month
+              {t.refuels.thisMonth}
             </button>
             <button
               onClick={filterThisYear}
               className="filter-button filter-button-accent"
             >
-              This Year
+              {t.refuels.thisYear}
             </button>
           </div>
         </div>

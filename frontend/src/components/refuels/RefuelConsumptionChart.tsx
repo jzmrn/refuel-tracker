@@ -18,7 +18,10 @@ import {
   TrendingDownIcon,
   CheckCircleIcon,
 } from "../common/Icons";
-import { format } from "path";
+import {
+  useTranslation,
+  useLocalization,
+} from "../../lib/i18n/LanguageContext";
 
 // Hook to get theme-appropriate colors
 const useChartTheme = () => {
@@ -64,18 +67,20 @@ interface RefuelConsumptionChartProps {
 export default function RefuelConsumptionChart({
   refuelData,
 }: RefuelConsumptionChartProps) {
+  const { t } = useTranslation();
+  const { formatDate, formatNumber } = useLocalization();
   const chartTheme = useChartTheme();
 
   if (!refuelData || refuelData.length === 0) {
     return (
       <div className="mt-6">
         <h4 className="heading-4 mb-3">
-          Fuel Consumption: Estimated vs Actual
+          {t.refuels.fuelConsumptionEstimatedVsActual}
         </h4>
         <div className="empty-state">
-          <p>No consumption data available</p>
+          <p>{t.refuels.noConsumptionDataAvailable}</p>
           <p className="text-sm mt-1">
-            Add more refuel entries to see consumption trends
+            {t.refuels.addMoreRefuelEntriesToSeeConsumptionTrends}
           </p>
         </div>
       </div>
@@ -95,7 +100,7 @@ export default function RefuelConsumptionChart({
       return {
         ...item,
         timestampMs: new Date(item.timestamp).getTime(),
-        displayDate: new Date(item.timestamp).toLocaleDateString("en-US", {
+        displayDate: formatDate(new Date(item.timestamp), {
           month: "short",
           day: "numeric",
           year: "2-digit",
@@ -114,12 +119,12 @@ export default function RefuelConsumptionChart({
     return (
       <div className="mt-6">
         <h4 className="text-md font-semibold mb-3 text-gray-700">
-          Fuel Consumption: Estimated vs Actual
+          {t.refuels.fuelConsumptionEstimatedVsActual}
         </h4>
         <div className="bg-gray-50 p-8 rounded-lg text-center text-gray-500">
-          <p>No valid consumption data available</p>
+          <p>{t.refuels.noValidConsumptionDataAvailable}</p>
           <p className="text-sm mt-1">
-            Make sure your entries have kilometers and fuel amount data
+            {t.refuels.makeSureEntriesHaveKilometersAndFuelAmount}
           </p>
         </div>
       </div>
@@ -132,13 +137,13 @@ export default function RefuelConsumptionChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const date = new Date(label);
-      const formattedDate = date.toLocaleDateString("en-GB", {
+      const formattedDate = formatDate(date, {
         weekday: "short",
         month: "short",
         day: "numeric",
         year: "numeric",
       });
-      const formattedTime = date.toLocaleTimeString("en-GB", {
+      const formattedTime = formatDate(date, {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
@@ -151,11 +156,11 @@ export default function RefuelConsumptionChart({
           </div>
           <div className="space-y-1 text-sm">
             <p className="text-blue-600">
-              <span className="font-medium">Estimated:</span>{" "}
+              <span className="font-medium">{t.refuels.estimated}:</span>{" "}
               {formatConsumption(data.estimatedConsumption)}
             </p>
             <p className="text-green-600">
-              <span className="font-medium">Actual:</span>{" "}
+              <span className="font-medium">{t.refuels.actual}:</span>{" "}
               {formatConsumption(data.actualConsumption)}
             </p>
             <p
@@ -163,18 +168,22 @@ export default function RefuelConsumptionChart({
                 data.difference > 0 ? "text-red-600" : "text-green-600"
               }`}
             >
-              <span className="font-medium">Difference:</span>{" "}
+              <span className="font-medium">{t.refuels.difference}:</span>{" "}
               {data.difference > 0 ? "+" : ""}
               {formatConsumption(Math.abs(data.difference))}
             </p>
             <div className="border-t pt-2 mt-2">
               <p className="text-secondary">
-                <span className="font-medium">Distance:</span>{" "}
+                <span className="font-medium">{t.refuels.distance}:</span>{" "}
                 {data.kilometers_since_last_refuel} km
               </p>
               <p className="text-secondary">
-                <span className="font-medium">Fuel:</span>{" "}
-                {data.amount.toFixed(2)} L
+                <span className="font-medium">{t.refuels.fuel}:</span>{" "}
+                {formatNumber(data.amount, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}{" "}
+                L
               </p>
             </div>
           </div>
@@ -210,7 +219,9 @@ export default function RefuelConsumptionChart({
 
   return (
     <div className="mt-6">
-      <h4 className="heading-4 mb-3">Fuel Consumption: Estimated vs Actual</h4>
+      <h4 className="heading-4 mb-3">
+        {t.refuels.fuelConsumptionEstimatedVsActual}
+      </h4>
 
       <div className="chart-container">
         <ResponsiveContainer width="100%" height={350}>
@@ -234,7 +245,7 @@ export default function RefuelConsumptionChart({
               tickMargin={10}
               tickFormatter={(value) => {
                 const date = new Date(value);
-                return date.toLocaleDateString("en-GB", {
+                return formatDate(date, {
                   month: "short",
                   day: "numeric",
                   year: "2-digit",
@@ -247,7 +258,7 @@ export default function RefuelConsumptionChart({
               fontSize={12}
               tickFormatter={(value) => `${value.toFixed(1)}`}
               label={{
-                value: "Consumption (L/100km)",
+                value: t.refuels.consumptionLabelWithUnit,
                 angle: -90,
                 position: "insideLeft",
                 style: { textAnchor: "middle" },
@@ -266,7 +277,7 @@ export default function RefuelConsumptionChart({
                 strokeWidth: 2,
                 r: 3,
               }}
-              name="Estimated Consumption"
+              name={t.refuels.estimatedConsumption}
             />
             <Line
               type="monotone"
@@ -284,28 +295,28 @@ export default function RefuelConsumptionChart({
                 strokeWidth: 2,
                 stroke: chartTheme.activeDotStroke,
               }}
-              name="Actual Consumption"
+              name={t.refuels.actualConsumptionChart}
             />
           </LineChart>
         </ResponsiveContainer>
 
         <GridLayout variant="stats" className="mt-4 text-sm">
           <SummaryCard
-            title="Avg Actual"
+            title={t.refuels.avgActual}
             value={{ value: formatConsumption(avgActual), unit: "L/100km" }}
             icon={<ChartIcon size="lg" color="green" />}
             iconBgColor="green"
           />
 
           <SummaryCard
-            title="Avg Estimated"
+            title={t.refuels.avgEstimated}
             value={{ value: formatConsumption(avgEstimated), unit: "L/100km" }}
             icon={<HashIcon size="lg" color="blue" />}
             iconBgColor="blue"
           />
 
           <SummaryCard
-            title="Avg Difference"
+            title={t.refuels.avgDifference}
             value={{
               value: `${avgDifference > 0 ? "+" : ""}${formatConsumption(
                 Math.abs(avgDifference),
@@ -323,7 +334,7 @@ export default function RefuelConsumptionChart({
           />
 
           <SummaryCard
-            title="Accuracy"
+            title={t.refuels.accuracy}
             value={{ value: `${accuracyPercentage.toFixed(0)}`, unit: "%" }}
             icon={<CheckCircleIcon size="lg" color="purple" />}
             iconBgColor="purple"
@@ -332,19 +343,19 @@ export default function RefuelConsumptionChart({
 
         <div className="mt-3 text-xs text-secondary">
           <p>
-            • <span className="font-medium">Accuracy</span> shows percentage of
-            entries within ±0.5 L/100km of estimate
+            • <span className="font-medium">{t.refuels.accuracy}</span>{" "}
+            {t.refuels.accuracyDescription}
           </p>
           <p>
             •{" "}
             <span className="text-green-600 font-medium">
-              Green line (solid)
+              {t.refuels.greenLineSolid}
             </span>
-            : Actual consumption |
+            : {t.refuels.actualConsumptionDescription} |
             <span className="text-blue-600 font-medium ml-1">
-              Blue line (dashed)
+              {t.refuels.blueLineDashed}
             </span>
-            : Your estimates
+            : {t.refuels.yourEstimates}
           </p>
         </div>
       </div>

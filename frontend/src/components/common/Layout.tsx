@@ -2,111 +2,118 @@ import { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { clsx } from "clsx";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 interface LayoutProps {
   children: ReactNode;
 }
 
-const navigation = [
-  {
-    name: "Dashboard",
-    href: "/",
-    shortName: "Home",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
-        />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M8 5a2 2 0 012-2h4a2 2 0 012 2v14l-5-3-5 3V5z"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: "Refuel",
-    href: "/refuels",
-    shortName: "Fuel",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M13 10V3L4 14h7v7l9-11h-7z"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: "Data Tracking",
-    href: "/data-tracking",
-    shortName: "Data",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: "Time Spans",
-    href: "/time-spans",
-    shortName: "Time",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-    ),
-  },
-];
-
 export default function Layout({ children }: LayoutProps) {
   const router = useRouter();
+  const { t } = useTranslation();
+
+  const navigation = [
+    {
+      name: t.navigation.dashboard,
+      href: "/",
+      shortName: t.navigation.home,
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 5a2 2 0 012-2h4a2 2 0 012 2v14l-5-3-5 3V5z"
+          />
+        </svg>
+      ),
+    },
+    {
+      name: t.navigation.refuel,
+      href: "/refuels",
+      shortName: t.navigation.fuel,
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 10V3L4 14h7v7l9-11h-7z"
+          />
+        </svg>
+      ),
+    },
+    {
+      name: t.navigation.dataTracking,
+      href: "/data-tracking",
+      shortName: t.navigation.data,
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+          />
+        </svg>
+      ),
+    },
+    {
+      name: t.navigation.timeSpans,
+      href: "/time-spans",
+      shortName: t.navigation.time,
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      ),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:flex">
       {/* Desktop Sidebar - Hidden on mobile */}
       <div className="hidden md:block w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0 overflow-y-auto">
-        <div className="p-6">
+        <div className="p-6 flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-            Personal Data Tracker
+            {t.layout.appTitle}
           </h1>
+        </div>
+
+        <div className="px-3 mb-4">
+          <LanguageSwitcher />
         </div>
 
         <nav className="px-3 pb-4">
@@ -136,9 +143,12 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Mobile Header - Visible only on mobile */}
       <div className="md:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-        <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-          Personal Data Tracker
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+            {t.layout.appTitle}
+          </h1>
+          <LanguageSwitcher />
+        </div>
       </div>
 
       {/* Main content */}

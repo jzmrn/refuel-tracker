@@ -3,7 +3,9 @@ import { format } from "date-fns";
 
 import { DataPointResponse } from "@/lib/api";
 import LoadingSpinner from "../common/LoadingSpinner";
-import { ChartIcon, TrashIcon } from "../common/Icons";
+import { TrashIcon, ChartIcon, CollectionIcon } from "../common/Icons";
+import { EmptyState } from "../common";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 export type DataPoint = DataPointResponse;
 
@@ -18,17 +20,21 @@ export default function DataPointList({
   onDelete,
   loading,
 }: DataPointListProps) {
+  const { t } = useTranslation();
+
   if (loading) {
-    return <LoadingSpinner text="Loading data points..." />;
+    return <LoadingSpinner text={t.dataTracking.loadingDataPoints} />;
   }
 
   if (dataPoints.length === 0) {
     return (
-      <div className="empty-state">
-        <ChartIcon size="xl" color="gray" className="mx-auto mb-4" />
-        <p className="text-lg font-medium mb-2">No data points yet</p>
-        <p>Start tracking by adding your first data point above</p>
-      </div>
+      <EmptyState
+        icon={
+          <CollectionIcon size="xl" color="gray" className="mx-auto mb-4" />
+        }
+        title={t.dataTracking.noDataPointsYet}
+        className="empty-state"
+      />
     );
   }
 
@@ -79,12 +85,15 @@ export default function DataPointList({
                     {label}
                   </span>
                   <span className="text-sm text-secondary">
-                    {points.length} {points.length === 1 ? "entry" : "entries"}
+                    {points.length}{" "}
+                    {points.length === 1
+                      ? t.dataTracking.entry
+                      : t.dataTracking.entries}
                   </span>
                 </div>
                 {points.length > 0 && (
                   <div className="text-sm text-secondary">
-                    Latest:{" "}
+                    {t.dataTracking.latest}:{" "}
                     {
                       points.reduce((latest, point) =>
                         new Date(point.timestamp) > new Date(latest.timestamp)
@@ -135,10 +144,10 @@ export default function DataPointList({
                         <button
                           onClick={() => onDelete(point)}
                           className="action-btn-delete"
-                          title="Delete this data point"
+                          title={t.dataTracking.deleteDataPoint}
                         >
                           <TrashIcon size="sm" color="red" />
-                          Delete
+                          {t.common.delete}
                         </button>
                       </div>
                     </div>

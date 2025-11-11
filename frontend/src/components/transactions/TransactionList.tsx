@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import apiService, { Transaction } from "@/lib/api";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 interface TransactionListProps {
   refreshTrigger?: number;
@@ -9,6 +10,7 @@ interface TransactionListProps {
 export default function TransactionList({
   refreshTrigger,
 }: TransactionListProps) {
+  const { t } = useTranslation();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +25,7 @@ export default function TransactionList({
       const data = await apiService.getTransactions({ limit: 50 });
       setTransactions(data);
     } catch (err) {
-      setError("Failed to fetch transactions");
+      setError(t.transactions.failedToFetch);
       console.error("Error fetching transactions:", err);
     } finally {
       setLoading(false);
@@ -71,7 +73,7 @@ export default function TransactionList({
         <div className="text-center py-8">
           <p className="text-red-600 mb-4">{error}</p>
           <button onClick={fetchTransactions} className="btn-primary">
-            Try Again
+            {t.transactions.tryAgain}
           </button>
         </div>
       </div>
@@ -80,11 +82,13 @@ export default function TransactionList({
 
   return (
     <div className="card">
-      <h3 className="text-lg font-semibold mb-4">Recent Transactions</h3>
+      <h3 className="text-lg font-semibold mb-4">
+        {t.transactions.recentTransactions}
+      </h3>
 
       {transactions.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          <p>No transactions found</p>
+          <p>{t.transactions.noTransactions}</p>
         </div>
       ) : (
         <div className="space-y-3">

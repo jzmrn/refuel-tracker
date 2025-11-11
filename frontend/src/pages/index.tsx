@@ -4,9 +4,11 @@ import TransactionList from "@/components/transactions/TransactionList";
 import AddTransactionForm from "@/components/transactions/AddTransactionForm";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import SummaryCard from "@/components/common/SummaryCard";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 import apiService, { MonthlySummary } from "@/lib/api";
 
 export default function Home() {
+  const { t } = useTranslation();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [monthlySummary, setMonthlySummary] = useState<MonthlySummary | null>(
     null,
@@ -44,17 +46,17 @@ export default function Home() {
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
-          Financial Dashboard
+          {t.navigation.dashboard}
         </h1>
         <p className="text-gray-600 dark:text-gray-300 mt-2 text-sm md:text-base">
-          Track your financial data with ease
+          {t.dashboard.welcome}
         </p>
       </div>
 
       {/* Monthly Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
         <SummaryCard
-          title="Income"
+          title={t.transactions.income}
           value={{ value: monthlySummary?.income || 0, unit: "€" }}
           icon={<span className="font-semibold text-sm md:text-base">+</span>}
           iconBgColor="green"
@@ -62,7 +64,7 @@ export default function Home() {
         />
 
         <SummaryCard
-          title="Expenses"
+          title={t.transactions.expenses}
           value={{ value: monthlySummary?.expenses || 0, unit: "€" }}
           icon={<span className="font-semibold text-sm md:text-base">-</span>}
           iconBgColor="red"
@@ -70,7 +72,7 @@ export default function Home() {
         />
 
         <SummaryCard
-          title="Net"
+          title={t.transactions.net}
           value={{ value: monthlySummary?.net || 0, unit: "€" }}
           icon={<span className="font-semibold text-sm md:text-base">=</span>}
           iconBgColor={(monthlySummary?.net || 0) >= 0 ? "green" : "red"}
@@ -78,7 +80,7 @@ export default function Home() {
         />
 
         <SummaryCard
-          title="Transactions"
+          title={t.transactions.transactions}
           value={{ value: (monthlySummary?.transaction_count || 0).toString() }}
           icon={<span className="font-semibold text-sm md:text-base">#</span>}
           iconBgColor="blue"

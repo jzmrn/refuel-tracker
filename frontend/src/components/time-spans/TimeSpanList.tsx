@@ -7,7 +7,14 @@ import {
 } from "date-fns";
 import { TimeSpanResponse } from "@/lib/api";
 import LoadingSpinner from "../common/LoadingSpinner";
-import { ClockIcon, EditIcon, TrashIcon } from "../common/Icons";
+import {
+  EditIcon,
+  TrashIcon,
+  ClockIcon,
+  CollectionIcon,
+} from "../common/Icons";
+import { EmptyState } from "../common";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 interface TimeSpanListProps {
   timeSpans: TimeSpanResponse[];
@@ -22,24 +29,27 @@ export default function TimeSpanList({
   onEdit,
   loading,
 }: TimeSpanListProps) {
+  const { t } = useTranslation();
   if (loading) {
-    return <LoadingSpinner text="Loading time spans..." />;
+    return <LoadingSpinner text={t.timeSpans.loadingTimeSpans} />;
   }
 
   if (!timeSpans || timeSpans.length === 0) {
     return (
-      <div className="empty-state">
-        <ClockIcon size="xl" color="gray" className="mx-auto mb-4" />
-        <p className="text-lg font-medium mb-2">No time spans yet</p>
-        <p>Start tracking by adding your first time span above</p>
-      </div>
+      <EmptyState
+        icon={
+          <CollectionIcon size="xl" color="gray" className="mx-auto mb-4" />
+        }
+        title={t.timeSpans.noTimeSpansYet}
+        className="empty-state"
+      />
     );
   }
 
   // Group time spans by group for better organization
   const groupedTimeSpans = timeSpans.reduce(
     (groups, span) => {
-      const group = span.group || "General";
+      const group = span.group || t.timeSpans.general;
       if (!groups[group]) {
         groups[group] = [];
       }
@@ -92,10 +102,6 @@ export default function TimeSpanList({
     return format(new Date(dateString), "MMM d, yyyy 'at' h:mm a");
   };
 
-  const formatDateTimeShort = (dateString: string) => {
-    return format(new Date(dateString), "MMM d, h:mm a");
-  };
-
   const isOngoing = (span: TimeSpanResponse) => !span.end_date;
 
   const calculateTotalDuration = (spans: TimeSpanResponse[]) => {
@@ -131,12 +137,13 @@ export default function TimeSpanList({
                     {group}
                   </span>
                   <span className="text-sm text-secondary">
-                    {spans.length} {spans.length === 1 ? "span" : "spans"}
+                    {spans.length}{" "}
+                    {spans.length === 1 ? t.timeSpans.span : t.timeSpans.spans}
                   </span>
                 </div>
                 {spans.length > 0 && (
                   <div className="text-sm text-secondary">
-                    Total: {calculateTotalDuration(spans)}
+                    {t.timeSpans.total}: {calculateTotalDuration(spans)}
                   </div>
                 )}
               </div>
@@ -159,7 +166,7 @@ export default function TimeSpanList({
                           </div>
                           {isOngoing(span) && (
                             <span className="status-badge-ongoing">
-                              Ongoing
+                              {t.timeSpans.ongoing}
                             </span>
                           )}
                         </div>
@@ -167,12 +174,16 @@ export default function TimeSpanList({
                         <div className="space-y-1 text-sm text-secondary">
                           <div className="flex-center gap-4">
                             <div>
-                              <span className="font-medium">Started:</span>{" "}
+                              <span className="font-medium">
+                                {t.timeSpans.started}:
+                              </span>{" "}
                               {formatDateTime(span.start_date)}
                             </div>
                             {span.end_date && (
                               <div>
-                                <span className="font-medium">Ended:</span>{" "}
+                                <span className="font-medium">
+                                  {t.timeSpans.ended}:
+                                </span>{" "}
                                 {formatDateTime(span.end_date)}
                               </div>
                             )}
@@ -180,7 +191,9 @@ export default function TimeSpanList({
 
                           <div className="flex-center gap-4">
                             <div>
-                              <span className="font-medium">Duration:</span>{" "}
+                              <span className="font-medium">
+                                {t.timeSpans.duration}:
+                              </span>{" "}
                               <span className="text-blue-600 font-semibold dark:text-blue-400">
                                 {calculateDuration(
                                   span.start_date,
@@ -190,7 +203,7 @@ export default function TimeSpanList({
                               {isOngoing(span) && (
                                 <span className="text-secondary">
                                   {" "}
-                                  (and counting...)
+                                  {t.timeSpans.andCounting}
                                 </span>
                               )}
                             </div>
@@ -209,7 +222,7 @@ export default function TimeSpanList({
                           <button
                             onClick={() => onEdit(span)}
                             className="action-btn-edit"
-                            title="Edit time span"
+                            title={t.timeSpans.editTimeSpanTitle}
                           >
                             <EditIcon size="sm" color="indigo" />
                           </button>
@@ -217,10 +230,10 @@ export default function TimeSpanList({
                         <button
                           onClick={() => onDelete(span)}
                           className="action-btn-delete"
-                          title="Delete time span"
+                          title={t.timeSpans.deleteTitle}
                         >
                           <TrashIcon size="sm" color="red" />
-                          Delete
+                          {t.common.delete}
                         </button>
                       </div>
                     </div>
