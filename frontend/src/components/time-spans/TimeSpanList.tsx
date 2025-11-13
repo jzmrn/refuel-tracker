@@ -37,9 +37,7 @@ export default function TimeSpanList({
   if (!timeSpans || timeSpans.length === 0) {
     return (
       <EmptyState
-        icon={
-          <CollectionIcon size="xl" color="gray" className="mx-auto mb-4" />
-        }
+        icon={<ClockIcon size="xl" color="gray" className="mx-auto mb-4" />}
         title={t.timeSpans.noTimeSpansYet}
         className="empty-state"
       />
@@ -89,13 +87,9 @@ export default function TimeSpanList({
     const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
     const minutes = totalMinutes % 60;
 
-    if (days > 0) {
-      return `${days}d ${hours}h ${minutes}m`;
-    } else if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    } else {
-      return `${minutes}m`;
-    }
+    if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+    else if (hours > 0) return `${hours}h ${minutes}m`;
+    else return `${minutes}m`;
   };
 
   const formatDateTime = (dateString: string) => {
@@ -115,13 +109,9 @@ export default function TimeSpanList({
     const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
     const minutes = totalMinutes % 60;
 
-    if (days > 0) {
-      return `${days}d ${hours}h ${minutes}m`;
-    } else if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    } else {
-      return `${minutes}m`;
-    }
+    if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+    else if (hours > 0) return `${hours}h ${minutes}m`;
+    else return `${minutes}m`;
   };
 
   return (

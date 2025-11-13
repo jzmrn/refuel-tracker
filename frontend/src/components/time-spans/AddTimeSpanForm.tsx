@@ -229,14 +229,14 @@ export default function AddTimeSpanForm({
           <label htmlFor="start_date" className="label">
             {t.timeSpans.startDateTime} *
           </label>
-          <div className="flex gap-2">
+          <div className="flex gap-2 min-w-0">
             <input
               type="datetime-local"
               id="start_date"
               name="start_date"
               value={formData.start_date || ""}
               onChange={handleChange}
-              className={`input flex-1 ${
+              className={`input flex-1 min-w-0 ${
                 errors.start_date ? "border-red-300" : ""
               }`}
               required
@@ -253,7 +253,7 @@ export default function AddTimeSpanForm({
                   setErrors((prev) => ({ ...prev, start_date: "" }));
                 }
               }}
-              className="btn-sm-secondary whitespace-nowrap"
+              className="btn-sm-secondary whitespace-nowrap flex-shrink-0"
             >
               {t.timeSpans.now}
             </button>
@@ -267,21 +267,21 @@ export default function AddTimeSpanForm({
           <label htmlFor="end_date" className="label">
             {t.timeSpans.endDateTime}
           </label>
-          <div className="flex gap-2">
+          <div className="flex gap-2 min-w-0">
             <input
               type="datetime-local"
               id="end_date"
               name="end_date"
               value={formData.end_date || ""}
               onChange={handleChange}
-              className={`input flex-1 ${
+              className={`input flex-1 min-w-0 ${
                 errors.end_date ? "border-red-300" : ""
               }`}
             />
             <button
               type="button"
               onClick={setEndDateToNow}
-              className="btn-sm-secondary whitespace-nowrap"
+              className="btn-sm-secondary whitespace-nowrap flex-shrink-0"
             >
               {t.timeSpans.now}
             </button>

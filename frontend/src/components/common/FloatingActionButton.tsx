@@ -67,32 +67,27 @@ export default function FloatingActionButton({
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="modal">
-                  <div className="p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <Dialog.Title as="h3" className="heading-3">
-                        Add New Entry
-                      </Dialog.Title>
-                      <button
-                        onClick={onClose}
-                        className="rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 text-left align-middle shadow-xl transition-all">
+                  <div className="relative">
+                    <button
+                      onClick={onClose}
+                      className="absolute top-4 right-4 z-10 rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <svg
+                        className="w-5 h-5 text-gray-500 dark:text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <svg
-                          className="w-5 h-5 text-gray-500 dark:text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                    <div className="max-h-[70vh] overflow-y-auto">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                    <div className="max-h-[80vh] overflow-y-auto">
                       {children}
                     </div>
                   </div>

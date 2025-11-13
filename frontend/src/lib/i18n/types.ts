@@ -19,13 +19,15 @@ export interface TranslationStructure {
     previous: string;
     settings: string;
     language: string;
-    noData: string;
+    noStatistics: string;
     error: string;
     success: string;
     warning: string;
     total: string;
     spans: string;
     unknownError: string;
+    labels: string;
+    entries: string;
   };
 
   // Navigation
@@ -75,8 +77,6 @@ export interface TranslationStructure {
     filterByMetric: string;
     allMetrics: string;
     trackNumericalData: string;
-    labels: string;
-    noDataPointsYetMobile: string;
     addFirstDataPoint: string;
     dataPointDeleteConfirm: string;
     actionCannotBeUndone: string;
@@ -225,11 +225,8 @@ export interface TranslationStructure {
     trackActivities: string;
     uniqueLabels: string;
     totalEntries: string;
-    labels: string;
-    entries: string;
     filterByGroup: string;
     allGroups: string;
-    searchTimeSpans: string;
     allTimeSpans: string;
     noTimeSpansYet: string;
     addFirstTimeSpan: string;
@@ -282,7 +279,6 @@ export interface TranslationStructure {
     };
     // Statistics
     statisticsFor: string;
-    noStatisticsData: string;
     addSomeTimeSpans: string;
     selectGroupTimeline: string;
     statisticsShowAllSpans: string;

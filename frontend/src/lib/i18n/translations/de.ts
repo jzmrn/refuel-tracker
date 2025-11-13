@@ -18,13 +18,15 @@ export const de: TranslationStructure = {
     previous: "Vorherige",
     settings: "Einstellungen",
     language: "Sprache",
-    noData: "Keine Daten verfügbar",
+    noStatistics: "Keine Statistiken verfügbar.",
     error: "Fehler",
     success: "Erfolg",
     warning: "Warnung",
     total: "gesamt",
     spans: "Zeitspannen",
     unknownError: "Unbekannter Fehler",
+    labels: "Bezeichnungen",
+    entries: "Einträge",
   },
 
   navigation: {
@@ -72,7 +74,7 @@ export const de: TranslationStructure = {
     increasing: "Steigend",
     decreasing: "Fallend",
     loadingDataPoints: "Datenpunkte werden geladen...",
-    noDataPointsYet: "Noch keine Datenpunkte",
+    noDataPointsYet: "Noch keine Datenpunkte.",
     startTracking:
       "Beginnen Sie mit der Verfolgung, indem Sie Ihren ersten Datenpunkt oben hinzufügen",
     entry: "Eintrag",
@@ -87,8 +89,6 @@ export const de: TranslationStructure = {
     allMetrics: "Alle Metriken",
     trackNumericalData:
       "Verfolge numerische Daten über Zeit mit benutzerdefinierten Labels",
-    labels: "Labels",
-    noDataPointsYetMobile: "Noch keine Datenpunkte.",
     addFirstDataPoint:
       "Füge deinen ersten Datenpunkt mit dem + Button unten hinzu.",
     dataPointDeleteConfirm:
@@ -231,11 +231,8 @@ export const de: TranslationStructure = {
       "Verfolgen Sie Aktivitäten und Ereignisse mit Start- und Enddatum",
     uniqueLabels: "Eindeutige Bezeichnungen",
     totalEntries: "Gesamteinträge",
-    labels: "Bezeichnungen",
-    entries: "Einträge",
     filterByGroup: "Nach Gruppe filtern",
     allGroups: "Alle Gruppen",
-    searchTimeSpans: "Zeitspannen suchen",
     allTimeSpans: "Alle Zeitspannen",
     noTimeSpansYet: "Noch keine Zeitspannen.",
     addFirstTimeSpan:
@@ -294,7 +291,6 @@ export const de: TranslationStructure = {
     },
     // Statistics
     statisticsFor: "Statistiken für",
-    noStatisticsData: "Keine Zeitspannen verfügbar für",
     addSomeTimeSpans:
       "Fügen Sie einige Zeitspannen hinzu, um Statistiken zu sehen.",
     selectGroupTimeline: "Gruppe für Zeitleiste auswählen",

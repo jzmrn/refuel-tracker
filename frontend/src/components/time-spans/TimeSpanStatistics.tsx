@@ -481,9 +481,9 @@ export default function TimeSpanStatistics({
   if (!timeSpans || timeSpans.length === 0) {
     return (
       <EmptyState
-        icon={<ClockIcon size="xl" color="gray" className="mx-auto mb-4" />}
-        title={t.common.noData}
-        className="empty-state py-8"
+        icon={<ChartIcon size="xl" color="gray" className="mx-auto mb-4" />}
+        title={t.common.noStatistics}
+        className="empty-state"
       />
     );
   }

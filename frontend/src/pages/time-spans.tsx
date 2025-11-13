@@ -137,6 +137,79 @@ export default function TimeSpans() {
     }
   };
 
+  // Reusable component functions
+  const renderSummaryCards = (
+    gridCols: string = "grid-cols-1 md:grid-cols-2",
+  ) => (
+    <div className={`grid ${gridCols} gap-6 mb-8`}>
+      <SummaryCard
+        title={t.timeSpans.uniqueLabels}
+        value={{ value: summary?.unique_labels || 0 }}
+        loading={loading}
+        iconBgColor="purple"
+        icon={<TagIcon size="lg" color="purple" />}
+      />
+
+      <SummaryCard
+        title={t.timeSpans.totalEntries}
+        value={{ value: summary?.total_entries || 0 }}
+        loading={loading}
+        iconBgColor="blue"
+        icon={<ClockIcon size="lg" color="blue" />}
+      />
+    </div>
+  );
+
+  const renderGroupFilter = (id: string, isMobile: boolean = false) =>
+    existingGroups.length > 0 && (
+      <div className={`${isMobile ? "mb-4" : "mb-6"} panel`}>
+        <div className="flex items-center gap-4">
+          <label htmlFor={id} className="label flex-shrink-0">
+            {t.timeSpans.filterByGroup}
+          </label>
+          <select
+            id={id}
+            value={valuesSelectedGroup}
+            onChange={(e) => setValuesSelectedGroup(e.target.value)}
+            className="input flex-1"
+          >
+            <option value="">{t.timeSpans.allGroups}</option>
+            {existingGroups.map((group) => (
+              <option key={group} value={group}>
+                {group}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    );
+
+  const renderTimeSpanListWithEdit = () =>
+    editingSpan ? (
+      <EditTimeSpanForm
+        timeSpan={editingSpan}
+        onSubmit={handleUpdateTimeSpan}
+        existingLabels={existingLabels}
+        existingGroups={existingGroups}
+        onCancel={() => setEditingSpan(null)}
+      />
+    ) : (
+      <TimeSpanList
+        timeSpans={filteredTimeSpans}
+        onDelete={handleDeleteTimeSpan}
+        onEdit={handleEditTimeSpan}
+        loading={loading}
+      />
+    );
+
+  const renderStatistics = () => (
+    <TimeSpanStatistics
+      timeSpans={timeSpans}
+      label={t.timeSpans.allTimeSpans}
+      loading={loading}
+    />
+  );
+
   const tabs = [
     { id: "add" as TabType, label: t.timeSpans.addTimeSpan, icon: "⏱️" },
     { id: "statistics" as TabType, label: t.timeSpans.statistics, icon: "📊" },
@@ -154,72 +227,16 @@ export default function TimeSpans() {
           />
         );
       case "statistics":
-        return (
-          <TimeSpanStatistics
-            timeSpans={timeSpans}
-            label={t.timeSpans.allTimeSpans}
-            loading={loading}
-          />
-        );
+        return renderStatistics();
       case "values":
         return (
           <div>
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <SummaryCard
-                title={t.timeSpans.uniqueLabels}
-                value={{ value: summary?.unique_labels || 0 }}
-                loading={loading}
-                iconBgColor="purple"
-                icon={<TagIcon size="lg" color="purple" />}
-              />
+            {renderSummaryCards()}
 
-              <SummaryCard
-                title={t.timeSpans.totalEntries}
-                value={{ value: summary?.total_entries || 0 }}
-                loading={loading}
-                iconBgColor="blue"
-                icon={<ClockIcon size="lg" color="blue" />}
-              />
-            </div>
+            {renderGroupFilter("values-group-select")}
 
-            {existingGroups.length > 0 && (
-              <div className="mb-6 panel">
-                <label htmlFor="values-group-select" className="label">
-                  {t.timeSpans.filterByGroup}
-                </label>
-                <select
-                  id="values-group-select"
-                  value={valuesSelectedGroup}
-                  onChange={(e) => setValuesSelectedGroup(e.target.value)}
-                  className="input"
-                >
-                  <option value="">{t.timeSpans.allGroups}</option>
-                  {existingGroups.map((group) => (
-                    <option key={group} value={group}>
-                      {group}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {editingSpan ? (
-              <EditTimeSpanForm
-                timeSpan={editingSpan}
-                onSubmit={handleUpdateTimeSpan}
-                existingLabels={existingLabels}
-                existingGroups={existingGroups}
-                onCancel={() => setEditingSpan(null)}
-              />
-            ) : (
-              <TimeSpanList
-                timeSpans={filteredTimeSpans}
-                onDelete={handleDeleteTimeSpan}
-                onEdit={handleEditTimeSpan}
-                loading={loading}
-              />
-            )}
+            {renderTimeSpanListWithEdit()}
           </div>
         );
       default:
@@ -267,82 +284,16 @@ export default function TimeSpans() {
       {/* Mobile Unified View - Visible only on mobile */}
       <div className="md:hidden space-y-6">
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-4">
-          <SummaryCard
-            title={t.timeSpans.labels}
-            value={{ value: summary?.unique_labels || 0 }}
-            loading={loading}
-            iconBgColor="purple"
-            icon={<TagIcon size="lg" color="purple" />}
-          />
-
-          <SummaryCard
-            title={t.timeSpans.entries}
-            value={{ value: summary?.total_entries || 0 }}
-            loading={loading}
-            iconBgColor="blue"
-            icon={<ClockIcon size="lg" color="blue" />}
-          />
-        </div>
+        {renderSummaryCards("grid-cols-2")}
 
         {/* Statistics Section */}
-        <TimeSpanStatistics
-          timeSpans={timeSpans}
-          label={t.timeSpans.allTimeSpans}
-          loading={loading}
-        />
+        {renderStatistics()}
 
         {/* Time Spans List */}
-        {existingGroups.length > 0 && (
-          <div>
-            <div className="mb-4 panel">
-              <label htmlFor="mobile-values-search" className="label">
-                {t.timeSpans.searchTimeSpans}
-              </label>
-              <select
-                id="mobile-values-group-select"
-                value={valuesSelectedGroup}
-                onChange={(e) => setValuesSelectedGroup(e.target.value)}
-                className="input"
-              >
-                <option value="">{t.timeSpans.allGroups}</option>
-                {existingGroups.map((group) => (
-                  <option key={group} value={group}>
-                    {group}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {editingSpan ? (
-              <EditTimeSpanForm
-                timeSpan={editingSpan}
-                onSubmit={handleUpdateTimeSpan}
-                existingLabels={existingLabels}
-                existingGroups={existingGroups}
-                onCancel={() => setEditingSpan(null)}
-              />
-            ) : (
-              <TimeSpanList
-                timeSpans={filteredTimeSpans}
-                onDelete={handleDeleteTimeSpan}
-                onEdit={handleEditTimeSpan}
-                loading={loading}
-              />
-            )}
-          </div>
-        )}
-
-        {existingGroups.length === 0 && !loading && (
-          <div className="panel">
-            <div className="text-center py-8 text-secondary">
-              <p>No time spans yet.</p>
-              <p className="text-sm mt-1">
-                Add your first time span using the + button below.
-              </p>
-            </div>
-          </div>
-        )}
+        <div>
+          {renderGroupFilter("mobile-values-group-select", true)}
+          {renderTimeSpanListWithEdit()}
+        </div>
       </div>
 
       {/* Floating Action Button for Mobile */}
@@ -361,10 +312,10 @@ export default function TimeSpans() {
       {/* Confirmation Dialog */}
       <ConfirmationDialog
         isOpen={!!deletingSpan}
-        title="Delete Time Span"
-        message={`Are you sure you want to delete this time span "${deletingSpan?.label}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t.timeSpans.deleteTimeSpan}
+        message={t.timeSpans.deleteConfirmMessage}
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
         variant="danger"
         onConfirm={confirmDeleteTimeSpan}
         onCancel={() => setDeletingSpan(null)}

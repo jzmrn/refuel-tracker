@@ -183,6 +183,7 @@ export default function AddRefuelForm({
 
   return (
     <StandardForm
+      title={t.refuels.addEntry}
       onSubmit={handleSubmit}
       actions={formActions}
       containerClass="panel"
@@ -191,7 +192,7 @@ export default function AddRefuelForm({
         <label htmlFor="timestamp" className="label">
           {t.refuels.dateTime} *
         </label>
-        <div className="flex gap-2">
+        <div className="flex gap-2 min-w-0">
           <input
             type="datetime-local"
             id="timestamp"
@@ -199,7 +200,7 @@ export default function AddRefuelForm({
             value={formData.timestamp || ""}
             max={new Date().toISOString().slice(0, 16)}
             onChange={handleChange}
-            className={`input flex-1 ${
+            className={`input flex-1 min-w-0 ${
               errors.timestamp ? "border-red-300" : ""
             }`}
             required
@@ -216,7 +217,7 @@ export default function AddRefuelForm({
                 setErrors((prev) => ({ ...prev, timestamp: "" }));
               }
             }}
-            className="btn-sm-secondary whitespace-nowrap"
+            className="btn-sm-secondary whitespace-nowrap flex-shrink-0"
           >
             {t.refuels.now}
           </button>

@@ -49,6 +49,23 @@ export default function Home() {
         </p>
       </div>
 
+      {/* Getting Started */}
+      <div className="mb-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 p-6">
+        <div className="flex items-center">
+          <DocumentChartBarIcon className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+          <div className="ml-4">
+            <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+              Getting Started
+            </h3>
+            <p className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+              Choose a tracking category below to begin monitoring your personal
+              data. Each section provides specialized tools for different types
+              of information.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Feature Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {features.map((feature) => (
@@ -77,23 +94,6 @@ export default function Home() {
             </p>
           </Link>
         ))}
-      </div>
-
-      {/* Getting Started */}
-      <div className="mt-12 rounded-lg bg-blue-50 dark:bg-blue-900/20 p-6">
-        <div className="flex items-center">
-          <DocumentChartBarIcon className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-          <div className="ml-4">
-            <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
-              Getting Started
-            </h3>
-            <p className="mt-2 text-sm text-blue-700 dark:text-blue-300">
-              Choose a tracking category above to begin monitoring your personal
-              data. Each section provides specialized tools for different types
-              of information.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

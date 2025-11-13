@@ -130,6 +130,113 @@ export default function DataTracking() {
     }
   };
 
+  // Reusable component functions
+  const renderSummaryCards = (
+    gridCols: string = "grid-cols-1 md:grid-cols-2",
+    isMobile: boolean = false,
+  ) => (
+    <div className={`grid ${gridCols} gap-6 mb-8`}>
+      <SummaryCard
+        title={isMobile ? t.common.labels : t.dataTracking.uniqueLabels}
+        value={{
+          value: isMobile
+            ? summary?.unique_labels?.toString() || "0"
+            : summary?.unique_labels || 0,
+        }}
+        loading={loading}
+        iconBgColor="purple"
+        icon={<TagIcon size="lg" color="purple" />}
+      />
+
+      <SummaryCard
+        title={isMobile ? t.common.entries : t.dataTracking.totalEntries}
+        value={{
+          value: isMobile
+            ? summary?.total_entries?.toString() || "0"
+            : summary?.total_entries || 0,
+        }}
+        loading={loading}
+        iconBgColor="blue"
+        icon={<ChartIcon size="lg" color="blue" />}
+      />
+    </div>
+  );
+
+  const renderStatisticsFilter = (
+    id: string,
+    labelKey: string,
+    isMobile: boolean = false,
+  ) =>
+    existingLabels.length > 0 && (
+      <div
+        className={`panel ${
+          isMobile ? "mb-4" : "mb-6"
+        } flex justify-between items-center`}
+      >
+        <label htmlFor={id} className="label">
+          {labelKey}
+        </label>
+        <select
+          id={id}
+          value={statisticsSelectedLabel}
+          onChange={(e) => setStatisticsSelectedLabel(e.target.value)}
+          className="input w-1/4"
+        >
+          {existingLabels.map((label) => (
+            <option key={label} value={label}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+
+  const renderStatistics = () => (
+    <DataPointStatistics
+      dataPoints={statisticsFilteredDataPoints}
+      label={statisticsSelectedLabel}
+      loading={loading}
+    />
+  );
+
+  const renderValuesFilter = (
+    id: string,
+    labelKey: string,
+    isMobile: boolean = false,
+  ) =>
+    existingLabels.length > 0 && (
+      <div
+        className={`panel ${
+          isMobile ? "mb-4" : "mb-6"
+        } flex justify-between items-center`}
+      >
+        <label htmlFor={id} className="label">
+          {labelKey}
+        </label>
+        <select
+          id={id}
+          value={valuesSelectedLabel}
+          onChange={(e) => setValuesSelectedLabel(e.target.value)}
+          className="input w-1/4"
+        >
+          <option value="">{t.dataTracking.allMetrics}</option>
+          {existingLabels.map((label) => (
+            <option key={label} value={label}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+
+  const renderDataPointList = () => (
+    <DataPointList
+      dataPoints={filteredDataPoints}
+      onDelete={handleDeleteDataPoint}
+      loading={loading}
+    />
+  );
+
   const tabs = [
     { id: "add" as TabType, label: t.dataTracking.addDataPoint, icon: "+" },
     {
@@ -152,81 +259,25 @@ export default function DataTracking() {
       case "statistics":
         return (
           <div>
-            {existingLabels.length > 0 && (
-              <div className="panel mb-6 flex justify-between items-center">
-                <label htmlFor="stats-label-select" className="label">
-                  {t.dataTracking.selectMetricToView}{" "}
-                  {t.dataTracking.statistics}
-                </label>
-                <select
-                  id="stats-label-select"
-                  value={statisticsSelectedLabel}
-                  onChange={(e) => setStatisticsSelectedLabel(e.target.value)}
-                  className="input w-1/4"
-                >
-                  {existingLabels.map((label) => (
-                    <option key={label} value={label}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {renderStatisticsFilter(
+              "stats-label-select",
+              `${t.dataTracking.selectMetricToView} ${t.dataTracking.statistics}`,
             )}
-            <DataPointStatistics
-              dataPoints={statisticsFilteredDataPoints}
-              label={statisticsSelectedLabel}
-              loading={loading}
-            />
+            {renderStatistics()}
           </div>
         );
       case "values":
         return (
           <div>
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <SummaryCard
-                title={t.dataTracking.uniqueLabels}
-                value={{ value: summary?.unique_labels || 0 }}
-                loading={loading}
-                iconBgColor="purple"
-                icon={<TagIcon size="lg" color="purple" />}
-              />
+            {renderSummaryCards()}
 
-              <SummaryCard
-                title={t.dataTracking.totalEntries}
-                value={{ value: summary?.total_entries || 0 }}
-                loading={loading}
-                iconBgColor="blue"
-                icon={<ChartIcon size="lg" color="blue" />}
-              />
-            </div>
-
-            {existingLabels.length > 0 && (
-              <div className="panel mb-6 flex justify-between items-center">
-                <label htmlFor="values-label-select" className="label">
-                  {t.dataTracking.filterByMetric}
-                </label>
-                <select
-                  id="values-label-select"
-                  value={valuesSelectedLabel}
-                  onChange={(e) => setValuesSelectedLabel(e.target.value)}
-                  className="input w-1/4"
-                >
-                  <option value="">{t.dataTracking.allMetrics}</option>
-                  {existingLabels.map((label) => (
-                    <option key={label} value={label}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {renderValuesFilter(
+              "values-label-select",
+              t.dataTracking.filterByMetric,
             )}
 
-            <DataPointList
-              dataPoints={filteredDataPoints}
-              onDelete={handleDeleteDataPoint}
-              loading={loading}
-            />
+            {renderDataPointList()}
           </div>
         );
       default:
@@ -271,92 +322,30 @@ export default function DataTracking() {
       {/* Mobile Unified View - Visible only on mobile */}
       <div className="md:hidden space-y-6">
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-4">
-          <SummaryCard
-            title={t.dataTracking.labels}
-            value={{ value: summary?.unique_labels?.toString() || "0" }}
-            icon={<TagIcon size="lg" color="purple" />}
-            iconBgColor="purple"
-            loading={loading}
-          />
-
-          <SummaryCard
-            title={t.dataTracking.entries}
-            value={{ value: summary?.total_entries?.toString() || "0" }}
-            icon={<ChartIcon size="lg" color="blue" />}
-            iconBgColor="blue"
-            loading={loading}
-          />
-        </div>
+        {renderSummaryCards("grid-cols-2", true)}
 
         {/* Statistics Section */}
         {existingLabels.length > 0 && (
           <div>
-            <div className="panel mb-4 flex justify-between items-center">
-              <label htmlFor="mobile-stats-label-select" className="label">
-                {t.dataTracking.selectMetricToViewStats}
-              </label>
-              <select
-                id="mobile-stats-label-select"
-                value={statisticsSelectedLabel}
-                onChange={(e) => setStatisticsSelectedLabel(e.target.value)}
-                className="input w-1/4"
-              >
-                {existingLabels.map((label) => (
-                  <option key={label} value={label}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {statisticsSelectedLabel && (
-              <DataPointStatistics
-                dataPoints={statisticsFilteredDataPoints}
-                label={statisticsSelectedLabel}
-                loading={loading}
-              />
+            {renderStatisticsFilter(
+              "mobile-stats-label-select",
+              t.dataTracking.selectMetricToViewStats,
+              true,
             )}
+            {statisticsSelectedLabel && renderStatistics()}
           </div>
         )}
 
         {/* Data Points List */}
-        {existingLabels.length > 0 && (
-          <div>
-            <div className="panel mb-4 flex justify-between items-center">
-              <label htmlFor="mobile-values-label-select" className="label">
-                {t.dataTracking.filterByMetric}
-              </label>
-              <select
-                id="mobile-values-label-select"
-                value={valuesSelectedLabel}
-                onChange={(e) => setValuesSelectedLabel(e.target.value)}
-                className="input w-1/4"
-              >
-                <option value="">{t.dataTracking.allMetrics}</option>
-                {existingLabels.map((label) => (
-                  <option key={label} value={label}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div>
+          {renderValuesFilter(
+            "mobile-values-label-select",
+            t.dataTracking.filterByMetric,
+            true,
+          )}
 
-            <DataPointList
-              dataPoints={filteredDataPoints}
-              onDelete={handleDeleteDataPoint}
-              loading={loading}
-            />
-          </div>
-        )}
-
-        {existingLabels.length === 0 && !loading && (
-          <div className="panel">
-            <div className="empty-state">
-              <p>{t.dataTracking.noDataPointsYetMobile}</p>
-              <p className="text-sm mt-1">{t.dataTracking.addFirstDataPoint}</p>
-            </div>
-          </div>
-        )}
+          {renderDataPointList()}
+        </div>
       </div>
       {/* Floating Action Button for Mobile */}
       <FloatingActionButton

@@ -130,6 +130,45 @@ const RefuelPage: NextPage = () => {
     fetchRefuels();
   };
 
+  // Reusable component functions
+  const renderStatistics = () => (
+    <RefuelStats
+      statistics={statistics}
+      refuelData={refuels}
+      loading={statsLoading}
+    />
+  );
+
+  const renderFilterOptions = () => (
+    <div className="filter-container flex justify-between items-center">
+      <h3 className="filter-title">{t.refuels.filter}</h3>
+      <div className="filter-buttons">
+        <button
+          onClick={showAll}
+          className="filter-button filter-button-primary"
+        >
+          {t.refuels.showAll}
+        </button>
+        <button
+          onClick={filterThisMonth}
+          className="filter-button filter-button-success"
+        >
+          {t.refuels.thisMonth}
+        </button>
+        <button
+          onClick={filterThisYear}
+          className="filter-button filter-button-accent"
+        >
+          {t.refuels.thisYear}
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderRefuelList = () => (
+    <RefuelList refuels={refuels} loading={loading} />
+  );
+
   const tabs = [
     { id: "add" as TabType, label: t.refuels.addEntry, icon: "+" },
     { id: "statistics" as TabType, label: t.refuels.statistics, icon: "📊" },
@@ -141,41 +180,13 @@ const RefuelPage: NextPage = () => {
       case "add":
         return <AddRefuelForm onSubmit={handleAddRefuel} />;
       case "statistics":
-        return (
-          <RefuelStats
-            statistics={statistics}
-            refuelData={refuels}
-            loading={statsLoading}
-          />
-        );
+        return renderStatistics();
       case "entries":
         return (
           <div>
             {/* Filter Options */}
-            <div className="filter-container flex justify-between items-center">
-              <h3 className="filter-title">{t.refuels.filter}</h3>
-              <div className="filter-buttons">
-                <button
-                  onClick={showAll}
-                  className="filter-button filter-button-primary"
-                >
-                  {t.refuels.showAll}
-                </button>
-                <button
-                  onClick={filterThisMonth}
-                  className="filter-button filter-button-success"
-                >
-                  {t.refuels.thisMonth}
-                </button>
-                <button
-                  onClick={filterThisYear}
-                  className="filter-button filter-button-accent"
-                >
-                  {t.refuels.thisYear}
-                </button>
-              </div>
-            </div>
-            <RefuelList refuels={refuels} loading={loading} />
+            {renderFilterOptions()}
+            {renderRefuelList()}
           </div>
         );
       default:
@@ -230,39 +241,13 @@ const RefuelPage: NextPage = () => {
       {/* Mobile Unified View - Visible only on mobile */}
       <div className="md:hidden space-y-6">
         {/* Statistics Section */}
-        <RefuelStats
-          statistics={statistics}
-          refuelData={refuels}
-          loading={statsLoading}
-        />
+        {renderStatistics()}
 
         {/* Filter Options */}
-        <div className="filter-container flex justify-between items-center">
-          <h3 className="filter-title">{t.refuels.filter}</h3>
-          <div className="filter-buttons">
-            <button
-              onClick={showAll}
-              className="filter-button filter-button-primary"
-            >
-              {t.refuels.showAll}
-            </button>
-            <button
-              onClick={filterThisMonth}
-              className="filter-button filter-button-success"
-            >
-              {t.refuels.thisMonth}
-            </button>
-            <button
-              onClick={filterThisYear}
-              className="filter-button filter-button-accent"
-            >
-              {t.refuels.thisYear}
-            </button>
-          </div>
-        </div>
+        {renderFilterOptions()}
 
         {/* Refuel Entries */}
-        <RefuelList refuels={refuels} loading={loading} />
+        {renderRefuelList()}
       </div>
 
       {/* Floating Action Button for Mobile */}

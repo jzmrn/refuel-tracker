@@ -52,8 +52,8 @@ export default function DataPointStatistics({
     return (
       <EmptyState
         icon={<ChartIcon size="xl" color="gray" className="mx-auto mb-4" />}
-        title={t.common.noData}
-        className="empty-state py-8"
+        title={t.common.noStatistics}
+        className="empty-state"
       />
     );
   }
