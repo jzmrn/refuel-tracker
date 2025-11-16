@@ -28,6 +28,7 @@ class RefuelStore(MetricStoreBase):
         """Return the Polars schema for refuel metrics"""
         return {
             "timestamp": pl.Datetime,
+            "user_id": pl.Utf8,
             "price": pl.Float64,
             "amount": pl.Float64,
             "kilometers_since_last_refuel": pl.Float64,
@@ -39,6 +40,7 @@ class RefuelStore(MetricStoreBase):
         """Convert RefuelMetric to DataFrame row"""
         return {
             "timestamp": metric.timestamp,
+            "user_id": "",  # Will be set by caller (add_metric/add_metrics)
             "price": metric.price,
             "amount": metric.amount,
             "kilometers_since_last_refuel": metric.kilometers_since_last_refuel,
@@ -58,7 +60,10 @@ class RefuelStore(MetricStoreBase):
         )
 
     async def get_total_cost_by_period(
-        self, start_date: datetime | None = None, end_date: datetime | None = None
+        self,
+        user_id: str,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> dict[str, Any]:
         """Get aggregated cost statistics for a time period"""
         try:
@@ -88,6 +93,9 @@ class RefuelStore(MetricStoreBase):
                 }
 
             df = pl.concat(dataframes)
+
+            # Filter by user_id first
+            df = df.filter(pl.col("user_id") == user_id)
 
             # Apply date filters
             if start_date:
@@ -135,11 +143,16 @@ class RefuelStore(MetricStoreBase):
             }
 
     async def get_price_trends(
-        self, start_date: datetime | None = None, end_date: datetime | None = None
+        self,
+        user_id: str,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> list[dict[str, Any]]:
         """Get price trends over time"""
         try:
-            metrics = await self.get_metrics(start_date=start_date, end_date=end_date)
+            metrics = await self.get_metrics(
+                user_id, start_date=start_date, end_date=end_date
+            )
 
             # Convert to list of dictionaries for trend analysis
             trends = []
@@ -163,7 +176,9 @@ class RefuelStore(MetricStoreBase):
             print(f"Error getting refuel price trends: {e}")
             return []
 
-    async def get_monthly_summary(self, year: int, month: int) -> dict[str, Any]:
+    async def get_monthly_summary(
+        self, user_id: str, year: int, month: int
+    ) -> dict[str, Any]:
         """Get monthly fuel statistics"""
         start_date = datetime(year, month, 1)
         if month == 12:
@@ -172,10 +187,12 @@ class RefuelStore(MetricStoreBase):
             end_date = datetime(year, month + 1, 1)
 
         # Get cost statistics for the month
-        cost_stats = await self.get_total_cost_by_period(start_date, end_date)
+        cost_stats = await self.get_total_cost_by_period(user_id, start_date, end_date)
 
         # Get all fill-ups for additional analysis
-        metrics = await self.get_metrics(start_date=start_date, end_date=end_date)
+        metrics = await self.get_metrics(
+            user_id, start_date=start_date, end_date=end_date
+        )
 
         if not metrics:
             return {

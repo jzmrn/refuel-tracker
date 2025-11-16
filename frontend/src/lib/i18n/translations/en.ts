@@ -27,6 +27,7 @@ export const en: TranslationStructure = {
     unknownError: "An unknown error occurred.",
     labels: "Labels",
     entries: "Entries",
+    signOut: "Sign Out",
   },
 
   navigation: {

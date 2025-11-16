@@ -62,7 +62,8 @@ export default function AddRefuelForm({
         isValid = numValue > 0 && numValue <= 20;
       } else if (name === "timestamp") {
         const selectedDate = new Date(value);
-        isValid = !isNaN(selectedDate.getTime()) && selectedDate <= new Date();
+        const now = new Date();
+        isValid = !isNaN(selectedDate.getTime()) && selectedDate <= now;
       } else if (name === "notes") {
         isValid = value.length <= 500;
       } else {
@@ -198,7 +199,6 @@ export default function AddRefuelForm({
             id="timestamp"
             name="timestamp"
             value={formData.timestamp || ""}
-            max={new Date().toISOString().slice(0, 16)}
             onChange={handleChange}
             className={`input flex-1 min-w-0 ${
               errors.timestamp ? "border-red-300" : ""

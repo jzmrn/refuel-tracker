@@ -2,6 +2,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
 
+from ..auth import CurrentUserId
 from ..models import (
     RefuelCostStatistics,
     RefuelMetricCreate,
@@ -34,7 +35,7 @@ def set_metric_registry(registry: MetricRegistry):
 
 # Refuel-specific endpoints
 @router.post("/refuel", response_model=dict)
-async def create_refuel_metric(metric_data: RefuelMetricCreate):
+async def create_refuel_metric(metric_data: RefuelMetricCreate, user_id: CurrentUserId):
     """Create a new refuel entry"""
     try:
         if not metric_registry:
@@ -42,7 +43,7 @@ async def create_refuel_metric(metric_data: RefuelMetricCreate):
 
         # Convert Pydantic model to dict for internal processing
         data_dict = metric_data.model_dump()
-        success = await metric_registry.add_metric("refuel", data_dict)
+        success = await metric_registry.add_metric("refuel", data_dict, user_id)
 
         if success:
             return {
@@ -63,6 +64,7 @@ async def create_refuel_metric(metric_data: RefuelMetricCreate):
 
 @router.get("/refuel", response_model=list[RefuelMetricResponse])
 async def get_refuel_metrics(
+    user_id: CurrentUserId,
     start_date: str | None = None,
     end_date: str | None = None,
     limit: int | None = 100,
@@ -78,6 +80,7 @@ async def get_refuel_metrics(
 
         metrics = await metric_registry.get_metrics(
             "refuel",
+            user_id,
             start_date=start_dt,
             end_date=end_dt,
             limit=limit,
@@ -89,6 +92,7 @@ async def get_refuel_metrics(
             result.append(
                 RefuelMetricResponse(
                     timestamp=metric.timestamp,
+                    user_id=user_id,
                     price=metric.price,
                     amount=metric.amount,
                     kilometers_since_last_refuel=metric.kilometers_since_last_refuel,
@@ -106,6 +110,7 @@ async def get_refuel_metrics(
 
 @router.get("/refuel/statistics", response_model=RefuelStatisticsResponse)
 async def get_refuel_statistics(
+    user_id: CurrentUserId,
     start_date: str | None = None,
     end_date: str | None = None,
 ):
@@ -127,10 +132,14 @@ async def get_refuel_statistics(
         end_dt = datetime.fromisoformat(end_date) if end_date else None
 
         # Get cost statistics
-        cost_stats = await refuel_store.get_total_cost_by_period(start_dt, end_dt)
+        cost_stats = await refuel_store.get_total_cost_by_period(
+            user_id, start_dt, end_dt
+        )
 
         # Get price trends
-        price_trends_raw = await refuel_store.get_price_trends(start_dt, end_dt)
+        price_trends_raw = await refuel_store.get_price_trends(
+            user_id, start_dt, end_dt
+        )
 
         # Convert to Pydantic models
         cost_statistics = RefuelCostStatistics(**cost_stats)
@@ -153,7 +162,7 @@ async def get_refuel_statistics(
     "/refuel/monthly/{year}/{month}",
     response_model=RefuelMonthlySummaryResponse,
 )
-async def get_refuel_monthly_summary(year: int, month: int):
+async def get_refuel_monthly_summary(user_id: CurrentUserId, year: int, month: int):
     """Get detailed refuel statistics for a specific month"""
     try:
         if not metric_registry:
@@ -172,7 +181,7 @@ async def get_refuel_monthly_summary(year: int, month: int):
         if not isinstance(refuel_store, RefuelStore):
             raise HTTPException(status_code=500, detail="Invalid store type for refuel")
 
-        summary_data = await refuel_store.get_monthly_summary(year, month)
+        summary_data = await refuel_store.get_monthly_summary(user_id, year, month)
 
         return RefuelMonthlySummaryResponse(**summary_data)
 

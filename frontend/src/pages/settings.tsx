@@ -1,10 +1,13 @@
 import React from "react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useAuth } from "@/lib/auth";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import ThemeSelector from "@/components/common/ThemeSelector";
+import SettingCard from "@/components/common/SettingCard";
 
 export default function Settings() {
   const { t } = useTranslation();
+  const { user, signOut } = useAuth();
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -20,35 +23,34 @@ export default function Settings() {
 
       {/* Settings Sections */}
       <div className="space-y-6">
+        {/* Account Settings */}
+        <SettingCard
+          title={user?.name || "Account"}
+          description={user?.email || ""}
+        >
+          <button
+            onClick={signOut}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+          >
+            {t.common.signOut}
+          </button>
+        </SettingCard>
+
         {/* Language Settings */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                {t.settings.language.title}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 text-sm">
-                {t.settings.language.description}
-              </p>
-            </div>
-            <LanguageSwitcher />
-          </div>
-        </div>
+        <SettingCard
+          title={t.settings.language.title}
+          description={t.settings.language.description}
+        >
+          <LanguageSwitcher />
+        </SettingCard>
 
         {/* Theme Settings */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                {t.settings.theme.title}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 text-sm">
-                {t.settings.theme.description}
-              </p>
-            </div>
-            <ThemeSelector />
-          </div>
-        </div>
+        <SettingCard
+          title={t.settings.theme.title}
+          description={t.settings.theme.description}
+        >
+          <ThemeSelector />
+        </SettingCard>
       </div>
     </div>
   );

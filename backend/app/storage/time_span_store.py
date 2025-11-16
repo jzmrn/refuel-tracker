@@ -39,7 +39,9 @@ class TimeSpanStore:
             "duration_minutes": minutes,
         }
 
-    async def add_time_span(self, time_span: TimeSpanCreate) -> TimeSpanResponse:
+    async def add_time_span(
+        self, time_span: TimeSpanCreate, user_id: str
+    ) -> TimeSpanResponse:
         """Add a new time span"""
         async with self._write_lock:
             # Generate ID based on timestamp and label hash
@@ -56,6 +58,7 @@ class TimeSpanStore:
             new_row = pl.DataFrame(
                 {
                     "id": [span_id],
+                    "user_id": [user_id],
                     "start_date": [time_span.start_date.isoformat()],
                     "end_date": [
                         time_span.end_date.isoformat() if time_span.end_date else None
@@ -89,6 +92,7 @@ class TimeSpanStore:
 
     async def get_time_spans(
         self,
+        user_id: str,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         label: str | None = None,
@@ -102,6 +106,9 @@ class TimeSpanStore:
 
         # Read data
         df = pl.read_parquet(parquet_file)
+
+        # Filter by user_id first
+        df = df.filter(pl.col("user_id") == user_id)
 
         # Apply filters
         if start_date:
@@ -150,7 +157,7 @@ class TimeSpanStore:
 
         return results
 
-    async def delete_time_span(self, span_id: str) -> bool:
+    async def delete_time_span(self, user_id: str, span_id: str) -> bool:
         """Delete a time span by ID"""
         async with self._write_lock:
             parquet_file = self._get_parquet_file()
@@ -161,12 +168,14 @@ class TimeSpanStore:
             # Read existing data
             df = pl.read_parquet(parquet_file)
 
-            # Check if span exists
-            if not df.filter(pl.col("id") == span_id).height:
+            # Check if span exists for this user
+            if not df.filter(
+                (pl.col("id") == span_id) & (pl.col("user_id") == user_id)
+            ).height:
                 return False
 
-            # Remove the span
-            df = df.filter(pl.col("id") != span_id)
+            # Remove the span (only for this user)
+            df = df.filter((pl.col("id") != span_id) | (pl.col("user_id") != user_id))
 
             # Write back to parquet
             if df.height > 0:
@@ -177,7 +186,7 @@ class TimeSpanStore:
 
             return True
 
-    async def get_existing_labels(self) -> list[str]:
+    async def get_existing_labels(self, user_id: str) -> list[str]:
         """Get all unique labels from existing time spans"""
         parquet_file = self._get_parquet_file()
 
@@ -187,12 +196,15 @@ class TimeSpanStore:
         # Read data
         df = pl.read_parquet(parquet_file)
 
+        # Filter by user_id
+        df = df.filter(pl.col("user_id") == user_id)
+
         # Get unique labels, sorted
         labels = sorted(df["label"].unique().to_list())
 
         return labels
 
-    async def get_summary_stats(self) -> dict:
+    async def get_summary_stats(self, user_id: str) -> dict:
         """Get summary statistics for time spans"""
         parquet_file = self._get_parquet_file()
 
@@ -213,6 +225,9 @@ class TimeSpanStore:
 
         # Read data
         df = pl.read_parquet(parquet_file)
+
+        # Filter by user_id
+        df = df.filter(pl.col("user_id") == user_id)
 
         if df.height == 0:
             return {

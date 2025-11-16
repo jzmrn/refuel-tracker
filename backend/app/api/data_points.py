@@ -4,6 +4,7 @@ from pathlib import Path
 import polars as pl
 from fastapi import APIRouter, HTTPException, Query
 
+from ..auth import CurrentUserId
 from ..models import DataPointCreate, DataPointResponse, DataSummaryResponse
 from ..storage.parquet_store import ParquetDataStore
 
@@ -27,7 +28,7 @@ def _ensure_data_store():
 
 
 @router.post("/data-points", response_model=DataPointResponse)
-async def create_data_point(data_point: DataPointCreate):
+async def create_data_point(data_point: DataPointCreate, user_id: CurrentUserId):
     """Create a new data point"""
     store = _ensure_data_store()
 
@@ -35,15 +36,24 @@ async def create_data_point(data_point: DataPointCreate):
         # Generate ID based on timestamp and label hash
         point_id = f"{data_point.timestamp.isoformat()}_{abs(hash(data_point.label))}"
 
-        # Create dataframe row
+        # Create dataframe row with explicit schema
         new_row = pl.DataFrame(
             {
                 "id": [point_id],
+                "user_id": [user_id],
                 "timestamp": [data_point.timestamp.isoformat()],
                 "value": [data_point.value],
                 "label": [data_point.label],
                 "notes": [data_point.notes or ""],
-            }
+            },
+            schema={
+                "id": pl.Utf8,
+                "user_id": pl.Utf8,
+                "timestamp": pl.Utf8,
+                "value": pl.Float64,
+                "label": pl.Utf8,
+                "notes": pl.Utf8,
+            },
         )
 
         # Store in parquet file
@@ -55,6 +65,30 @@ async def create_data_point(data_point: DataPointCreate):
         # Read existing data if file exists
         if parquet_file.exists():
             existing_df = pl.read_parquet(parquet_file)
+
+            # Ensure all required columns exist and have correct types
+            required_columns = {
+                "id": pl.Utf8,
+                "user_id": pl.Utf8,
+                "timestamp": pl.Utf8,
+                "value": pl.Float64,
+                "label": pl.Utf8,
+                "notes": pl.Utf8,
+            }
+
+            for col_name, col_type in required_columns.items():
+                if col_name not in existing_df.columns:
+                    existing_df = existing_df.with_columns(
+                        [pl.lit(None, dtype=col_type).alias(col_name)]
+                    )
+
+            # Re-order columns to match new_row and cast to correct types
+            existing_df = existing_df.select(list(required_columns.keys()))
+            for col_name, col_type in required_columns.items():
+                existing_df = existing_df.with_columns(
+                    [pl.col(col_name).cast(col_type, strict=False)]
+                )
+
             # Append new row
             combined_df = pl.concat([existing_df, new_row])
         else:
@@ -65,6 +99,7 @@ async def create_data_point(data_point: DataPointCreate):
 
         return DataPointResponse(
             id=point_id,
+            user_id=user_id,
             timestamp=data_point.timestamp,
             value=data_point.value,
             label=data_point.label,
@@ -80,6 +115,7 @@ async def create_data_point(data_point: DataPointCreate):
 
 @router.get("/data-points", response_model=list[DataPointResponse])
 async def get_data_points(
+    user_id: CurrentUserId,
     start_date: str | None = Query(None, description="Start date filter (ISO format)"),
     end_date: str | None = Query(None, description="End date filter (ISO format)"),
     label: str | None = Query(None, description="Filter by label"),
@@ -96,6 +132,9 @@ async def get_data_points(
 
         # Read data
         df = pl.read_parquet(data_points_path)
+
+        # Filter by user_id first
+        df = df.filter(pl.col("user_id") == user_id)
 
         # Apply filters
         if start_date:
@@ -124,6 +163,7 @@ async def get_data_points(
             results.append(
                 DataPointResponse(
                     id=str(row["id"]),
+                    user_id=str(row["user_id"]),
                     timestamp=row["timestamp"],
                     value=float(row["value"]),
                     label=str(row["label"]),
@@ -142,7 +182,7 @@ async def get_data_points(
 
 
 @router.delete("/data-points/{point_id}")
-async def delete_data_point(point_id: str):
+async def delete_data_point(point_id: str, user_id: CurrentUserId):
     """Delete a data point by ID"""
     store = _ensure_data_store()
 
@@ -155,12 +195,14 @@ async def delete_data_point(point_id: str):
         # Read existing data
         df = pl.read_parquet(data_points_path)
 
-        # Check if point exists
-        if not df.filter(pl.col("id") == point_id).height:
+        # Check if point exists for this user
+        if not df.filter(
+            (pl.col("id") == point_id) & (pl.col("user_id") == user_id)
+        ).height:
             raise HTTPException(status_code=404, detail="Data point not found")
 
-        # Remove the point
-        df = df.filter(pl.col("id") != point_id)
+        # Remove the point (only for this user)
+        df = df.filter((pl.col("id") != point_id) | (pl.col("user_id") != user_id))
 
         # Write back to parquet
         if df.height > 0:
@@ -180,7 +222,7 @@ async def delete_data_point(point_id: str):
 
 
 @router.get("/data-points/labels", response_model=list[str])
-async def get_existing_labels():
+async def get_existing_labels(user_id: CurrentUserId):
     """Get all unique labels from existing data points"""
     store = _ensure_data_store()
 
@@ -192,6 +234,9 @@ async def get_existing_labels():
 
         # Read data
         df = pl.read_parquet(data_points_path)
+
+        # Filter by user_id
+        df = df.filter(pl.col("user_id") == user_id)
 
         # Get unique labels, sorted
         labels = sorted(df["label"].unique().to_list())
@@ -205,7 +250,7 @@ async def get_existing_labels():
 
 
 @router.get("/data-points/summary", response_model=DataSummaryResponse)
-async def get_data_summary():
+async def get_data_summary(user_id: CurrentUserId):
     """Get summary statistics for data points"""
     store = _ensure_data_store()
 
@@ -222,6 +267,9 @@ async def get_data_summary():
 
         # Read data
         df = pl.read_parquet(data_points_path)
+
+        # Filter by user_id
+        df = df.filter(pl.col("user_id") == user_id)
 
         if df.height == 0:
             return DataSummaryResponse(

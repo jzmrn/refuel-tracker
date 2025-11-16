@@ -59,7 +59,8 @@ export default function AddTimeSpanForm({
         isValid = value.trim().length > 0;
       } else if (name === "start_date" || name === "end_date") {
         const selectedDate = new Date(value);
-        isValid = !isNaN(selectedDate.getTime()) && selectedDate <= new Date();
+        const now = new Date();
+        isValid = !isNaN(selectedDate.getTime()) && selectedDate <= now;
       } else {
         isValid = true; // For notes and other optional fields
       }

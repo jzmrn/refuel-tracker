@@ -28,6 +28,7 @@ export interface TranslationStructure {
     unknownError: string;
     labels: string;
     entries: string;
+    signOut: string;
   };
 
   // Navigation

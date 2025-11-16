@@ -1,8 +1,9 @@
-import { ReactNode } from "react";
+import React, { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { clsx } from "clsx";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { UserProfile } from "@/components/auth";
 
 interface LayoutProps {
   children: ReactNode;
@@ -137,9 +138,12 @@ export default function Layout({ children }: LayoutProps) {
       {/* Desktop Sidebar - Hidden on mobile */}
       <div className="hidden md:flex md:flex-col w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0">
         <div className="p-6">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-            {t.layout.appTitle}
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              {t.layout.appTitle}
+            </h1>
+            <UserProfile />
+          </div>
         </div>
 
         {/* Main Navigation */}
@@ -195,10 +199,11 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Mobile Header - Visible only on mobile */}
       <div className="md:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-between">
           <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
             {t.layout.appTitle}
           </h1>
+          <UserProfile />
         </div>
       </div>
 

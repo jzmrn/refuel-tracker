@@ -3,8 +3,29 @@ from datetime import UTC, datetime
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
+class User(BaseModel):
+    """User model for authentication"""
+
+    id: str = Field(..., description="User ID from Google OAuth")
+    email: str = Field(..., description="User email from Google")
+    name: str = Field(..., description="User display name")
+    picture: str | None = Field(None, description="User profile picture URL")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    last_login: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class UserCreate(BaseModel):
+    """Request model for creating a user"""
+
+    id: str
+    email: str
+    name: str
+    picture: str | None = None
+
+
 class Transaction(BaseModel):
     timestamp: datetime
+    user_id: str = Field(..., description="User ID who owns this transaction")
     account_id: str
     amount: float
     category: str
@@ -14,6 +35,7 @@ class Transaction(BaseModel):
 
 class AccountBalance(BaseModel):
     timestamp: datetime
+    user_id: str = Field(..., description="User ID who owns this account")
     account_id: str
     balance: float
 
@@ -85,6 +107,7 @@ class RefuelMetricResponse(BaseModel):
     """Response model for refuel entries"""
 
     timestamp: datetime
+    user_id: str = Field(..., description="User ID who owns this refuel entry")
     price: float
     amount: float
     kilometers_since_last_refuel: float
@@ -171,6 +194,7 @@ class DataPointResponse(BaseModel):
 
     id: str
     timestamp: datetime
+    user_id: str = Field(..., description="User ID who owns this data point")
     value: float
     label: str
     notes: str | None = None
@@ -277,6 +301,7 @@ class TimeSpanResponse(BaseModel):
     id: str
     start_date: datetime
     end_date: datetime | None = None
+    user_id: str = Field(..., description="User ID who owns this time span")
     label: str
     group: str
     notes: str | None = None

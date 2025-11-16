@@ -1,6 +1,14 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  return ""; // Fallback for server-side rendering
+}
 
 export interface Unit {
   id: string;
@@ -210,11 +218,26 @@ export interface TimeSpanSummaryResponse {
 
 class ApiService {
   private api = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: getApiBaseUrl(),
     headers: {
       "Content-Type": "application/json",
     },
+    withCredentials: true, // Important for session cookies
   });
+
+  constructor() {
+    // Add response interceptor to handle auth errors
+    this.api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          // User not authenticated, redirect to sign in
+          window.location.href = `/oauth/authorize`;
+        }
+        return Promise.reject(error);
+      }
+    );
+  }
 
   private categoriesCache: Category[] | null = null;
 

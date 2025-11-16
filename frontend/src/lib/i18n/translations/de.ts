@@ -27,6 +27,7 @@ export const de: TranslationStructure = {
     unknownError: "Unbekannter Fehler",
     labels: "Bezeichnungen",
     entries: "Einträge",
+    signOut: "Abmelden",
   },
 
   navigation: {

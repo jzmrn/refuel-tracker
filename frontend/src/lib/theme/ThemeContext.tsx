@@ -18,37 +18,64 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const STORAGE_KEY = "personal-data-tracker-theme";
 
+// Helper function to get the initial theme synchronously
+export function getInitialTheme(): Theme {
+  if (typeof window === "undefined") {
+    return "system";
+  }
+  try {
+    const savedTheme = localStorage.getItem(STORAGE_KEY) as Theme | null;
+    if (savedTheme && ["light", "dark", "system"].includes(savedTheme)) {
+      return savedTheme;
+    }
+  } catch (error) {
+    console.warn("Failed to load theme from localStorage:", error);
+  }
+  return "system";
+}
+
+// Helper function to resolve the actual theme
+export function resolveTheme(theme: Theme): "light" | "dark" {
+  if (theme === "system") {
+    if (typeof window === "undefined") {
+      return "light";
+    }
+    const systemPrefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+    return systemPrefersDark ? "dark" : "light";
+  }
+  return theme;
+}
+
+// Apply theme to document synchronously
+export function applyTheme(currentTheme: "light" | "dark") {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const root = document.documentElement;
+  if (currentTheme === "dark") {
+    root.classList.add("dark");
+  } else {
+    root.classList.remove("dark");
+  }
+}
+
 interface ThemeProviderProps {
   children: ReactNode;
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>("system");
-  const [currentTheme, setCurrentTheme] = useState<"light" | "dark">("light");
-
-  // Load theme from localStorage on mount
-  useEffect(() => {
-    try {
-      const savedTheme = localStorage.getItem(STORAGE_KEY) as Theme | null;
-      if (savedTheme && ["light", "dark", "system"].includes(savedTheme)) {
-        setTheme(savedTheme);
-      }
-    } catch (error) {
-      console.warn("Failed to load theme from localStorage:", error);
-    }
-  }, []);
+  const [theme, setTheme] = useState<Theme>(() => getInitialTheme());
+  const [currentTheme, setCurrentTheme] = useState<"light" | "dark">(() =>
+    resolveTheme(getInitialTheme()),
+  );
 
   // Update current theme when theme or system preference changes
   useEffect(() => {
     const updateCurrentTheme = () => {
-      if (theme === "system") {
-        const systemPrefersDark = window.matchMedia(
-          "(prefers-color-scheme: dark)",
-        ).matches;
-        setCurrentTheme(systemPrefersDark ? "dark" : "light");
-      } else {
-        setCurrentTheme(theme);
-      }
+      const resolved = resolveTheme(theme);
+      setCurrentTheme(resolved);
     };
 
     updateCurrentTheme();
@@ -65,15 +92,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, [theme]);
 
-  // Apply theme to document
+  // Apply theme to document when currentTheme changes
   useEffect(() => {
-    const root = document.documentElement;
-
-    if (currentTheme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
+    applyTheme(currentTheme);
   }, [currentTheme]);
 
   const handleSetTheme = (newTheme: Theme) => {

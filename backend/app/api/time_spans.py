@@ -4,6 +4,7 @@ from pathlib import Path
 import polars as pl
 from fastapi import APIRouter, HTTPException, Query
 
+from ..auth import CurrentUserId
 from ..models import (
     TimeSpanCreate,
     TimeSpanResponse,
@@ -60,7 +61,7 @@ def _calculate_duration(start_date: datetime, end_date: datetime | None) -> dict
 
 
 @router.post("/time-spans", response_model=TimeSpanResponse)
-async def create_time_span(time_span: TimeSpanCreate):
+async def create_time_span(time_span: TimeSpanCreate, user_id: CurrentUserId):
     """Create a new time span"""
     store = _ensure_data_store()
 
@@ -80,6 +81,7 @@ async def create_time_span(time_span: TimeSpanCreate):
         new_row = pl.DataFrame(
             {
                 "id": [span_id],
+                "user_id": [user_id],
                 "start_date": [time_span.start_date.isoformat()],
                 "end_date": [
                     time_span.end_date.isoformat() if time_span.end_date else None
@@ -93,14 +95,15 @@ async def create_time_span(time_span: TimeSpanCreate):
                 "updated_at": [current_time],
             },
             schema={
-                "id": pl.String,
-                "start_date": pl.String,
-                "end_date": pl.String,  # Allow nulls
-                "label": pl.String,
-                "group": pl.String,  # Required field
-                "notes": pl.String,  # Allow nulls
-                "created_at": pl.String,
-                "updated_at": pl.String,
+                "id": pl.Utf8,
+                "user_id": pl.Utf8,
+                "start_date": pl.Utf8,
+                "end_date": pl.Utf8,
+                "label": pl.Utf8,
+                "group": pl.Utf8,
+                "notes": pl.Utf8,
+                "created_at": pl.Utf8,
+                "updated_at": pl.Utf8,
             },
         )
 
@@ -147,14 +150,43 @@ async def create_time_span(time_span: TimeSpanCreate):
             print("Casting nullable columns...")
             existing_df = existing_df.with_columns(
                 [
-                    pl.col("end_date").cast(pl.String, strict=False),
-                    pl.col("notes").cast(pl.String, strict=False),
-                    pl.col("group").cast(pl.String, strict=False),
+                    pl.col("id").cast(pl.Utf8, strict=False),
+                    pl.col("user_id").cast(pl.Utf8, strict=False),
+                    pl.col("start_date").cast(pl.Utf8, strict=False),
+                    pl.col("end_date").cast(pl.Utf8, strict=False),
+                    pl.col("label").cast(pl.Utf8, strict=False),
+                    pl.col("group").cast(pl.Utf8, strict=False),
+                    pl.col("notes").cast(pl.Utf8, strict=False),
+                    pl.col("created_at").cast(pl.Utf8, strict=False),
+                    pl.col("updated_at").cast(pl.Utf8, strict=False),
                 ]
             )
 
             print(f"New row schema: {new_row.schema}")
             print(f"Existing df schema after cast: {existing_df.schema}")
+
+            # Ensure all required columns exist and have correct types
+            required_columns = {
+                "id": pl.Utf8,
+                "user_id": pl.Utf8,
+                "start_date": pl.Utf8,
+                "end_date": pl.Utf8,
+                "label": pl.Utf8,
+                "group": pl.Utf8,
+                "notes": pl.Utf8,
+                "created_at": pl.Utf8,
+                "updated_at": pl.Utf8,
+            }
+
+            for col_name, col_type in required_columns.items():
+                if col_name not in existing_df.columns:
+                    print(f"Adding missing column: {col_name}")
+                    existing_df = existing_df.with_columns(
+                        [pl.lit(None, dtype=col_type).alias(col_name)]
+                    )
+
+            # Re-order columns to match new_row
+            existing_df = existing_df.select(list(required_columns.keys()))
 
             # Append new row
             combined_df = pl.concat([existing_df, new_row], how="vertical")
@@ -170,6 +202,7 @@ async def create_time_span(time_span: TimeSpanCreate):
 
         return TimeSpanResponse(
             id=span_id,
+            user_id=user_id,
             start_date=time_span.start_date,
             end_date=time_span.end_date,
             label=time_span.label,
@@ -189,6 +222,7 @@ async def create_time_span(time_span: TimeSpanCreate):
 
 @router.get("/time-spans", response_model=list[TimeSpanResponse])
 async def get_time_spans(
+    user_id: CurrentUserId,
     start_date: str | None = Query(None, description="Start date filter (ISO format)"),
     end_date: str | None = Query(None, description="End date filter (ISO format)"),
     label: str | None = Query(None, description="Filter by label"),
@@ -208,6 +242,9 @@ async def get_time_spans(
         # Read data
         print(f"Reading time spans from: {time_spans_path}")
         df = pl.read_parquet(time_spans_path)
+
+        # Filter by user_id first
+        df = df.filter(pl.col("user_id") == user_id)
         print(f"Loaded dataframe with {df.height} rows and columns: {df.columns}")
 
         # Apply filters
@@ -295,6 +332,7 @@ async def get_time_spans(
             # Prepare response data
             response_data = {
                 "id": str(row["id"]),
+                "user_id": str(row["user_id"]),
                 "start_date": start_date_parsed,
                 "end_date": end_date_parsed,
                 "label": str(row["label"]),
@@ -331,7 +369,9 @@ async def get_time_spans(
 
 
 @router.put("/time-spans/{span_id}", response_model=TimeSpanResponse)
-async def update_time_span(span_id: str, time_span_update: TimeSpanUpdate):
+async def update_time_span(
+    span_id: str, time_span_update: TimeSpanUpdate, user_id: CurrentUserId
+):
     """Update an existing time span"""
     store = _ensure_data_store()
 
@@ -425,6 +465,7 @@ async def update_time_span(span_id: str, time_span_update: TimeSpanUpdate):
 
         return TimeSpanResponse(
             id=span_id,
+            user_id=user_id,
             start_date=start_dt,
             end_date=end_dt,
             label=updated_data["label"],
@@ -448,7 +489,7 @@ async def update_time_span(span_id: str, time_span_update: TimeSpanUpdate):
 
 
 @router.delete("/time-spans/{span_id}")
-async def delete_time_span(span_id: str):
+async def delete_time_span(span_id: str, user_id: CurrentUserId):
     """Delete a time span by ID"""
     store = _ensure_data_store()
 
@@ -461,12 +502,14 @@ async def delete_time_span(span_id: str):
         # Read existing data
         df = pl.read_parquet(time_spans_path)
 
-        # Check if span exists
-        if not df.filter(pl.col("id") == span_id).height:
+        # Check if span exists for this user
+        if not df.filter(
+            (pl.col("id") == span_id) & (pl.col("user_id") == user_id)
+        ).height:
             raise HTTPException(status_code=404, detail="Time span not found")
 
-        # Remove the span
-        df = df.filter(pl.col("id") != span_id)
+        # Remove the span (only for this user)
+        df = df.filter((pl.col("id") != span_id) | (pl.col("user_id") != user_id))
 
         # Write back to parquet
         if df.height > 0:
@@ -486,7 +529,7 @@ async def delete_time_span(span_id: str):
 
 
 @router.get("/time-spans/labels", response_model=list[str])
-async def get_existing_labels():
+async def get_existing_labels(user_id: CurrentUserId):
     """Get all unique labels from existing time spans"""
     store = _ensure_data_store()
 
@@ -498,6 +541,9 @@ async def get_existing_labels():
 
         # Read data
         df = pl.read_parquet(time_spans_path)
+
+        # Filter by user_id first
+        df = df.filter(pl.col("user_id") == user_id)
 
         # Get unique labels, sorted
         labels = sorted(df["label"].unique().to_list())
@@ -511,7 +557,7 @@ async def get_existing_labels():
 
 
 @router.get("/time-spans/groups", response_model=list[str])
-async def get_existing_groups():
+async def get_existing_groups(user_id: CurrentUserId):
     """Get all unique groups from existing time spans"""
     store = _ensure_data_store()
 
@@ -523,6 +569,9 @@ async def get_existing_groups():
 
         # Read data
         df = pl.read_parquet(time_spans_path)
+
+        # Filter by user_id first
+        df = df.filter(pl.col("user_id") == user_id)
 
         # Ensure group column exists (for backward compatibility)
         if "group" not in df.columns:
@@ -540,7 +589,7 @@ async def get_existing_groups():
 
 
 @router.get("/time-spans/summary", response_model=TimeSpanSummaryResponse)
-async def get_time_span_summary():
+async def get_time_span_summary(user_id: CurrentUserId):
     """Get summary statistics for time spans"""
     store = _ensure_data_store()
 
@@ -564,6 +613,9 @@ async def get_time_span_summary():
 
         # Read data
         df = pl.read_parquet(time_spans_path)
+
+        # Filter by user_id first
+        df = df.filter(pl.col("user_id") == user_id)
 
         if df.height == 0:
             return TimeSpanSummaryResponse(

@@ -47,7 +47,9 @@ class MetricRegistry:
         """List all registered metric types"""
         return list(self._stores.keys())
 
-    async def add_metric(self, metric_name: str, metric_data: dict[str, Any]) -> bool:
+    async def add_metric(
+        self, metric_name: str, metric_data: dict[str, Any], user_id: str
+    ) -> bool:
         """Add a metric by name and data dictionary"""
         if metric_name not in self._stores:
             raise ValueError(f"Unknown metric type: {metric_name}")
@@ -64,11 +66,12 @@ class MetricRegistry:
 
         # Store using the appropriate store
         store = self._stores[metric_name]
-        return await store.add_metric(metric)
+        return await store.add_metric(metric, user_id)
 
     async def get_metrics(
         self,
         metric_name: str,
+        user_id: str,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         limit: int | None = None,
@@ -80,16 +83,18 @@ class MetricRegistry:
 
         store = self._stores[metric_name]
         return await store.get_metrics(
-            start_date=start_date, end_date=end_date, limit=limit, **filters
+            user_id, start_date=start_date, end_date=end_date, limit=limit, **filters
         )
 
-    async def get_metric_summary(self, metric_name: str) -> dict[str, Any]:
+    async def get_metric_summary(
+        self, metric_name: str, user_id: str
+    ) -> dict[str, Any]:
         """Get summary for a specific metric type"""
         if metric_name not in self._stores:
             raise ValueError(f"Unknown metric type: {metric_name}")
 
         store = self._stores[metric_name]
-        summary = await store.get_summary()
+        summary = await store.get_summary(user_id)
         summary["metric_name"] = metric_name
         return summary
 

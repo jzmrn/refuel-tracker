@@ -39,7 +39,7 @@ class MetricStoreBase(ABC):
 
     @abstractmethod
     def get_schema(self) -> dict[str, Any]:
-        """Return the Polars schema for this metric type"""
+        """Return the Polars schema for this metric type (must include user_id)"""
         pass
 
     @abstractmethod
@@ -107,12 +107,15 @@ class MetricStoreBase(ABC):
 
         return files
 
-    async def add_metrics(self, metrics: list[MetricBase]) -> bool:
+    async def add_metrics(self, metrics: list[MetricBase], user_id: str) -> bool:
         """Add multiple metrics efficiently"""
         async with self._write_lock:
             try:
-                # Convert to DataFrame
+                # Convert to DataFrame and add user_id
                 rows = [self.metric_to_row(metric) for metric in metrics]
+                # Add user_id to each row
+                for row in rows:
+                    row["user_id"] = user_id
                 df = pl.DataFrame(rows, schema=self.get_schema())
 
                 # Group by partition (month)
@@ -148,12 +151,13 @@ class MetricStoreBase(ABC):
                 print(f"Error adding {self.get_metric_name()} metrics: {e}")
                 return False
 
-    async def add_metric(self, metric: MetricBase) -> bool:
+    async def add_metric(self, metric: MetricBase, user_id: str) -> bool:
         """Add a single metric"""
-        return await self.add_metrics([metric])
+        return await self.add_metrics([metric], user_id)
 
     async def get_metrics(
         self,
+        user_id: str,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         limit: int | None = None,
@@ -179,6 +183,9 @@ class MetricStoreBase(ABC):
 
             # Combine all dataframes
             df = pl.concat(dataframes)
+
+            # Filter by user_id first
+            df = df.filter(pl.col("user_id") == user_id)
 
             # Apply date filters
             if start_date:
@@ -209,11 +216,11 @@ class MetricStoreBase(ABC):
             print(f"Error reading {self.get_metric_name()} metrics: {e}")
             return []
 
-    async def get_summary(self) -> dict[str, Any]:
+    async def get_summary(self, user_id: str) -> dict[str, Any]:
         """Get summary statistics for this metric type"""
         try:
             # Get all metrics for total count
-            all_metrics = await self.get_metrics()
+            all_metrics = await self.get_metrics(user_id)
 
             if not all_metrics:
                 return {
@@ -224,7 +231,7 @@ class MetricStoreBase(ABC):
 
             # Get recent metrics (last 30 days)
             thirty_days_ago = datetime.now() - timedelta(days=30)
-            recent_metrics = await self.get_metrics(start_date=thirty_days_ago)
+            recent_metrics = await self.get_metrics(user_id, start_date=thirty_days_ago)
 
             # Calculate statistics
             timestamps = [m.timestamp for m in all_metrics]
@@ -247,7 +254,9 @@ class MetricStoreBase(ABC):
                 "oldest_date": None,
             }
 
-    async def delete_metric(self, timestamp: datetime, **match_criteria) -> bool:
+    async def delete_metric(
+        self, user_id: str, timestamp: datetime, **match_criteria
+    ) -> bool:
         """Delete a specific metric by timestamp and matching criteria"""
         async with self._write_lock:
             try:
@@ -260,8 +269,10 @@ class MetricStoreBase(ABC):
                 df = pl.read_parquet(partition_path)
                 original_count = len(df)
 
-                # Build filter condition
-                filter_condition = pl.col("timestamp") == timestamp
+                # Build filter condition including user_id
+                filter_condition = (pl.col("timestamp") == timestamp) & (
+                    pl.col("user_id") == user_id
+                )
                 for field, value in match_criteria.items():
                     if field in df.columns:
                         filter_condition = filter_condition & (pl.col(field) == value)

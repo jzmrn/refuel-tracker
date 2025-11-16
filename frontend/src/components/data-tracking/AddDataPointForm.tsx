@@ -57,7 +57,8 @@ export default function AddDataPointForm({
         isValid = value.trim().length > 0;
       } else if (name === "timestamp") {
         const selectedDate = new Date(value);
-        isValid = !isNaN(selectedDate.getTime()) && selectedDate <= new Date();
+        const now = new Date();
+        isValid = !isNaN(selectedDate.getTime()) && selectedDate <= now;
       } else {
         isValid = true; // For notes and other optional fields
       }
@@ -183,7 +184,6 @@ export default function AddDataPointForm({
               id="timestamp"
               name="timestamp"
               value={formData.timestamp || ""}
-              max={new Date().toISOString().slice(0, 16)}
               onChange={handleChange}
               className={`input flex-1 min-w-0 ${
                 errors.timestamp ? "border-red-300" : ""
