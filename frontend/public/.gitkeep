@@ -1,0 +1,6 @@
+# Personal Data Tracker
+
+This directory contains static assets for the Personal Data Tracker application.
+
+Static files in this directory are served from the root path `/`.
+For example, `public/logo.png` will be available at `/logo.png`.

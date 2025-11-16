@@ -67,7 +67,7 @@ export default function Home() {
       </div>
 
       {/* Feature Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
         {features.map((feature) => (
           <Link
             key={feature.name}

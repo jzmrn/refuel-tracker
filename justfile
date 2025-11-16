@@ -4,9 +4,13 @@
 default:
     @just --list
 
-# Build Docker images
+# Build Docker images (optimized for avoiding provenance issues)
 build:
-    docker-compose build
+    #!/usr/bin/env bash
+    export DOCKER_BUILDKIT=1
+    export BUILDKIT_PROGRESS=plain
+    export BUILDX_NO_DEFAULT_ATTESTATIONS=1
+    docker-compose build --parallel
 
 # Start services with Docker Compose
 up:
