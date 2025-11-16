@@ -1,101 +1,43 @@
 from datetime import datetime
-from pathlib import Path
 
-import polars as pl
 from fastapi import APIRouter, HTTPException, Query
 
 from ..auth import CurrentUserId
 from ..models import DataPointCreate, DataPointResponse, DataSummaryResponse
-from ..storage.parquet_store import ParquetDataStore
+from ..storage.metric_store import DataPointStore
 
 router = APIRouter()
 
 # Global data store instance
-data_store: ParquetDataStore | None = None
+data_point_store: DataPointStore | None = None
 
 
-def set_data_store(store: ParquetDataStore):
-    """Inject the data store dependency"""
-    global data_store
-    data_store = store
+def set_data_point_store(store: DataPointStore):
+    """Inject the data point store dependency"""
+    global data_point_store
+    data_point_store = store
 
 
-def _ensure_data_store():
-    """Ensure data store is available"""
-    if data_store is None:
-        raise HTTPException(status_code=500, detail="Data store not initialized")
-    return data_store
+def _ensure_data_point_store():
+    """Ensure data point store is available"""
+    if data_point_store is None:
+        raise HTTPException(status_code=500, detail="Data point store not initialized")
+    return data_point_store
 
 
 @router.post("/data-points", response_model=DataPointResponse)
 async def create_data_point(data_point: DataPointCreate, user_id: CurrentUserId):
     """Create a new data point"""
-    store = _ensure_data_store()
+    store = _ensure_data_point_store()
 
     try:
-        # Generate ID based on timestamp and label hash
-        point_id = f"{data_point.timestamp.isoformat()}_{abs(hash(data_point.label))}"
-
-        # Create dataframe row with explicit schema
-        new_row = pl.DataFrame(
-            {
-                "id": [point_id],
-                "user_id": [user_id],
-                "timestamp": [data_point.timestamp.isoformat()],
-                "value": [data_point.value],
-                "label": [data_point.label],
-                "notes": [data_point.notes or ""],
-            },
-            schema={
-                "id": pl.Utf8,
-                "user_id": pl.Utf8,
-                "timestamp": pl.Utf8,
-                "value": pl.Float64,
-                "label": pl.Utf8,
-                "notes": pl.Utf8,
-            },
+        point_id = await store.add_data_point(
+            data_point.timestamp,
+            data_point.value,
+            data_point.label,
+            data_point.notes,
+            user_id,
         )
-
-        # Store in parquet file
-        data_points_path = Path(store.base_path) / "data_points"
-        data_points_path.mkdir(exist_ok=True)
-
-        parquet_file = data_points_path / "data_points.parquet"
-
-        # Read existing data if file exists
-        if parquet_file.exists():
-            existing_df = pl.read_parquet(parquet_file)
-
-            # Ensure all required columns exist and have correct types
-            required_columns = {
-                "id": pl.Utf8,
-                "user_id": pl.Utf8,
-                "timestamp": pl.Utf8,
-                "value": pl.Float64,
-                "label": pl.Utf8,
-                "notes": pl.Utf8,
-            }
-
-            for col_name, col_type in required_columns.items():
-                if col_name not in existing_df.columns:
-                    existing_df = existing_df.with_columns(
-                        [pl.lit(None, dtype=col_type).alias(col_name)]
-                    )
-
-            # Re-order columns to match new_row and cast to correct types
-            existing_df = existing_df.select(list(required_columns.keys()))
-            for col_name, col_type in required_columns.items():
-                existing_df = existing_df.with_columns(
-                    [pl.col(col_name).cast(col_type, strict=False)]
-                )
-
-            # Append new row
-            combined_df = pl.concat([existing_df, new_row])
-        else:
-            combined_df = new_row
-
-        # Write back to parquet
-        combined_df.write_parquet(parquet_file)
 
         return DataPointResponse(
             id=point_id,
@@ -122,44 +64,28 @@ async def get_data_points(
     limit: int | None = Query(None, description="Limit number of results"),
 ):
     """Get data points with optional filtering"""
-    store = _ensure_data_store()
+    store = _ensure_data_point_store()
 
     try:
-        data_points_path = Path(store.base_path) / "data_points" / "data_points.parquet"
+        # Parse dates
+        start_dt = (
+            datetime.fromisoformat(start_date.replace("Z", "+00:00"))
+            if start_date
+            else None
+        )
+        end_dt = (
+            datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+            if end_date
+            else None
+        )
 
-        if not data_points_path.exists():
-            return []
-
-        # Read data
-        df = pl.read_parquet(data_points_path)
-
-        # Filter by user_id first
-        df = df.filter(pl.col("user_id") == user_id)
-
-        # Apply filters
-        if start_date:
-            start_dt = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
-            df = df.filter(pl.col("timestamp") >= start_dt)
-
-        if end_date:
-            end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
-            df = df.filter(pl.col("timestamp") <= end_dt)
-
-        if label:
-            df = df.filter(
-                pl.col("label").str.to_lowercase().str.contains(label.lower())
-            )
-
-        # Sort by timestamp descending
-        df = df.sort("timestamp", descending=True)
-
-        # Apply limit
-        if limit:
-            df = df.head(limit)
+        rows = await store.get_data_points(
+            user_id, start_date=start_dt, end_date=end_dt, label=label, limit=limit
+        )
 
         # Convert to response models
         results = []
-        for row in df.iter_rows(named=True):
+        for row in rows:
             results.append(
                 DataPointResponse(
                     id=str(row["id"]),
@@ -184,32 +110,13 @@ async def get_data_points(
 @router.delete("/data-points/{point_id}")
 async def delete_data_point(point_id: str, user_id: CurrentUserId):
     """Delete a data point by ID"""
-    store = _ensure_data_store()
+    store = _ensure_data_point_store()
 
     try:
-        data_points_path = Path(store.base_path) / "data_points" / "data_points.parquet"
+        success = await store.delete_data_point(user_id, point_id)
 
-        if not data_points_path.exists():
+        if not success:
             raise HTTPException(status_code=404, detail="Data point not found")
-
-        # Read existing data
-        df = pl.read_parquet(data_points_path)
-
-        # Check if point exists for this user
-        if not df.filter(
-            (pl.col("id") == point_id) & (pl.col("user_id") == user_id)
-        ).height:
-            raise HTTPException(status_code=404, detail="Data point not found")
-
-        # Remove the point (only for this user)
-        df = df.filter((pl.col("id") != point_id) | (pl.col("user_id") != user_id))
-
-        # Write back to parquet
-        if df.height > 0:
-            df.write_parquet(data_points_path)
-        else:
-            # If no data left, remove the file
-            data_points_path.unlink()
 
         return {"status": "success", "message": "Data point deleted"}
 
@@ -224,23 +131,10 @@ async def delete_data_point(point_id: str, user_id: CurrentUserId):
 @router.get("/data-points/labels", response_model=list[str])
 async def get_existing_labels(user_id: CurrentUserId):
     """Get all unique labels from existing data points"""
-    store = _ensure_data_store()
+    store = _ensure_data_point_store()
 
     try:
-        data_points_path = Path(store.base_path) / "data_points" / "data_points.parquet"
-
-        if not data_points_path.exists():
-            return []
-
-        # Read data
-        df = pl.read_parquet(data_points_path)
-
-        # Filter by user_id
-        df = df.filter(pl.col("user_id") == user_id)
-
-        # Get unique labels, sorted
-        labels = sorted(df["label"].unique().to_list())
-
+        labels = await store.get_existing_labels(user_id)
         return labels
 
     except Exception as e:
@@ -252,52 +146,12 @@ async def get_existing_labels(user_id: CurrentUserId):
 @router.get("/data-points/summary", response_model=DataSummaryResponse)
 async def get_data_summary(user_id: CurrentUserId):
     """Get summary statistics for data points"""
-    store = _ensure_data_store()
+    store = _ensure_data_point_store()
 
     try:
-        data_points_path = Path(store.base_path) / "data_points" / "data_points.parquet"
+        summary = await store.get_summary(user_id)
 
-        if not data_points_path.exists():
-            return DataSummaryResponse(
-                total_entries=0,
-                unique_labels=0,
-                date_range={"earliest": None, "latest": None},
-                value_stats={"min": None, "max": None, "average": None},
-            )
-
-        # Read data
-        df = pl.read_parquet(data_points_path)
-
-        # Filter by user_id
-        df = df.filter(pl.col("user_id") == user_id)
-
-        if df.height == 0:
-            return DataSummaryResponse(
-                total_entries=0,
-                unique_labels=0,
-                date_range={"earliest": None, "latest": None},
-                value_stats={"min": None, "max": None, "average": None},
-            )
-
-        # Calculate statistics
-        total_entries = df.height
-        unique_labels = df["label"].n_unique()
-
-        # Date range
-        earliest_date = df["timestamp"].min()
-        latest_date = df["timestamp"].max()
-
-        # Value statistics
-        min_value = float(df["value"].min())
-        max_value = float(df["value"].max())
-        avg_value = float(df["value"].mean())
-
-        return DataSummaryResponse(
-            total_entries=total_entries,
-            unique_labels=unique_labels,
-            date_range={"earliest": earliest_date, "latest": latest_date},
-            value_stats={"min": min_value, "max": max_value, "average": avg_value},
-        )
+        return DataSummaryResponse(**summary)
 
     except Exception as e:
         raise HTTPException(

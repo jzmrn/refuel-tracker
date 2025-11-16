@@ -2,8 +2,16 @@ from datetime import datetime
 from typing import Any
 
 import polars as pl
+from pydantic import BaseModel
 
-from .metric_store import MetricBase, MetricStoreBase
+from .parquet_store import ParquetDataStore
+
+
+class MetricBase(BaseModel):
+    """Base class for all metrics"""
+
+    timestamp: datetime
+    notes: str | None = None
 
 
 class RefuelMetric(MetricBase):
@@ -18,11 +26,12 @@ class RefuelMetric(MetricBase):
         return f"Refuel: {self.amount:.2f}L @ {self.price:.3f}€/L (Total: {self.amount * self.price:.2f}€) - {self.kilometers_since_last_refuel:.0f}km, Est: {self.estimated_fuel_consumption:.1f}L/100km"
 
 
-class RefuelStore(MetricStoreBase):
+class RefuelStore:
     """Parquet store for refuel metrics with optimized schema"""
 
-    def get_metric_name(self) -> str:
-        return "refuel"
+    def __init__(self, parquet_store: ParquetDataStore):
+        self.parquet_store = parquet_store
+        self.data_type = "refuel"
 
     def get_schema(self) -> dict[str, Any]:
         """Return the Polars schema for refuel metrics"""
@@ -59,6 +68,39 @@ class RefuelStore(MetricStoreBase):
             notes=row["notes"] if row["notes"] else None,
         )
 
+    async def add_metrics(self, metrics: list[RefuelMetric], user_id: str) -> bool:
+        """Add multiple metrics efficiently"""
+        rows = [self.metric_to_row(metric) for metric in metrics]
+        return await self.parquet_store.add_rows(
+            self.data_type, rows, self.get_schema(), user_id
+        )
+
+    async def add_metric(self, metric: RefuelMetric, user_id: str) -> bool:
+        """Add a single metric"""
+        return await self.add_metrics([metric], user_id)
+
+    async def get_metrics(
+        self,
+        user_id: str,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        limit: int | None = None,
+        **filters,
+    ) -> list[RefuelMetric]:
+        """Get metrics with optional filters"""
+        rows = await self.parquet_store.get_rows(
+            self.data_type, user_id, start_date, end_date, limit, **filters
+        )
+        return [self.row_to_metric(row) for row in rows]
+
+    async def delete_metric(
+        self, user_id: str, timestamp: datetime, **match_criteria
+    ) -> bool:
+        """Delete a specific metric by timestamp and matching criteria"""
+        return await self.parquet_store.delete_row(
+            self.data_type, user_id, timestamp, **match_criteria
+        )
+
     async def get_total_cost_by_period(
         self,
         user_id: str,
@@ -67,59 +109,22 @@ class RefuelStore(MetricStoreBase):
     ) -> dict[str, Any]:
         """Get aggregated cost statistics for a time period"""
         try:
-            files = self._get_relevant_files(start_date, end_date)
-
-            if not files:
-                return {
-                    "total_cost": 0.0,
-                    "total_liters": 0.0,
-                    "average_price_per_liter": 0.0,
-                    "fill_up_count": 0,
-                }
-
-            # Read and combine all files
-            dataframes = []
-            for file_path in files:
-                if file_path.exists():
-                    df = pl.read_parquet(file_path)
-                    dataframes.append(df)
-
-            if not dataframes:
-                return {
-                    "total_cost": 0.0,
-                    "total_liters": 0.0,
-                    "average_price_per_liter": 0.0,
-                    "fill_up_count": 0,
-                }
-
-            df = pl.concat(dataframes)
-
-            # Filter by user_id first
-            df = df.filter(pl.col("user_id") == user_id)
-
-            # Apply date filters
-            if start_date:
-                df = df.filter(pl.col("timestamp") >= start_date)
-            if end_date:
-                df = df.filter(pl.col("timestamp") <= end_date)
-
-            if df.is_empty():
-                return {
-                    "total_cost": 0.0,
-                    "total_liters": 0.0,
-                    "average_price_per_liter": 0.0,
-                    "fill_up_count": 0,
-                }
-
-            # Calculate total cost (price * amount for each row)
-            df = df.with_columns(
-                (pl.col("price") * pl.col("amount")).alias("total_cost_per_fillup")
+            rows = await self.parquet_store.get_rows(
+                self.data_type, user_id, start_date, end_date
             )
 
-            # Aggregate statistics
-            total_cost = df.select(pl.sum("total_cost_per_fillup")).item()
-            total_liters = df.select(pl.sum("amount")).item()
-            fill_up_count = len(df)
+            if not rows:
+                return {
+                    "total_cost": 0.0,
+                    "total_liters": 0.0,
+                    "average_price_per_liter": 0.0,
+                    "fill_up_count": 0,
+                }
+
+            # Calculate statistics
+            total_cost = sum(row["price"] * row["amount"] for row in rows)
+            total_liters = sum(row["amount"] for row in rows)
+            fill_up_count = len(rows)
 
             # Calculate weighted average price per liter
             average_price_per_liter = (

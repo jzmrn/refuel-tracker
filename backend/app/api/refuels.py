@@ -11,26 +11,25 @@ from ..models import (
     RefuelPriceTrend,
     RefuelStatisticsResponse,
 )
-from ..storage.metric_registry import MetricRegistry
-from ..storage.parquet_store import ParquetDataStore
+from ..storage.refuel_store import RefuelStore
 
 router = APIRouter()
 
 # Global state variables for dependency injection
-data_store: ParquetDataStore = None
-metric_registry: MetricRegistry = None
+refuel_store: RefuelStore | None = None
 
 
-def set_data_store(store: ParquetDataStore):
-    """Set the data store instance"""
-    global data_store
-    data_store = store
+def set_refuel_store(store: RefuelStore):
+    """Set the refuel store instance"""
+    global refuel_store
+    refuel_store = store
 
 
-def set_metric_registry(registry: MetricRegistry):
-    """Set the metric registry instance"""
-    global metric_registry
-    metric_registry = registry
+def _ensure_refuel_store():
+    """Ensure refuel store is available"""
+    if refuel_store is None:
+        raise HTTPException(status_code=500, detail="Refuel store not initialized")
+    return refuel_store
 
 
 # Refuel-specific endpoints
@@ -38,18 +37,27 @@ def set_metric_registry(registry: MetricRegistry):
 async def create_refuel_metric(metric_data: RefuelMetricCreate, user_id: CurrentUserId):
     """Create a new refuel entry"""
     try:
-        if not metric_registry:
-            raise HTTPException(status_code=503, detail="Metric registry not available")
+        store = _ensure_refuel_store()
 
-        # Convert Pydantic model to dict for internal processing
-        data_dict = metric_data.model_dump()
-        success = await metric_registry.add_metric("refuel", data_dict, user_id)
+        # Convert Pydantic model to RefuelMetric
+        from ..storage.refuel_store import RefuelMetric
+
+        metric = RefuelMetric(
+            timestamp=metric_data.timestamp,
+            price=metric_data.price,
+            amount=metric_data.amount,
+            kilometers_since_last_refuel=metric_data.kilometers_since_last_refuel,
+            estimated_fuel_consumption=metric_data.estimated_fuel_consumption,
+            notes=metric_data.notes,
+        )
+
+        success = await store.add_metric(metric, user_id)
 
         if success:
             return {
                 "message": "Refuel metric created successfully",
                 "metric_type": "refuel",
-                "data": data_dict,
+                "data": metric_data.model_dump(),
             }
         else:
             raise HTTPException(
@@ -71,15 +79,13 @@ async def get_refuel_metrics(
 ):
     """Get refuel metrics with optional filters"""
     try:
-        if not metric_registry:
-            raise HTTPException(status_code=503, detail="Metric registry not available")
+        store = _ensure_refuel_store()
 
         # Parse dates if provided
         start_dt = datetime.fromisoformat(start_date) if start_date else None
         end_dt = datetime.fromisoformat(end_date) if end_date else None
 
-        metrics = await metric_registry.get_metrics(
-            "refuel",
+        metrics = await store.get_metrics(
             user_id,
             start_date=start_dt,
             end_date=end_dt,
@@ -116,30 +122,17 @@ async def get_refuel_statistics(
 ):
     """Get specialized refuel statistics (cost analysis, price trends)"""
     try:
-        if not metric_registry:
-            raise HTTPException(status_code=503, detail="Metric registry not available")
-
-        refuel_store = metric_registry.get_store("refuel")
-
-        # Ensure we have the right type - cast to RefuelStore
-        from ..storage.refuel_store import RefuelStore
-
-        if not isinstance(refuel_store, RefuelStore):
-            raise HTTPException(status_code=500, detail="Invalid store type for refuel")
+        store = _ensure_refuel_store()
 
         # Parse dates if provided
         start_dt = datetime.fromisoformat(start_date) if start_date else None
         end_dt = datetime.fromisoformat(end_date) if end_date else None
 
         # Get cost statistics
-        cost_stats = await refuel_store.get_total_cost_by_period(
-            user_id, start_dt, end_dt
-        )
+        cost_stats = await store.get_total_cost_by_period(user_id, start_dt, end_dt)
 
         # Get price trends
-        price_trends_raw = await refuel_store.get_price_trends(
-            user_id, start_dt, end_dt
-        )
+        price_trends_raw = await store.get_price_trends(user_id, start_dt, end_dt)
 
         # Convert to Pydantic models
         cost_statistics = RefuelCostStatistics(**cost_stats)
@@ -165,23 +158,14 @@ async def get_refuel_statistics(
 async def get_refuel_monthly_summary(user_id: CurrentUserId, year: int, month: int):
     """Get detailed refuel statistics for a specific month"""
     try:
-        if not metric_registry:
-            raise HTTPException(status_code=503, detail="Metric registry not available")
+        store = _ensure_refuel_store()
 
         if month < 1 or month > 12:
             raise HTTPException(
                 status_code=400, detail="Month must be between 1 and 12"
             )
 
-        refuel_store = metric_registry.get_store("refuel")
-
-        # Ensure we have the right type - cast to RefuelStore
-        from ..storage.refuel_store import RefuelStore
-
-        if not isinstance(refuel_store, RefuelStore):
-            raise HTTPException(status_code=500, detail="Invalid store type for refuel")
-
-        summary_data = await refuel_store.get_monthly_summary(user_id, year, month)
+        summary_data = await store.get_monthly_summary(user_id, year, month)
 
         return RefuelMonthlySummaryResponse(**summary_data)
 
