@@ -18,6 +18,11 @@ repos:
         types_or: [markdown, yaml, json, javascript, tsx]
         files: \.(js|jsx|ts|tsx|json|md|yaml|yml)$
         exclude: node_modules/
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
   - repo: local
     hooks:
       - id: typescript-check
