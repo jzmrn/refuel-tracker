@@ -8,6 +8,6 @@ plugins:
   - "@semantic-release/git"
   - - "@codedependant/semantic-release-docker"
     - dockerImage: jzmrn/data-tracker-dagster
-      dockerFile: analytics/Dockerfile
+      dockerFile: Dockerfile
       dockerBuildFlags:
         platform: linux/amd64
