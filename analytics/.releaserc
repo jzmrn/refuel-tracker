@@ -1,10 +1,11 @@
 branches:
   - main
+tagFormat: dagster-v${version}
 plugins:
   - "@semantic-release/commit-analyzer"
   - "@semantic-release/changelog"
   - "@semantic-release/release-notes-generator"
-  - "@semantic-release/github"
+  - "@semantic-release/git"
   - - "@codedependant/semantic-release-docker"
     - dockerImage: jzmrn/data-tracker-dagster
       dockerFile: analytics/Dockerfile
