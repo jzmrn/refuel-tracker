@@ -4,7 +4,7 @@ Tankerkoenig API client for fetching gas station prices and data.
 
 from enum import Enum
 from pydantic import BaseModel, Field
-from typing import Annotated, Literal, Union
+from typing import Annotated, Literal
 from dataclasses import dataclass
 from pydantic import TypeAdapter
 
@@ -28,9 +28,9 @@ class TankerKoenigError(BaseModel):
 
 class GasStationOpen(BaseModel):
     status: Literal["open"]
-    e5: Union[float, bool]
-    e10: Union[float, bool]
-    diesel: Union[float, bool]
+    e5: float | bool
+    e10: float | bool
+    diesel: float | bool
 
 
 class GasStationClosed(BaseModel):
@@ -46,7 +46,7 @@ class GasStationNoStations(BaseModel):
 
 
 GasStationData = Annotated[
-    Union[GasStationOpen, GasStationClosed, GasStationNoPrices, GasStationNoStations],
+    GasStationOpen | GasStationClosed | GasStationNoPrices | GasStationNoStations,
     Field(discriminator="status"),
 ]
 
@@ -59,7 +59,7 @@ class TankerKoenigPriceData(BaseModel):
 
 
 PriceResponse = Annotated[
-    Union[TankerKoenigPriceData, TankerKoenigError],
+    TankerKoenigPriceData | TankerKoenigError,
     Field(discriminator="ok"),
 ]
 
@@ -108,7 +108,7 @@ class TankerKoenigSearchData(BaseModel):
 
 
 SearchResponse = Annotated[
-    Union[TankerKoenigSearchData, TankerKoenigError],
+    TankerKoenigSearchData | TankerKoenigError,
     Field(discriminator="ok"),
 ]
 
@@ -148,7 +148,7 @@ class TankerKoenigDetailData(BaseModel):
 
 
 DetailResponse = Annotated[
-    Union[TankerKoenigDetailData, TankerKoenigError],
+    TankerKoenigDetailData | TankerKoenigError,
     Field(discriminator="ok"),
 ]
 
