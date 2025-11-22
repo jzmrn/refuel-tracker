@@ -18,10 +18,12 @@ coverage.xml
 *.log
 .git
 .mypy_cache
-.env
+.env*
 .venv
 env/
 venv/
+.ruff_cache
+variables.*
 
 # IDE
 .vscode/
@@ -61,4 +63,12 @@ logs/
 tmp/
 temp/
 .tmp
+
+## Other
 tsconfig.tsbuildinfo
+.secrets.baseline
+
+## Dagster
+.telemetry/
+.logs_queue/
+.nux/

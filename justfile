@@ -60,13 +60,6 @@ format:
     @echo "Formatting frontend..."
     cd frontend && npm run lint --fix
 
-# Create data backup
-backup:
-    @echo "Creating backup..."
-    @mkdir -p backups
-    @tar -czf backups/backup-{{`date +%Y%m%d-%H%M%S`}}.tar.gz data/
-    @echo "Backup created in backups/"
-
 # Start backend development server
 dev-backend:
     cd backend && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -81,3 +74,23 @@ dev: dev-backend dev-frontend
     @echo "Backend: http://localhost:8000"
     @echo "Frontend: http://localhost:3000"
     @echo "Press Ctrl+C to stop"
+
+# Install Dagster analytics dependencies
+install-analytics: check-uv
+    cd analytics && uv sync
+
+# Start Dagster analytics development server
+dev-analytics: install-analytics
+    #!/usr/bin/env bash
+    cd analytics
+    
+    export DAGSTER_HOME="$(pwd)/home"
+    export DATA_PATH="$(pwd)/data"
+    
+    uv run dagster dev
+
+# Render Envoy config templates
+render-envoy-config VARS_FILE="config/variables.example.yaml":
+    jinja2 config/envoy.yaml.j2 {{ VARS_FILE }} --format=yaml > config/out/envoy.yaml
+    jinja2 config/envoy-hmac-secret.yaml.j2 {{ VARS_FILE }} --format=yaml > config/out/envoy-hmac-secret.yaml
+    jinja2 config/envoy-token-secret.yaml.j2 {{ VARS_FILE }} --format=yaml > config/out/envoy-token-secret.yaml

@@ -1,0 +1,40 @@
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.36-latest
+    ports:
+      - "8080:8080"
+      - "9902:9901" # Admin interface
+    volumes:
+      - ./config/out/envoy.yaml:/etc/envoy/envoy.yaml:ro
+      - ./config/out/envoy-token-secret.yaml:/etc/envoy/token-secret.yaml:ro
+      - ./config/out/envoy-hmac-secret.yaml:/etc/envoy/hmac-secret.yaml:ro
+    depends_on:
+      - dagster
+    restart: unless-stopped
+
+  dagster:
+    build:
+      context: .
+      dockerfile: ./analytics/Dockerfile
+    expose:
+      - "3000"
+    env_file:
+      - ./analytics/.env
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DATA_OUTPUT_PATH=/app/data/analytics
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  data:
+    driver: local
+
+networks:
+  default:
+    name: analytics
