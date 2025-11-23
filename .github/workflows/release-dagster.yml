@@ -33,6 +33,9 @@ jobs:
       - name: Install yarn
         run: npm install --global yarn
 
+      - name: Move release config
+        run: cp analytics/.releaserc .releaserc
+
       - name: Install dependencies
         run: |
           npm install --save-dev \
@@ -49,4 +52,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCKER_REGISTRY_USER: ${{ vars.DOCKER_REGISTRY_USER }}
           DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
-        working-directory: ./analytics
+        working-directory: . # Cannot use ./analytics here as the Dockerfile uses /lib

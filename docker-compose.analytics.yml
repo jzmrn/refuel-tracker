@@ -14,12 +14,12 @@ services:
 
   dagster:
     build:
-      context: .
-      dockerfile: ./analytics/Dockerfile
+      context: ./analytics
+      dockerfile: Dockerfile
     expose:
       - "3000"
     env_file:
-      - ./analytics/.env
+      - ./.env
     volumes:
       - ./data:/app/data
     environment:
