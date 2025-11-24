@@ -43,18 +43,21 @@ static_resources:
                           token_secret:
                             name: token_secret
                             sds_config:
-                              path: "/etc/envoy/token-secret.yaml"
+                              path_config_source:
+                                path: "/etc/envoy/token-secret.yaml"
                           hmac_secret:
                             name: hmac_secret
                             sds_config:
-                              path: "/etc/envoy/hmac-secret.yaml"
+                              path_config_source:
+                                path: "/etc/envoy/hmac-secret.yaml"
                         auth_scopes:
                           - "openid"
                           - "email"
                           - "profile"
                         pass_through_matcher:
                           - name: ":method"
-                            exact_match: "OPTIONS"
+                            string_match:
+                              exact: "OPTIONS"
 
                   - name: envoy.filters.http.jwt_authn
                     typed_config:
