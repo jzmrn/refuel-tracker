@@ -90,7 +90,7 @@ dev-analytics: install-analytics
     uv run dagster dev
 
 # Render Envoy config templates
-render-envoy-config VARS_FILE="config/variables.example.yaml":
-    jinja2 config/envoy.yaml.j2 {{ VARS_FILE }} --format=yaml > config/out/envoy.yaml
-    jinja2 config/envoy-hmac-secret.yaml.j2 {{ VARS_FILE }} --format=yaml > config/out/envoy-hmac-secret.yaml
-    jinja2 config/envoy-token-secret.yaml.j2 {{ VARS_FILE }} --format=yaml > config/out/envoy-token-secret.yaml
+render-envoy-config DEPLOYMENT="app" ENV="development":
+    jinja2 config/{{ DEPLOYMENT }}-envoy.yaml.j2 "config/variables.{{ DEPLOYMENT }}.{{ ENV }}.yaml" --format=yaml > config/out/{{ DEPLOYMENT }}/envoy.yaml
+    jinja2 config/envoy-hmac-secret.yaml.j2 "config/variables.{{ DEPLOYMENT }}.{{ ENV }}.yaml" --format=yaml > config/out/{{ DEPLOYMENT }}/envoy-hmac-secret.yaml
+    jinja2 config/envoy-token-secret.yaml.j2 "config/variables.{{ DEPLOYMENT }}.{{ ENV }}.yaml" --format=yaml > config/out/{{ DEPLOYMENT }}/envoy-token-secret.yaml

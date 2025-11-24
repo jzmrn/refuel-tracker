@@ -31,6 +31,7 @@ static_resources:
                           uri: "https://oauth2.googleapis.com/token"
                           timeout: 3s
                         authorization_endpoint: "https://accounts.google.com/o/oauth2/v2/auth"
+                        forward_bearer_token: true
                         redirect_uri: "{{ oauth_redirect_uri }}"
                         redirect_path_matcher:
                           path:
