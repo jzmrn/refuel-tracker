@@ -2,7 +2,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
 
-from ..auth import CurrentUserId
+from ..auth import CurrentUser
 from ..models import (
     RefuelCostStatistics,
     RefuelMetricCreate,
@@ -34,7 +34,7 @@ def _ensure_refuel_store():
 
 # Refuel-specific endpoints
 @router.post("/refuel", response_model=dict)
-async def create_refuel_metric(metric_data: RefuelMetricCreate, user_id: CurrentUserId):
+async def create_refuel_metric(metric_data: RefuelMetricCreate, user: CurrentUser):
     """Create a new refuel entry"""
     try:
         store = _ensure_refuel_store()
@@ -51,7 +51,7 @@ async def create_refuel_metric(metric_data: RefuelMetricCreate, user_id: Current
             notes=metric_data.notes,
         )
 
-        success = await store.add_metric(metric, user_id)
+        success = await store.add_metric(metric, user.id)
 
         if success:
             return {
@@ -72,12 +72,13 @@ async def create_refuel_metric(metric_data: RefuelMetricCreate, user_id: Current
 
 @router.get("/refuel", response_model=list[RefuelMetricResponse])
 async def get_refuel_metrics(
-    user_id: CurrentUserId,
+    user: CurrentUser,
     start_date: str | None = None,
     end_date: str | None = None,
     limit: int | None = 100,
 ):
     """Get refuel metrics with optional filters"""
+
     try:
         store = _ensure_refuel_store()
 
@@ -86,7 +87,7 @@ async def get_refuel_metrics(
         end_dt = datetime.fromisoformat(end_date) if end_date else None
 
         metrics = await store.get_metrics(
-            user_id,
+            user.id,
             start_date=start_dt,
             end_date=end_dt,
             limit=limit,
@@ -98,7 +99,7 @@ async def get_refuel_metrics(
             result.append(
                 RefuelMetricResponse(
                     timestamp=metric.timestamp,
-                    user_id=user_id,
+                    user_id=user.id,
                     price=metric.price,
                     amount=metric.amount,
                     kilometers_since_last_refuel=metric.kilometers_since_last_refuel,
@@ -116,7 +117,7 @@ async def get_refuel_metrics(
 
 @router.get("/refuel/statistics", response_model=RefuelStatisticsResponse)
 async def get_refuel_statistics(
-    user_id: CurrentUserId,
+    user: CurrentUser,
     start_date: str | None = None,
     end_date: str | None = None,
 ):
@@ -129,10 +130,10 @@ async def get_refuel_statistics(
         end_dt = datetime.fromisoformat(end_date) if end_date else None
 
         # Get cost statistics
-        cost_stats = await store.get_total_cost_by_period(user_id, start_dt, end_dt)
+        cost_stats = await store.get_total_cost_by_period(user.id, start_dt, end_dt)
 
         # Get price trends
-        price_trends_raw = await store.get_price_trends(user_id, start_dt, end_dt)
+        price_trends_raw = await store.get_price_trends(user.id, start_dt, end_dt)
 
         # Convert to Pydantic models
         cost_statistics = RefuelCostStatistics(**cost_stats)
@@ -155,7 +156,7 @@ async def get_refuel_statistics(
     "/refuel/monthly/{year}/{month}",
     response_model=RefuelMonthlySummaryResponse,
 )
-async def get_refuel_monthly_summary(user_id: CurrentUserId, year: int, month: int):
+async def get_refuel_monthly_summary(user: CurrentUser, year: int, month: int):
     """Get detailed refuel statistics for a specific month"""
     try:
         store = _ensure_refuel_store()
@@ -165,8 +166,7 @@ async def get_refuel_monthly_summary(user_id: CurrentUserId, year: int, month: i
                 status_code=400, detail="Month must be between 1 and 12"
             )
 
-        summary_data = await store.get_monthly_summary(user_id, year, month)
-
+        summary_data = await store.get_monthly_summary(user.id, year, month)
         return RefuelMonthlySummaryResponse(**summary_data)
 
     except ValueError as e:

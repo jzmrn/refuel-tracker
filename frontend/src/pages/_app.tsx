@@ -1,9 +1,9 @@
 import type { AppProps } from "next/app";
 import { useEffect } from "react";
+import { useRouter } from "next/router";
 import Layout from "@/components/common/Layout";
-import { AuthProvider } from "@/lib/auth";
-import { AuthGuard } from "@/components/auth";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
+import { UserProvider } from "@/lib/auth/UserContext";
 import {
   ThemeProvider,
   getInitialTheme,
@@ -19,24 +19,30 @@ if (typeof window !== "undefined") {
   applyTheme(currentTheme);
 }
 
-export default function App({ Component, pageProps }: AppProps) {
+function AppContent({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+
   useEffect(() => {
-    // Re-apply on mount to ensure it's set
+    // Re-apply theme on mount
     const theme = getInitialTheme();
     const currentTheme = resolveTheme(theme);
     applyTheme(currentTheme);
   }, []);
 
   return (
+    <Layout>
+      <Component {...pageProps} />
+    </Layout>
+  );
+}
+
+export default function App(props: AppProps) {
+  return (
     <ThemeProvider>
       <LanguageProvider>
-        <AuthProvider>
-          <AuthGuard>
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
-          </AuthGuard>
-        </AuthProvider>
+        <UserProvider>
+          <AppContent {...props} />
+        </UserProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

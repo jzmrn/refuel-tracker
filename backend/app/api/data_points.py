@@ -2,7 +2,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Query
 
-from ..auth import CurrentUserId
+from ..auth import CurrentUser
 from ..models import DataPointCreate, DataPointResponse, DataSummaryResponse
 from ..storage.metric_store import DataPointStore
 
@@ -26,7 +26,7 @@ def _ensure_data_point_store():
 
 
 @router.post("/data-points", response_model=DataPointResponse)
-async def create_data_point(data_point: DataPointCreate, user_id: CurrentUserId):
+async def create_data_point(data_point: DataPointCreate, user: CurrentUser):
     """Create a new data point"""
     store = _ensure_data_point_store()
 
@@ -36,12 +36,12 @@ async def create_data_point(data_point: DataPointCreate, user_id: CurrentUserId)
             data_point.value,
             data_point.label,
             data_point.notes,
-            user_id,
+            user.id,
         )
 
         return DataPointResponse(
             id=point_id,
-            user_id=user_id,
+            user_id=user.id,
             timestamp=data_point.timestamp,
             value=data_point.value,
             label=data_point.label,
@@ -57,7 +57,7 @@ async def create_data_point(data_point: DataPointCreate, user_id: CurrentUserId)
 
 @router.get("/data-points", response_model=list[DataPointResponse])
 async def get_data_points(
-    user_id: CurrentUserId,
+    user: CurrentUser,
     start_date: str | None = Query(None, description="Start date filter (ISO format)"),
     end_date: str | None = Query(None, description="End date filter (ISO format)"),
     label: str | None = Query(None, description="Filter by label"),
@@ -80,7 +80,7 @@ async def get_data_points(
         )
 
         rows = await store.get_data_points(
-            user_id, start_date=start_dt, end_date=end_dt, label=label, limit=limit
+            user.id, start_date=start_dt, end_date=end_dt, label=label, limit=limit
         )
 
         # Convert to response models
@@ -108,12 +108,12 @@ async def get_data_points(
 
 
 @router.delete("/data-points/{point_id}")
-async def delete_data_point(point_id: str, user_id: CurrentUserId):
+async def delete_data_point(point_id: str, user: CurrentUser):
     """Delete a data point by ID"""
     store = _ensure_data_point_store()
 
     try:
-        success = await store.delete_data_point(user_id, point_id)
+        success = await store.delete_data_point(user.id, point_id)
 
         if not success:
             raise HTTPException(status_code=404, detail="Data point not found")
@@ -129,12 +129,12 @@ async def delete_data_point(point_id: str, user_id: CurrentUserId):
 
 
 @router.get("/data-points/labels", response_model=list[str])
-async def get_existing_labels(user_id: CurrentUserId):
+async def get_existing_labels(user: CurrentUser):
     """Get all unique labels from existing data points"""
     store = _ensure_data_point_store()
 
     try:
-        labels = await store.get_existing_labels(user_id)
+        labels = await store.get_existing_labels(user.id)
         return labels
 
     except Exception as e:
@@ -144,12 +144,12 @@ async def get_existing_labels(user_id: CurrentUserId):
 
 
 @router.get("/data-points/summary", response_model=DataSummaryResponse)
-async def get_data_summary(user_id: CurrentUserId):
+async def get_data_summary(user: CurrentUser):
     """Get summary statistics for data points"""
     store = _ensure_data_point_store()
 
     try:
-        summary = await store.get_summary(user_id)
+        summary = await store.get_summary(user.id)
 
         return DataSummaryResponse(**summary)
 

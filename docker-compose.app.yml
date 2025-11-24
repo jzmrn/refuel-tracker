@@ -1,10 +1,13 @@
 services:
-  nginx:
-    image: nginx:alpine
+  envoy:
+    image: envoyproxy/envoy:v1.36-latest
     ports:
-      - "80:80"
+      - "9090:8080"
+      - "9902:9901" # Admin interface
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./config/out/app/envoy.yaml:/etc/envoy/envoy.yaml:ro
+      - ./config/out/app/envoy-token-secret.yaml:/etc/envoy/token-secret.yaml:ro
+      - ./config/out/app/envoy-hmac-secret.yaml:/etc/envoy/hmac-secret.yaml:ro
     depends_on:
       - backend
       - frontend
@@ -28,10 +31,6 @@ services:
       - BUILDKIT_PROGRESS=plain
       - ENVIRONMENT=development
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
 
   frontend:
     build:
@@ -49,9 +48,7 @@ services:
 volumes:
   data:
     driver: local
-  backups:
-    driver: local
 
 networks:
   default:
-    name: personal-data-tracker
+    name: app

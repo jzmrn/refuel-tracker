@@ -1,13 +1,13 @@
 import React from "react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { useAuth } from "@/lib/auth";
+import { useUser } from "@/lib/auth/UserContext";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import ThemeSelector from "@/components/common/ThemeSelector";
 import SettingCard from "@/components/common/SettingCard";
 
 export default function Settings() {
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
+  const { user } = useUser();
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -28,12 +28,13 @@ export default function Settings() {
           title={user?.name || "Account"}
           description={user?.email || ""}
         >
-          <button
-            onClick={signOut}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
-          >
-            {t.common.signOut}
-          </button>
+          {user?.picture && (
+            <img
+              src={user.picture}
+              alt={user.name}
+              className="w-16 h-16 rounded-full"
+            />
+          )}
         </SettingCard>
 
         {/* Language Settings */}

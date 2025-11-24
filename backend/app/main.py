@@ -1,30 +1,23 @@
 import os
-import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
-from starlette.middleware.sessions import SessionMiddleware
 
 from app.api import (
     data_points,
     refuels,
     time_spans,
 )
-from app.auth import init_auth_service
+from app.auth import CurrentUser
 from app.storage.metric_store import DataPointStore
 from app.storage.parquet_store import ParquetDataStore
 from app.storage.refuel_store import RefuelStore
 from app.storage.time_span_store import TimeSpanStore
-from app.storage.user_store import UserStore
-
-from .auth import CurrentUser
 
 # Global instances
 data_store: ParquetDataStore = None
-user_store: UserStore = None
 refuel_store: RefuelStore = None
 data_point_store: DataPointStore = None
 time_span_store: TimeSpanStore = None
@@ -33,7 +26,7 @@ time_span_store: TimeSpanStore = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    global data_store, user_store, refuel_store, data_point_store, time_span_store
+    global data_store, refuel_store, data_point_store, time_span_store
 
     # Initialize data store
     # Get the directory where this main.py file is located
@@ -43,15 +36,11 @@ async def lifespan(app: FastAPI):
         raise ValueError("DATA_PATH environment variable is not set")
 
     data_store = ParquetDataStore(data_path)
-    user_store = UserStore(data_path)
 
     # Initialize stores
     refuel_store = RefuelStore(data_store)
     data_point_store = DataPointStore(data_store)
     time_span_store = TimeSpanStore(data_store)
-
-    # Initialize auth service with user store
-    init_auth_service(user_store)
 
     # Inject stores into API modules
     refuels.set_refuel_store(refuel_store)
@@ -73,14 +62,6 @@ app = FastAPI(
     description="A personal finance and metrics tracking application with Parquet storage",
     version="1.0.0",
     lifespan=lifespan,
-)
-
-# Add SessionMiddleware for OAuth2 flow (must be before CORS)
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=os.getenv("SESSION_SECRET_KEY", secrets.token_urlsafe(32)),
-    session_cookie="session",
-    max_age=24 * 60 * 60,  # 24 hours
 )
 
 # Configure CORS - allow frontend access
@@ -159,76 +140,15 @@ async def health_check():
     return {"status": "healthy", "data_store": "operational", "storage_type": "parquet"}
 
 
-# OAuth endpoints
-@app.get("/oauth/authorize")
-async def oauth_authorize(request: Request):
-    """Start OAuth2 flow with Google"""
-    from app.auth import auth_service
-
-    if not auth_service:
-        raise HTTPException(status_code=500, detail="Auth service not initialized")
-
-    redirect_uri = request.url_for("oauth_callback")
-    return await auth_service.get_oauth_client().authorize_redirect(
-        request, str(redirect_uri)
-    )
-
-
-@app.get("/oauth/callback")
-async def oauth_callback(request: Request):
-    """OAuth2 callback from Google"""
-    from app.auth import auth_service
-
-    if not auth_service:
-        raise HTTPException(status_code=500, detail="Auth service not initialized")
-
-    try:
-        # Get the token from the callback
-        token = await auth_service.get_oauth_client().authorize_access_token(request)
-
-        # Debug: Log the token structure
-        print(f"Token received from Google: {token}")
-        print(f"Token keys: {token.keys()}")
-
-        # Handle OAuth callback and create/update user
-        user_data, session_token = auth_service.handle_oauth_callback(token)
-
-        # Redirect to frontend root (will use current host through nginx)
-        response = RedirectResponse(url="/", status_code=302)
-
-        # Set secure session cookie with user ID
-        response.set_cookie(
-            key="user_id",
-            value=user_data.sub,
-            httponly=True,
-            secure=os.getenv("ENVIRONMENT") == "production",
-            samesite="lax",
-            max_age=24 * 60 * 60,  # 24 hours
-        )
-
-        return response
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"OAuth callback failed: {str(e)}")
-
-
-@app.post("/oauth/logout")
-async def oauth_logout():
-    """Logout endpoint - clear session cookie"""
-    response = RedirectResponse(url="/", status_code=302)
-    response.delete_cookie("user_id")
-    return response
-
-
 # Authentication endpoint
 @app.get("/api/auth/me")
-async def get_current_user_info(current_user: "CurrentUser"):
-    """Get current user information"""
-
+async def get_current_user_info(user: CurrentUser):
+    """Get current user information from OAuth2 Proxy headers"""
     return {
-        "id": current_user.sub,
-        "email": current_user.email,
-        "name": current_user.name,
-        "picture": current_user.picture,
+        "id": user.id,
+        "email": user.email,
+        "name": user.name,
+        "picture": user.picture,
     }
 
 

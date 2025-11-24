@@ -225,19 +225,7 @@ class ApiService {
     withCredentials: true, // Important for session cookies
   });
 
-  constructor() {
-    // Add response interceptor to handle auth errors
-    this.api.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          // User not authenticated, redirect to sign in
-          window.location.href = `/oauth/authorize`;
-        }
-        return Promise.reject(error);
-      }
-    );
-  }
+  constructor() {}
 
   private categoriesCache: Category[] | null = null;
 

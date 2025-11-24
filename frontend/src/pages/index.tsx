@@ -7,7 +7,7 @@ import {
   TruckIcon,
 } from "@heroicons/react/24/outline";
 
-export default function Home() {
+export default function Dashboard() {
   const { t } = useTranslation();
 
   const features = [

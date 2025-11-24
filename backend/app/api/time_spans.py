@@ -2,7 +2,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Query
 
-from ..auth import CurrentUserId
+from ..auth import CurrentUser
 from ..models import (
     TimeSpanCreate,
     TimeSpanResponse,
@@ -59,12 +59,12 @@ def _calculate_duration(start_date: datetime, end_date: datetime | None) -> dict
 
 
 @router.post("/time-spans", response_model=TimeSpanResponse)
-async def create_time_span(time_span: TimeSpanCreate, user_id: CurrentUserId):
+async def create_time_span(time_span: TimeSpanCreate, user: CurrentUser):
     """Create a new time span"""
     store = _ensure_time_span_store()
 
     try:
-        response = await store.add_time_span(time_span, user_id)
+        response = await store.add_time_span(time_span, user.id)
         return response
 
     except Exception as e:
@@ -76,7 +76,7 @@ async def create_time_span(time_span: TimeSpanCreate, user_id: CurrentUserId):
 
 @router.get("/time-spans", response_model=list[TimeSpanResponse])
 async def get_time_spans(
-    user_id: CurrentUserId,
+    user_id: CurrentUser,
     start_date: str | None = Query(None, description="Start date filter (ISO format)"),
     end_date: str | None = Query(None, description="End date filter (ISO format)"),
     label: str | None = Query(None, description="Filter by label"),
@@ -122,7 +122,7 @@ async def get_time_spans(
 
 @router.put("/time-spans/{span_id}", response_model=TimeSpanResponse)
 async def update_time_span(
-    span_id: str, time_span_update: TimeSpanUpdate, user_id: CurrentUserId
+    span_id: str, time_span_update: TimeSpanUpdate, user_id: CurrentUser
 ):
     """Update an existing time span"""
     store = _ensure_time_span_store()
@@ -164,12 +164,12 @@ async def update_time_span(
 
 
 @router.delete("/time-spans/{span_id}")
-async def delete_time_span(span_id: str, user_id: CurrentUserId):
+async def delete_time_span(span_id: str, user: CurrentUser):
     """Delete a time span by ID"""
     store = _ensure_time_span_store()
 
     try:
-        success = await store.delete_time_span(user_id, span_id)
+        success = await store.delete_time_span(user.id, span_id)
         if not success:
             raise HTTPException(status_code=404, detail="Time span not found")
 
@@ -184,13 +184,13 @@ async def delete_time_span(span_id: str, user_id: CurrentUserId):
 
 
 @router.get("/time-spans/labels", response_model=list[str])
-async def get_existing_labels(user_id: CurrentUserId):
+async def get_existing_labels(user: CurrentUser):
     """Get all unique labels from existing time spans"""
     store = _ensure_time_span_store()
 
     try:
         # Get all time spans and extract unique labels
-        time_spans = await store.get_time_spans(user_id)
+        time_spans = await store.get_time_spans(user.id)
         labels = list(set(ts.label for ts in time_spans))
         return sorted(labels)
 
@@ -201,12 +201,12 @@ async def get_existing_labels(user_id: CurrentUserId):
 
 
 @router.get("/time-spans/groups", response_model=list[str])
-async def get_existing_groups(user_id: CurrentUserId):
+async def get_existing_groups(user: CurrentUser):
     """Get all unique groups from existing time spans"""
     store = _ensure_time_span_store()
 
     try:
-        groups = await store.get_existing_groups(user_id)
+        groups = await store.get_existing_groups(user.id)
         return groups
 
     except Exception as e:
@@ -216,12 +216,12 @@ async def get_existing_groups(user_id: CurrentUserId):
 
 
 @router.get("/time-spans/summary", response_model=TimeSpanSummaryResponse)
-async def get_time_span_summary(user_id: CurrentUserId):
+async def get_time_span_summary(user: CurrentUser):
     """Get summary statistics for time spans"""
     store = _ensure_time_span_store()
 
     try:
-        summary = await store.get_summary_stats(user_id)
+        summary = await store.get_summary_stats(user.id)
 
         return TimeSpanSummaryResponse(
             total_entries=summary["total_entries"],

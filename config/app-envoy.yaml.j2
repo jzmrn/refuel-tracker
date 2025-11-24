@@ -1,0 +1,184 @@
+node:
+  id: app
+  cluster: app
+
+static_resources:
+  listeners:
+    - name: default
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 8080
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: ingress_http
+                use_remote_address: true
+                xff_num_trusted_hops: 2
+                access_log:
+                  - name: envoy.access_loggers.stdout
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                http_filters:
+                  - name: envoy.filters.http.oauth2
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2
+                      config:
+                        token_endpoint:
+                          cluster: oauth_cluster
+                          uri: "https://oauth2.googleapis.com/token"
+                          timeout: 3s
+                        authorization_endpoint: "https://accounts.google.com/o/oauth2/v2/auth"
+                        forward_bearer_token: true
+                        redirect_uri: "{{ oauth_redirect_uri }}"
+                        redirect_path_matcher:
+                          path:
+                            exact: "/oauth2/callback"
+                        signout_path:
+                          path:
+                            exact: "/oauth2/signout"
+                        credentials:
+                          client_id: "{{ oauth_client_id }}"
+                          token_secret:
+                            name: token_secret
+                            sds_config:
+                              path_config_source:
+                                path: "/etc/envoy/token-secret.yaml"
+                          hmac_secret:
+                            name: hmac_secret
+                            sds_config:
+                              path_config_source:
+                                path: "/etc/envoy/hmac-secret.yaml"
+                        auth_scopes:
+                          - "openid"
+                          - "email"
+                          - "profile"
+                        pass_through_matcher:
+                          - name: ":method"
+                            string_match:
+                              exact: "OPTIONS"
+                          
+                  - name: envoy.filters.http.jwt_authn
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
+                      providers:
+                        google_jwt:
+                          issuer: "https://accounts.google.com"
+                          audiences:
+                            - "{{ oauth_client_id }}"
+                          remote_jwks:
+                            http_uri:
+                              uri: "https://www.googleapis.com/oauth2/v3/certs"
+                              cluster: jwks_cluster
+                              timeout: 5s
+                            cache_duration: 300s
+                          from_cookies:
+                            - "IdToken"
+                          forward: true
+                          payload_in_metadata: jwt_payload
+                          claim_to_headers:
+                            - header_name: x-jwt-sub
+                              claim_name: sub
+                            - header_name: x-jwt-email
+                              claim_name: email
+                            - header_name: x-jwt-name
+                              claim_name: name
+                            - header_name: x-jwt-picture
+                              claim_name: picture
+                      rules:
+                        - match:
+                            prefix: "/"
+                          requires:
+                            provider_name: google_jwt
+
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+                route_config:
+                  name: local_route
+                  virtual_hosts:
+                    - name: local_service
+                      domains: ["*"]
+                      routes:
+                        - match:
+                            prefix: "/api/"
+                          route:
+                            cluster: backend_cluster
+                        - match:
+                            prefix: "/"
+                          route:
+                            cluster: frontend_cluster
+
+  clusters:
+    # OAuth2 token endpoint cluster
+    - name: oauth_cluster
+      type: LOGICAL_DNS
+      dns_lookup_family: V4_ONLY
+      load_assignment:
+        cluster_name: oauth_cluster
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: oauth2.googleapis.com
+                      port_value: 443
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+          sni: oauth2.googleapis.com
+
+    # JWKS cluster for JWT verification
+    - name: jwks_cluster
+      type: LOGICAL_DNS
+      dns_lookup_family: V4_ONLY
+      load_assignment:
+        cluster_name: jwks_cluster
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: www.googleapis.com
+                      port_value: 443
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+          sni: www.googleapis.com
+
+    - name: frontend_cluster
+      type: LOGICAL_DNS
+      dns_lookup_family: V4_ONLY
+      load_assignment:
+        cluster_name: frontend_cluster
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: frontend
+                      port_value: 3000
+
+    - name: backend_cluster
+      type: LOGICAL_DNS
+      dns_lookup_family: V4_ONLY
+      load_assignment:
+        cluster_name: backend_cluster
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: backend
+                      port_value: 8000
+
+admin:
+  address:
+    socket_address:
+      protocol: TCP
+      address: 0.0.0.0
+      port_value: 9901
