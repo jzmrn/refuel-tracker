@@ -1,3 +1,17 @@
+# [1.1.0](https://github.com/jzmrn/personal-data-tracker/compare/dagster-v1.0.0...dagster-v1.1.0) (2025-11-24)
+
+
+### Bug Fixes
+
+* **analytics:** remove deprecated fields in envoy config ([d026a80](https://github.com/jzmrn/personal-data-tracker/commit/d026a807d0081174567a6466228f32b488042c17))
+* **dagster:** configure separate directories for components ([31a39ef](https://github.com/jzmrn/personal-data-tracker/commit/31a39ef7d577df2b68999b60e229e24a0acc6f78))
+* **tankerkoenig:** return pydantic model instead of dataclass ([ccd0961](https://github.com/jzmrn/personal-data-tracker/commit/ccd09615411e064264761c9b1b8aee5ff468e88d))
+
+
+### Features
+
+* **analytics:** use separate clients for io ops ([365fcf2](https://github.com/jzmrn/personal-data-tracker/commit/365fcf23cdf0bd8f99c607f9d401ca4838f0c24f))
+
 # 1.0.0 (2025-11-23)
 
 
