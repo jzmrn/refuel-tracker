@@ -5,7 +5,6 @@ Tankerkoenig API client for fetching gas station prices and data.
 from enum import Enum
 from pydantic import BaseModel, Field
 from typing import Annotated, Literal
-from dataclasses import dataclass
 from pydantic import TypeAdapter
 
 
@@ -155,8 +154,7 @@ DetailResponse = Annotated[
 DetailResponseAdapter: TypeAdapter[DetailResponse] = TypeAdapter(DetailResponse)
 
 
-@dataclass
-class GasStationPrice:
+class GasStationPrice(BaseModel):
     """Represents the price information for a gas station."""
 
     station_id: str

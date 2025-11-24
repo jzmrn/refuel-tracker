@@ -1323,7 +1323,7 @@ wheels = [
 ]
 
 [[package]]
-name = "tankerkoenig"
+name = "tankerkoenig-client"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
