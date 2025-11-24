@@ -1,19 +1,19 @@
 # Dagster instance configuration using SQLite storage
 storage:
   sqlite:
-    base_dir: data
+    base_dir: storage
 
 compute_logs:
   module: dagster.core.storage.local_compute_log_manager
   class: LocalComputeLogManager
   config:
-    base_dir: data
+    base_dir: logs
 
 local_artifact_storage:
   module: dagster.core.storage.root
   class: LocalArtifactStorage
   config:
-    base_dir: data
+    base_dir: artifacts
 
 run_coordinator:
   module: dagster.core.run_coordinator

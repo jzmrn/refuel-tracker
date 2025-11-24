@@ -14,16 +14,19 @@ services:
 
   dagster:
     build:
-      context: ./analytics
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: analytics/Dockerfile
     expose:
       - "3000"
     env_file:
-      - ./.env
+      - analytics/.env
     volumes:
       - ./data:/app/data
+      - ./analytics/tmp/storage:/app/storage
+      - ./analytics/tmp/logs:/app/logs
+      - ./analytics/tmp/artifacts:/app/artifacts
     environment:
-      - DATA_OUTPUT_PATH=/app/data/analytics
+      - DATA_OUTPUT_PATH=/app/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
