@@ -4,7 +4,7 @@ from dagster import Definitions, EnvVar
 from dagster_duckdb import DuckDBResource
 
 from .assets import daily_aggregates, raw_fuel_prices
-from .iomanagers import DailyAggregatesIOManager, RawFuelDataIOManager
+from .iomanagers import DailyFuelPriceAggregatesIOManager, RawFuelPriceDataIOManager
 from .resources import TankerkoenigResource
 from .schedules import (
     daily_aggregates_job,
@@ -26,8 +26,9 @@ defs = Definitions(
         "tankerkoenig": TankerkoenigResource(
             api_key=EnvVar("TANKERKOENIG_API_KEY"),
         ),
-        "raw_fuel_io_manager": RawFuelDataIOManager(duckdb=duckdb),
-        "daily_aggregates_io_manager": DailyAggregatesIOManager(duckdb=duckdb),
+        "duckdb": duckdb,
+        "raw_fuel_io_manager": RawFuelPriceDataIOManager(duckdb=duckdb),
+        "daily_aggregates_io_manager": DailyFuelPriceAggregatesIOManager(duckdb=duckdb),
     },
     jobs=[
         fetch_fuel_prices_job,

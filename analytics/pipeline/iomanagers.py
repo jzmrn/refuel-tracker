@@ -8,10 +8,10 @@ from dagster import (
     ResourceDependency,
 )
 from dagster_duckdb import DuckDBResource
-from fueldata import FuelDataClient
+from fueldata import AggregatedFuelDataClient, FuelPriceDataClient
 
 
-class RawFuelDataIOManager(ConfigurableIOManager):
+class RawFuelPriceDataIOManager(ConfigurableIOManager):
     """IO manager for raw fuel price data stored in DuckDB."""
 
     duckdb: ResourceDependency[DuckDBResource]
@@ -25,11 +25,18 @@ class RawFuelDataIOManager(ConfigurableIOManager):
             obj: DataFrame with fuel price data to append (or None to skip)
         """
 
-        with self.duckdb.get_connection() as con:
-            client = FuelDataClient(con)
-            client.store_fuel_data(obj)
+        client = FuelPriceDataClient(self.duckdb)
+        client.store_fuel_data(obj)
 
-            context.log.info(f"Appended {len(obj)} rows to raw_fuel_prices table")
+        context.log.info(f"Appended {len(obj)} rows to fuel prices table")
+
+        context.add_output_metadata(
+            {
+                "num_rows": len(obj),
+                "num_columns": len(obj.columns),
+                "columns": ", ".join(obj.columns),
+            }
+        )
 
     def load_input(self, context: InputContext) -> pd.DataFrame:
         """
@@ -52,12 +59,11 @@ class RawFuelDataIOManager(ConfigurableIOManager):
             start_time = None
             end_time = None
 
-        with self.duckdb.get_connection() as con:
-            client = FuelDataClient(con)
-            return client.read_fuel_data(start_time, end_time)
+        client = FuelPriceDataClient(self.duckdb)
+        return client.read_fuel_data(start_time, end_time)
 
 
-class DailyAggregatesIOManager(ConfigurableIOManager):
+class DailyFuelPriceAggregatesIOManager(ConfigurableIOManager):
     """IO manager for daily aggregate data stored in DuckDB."""
 
     duckdb: ResourceDependency[DuckDBResource]
@@ -71,11 +77,21 @@ class DailyAggregatesIOManager(ConfigurableIOManager):
             obj: DataFrame with daily aggregate data
         """
 
-        with self.duckdb.get_connection() as con:
-            client = FuelDataClient(con)
-            client.store_daily_aggregates(obj)
+        client = AggregatedFuelDataClient(self.duckdb)
+        client.store_daily_aggregates(obj)
 
-            context.log.info(f"Stored {len(obj)} rows to daily_aggregates table")
+        context.log.info(f"Stored {len(obj)} rows to daily_aggregates table")
+
+        context.add_output_metadata(
+            {
+                "num_rows": len(obj),
+                "num_columns": len(obj.columns),
+                "columns": ", ".join(obj.columns),
+                "partition_key": context.partition_key
+                if context.has_partition_key
+                else None,
+            }
+        )
 
     def load_input(self, context: InputContext) -> pd.DataFrame:
         """
@@ -98,6 +114,5 @@ class DailyAggregatesIOManager(ConfigurableIOManager):
             start_time = None
             end_time = None
 
-        with self.duckdb.get_connection() as con:
-            client = FuelDataClient(con)
-            return client.read_daily_aggregates(start_time, end_time)
+        client = AggregatedFuelDataClient(self.duckdb)
+        return client.read_daily_aggregates(start_time, end_time)

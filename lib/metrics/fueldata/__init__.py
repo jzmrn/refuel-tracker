@@ -1,3 +1,5 @@
-from .client import FuelDataClient as FuelDataClient
-from .models import PriceEntry as PriceEntry
-from .models import DailyAggregate as DailyAggregate
+from .aggregates import AggregatedFuelDataClient as AggregatedFuelDataClient
+from .aggregates import DailyAggregate as DailyAggregate
+from .prices import FuelPriceDataClient as FuelPriceDataClient
+from .prices import PriceEntry as PriceEntry
+from .stations import FuelStationClient as FuelStationClient

@@ -7,6 +7,10 @@ from dagster import (
     OpExecutionContext,
     asset,
 )
+from dagster_duckdb import DuckDBResource
+from fueldata import FuelStationClient
+from tankerkoenig import TankerkoenigClient
+from tankerkoenig.models import GasStationPrice
 
 from .resources import TankerkoenigResource
 
@@ -19,6 +23,7 @@ from .resources import TankerkoenigResource
 def raw_fuel_prices(
     context: OpExecutionContext,
     tankerkoenig: TankerkoenigResource,
+    duckdb: DuckDBResource,
 ) -> pd.DataFrame:
     """
     Fetch raw fuel prices data from Tankerkönig API.
@@ -26,10 +31,25 @@ def raw_fuel_prices(
     Returns DataFrame which IO manager appends to DuckDB.
     """
 
+    client = FuelStationClient(duckdb)
+    favorites = client.get_favorite_stations()
+    station_ids = set([station.station_id for station in favorites])
+
+    context.log.info(f"Read {len(station_ids)} favorite stations")
+
+    if len(station_ids) == 0:
+        context.log.info("No favorite stations configured, skipping data fetch")
+        return pd.DataFrame()
+
     try:
-        data = tankerkoenig.get_client().get_gas_station_prices(
-            station_ids=["24a381e3-0d72-416d-bfd8-b2f65f6e5802"]
-        )
+        client: TankerkoenigClient = tankerkoenig.get_client()
+        data: list[GasStationPrice] = []
+
+        # API allows max 10 station IDs per request, so chunk requests
+        for chunk_start in range(0, len(station_ids), 10):
+            chunk_ids = list(station_ids)[chunk_start : chunk_start + 10]
+            chunk_data = client.get_gas_station_prices(station_ids=chunk_ids)
+            data.extend(chunk_data)
 
     except Exception as e:
         context.log.error(f"Failed to fetch gas station data: {str(e)}")
@@ -38,24 +58,10 @@ def raw_fuel_prices(
     context.log.info(f"Successfully fetched data for {len(data)} gas stations")
 
     timestamp = datetime.now()
-    rows = [
-        {
-            "timestamp": timestamp,
-            "station_id": entry.station_id,
-            "type": fuel_type,
-            "price": price,
-        }
-        for entry in data
-        for fuel_type, price in [
-            ("e5", entry.e5),
-            ("e10", entry.e10),
-            ("diesel", entry.diesel),
-        ]
-        if price is not None
-    ]
-
+    rows = [{"timestamp": timestamp, **entry.model_dump()} for entry in data]
     df = pd.DataFrame(rows)
-    context.log.info(f"Prepared {len(df)} rows of fuel data for storage")
+
+    context.log.info(f"Prepared {len(df)} rows of fuel data prices for storage")
 
     return df
 
@@ -85,21 +91,27 @@ def daily_aggregates(
         f"{raw_fuel_prices['timestamp'].min()} to {raw_fuel_prices['timestamp'].max()}"
     )
 
-    aggregates = (
-        raw_fuel_prices.groupby(["station_id", "type"])
-        .agg(
-            n_samples=("timestamp", "count"),
-            price_mean=("price", "mean"),
-            price_min=("price", "min"),
-            price_max=("price", "max"),
-            price_std=("price", "std"),
-            ts_min=("timestamp", "min"),
-            ts_max=("timestamp", "max"),
-        )
-        .reset_index()
-    )
+    grouped_fuel_prices = raw_fuel_prices.groupby("station_id")
+    partition_date = pd.to_datetime(context.partition_key).date()
 
-    aggregates["date"] = pd.to_datetime(context.partition_key).date()
-    context.log.info(f"Created {len(aggregates)} aggregate records")
+    df = pd.DataFrame()
 
-    return aggregates
+    for fuel_type in ["e5", "e10", "diesel"]:
+        agg_dict = {}
+        agg_dict[f"n_samples"] = (f"price_{fuel_type}", "count")
+        agg_dict[f"price_mean"] = (f"price_{fuel_type}", "mean")
+        agg_dict[f"price_min"] = (f"price_{fuel_type}", "min")
+        agg_dict[f"price_max"] = (f"price_{fuel_type}", "max")
+        agg_dict[f"price_std"] = (f"price_{fuel_type}", "std")
+
+        agg_dict["ts_min"] = ("timestamp", "min")
+        agg_dict["ts_max"] = ("timestamp", "max")
+
+        aggregates = grouped_fuel_prices.agg(**agg_dict).reset_index()
+        aggregates["date"] = partition_date
+        aggregates["type"] = fuel_type
+        df = pd.concat([df, aggregates], ignore_index=True)
+
+    context.log.info(f"Created {len(df)} aggregate records")
+
+    return df

@@ -810,6 +810,7 @@ name = "metrics"
 version = "0.1.0"
 source = { directory = "../lib/metrics" }
 dependencies = [
+    { name = "dagster-duckdb" },
     { name = "duckdb" },
     { name = "pandas" },
     { name = "pydantic" },
@@ -819,6 +820,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "black", marker = "extra == 'dev'" },
+    { name = "dagster-duckdb", specifier = ">=0.24.4" },
     { name = "duckdb", specifier = ">=1.3.2" },
     { name = "isort", marker = "extra == 'dev'" },
     { name = "mypy", marker = "extra == 'dev'" },
