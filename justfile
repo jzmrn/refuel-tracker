@@ -1,4 +1,5 @@
-# Personal Data Tracker justfile
+set dotenv-load := true
+
 
 # Default recipe shows help
 default:
@@ -62,6 +63,8 @@ format:
 
 # Start backend development server
 dev-backend:
+    #!/usr/bin/env bash
+    export DATA_PATH="$(pwd)/data"
     cd backend && uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 # Start frontend development server

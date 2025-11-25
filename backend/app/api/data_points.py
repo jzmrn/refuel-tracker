@@ -1,37 +1,28 @@
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from ..auth import CurrentUser
 from ..models import DataPointCreate, DataPointResponse, DataSummaryResponse
-from ..storage.metric_store import DataPointStore
+from ..storage.data_point_client import DataPointClient
 
 router = APIRouter()
 
-# Global data store instance
-data_point_store: DataPointStore | None = None
 
-
-def set_data_point_store(store: DataPointStore):
-    """Inject the data point store dependency"""
-    global data_point_store
-    data_point_store = store
-
-
-def _ensure_data_point_store():
-    """Ensure data point store is available"""
-    if data_point_store is None:
-        raise HTTPException(status_code=500, detail="Data point store not initialized")
-    return data_point_store
+def get_data_point_client(request: Request) -> DataPointClient:
+    """Dependency to get the data point client from app state"""
+    return request.app.state.data_point_client
 
 
 @router.post("/data-points", response_model=DataPointResponse)
-async def create_data_point(data_point: DataPointCreate, user: CurrentUser):
+async def create_data_point(
+    data_point: DataPointCreate,
+    user: CurrentUser,
+    client: DataPointClient = Depends(get_data_point_client),
+):
     """Create a new data point"""
-    store = _ensure_data_point_store()
-
     try:
-        point_id = await store.add_data_point(
+        point_id = client.add_data_point(
             data_point.timestamp,
             data_point.value,
             data_point.label,
@@ -58,14 +49,13 @@ async def create_data_point(data_point: DataPointCreate, user: CurrentUser):
 @router.get("/data-points", response_model=list[DataPointResponse])
 async def get_data_points(
     user: CurrentUser,
+    client: DataPointClient = Depends(get_data_point_client),
     start_date: str | None = Query(None, description="Start date filter (ISO format)"),
     end_date: str | None = Query(None, description="End date filter (ISO format)"),
     label: str | None = Query(None, description="Filter by label"),
     limit: int | None = Query(None, description="Limit number of results"),
 ):
     """Get data points with optional filtering"""
-    store = _ensure_data_point_store()
-
     try:
         # Parse dates
         start_dt = (
@@ -79,7 +69,7 @@ async def get_data_points(
             else None
         )
 
-        rows = await store.get_data_points(
+        rows = client.get_data_points(
             user.id, start_date=start_dt, end_date=end_dt, label=label, limit=limit
         )
 
@@ -108,12 +98,14 @@ async def get_data_points(
 
 
 @router.delete("/data-points/{point_id}")
-async def delete_data_point(point_id: str, user: CurrentUser):
+async def delete_data_point(
+    point_id: str,
+    user: CurrentUser,
+    client: DataPointClient = Depends(get_data_point_client),
+):
     """Delete a data point by ID"""
-    store = _ensure_data_point_store()
-
     try:
-        success = await store.delete_data_point(user.id, point_id)
+        success = client.delete_data_point(user.id, point_id)
 
         if not success:
             raise HTTPException(status_code=404, detail="Data point not found")
@@ -129,12 +121,13 @@ async def delete_data_point(point_id: str, user: CurrentUser):
 
 
 @router.get("/data-points/labels", response_model=list[str])
-async def get_existing_labels(user: CurrentUser):
+async def get_existing_labels(
+    user: CurrentUser,
+    client: DataPointClient = Depends(get_data_point_client),
+):
     """Get all unique labels from existing data points"""
-    store = _ensure_data_point_store()
-
     try:
-        labels = await store.get_existing_labels(user.id)
+        labels = client.get_existing_labels(user.id)
         return labels
 
     except Exception as e:
@@ -144,12 +137,13 @@ async def get_existing_labels(user: CurrentUser):
 
 
 @router.get("/data-points/summary", response_model=DataSummaryResponse)
-async def get_data_summary(user: CurrentUser):
+async def get_data_summary(
+    user: CurrentUser,
+    client: DataPointClient = Depends(get_data_point_client),
+):
     """Get summary statistics for data points"""
-    store = _ensure_data_point_store()
-
     try:
-        summary = await store.get_summary(user.id)
+        summary = client.get_summary(user.id)
 
         return DataSummaryResponse(**summary)
 

@@ -131,11 +131,11 @@ export default function TimeSpanStatistics({
   const ongoingCount = ongoingSpans.length;
 
   let stats = {
-    total: 0,
-    average: 0,
-    min: 0,
-    max: 0,
-    median: 0,
+    total: null as number | null,
+    average: null as number | null,
+    min: null as number | null,
+    max: null as number | null,
+    median: null as number | null,
   };
 
   if (durations.length > 0) {
@@ -153,7 +153,10 @@ export default function TimeSpanStatistics({
         : sortedDurations[Math.floor(count / 2)];
   }
 
-  const formatDuration = (minutes: number) => {
+  const formatDuration = (minutes: number | null): ValueUnit[] | ValueUnit => {
+    if (minutes === null) {
+      return { value: "-", unit: "" };
+    }
     const days = Math.floor(minutes / (24 * 60));
     const hours = Math.floor((minutes % (24 * 60)) / 60);
     const mins = Math.floor(minutes % 60);
@@ -162,10 +165,11 @@ export default function TimeSpanStatistics({
     if (days > 0) values.push({ value: days, unit: "d" });
     if (hours > 0) values.push({ value: hours, unit: "h" });
     if (mins > 0) values.push({ value: mins, unit: "m" });
-    return values;
+    return values.length > 0 ? values : { value: "-", unit: "" };
   };
 
-  const formatDurationString = (values: ValueUnit[]) => {
+  const formatDurationString = (values: ValueUnit[] | ValueUnit) => {
+    if (!Array.isArray(values)) return values.value.toString();
     return values.map((item) => `${item.value}${item.unit}`).join(" ");
   };
 

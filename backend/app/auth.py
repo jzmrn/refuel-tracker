@@ -9,18 +9,8 @@ from fastapi import Depends, HTTPException, Request, status
 from google.auth.transport import requests
 from google.oauth2 import id_token
 
-
-class User:
-    id: str
-    email: str
-    name: str
-    picture: str | None
-
-    def __init__(self, id: str, email: str, name: str, picture: str | None = None):
-        self.id = id
-        self.email = email
-        self.name = name
-        self.picture = picture
+from .models import User, UserCreate
+from .storage.user_store import UserStore
 
 
 def get_user_info_from_id_token(request: Request) -> User:
@@ -63,12 +53,23 @@ def get_user_info_from_id_token(request: Request) -> User:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    return User(
+    user_store: UserStore = request.app.state.user_store
+
+    user_create = UserCreate(
         id=user_id,
         email=email,
         name=name,
-        picture=idinfo.get("picture"),
+        picture_url=idinfo.get("picture"),
     )
+
+    try:
+        return user_store.create_or_update_user(user_create)
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to register user: {str(e)}",
+        )
 
 
 # Type alias for dependency injection

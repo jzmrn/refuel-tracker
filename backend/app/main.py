@@ -11,44 +11,48 @@ from app.api import (
     time_spans,
 )
 from app.auth import CurrentUser
-from app.storage.metric_store import DataPointStore
-from app.storage.parquet_store import ParquetDataStore
-from app.storage.refuel_store import RefuelStore
-from app.storage.time_span_store import TimeSpanStore
+from app.storage.data_point_client import DataPointClient
+from app.storage.duckdb_resource import BackendDuckDBResource
+from app.storage.refuel_client import RefuelDataClient
+from app.storage.time_span_client import TimeSpanClient
+from app.storage.user_store import UserStore
 
-# Global instances
-data_store: ParquetDataStore = None
-refuel_store: RefuelStore = None
-data_point_store: DataPointStore = None
-time_span_store: TimeSpanStore = None
+# Global DuckDB resource instance
+duckdb_resource: BackendDuckDBResource = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    global data_store, refuel_store, data_point_store, time_span_store
+    global duckdb_resource
 
-    # Initialize data store
-    # Get the directory where this main.py file is located
+    # Initialize DuckDB resource
     data_path = os.getenv("DATA_PATH", None)
 
     if not data_path:
         raise ValueError("DATA_PATH environment variable is not set")
 
-    data_store = ParquetDataStore(data_path)
+    # Ensure the directory exists
+    Path(data_path).mkdir(parents=True, exist_ok=True)
 
-    # Initialize stores
-    refuel_store = RefuelStore(data_store)
-    data_point_store = DataPointStore(data_store)
-    time_span_store = TimeSpanStore(data_store)
+    db_path = Path(data_path) / "userdata.duckdb"
+    duckdb_resource = BackendDuckDBResource(db_path)
 
-    # Inject stores into API modules
-    refuels.set_refuel_store(refuel_store)
-    data_points.set_data_point_store(data_point_store)
-    time_spans.set_time_span_store(time_span_store)
+    # Initialize clients (they create tables on instantiation)
+    user_store = UserStore(duckdb_resource)
+    refuel_client = RefuelDataClient(duckdb_resource)
+    data_point_client = DataPointClient(duckdb_resource)
+    time_span_client = TimeSpanClient(duckdb_resource)
 
-    print(f"Data store initialized with path: {data_path}")
-    print(f"Absolute data path: {Path(data_path).absolute()}")
+    print(f"DuckDB initialized at: {db_path}")
+    print(f"Absolute path: {db_path.absolute()}")
+
+    # Store clients in app state for dependency injection
+    app.state.duckdb_resource = duckdb_resource
+    app.state.user_store = user_store
+    app.state.refuel_client = refuel_client
+    app.state.data_point_client = data_point_client
+    app.state.time_span_client = time_span_client
 
     yield
 
@@ -59,7 +63,7 @@ async def lifespan(app: FastAPI):
 # Create FastAPI app
 app = FastAPI(
     title="Personal Data Tracker",
-    description="A personal finance and metrics tracking application with Parquet storage",
+    description="A personal finance and metrics tracking application with DuckDB storage",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -132,12 +136,12 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Detailed health check"""
-    global data_store
+    global duckdb_resource
 
-    if not data_store:
-        raise HTTPException(status_code=503, detail="Data store not initialized")
+    if not duckdb_resource:
+        raise HTTPException(status_code=503, detail="DuckDB resource not initialized")
 
-    return {"status": "healthy", "data_store": "operational", "storage_type": "parquet"}
+    return {"status": "healthy", "data_store": "operational", "storage_type": "duckdb"}
 
 
 # Authentication endpoint
@@ -148,7 +152,7 @@ async def get_current_user_info(user: CurrentUser):
         "id": user.id,
         "email": user.email,
         "name": user.name,
-        "picture": user.picture,
+        "picture": user.picture_url,
     }
 
 

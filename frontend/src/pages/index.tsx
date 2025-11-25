@@ -38,13 +38,12 @@ export default function Dashboard() {
   ];
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-8 md:mb-12">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100">
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
           {t.navigation.dashboard}
         </h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-4 text-lg">
+        <p className="mt-2 text-gray-600 dark:text-gray-300 text-sm md:text-base">
           {t.dashboard.welcome}
         </p>
       </div>

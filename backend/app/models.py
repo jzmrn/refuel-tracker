@@ -9,9 +9,20 @@ class User(BaseModel):
     id: str = Field(..., description="User ID from Google OAuth")
     email: str = Field(..., description="User email from Google")
     name: str = Field(..., description="User display name")
-    picture: str | None = Field(None, description="User profile picture URL")
+    picture_url: str | None = Field(None, description="User profile picture URL")
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_login: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "User":
+        return cls(
+            id=data["id"],
+            email=data["email"],
+            name=data["name"],
+            picture_url=data.get("picture_url"),
+            created_at=data.get("created_at", datetime.now(UTC)),
+            last_login=data.get("last_login", datetime.now(UTC)),
+        )
 
 
 class UserCreate(BaseModel):
@@ -20,7 +31,7 @@ class UserCreate(BaseModel):
     id: str
     email: str
     name: str
-    picture: str | None = None
+    picture_url: str | None = None
 
 
 class Transaction(BaseModel):

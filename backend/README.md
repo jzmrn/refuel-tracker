@@ -1,14 +1,14 @@
 # Personal Data Tracker - Backend
 
-A high-performance FastAPI backend with Parquet-based storage for personal finance and metrics tracking.
+A high-performance FastAPI backend with DuckDB-based storage for personal finance and metrics tracking.
 
 ## 🏗️ Architecture
 
 - **Framework**: FastAPI with async support
-- **Storage**: Parquet files with Polars for data processing
-- **Data Organization**: Time-partitioned files for optimal query performance
+- **Storage**: DuckDB with pandas for data processing
+- **Data Organization**: Single database file with indexed tables
 - **Validation**: Pydantic models for type safety
-- **Backup**: Automated backup system
+- **Pattern**: Dependency injection for clean architecture
 
 ## 🚀 Quick Start
 
@@ -48,33 +48,26 @@ just format
 
 ## 📊 Data Storage
 
-### Parquet File Structure
+### DuckDB Database Structure
 
 ```sh
 data/
-├── data_points/
-│   ├── year=2024/
-│   │   ├── month=01/
-│   │   │   ├── data_points_2024-01-01_2024-01-07.parquet
-│   │   │   └── data_points_2024-01-08_2024-01-14.parquet
-│   │   └── month=02/
-│   └── year=2025/
-├── time_spans/
-│   ├── time_spans_2024-01.parquet
-│   └── time_spans_2024-02.parquet
-├── metrics/
-│   └── refuel/
-│       └── refuel_2024-01.parquet
-└── metadata/
-    └── schemas.json
+├── userdata.duckdb      # Main database file with all tables
+└── users.db             # SQLite database for user management
 ```
+
+### Tables
+
+- **refuel_metrics**: Fuel tracking with indexes on `(user_id, timestamp)`
+- **data_points**: Generic data tracking with indexes on `(user_id, id)`, timestamp, and label
+- **time_spans**: Time duration tracking with indexes on `(user_id, id)`, start_date, label, and group
 
 ### Benefits
 
-- **90%+ compression** compared to JSON
-- **Columnar storage** for fast aggregations
-- **Predicate pushdown** - only reads relevant data
-- **Cross-platform** compatibility
+- **ACID transactions** for data consistency
+- **SQL queries** with proper indexing for performance
+- **Single file** - easy backup and migration
+- **Built-in analytics** capabilities
 
 ## 🔌 API Endpoints
 
@@ -156,13 +149,15 @@ app/
 ├── main.py              # FastAPI application entry point
 ├── models.py            # Pydantic data models
 ├── storage/
-│   ├── parquet_store.py # Main storage implementation
-│   └── backup_manager.py # Backup functionality
+│   ├── duckdb_resource.py  # DuckDB connection manager
+│   ├── refuel_client.py    # Refuel metrics storage
+│   ├── data_point_client.py # Data points storage
+│   ├── time_span_client.py  # Time spans storage
+│   └── user_store.py        # User management (SQLite)
 ├── api/
 │   ├── data_points.py   # Data tracking endpoints
 │   ├── refuels.py       # Refuel tracking endpoints
-│   ├── time_spans.py    # Time span endpoints
-│   └── analytics.py     # Analytics endpoints
+│   └── time_spans.py    # Time span endpoints
 └── utils/
     └── date_helpers.py  # Utility functions
 ```
@@ -191,10 +186,10 @@ uv run mypy app/
 
 ### Environment Variables
 
-- `DATA_PATH`: Path to store Parquet files (default: `data`)
-- `BACKUP_PATH`: Path to store backups (default: `backups`)
+- `DATA_PATH`: Path to store DuckDB database file (default: `data`)
+- `BACKUP_PATH`: Path to store backups (optional)
 
-## 🔧 Configuration
+### Configuration
 
 ### Development
 
@@ -202,14 +197,12 @@ Create `.env` file in backend directory:
 
 ```env
 DATA_PATH=./data
-BACKUP_PATH=./backups
 ```
 
 ### Production
 
 ```env
 DATA_PATH=/app/data
-BACKUP_PATH=/app/backups
 ```
 
 ## 🧪 Testing
@@ -221,7 +214,7 @@ BACKUP_PATH=/app/backups
 uv run pytest
 
 # Specific test file
-uv run pytest tests/test_parquet_store.py
+uv run pytest tests/test_clients.py
 
 # With verbose output
 uv run pytest -v
@@ -235,7 +228,7 @@ uv run pytest --cov=app
 ```sh
 tests/
 ├── test_main.py           # API endpoint tests
-├── test_parquet_store.py  # Storage layer tests
+├── test_clients.py        # Storage client tests
 ├── test_models.py         # Data model tests
 └── conftest.py           # Test configuration
 ```
@@ -253,7 +246,6 @@ docker build -t personal-data-tracker-backend .
 ```bash
 docker run -p 8000:8000 \
   -v $(pwd)/data:/app/data \
-  -v $(pwd)/backups:/app/backups \
   personal-data-tracker-backend
 ```
 
@@ -261,24 +253,24 @@ docker run -p 8000:8000 \
 
 - **Input Validation**: All inputs validated with Pydantic
 - **CORS Protection**: Configured for frontend origins
-- **No External Database**: Reduces attack surface
-- **File-based Storage**: Easy to backup and secure
+- **SQL Injection Protection**: Parameterized queries throughout
+- **Dependency Injection**: Clean architecture with no global state
 
 ## 📈 Performance
 
 ### Expected Performance
 
-- **Writes**: 10,000+ records/second
-- **Reads**: Millions of rows scanned in milliseconds
-- **Storage**: ~1MB per 10,000 records (compressed)
-- **Memory**: Low memory footprint with lazy loading
+- **Writes**: 10,000+ records/second with batch inserts
+- **Reads**: Optimized with indexes on common query patterns
+- **Storage**: Efficient compression with DuckDB's columnar format
+- **Memory**: Low memory footprint with lazy evaluation
 
 ### Optimization Tips
 
 - Use date range filters for large datasets
 - Batch data operations when possible
-- Monitor file sizes in data directory
-- Regular backups to prevent data loss
+- Leverage indexes on user_id, timestamp, and labels
+- Regular database vacuum for optimal performance
 
 ## 🐛 Troubleshooting
 

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from ..auth import CurrentUser
 from ..models import (
@@ -9,63 +9,33 @@ from ..models import (
     TimeSpanSummaryResponse,
     TimeSpanUpdate,
 )
-from ..storage.time_span_store import TimeSpanStore
+from ..storage.time_span_client import TimeSpanClient
 
 router = APIRouter()
 
-# Global time span store instance
-time_span_store: TimeSpanStore | None = None
 
-
-def set_time_span_store(store: TimeSpanStore):
-    """Inject the time span store dependency"""
-    global time_span_store
-    time_span_store = store
-
-
-def _ensure_time_span_store():
-    """Ensure time span store is available"""
-    if time_span_store is None:
-        raise HTTPException(status_code=500, detail="Time span store not initialized")
-    return time_span_store
-
-
-def _calculate_duration(start_date: datetime, end_date: datetime | None) -> dict:
-    """Calculate duration in days, hours, and minutes"""
-    # Ensure start_date is timezone-naive
-    if start_date.tzinfo is not None:
-        start_date = start_date.replace(tzinfo=None)
-
-    if end_date is None:
-        # For ongoing spans, calculate duration up to now
-        end_date = datetime.now()
-    else:
-        # Ensure end_date is timezone-naive
-        if end_date.tzinfo is not None:
-            end_date = end_date.replace(tzinfo=None)
-
-    duration = end_date - start_date
-    total_minutes = int(duration.total_seconds() / 60)
-
-    days = total_minutes // (24 * 60)
-    hours = (total_minutes % (24 * 60)) // 60
-    minutes = total_minutes % 60
-
-    return {
-        "duration_days": days,
-        "duration_hours": hours,
-        "duration_minutes": minutes,
-    }
+def get_time_span_client(request: Request) -> TimeSpanClient:
+    """Dependency to get the time span client from app state"""
+    return request.app.state.time_span_client
 
 
 @router.post("/time-spans", response_model=TimeSpanResponse)
-async def create_time_span(time_span: TimeSpanCreate, user: CurrentUser):
+async def create_time_span(
+    time_span: TimeSpanCreate,
+    user: CurrentUser,
+    client: TimeSpanClient = Depends(get_time_span_client),
+):
     """Create a new time span"""
-    store = _ensure_time_span_store()
-
     try:
-        response = await store.add_time_span(time_span, user.id)
-        return response
+        result = client.add_time_span(
+            start_date=time_span.start_date,
+            end_date=time_span.end_date,
+            label=time_span.label,
+            group=getattr(time_span, "group", "General"),
+            notes=time_span.notes,
+            user_id=user.id,
+        )
+        return TimeSpanResponse(**result)
 
     except Exception as e:
         print(f"Error creating time span: {str(e)}")
@@ -76,7 +46,8 @@ async def create_time_span(time_span: TimeSpanCreate, user: CurrentUser):
 
 @router.get("/time-spans", response_model=list[TimeSpanResponse])
 async def get_time_spans(
-    user_id: CurrentUser,
+    user: CurrentUser,
+    client: TimeSpanClient = Depends(get_time_span_client),
     start_date: str | None = Query(None, description="Start date filter (ISO format)"),
     end_date: str | None = Query(None, description="End date filter (ISO format)"),
     label: str | None = Query(None, description="Filter by label"),
@@ -84,8 +55,6 @@ async def get_time_spans(
     limit: int | None = Query(None, description="Limit number of results"),
 ):
     """Get time spans with optional filtering"""
-    store = _ensure_time_span_store()
-
     try:
         # Parse dates
         start_dt = (
@@ -99,8 +68,8 @@ async def get_time_spans(
             else None
         )
 
-        results = await store.get_time_spans(
-            user_id,
+        results = client.get_time_spans(
+            user.id,
             start_date=start_dt,
             end_date=end_dt,
             label=label,
@@ -108,7 +77,7 @@ async def get_time_spans(
             limit=limit,
         )
 
-        return results
+        return [TimeSpanResponse(**r) for r in results]
 
     except Exception as e:
         print(f"Error retrieving time spans: {str(e)}")
@@ -122,18 +91,19 @@ async def get_time_spans(
 
 @router.put("/time-spans/{span_id}", response_model=TimeSpanResponse)
 async def update_time_span(
-    span_id: str, time_span_update: TimeSpanUpdate, user_id: CurrentUser
+    span_id: str,
+    time_span_update: TimeSpanUpdate,
+    user: CurrentUser,
+    client: TimeSpanClient = Depends(get_time_span_client),
 ):
     """Update an existing time span"""
-    store = _ensure_time_span_store()
-
     try:
-        # Convert TimeSpanUpdate to dict for the store method
+        # Convert TimeSpanUpdate to dict for the client method
         updates = {}
         if time_span_update.start_date is not None:
-            updates["start_date"] = time_span_update.start_date.isoformat()
+            updates["start_date"] = time_span_update.start_date
         if time_span_update.end_date is not None:
-            updates["end_date"] = time_span_update.end_date.isoformat()
+            updates["end_date"] = time_span_update.end_date
         if time_span_update.label is not None:
             updates["label"] = time_span_update.label
         if time_span_update.group is not None:
@@ -141,19 +111,19 @@ async def update_time_span(
         if time_span_update.notes is not None:
             updates["notes"] = time_span_update.notes
 
-        success = await store.update_time_span(span_id, user_id, updates)
+        success = client.update_time_span(span_id, user.id, updates)
         if not success:
             raise HTTPException(status_code=404, detail="Time span not found")
 
         # Get the updated time span
-        time_spans = await store.get_time_spans(user_id)
-        updated_span = next((ts for ts in time_spans if ts.id == span_id), None)
+        time_spans = client.get_time_spans(user.id)
+        updated_span = next((ts for ts in time_spans if ts["id"] == span_id), None)
         if not updated_span:
             raise HTTPException(
                 status_code=404, detail="Time span not found after update"
             )
 
-        return updated_span
+        return TimeSpanResponse(**updated_span)
 
     except HTTPException:
         raise
@@ -164,12 +134,14 @@ async def update_time_span(
 
 
 @router.delete("/time-spans/{span_id}")
-async def delete_time_span(span_id: str, user: CurrentUser):
+async def delete_time_span(
+    span_id: str,
+    user: CurrentUser,
+    client: TimeSpanClient = Depends(get_time_span_client),
+):
     """Delete a time span by ID"""
-    store = _ensure_time_span_store()
-
     try:
-        success = await store.delete_time_span(user.id, span_id)
+        success = client.delete_time_span(user.id, span_id)
         if not success:
             raise HTTPException(status_code=404, detail="Time span not found")
 
@@ -184,15 +156,14 @@ async def delete_time_span(span_id: str, user: CurrentUser):
 
 
 @router.get("/time-spans/labels", response_model=list[str])
-async def get_existing_labels(user: CurrentUser):
+async def get_existing_labels(
+    user: CurrentUser,
+    client: TimeSpanClient = Depends(get_time_span_client),
+):
     """Get all unique labels from existing time spans"""
-    store = _ensure_time_span_store()
-
     try:
-        # Get all time spans and extract unique labels
-        time_spans = await store.get_time_spans(user.id)
-        labels = list(set(ts.label for ts in time_spans))
-        return sorted(labels)
+        labels = client.get_existing_labels(user.id)
+        return labels
 
     except Exception as e:
         raise HTTPException(
@@ -201,12 +172,13 @@ async def get_existing_labels(user: CurrentUser):
 
 
 @router.get("/time-spans/groups", response_model=list[str])
-async def get_existing_groups(user: CurrentUser):
+async def get_existing_groups(
+    user: CurrentUser,
+    client: TimeSpanClient = Depends(get_time_span_client),
+):
     """Get all unique groups from existing time spans"""
-    store = _ensure_time_span_store()
-
     try:
-        groups = await store.get_existing_groups(user.id)
+        groups = client.get_existing_groups(user.id)
         return groups
 
     except Exception as e:
@@ -216,12 +188,13 @@ async def get_existing_groups(user: CurrentUser):
 
 
 @router.get("/time-spans/summary", response_model=TimeSpanSummaryResponse)
-async def get_time_span_summary(user: CurrentUser):
+async def get_time_span_summary(
+    user: CurrentUser,
+    client: TimeSpanClient = Depends(get_time_span_client),
+):
     """Get summary statistics for time spans"""
-    store = _ensure_time_span_store()
-
     try:
-        summary = await store.get_summary_stats(user.id)
+        summary = client.get_summary_stats(user.id)
 
         return TimeSpanSummaryResponse(
             total_entries=summary["total_entries"],
