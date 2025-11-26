@@ -90,12 +90,9 @@ export default function TimeSpans() {
       setRefreshTrigger((prev) => prev + 1);
 
       showSuccess(t.timeSpans.addedSuccessfully);
-
-      // Close mobile form and switch to values tab to show the newly added entry
       setIsMobileFormOpen(false);
-      setActiveTab("values");
-      // Set the selected group to the newly added span's group
-      setValuesSelectedGroup(spanData.group);
+
+      await fetchData();
     } catch (error) {
       console.error("Error adding time span:", error);
       showError(t.timeSpans.failedToAdd);

@@ -3,7 +3,6 @@ name = "personal-data-tracker"
 version = "0.1.0"
 description = "Personal financial and metrics tracking with Parquet storage"
 authors = [{name = "Jan Zimmermann", email = "jzmrn@gmx.com"}]
-readme = "README.md"
 requires-python = ">=3.11"
 
 dependencies = [
@@ -15,6 +14,8 @@ dependencies = [
     "google-api-python-client>=2.187.0",
     "duckdb>=0.9.0",
     "pandas>=2.0.0",
+    "tankerkoenig-client @ {root:uri}/../lib/tankerkoenig",
+    "metrics @ {root:uri}/../lib/metrics"
 ]
 
 [dependency-groups]
@@ -31,6 +32,9 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.black]
 line-length = 88

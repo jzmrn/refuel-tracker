@@ -335,3 +335,80 @@ class TimeSpanSummaryResponse(BaseModel):
     ongoing_entries: int
     date_range: dict[str, datetime | None]
     duration_stats: dict[str, float | None]
+
+
+# Fuel Prices Models
+class GasStationSearchRequest(BaseModel):
+    """Request model for searching gas stations"""
+
+    lat: float = Field(..., ge=-90, le=90, description="Latitude")
+    lng: float = Field(..., ge=-180, le=180, description="Longitude")
+    rad: float = Field(..., gt=0, le=25, description="Search radius in km (max 25)")
+    fuel_type: str = Field(
+        default="all", description="Fuel type: 'e5', 'e10', 'diesel', or 'all'"
+    )
+    sort_by: str = Field(
+        default="dist", description="Sort by: 'price' or 'dist' (distance)"
+    )
+
+
+class GasStationResponse(BaseModel):
+    """Response model for gas station information"""
+
+    id: str
+    name: str
+    brand: str
+    street: str
+    house_number: str
+    post_code: int
+    place: str
+    lat: float
+    lng: float
+    dist: float | None = None
+    price: float | None = None
+    diesel: float | None = None
+    e5: float | None = None
+    e10: float | None = None
+    is_open: bool
+
+
+class FavoriteStationCreate(BaseModel):
+    """Request model for adding a favorite station"""
+
+    station_id: str = Field(..., description="Station ID to add to favorites")
+
+
+class FavoriteStationResponse(BaseModel):
+    """Response model for favorite stations"""
+
+    user_id: str
+    station_id: str
+    timestamp: datetime
+    name: str | None = None
+    brand: str | None = None
+    street: str | None = None
+    house_number: str | None = None
+    post_code: int | None = None
+    place: str | None = None
+    lat: float | None = None
+    lng: float | None = None
+    current_price_e5: float | None = None
+    current_price_e10: float | None = None
+    current_price_diesel: float | None = None
+    is_open: bool | None = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class FuelPricesSummaryResponse(BaseModel):
+    """Summary statistics for fuel prices"""
+
+    total_favorites: int
+    stations_open: int
+    lowest_e5_price: float | None = None
+    lowest_e10_price: float | None = None
+    lowest_diesel_price: float | None = None
+    average_e5_price: float | None = None
+    average_e10_price: float | None = None
+    average_diesel_price: float | None = None

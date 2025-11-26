@@ -15,7 +15,8 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: . # Use the root context to access python packages stored in /lib
+      dockerfile: backend/Dockerfile
     expose:
       - "8000"
     volumes:

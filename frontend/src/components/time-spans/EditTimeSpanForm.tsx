@@ -262,6 +262,7 @@ export default function EditTimeSpanForm({
               name="start_date"
               value={formData.start_date || ""}
               onChange={handleChange}
+              max={new Date().toISOString().slice(0, 16)}
               className={`input flex-1 ${
                 errors.start_date ? "border-red-300" : ""
               }`}
@@ -300,6 +301,7 @@ export default function EditTimeSpanForm({
               name="end_date"
               value={formData.end_date || ""}
               onChange={handleChange}
+              max={new Date().toISOString().slice(0, 16)}
               className={`input flex-1 ${
                 errors.end_date ? "border-red-300" : ""
               }`}

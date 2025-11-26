@@ -5,9 +5,8 @@ DuckDB client for data points storage.
 from datetime import datetime
 from typing import Any
 
-import pandas as pd
-
 from .duckdb_resource import BackendDuckDBResource
+from .models import DataPoint
 
 
 class DataPointClient:
@@ -20,6 +19,7 @@ class DataPointClient:
         Args:
             duckdb: BackendDuckDBResource for database operations
         """
+
         self._duckdb = duckdb
         with self._duckdb.get_connection() as con:
             con.execute(
@@ -35,6 +35,7 @@ class DataPointClient:
                 )
             """
             )
+
             # Create indexes for common query patterns
             con.execute(
                 """
@@ -58,25 +59,33 @@ class DataPointClient:
         user_id: str,
     ) -> str:
         """Add a data point and return its ID."""
-        # Generate ID based on timestamp and label hash
         point_id = f"{timestamp.isoformat()}_{abs(hash(label))}"
 
-        df = pd.DataFrame(  # noqa: F841 DuckDB reads the value internally
-            [
-                {
-                    "id": point_id,
-                    "user_id": user_id,
-                    "timestamp": timestamp,
-                    "value": value,
-                    "label": label,
-                    "notes": notes if notes else None,
-                }
-            ]
+        data_point = DataPoint(
+            id=point_id,
+            user_id=user_id,
+            timestamp=timestamp,
+            value=value,
+            label=label,
+            notes=notes,
         )
 
         try:
             with self._duckdb.get_connection() as con:
-                con.execute("INSERT INTO data_points SELECT * FROM df")
+                con.execute(
+                    """
+                    INSERT INTO data_points (id, user_id, timestamp, value, label, notes)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    [
+                        data_point.id,
+                        data_point.user_id,
+                        data_point.timestamp,
+                        data_point.value,
+                        data_point.label,
+                        data_point.notes,
+                    ],
+                )
             return point_id
         except Exception as e:
             print(f"Error adding data point: {e}")
@@ -89,8 +98,9 @@ class DataPointClient:
         end_date: datetime | None = None,
         label: str | None = None,
         limit: int | None = None,
-    ) -> list[dict[str, Any]]:
+    ) -> list[DataPoint]:
         """Get data points with optional filtering."""
+
         query = "SELECT * FROM data_points WHERE user_id = ?"
         params = [user_id]
 
@@ -112,12 +122,10 @@ class DataPointClient:
             query += f" LIMIT {limit}"
 
         with self._duckdb.get_connection() as con:
-            df = con.execute(query, params).df()
+            results = con.execute(query, params).fetchall()
+            columns = [desc[0] for desc in con.description]
 
-        if df.empty:
-            return []
-
-        return df.to_dict(orient="records")
+        return [DataPoint(**dict(zip(columns, row))) for row in results]
 
     def delete_data_point(self, user_id: str, point_id: str) -> bool:
         """Delete a data point by ID."""
@@ -143,12 +151,9 @@ class DataPointClient:
         """
 
         with self._duckdb.get_connection() as con:
-            df = con.execute(query, (user_id,)).df()
+            results = con.execute(query, (user_id,)).fetchall()
 
-        if df.empty:
-            return []
-
-        return df["label"].tolist()
+        return [row[0] for row in results]
 
     def get_summary(self, user_id: str) -> dict[str, Any]:
         """Get summary statistics for data points."""

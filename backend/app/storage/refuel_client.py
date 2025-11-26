@@ -5,21 +5,8 @@ DuckDB client for refuel metrics storage.
 from datetime import datetime
 from typing import Any
 
-import pandas as pd
-from pydantic import BaseModel
-
 from .duckdb_resource import BackendDuckDBResource
-
-
-class RefuelMetric(BaseModel):
-    """Refuel metric model"""
-
-    timestamp: datetime
-    price: float
-    amount: float
-    kilometers_since_last_refuel: float
-    estimated_fuel_consumption: float
-    notes: str | None = None
+from .models import RefuelMetric
 
 
 class RefuelDataClient:
@@ -65,27 +52,27 @@ class RefuelDataClient:
         if not metrics:
             return True
 
-        # Convert to DataFrame
-        rows = []
-        for metric in metrics:
-            rows.append(
-                {
-                    "timestamp": metric.timestamp,
-                    "user_id": user_id,
-                    "price": metric.price,
-                    "amount": metric.amount,
-                    "kilometers_since_last_refuel": metric.kilometers_since_last_refuel,
-                    "estimated_fuel_consumption": metric.estimated_fuel_consumption,
-                    "notes": metric.notes if metric.notes else None,
-                }
-            )
-
-        df = pd.DataFrame(rows)  # noqa: F841 DuckDB reads the value internally
-
         try:
             with self._duckdb.get_connection() as con:
-                con.execute("INSERT INTO refuel_metrics SELECT * FROM df")
+                for metric in metrics:
+                    con.execute(
+                        """
+                        INSERT INTO refuel_metrics (timestamp, user_id, price, amount,
+                        kilometers_since_last_refuel, estimated_fuel_consumption, notes)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        [
+                            metric.timestamp,
+                            user_id,
+                            metric.price,
+                            metric.amount,
+                            metric.kilometers_since_last_refuel,
+                            metric.estimated_fuel_consumption,
+                            metric.notes,
+                        ],
+                    )
             return True
+
         except Exception as e:
             print(f"Error adding refuel metrics: {e}")
             return False
@@ -115,23 +102,10 @@ class RefuelDataClient:
             query += f" LIMIT {limit}"
 
         with self._duckdb.get_connection() as con:
-            df = con.execute(query, params).df()
+            results = con.execute(query, params).fetchall()
+            columns = [desc[0] for desc in con.description]
 
-        if df.empty:
-            return []
-
-        records = df.to_dict(orient="records")
-        return [
-            RefuelMetric(
-                timestamp=record["timestamp"],
-                price=record["price"],
-                amount=record["amount"],
-                kilometers_since_last_refuel=record["kilometers_since_last_refuel"],
-                estimated_fuel_consumption=record["estimated_fuel_consumption"],
-                notes=record["notes"] if record["notes"] else None,
-            )
-            for record in records
-        ]
+        return [RefuelMetric(**dict(zip(columns, row))) for row in results]
 
     def delete_metric(self, user_id: str, timestamp: datetime) -> bool:
         """Delete a specific metric by timestamp."""
@@ -225,24 +199,21 @@ class RefuelDataClient:
 
         try:
             with self._duckdb.get_connection() as con:
-                df = con.execute(query, params).df()
-
-            if df.empty:
-                return []
+                results = con.execute(query, params).fetchall()
 
             trends = []
-            for _, row in df.iterrows():
+            for row in results:
                 trends.append(
                     {
-                        "date": row["date"].isoformat(),
-                        "timestamp": row["timestamp"],
-                        "price": row["price"],
-                        "amount": row["amount"],
-                        "total_cost": round(row["total_cost"], 2),
+                        "date": row[0].isoformat(),
+                        "timestamp": row[1],
+                        "price": row[2],
+                        "amount": row[3],
+                        "total_cost": round(row[4], 2),
                     }
                 )
-
             return trends
+
         except Exception as e:
             print(f"Error getting refuel price trends: {e}")
             return []
@@ -291,6 +262,7 @@ class RefuelDataClient:
                     "largest_fillup": 0.0,
                     "smallest_fillup": 0.0,
                 }
+
         except Exception as e:
             print(f"Error getting monthly summary: {e}")
             return {

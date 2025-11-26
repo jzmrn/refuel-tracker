@@ -216,6 +216,62 @@ export interface TimeSpanSummaryResponse {
   };
 }
 
+// Fuel Prices interfaces
+export interface GasStationSearchRequest {
+  lat: number;
+  lng: number;
+  rad: number;
+  fuel_type?: string;
+  sort_by?: string;
+}
+
+export interface GasStationResponse {
+  id: string;
+  name: string;
+  brand: string;
+  street: string;
+  house_number: string;
+  post_code: number;
+  place: string;
+  lat: number;
+  lng: number;
+  dist?: number;
+  price?: number;
+  diesel?: number;
+  e5?: number;
+  e10?: number;
+  is_open: boolean;
+}
+
+export interface FavoriteStationResponse {
+  user_id: string;
+  station_id: string;
+  timestamp: string;
+  name?: string;
+  brand?: string;
+  street?: string;
+  house_number?: string;
+  post_code?: number;
+  place?: string;
+  lat?: number;
+  lng?: number;
+  current_price_e5?: number;
+  current_price_e10?: number;
+  current_price_diesel?: number;
+  is_open?: boolean;
+}
+
+export interface FuelPricesSummaryResponse {
+  total_favorites: number;
+  stations_open: number;
+  lowest_e5_price?: number;
+  lowest_e10_price?: number;
+  lowest_diesel_price?: number;
+  average_e5_price?: number;
+  average_e10_price?: number;
+  average_diesel_price?: number;
+}
+
 class ApiService {
   private api = axios.create({
     baseURL: getApiBaseUrl(),
@@ -529,6 +585,34 @@ class ApiService {
 
   async getTimeSpanSummary(): Promise<TimeSpanSummaryResponse> {
     const response = await this.api.get("/api/time-spans/summary");
+    return response.data;
+  }
+
+  // Fuel Prices endpoints
+  async searchGasStations(
+    params: GasStationSearchRequest
+  ): Promise<GasStationResponse[]> {
+    const response = await this.api.post("/api/fuel-prices/search", params);
+    return response.data;
+  }
+
+  async addFavoriteStation(stationId: string): Promise<void> {
+    await this.api.post("/api/fuel-prices/favorites", {
+      station_id: stationId,
+    });
+  }
+
+  async getFavoriteStations(): Promise<FavoriteStationResponse[]> {
+    const response = await this.api.get("/api/fuel-prices/favorites");
+    return response.data;
+  }
+
+  async deleteFavoriteStation(stationId: string): Promise<void> {
+    await this.api.delete(`/api/fuel-prices/favorites/${stationId}`);
+  }
+
+  async getFuelPricesSummary(): Promise<FuelPricesSummaryResponse> {
+    const response = await this.api.get("/api/fuel-prices/summary");
     return response.data;
   }
 }

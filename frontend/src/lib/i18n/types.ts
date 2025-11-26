@@ -37,11 +37,13 @@ export interface TranslationStructure {
     refuel: string;
     dataTracking: string;
     timeSpans: string;
+    fuelPrices: string;
     settings: string;
     home: string;
     fuel: string;
     data: string;
     time: string;
+    prices: string;
   };
 
   // Layout
@@ -360,5 +362,67 @@ export interface TranslationStructure {
     welcome: string;
     recentActivity: string;
     quickStats: string;
+  };
+
+  // Fuel Prices
+  fuelPrices: {
+    title: string;
+    searchStations: string;
+    favorites: string;
+    statistics: string;
+    searchForStations: string;
+    searchDescription: string;
+    latitude: string;
+    longitude: string;
+    radius: string;
+    fuelType: string;
+    sortBy: string;
+    search: string;
+    useMyLocation: string;
+    e5: string;
+    e10: string;
+    diesel: string;
+    all: string;
+    price: string;
+    distance: string;
+    searchResults: string;
+    noResults: string;
+    searchForStationsNearby: string;
+    addToFavorites: string;
+    removeFromFavorites: string;
+    open: string;
+    closed: string;
+    myFavorites: string;
+    noFavorites: string;
+    addStationsToFavorites: string;
+    currentPrices: string;
+    stationAdded: string;
+    stationRemoved: string;
+    failedToSearch: string;
+    failedToAddFavorite: string;
+    failedToRemoveFavorite: string;
+    failedToLoadFavorites: string;
+    locationNotSupported: string;
+    locationPermissionDenied: string;
+    gettingLocation: string;
+    kmAway: string;
+    totalFavorites: string;
+    stationsOpen: string;
+    lowestE5: string;
+    lowestE10: string;
+    lowestDiesel: string;
+    avgE5: string;
+    avgE10: string;
+    avgDiesel: string;
+    priceComparison: string;
+    statisticsDescription: string;
+    radiusKm: string;
+    latitudeRequired: string;
+    longitudeRequired: string;
+    radiusRequired: string;
+    invalidCoordinates: string;
+    brand: string;
+    address: string;
+    currentPrice: string;
   };
 }

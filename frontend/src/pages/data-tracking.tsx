@@ -99,12 +99,7 @@ export default function DataTracking() {
       setRefreshTrigger((prev) => prev + 1);
 
       showSuccess(`${t.common.success}: ${t.dataTracking.dataPointAdded}`);
-
-      // Close mobile form and switch to values tab to show the newly added entry
       setIsMobileFormOpen(false);
-      setActiveTab("values");
-      // Set the selected label to the newly added point's label
-      setValuesSelectedLabel(pointData.label);
     } catch (error) {
       console.error("Error adding data point:", error);
       showError(`${t.common.error}: ${t.dataTracking.failedToAddDataPoint}`);

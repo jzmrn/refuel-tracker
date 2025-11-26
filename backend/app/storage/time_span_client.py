@@ -5,9 +5,8 @@ DuckDB client for time spans storage.
 from datetime import datetime
 from typing import Any
 
-import pandas as pd
-
 from .duckdb_resource import BackendDuckDBResource
+from .models import TimeSpan
 
 
 class TimeSpanClient:
@@ -62,8 +61,8 @@ class TimeSpanClient:
         self, start_date: datetime, end_date: datetime | None
     ) -> dict:
         """Calculate duration in days, hours, and minutes."""
-        if end_date is None or pd.isna(end_date):
-            # For ongoing spans (None or NaT), calculate duration up to now
+        if end_date is None:
+            # For ongoing spans, calculate duration up to now
             end_date = datetime.now()
 
         duration = end_date - start_date
@@ -89,29 +88,40 @@ class TimeSpanClient:
         user_id: str,
     ) -> dict[str, Any]:
         """Add a new time span and return the created record."""
-        # Generate ID based on timestamp and label hash
         span_id = f"{start_date.isoformat()}_{abs(hash(label))}"
         current_time = datetime.now()
 
-        df = pd.DataFrame(  # noqa: F841 DuckDB reads the value internally
-            [
-                {
-                    "id": span_id,
-                    "user_id": user_id,
-                    "start_date": start_date,
-                    "end_date": end_date,
-                    "label": label,
-                    "group": group,
-                    "notes": notes if notes else None,
-                    "created_at": current_time,
-                    "updated_at": current_time,
-                }
-            ]
+        time_span = TimeSpan(
+            id=span_id,
+            user_id=user_id,
+            start_date=start_date,
+            end_date=end_date,
+            label=label,
+            group=group,
+            notes=notes,
+            created_at=current_time,
+            updated_at=current_time,
         )
 
         try:
             with self._duckdb.get_connection() as con:
-                con.execute("INSERT INTO time_spans SELECT * FROM df")
+                con.execute(
+                    """
+                    INSERT INTO time_spans (id, user_id, start_date, end_date, label, "group", notes, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    [
+                        time_span.id,
+                        time_span.user_id,
+                        time_span.start_date,
+                        time_span.end_date,
+                        time_span.label,
+                        time_span.group,
+                        time_span.notes,
+                        time_span.created_at,
+                        time_span.updated_at,
+                    ],
+                )
 
             # Calculate duration if end_date is provided
             duration_info = {}
@@ -169,31 +179,19 @@ class TimeSpanClient:
             query += f" LIMIT {limit}"
 
         with self._duckdb.get_connection() as con:
-            df = con.execute(query, tuple(params)).df()
+            results = con.execute(query, tuple(params)).fetchall()
+            columns = [desc[0] for desc in con.description]
 
-        if df.empty:
-            return []
-
-        # Convert to list of dicts and add duration info
-        results = []
-        for record in df.to_dict(orient="records"):
-            # Convert pandas Timestamps to Python datetime objects
-            if hasattr(record["start_date"], "to_pydatetime"):
-                record["start_date"] = record["start_date"].to_pydatetime()
-
-            # Handle end_date - convert NaT to None, otherwise convert Timestamp
-            if pd.isna(record["end_date"]):
-                record["end_date"] = None
-            elif hasattr(record["end_date"], "to_pydatetime"):
-                record["end_date"] = record["end_date"].to_pydatetime()
-
-            # Calculate duration
+        # Convert to TimeSpan models and add duration info
+        time_spans = []
+        for row in results:
+            time_span = TimeSpan(**dict(zip(columns, row)))
             duration_info = self._calculate_duration(
-                record["start_date"], record["end_date"]
+                time_span.start_date, time_span.end_date
             )
-            results.append({**record, **duration_info})
+            time_spans.append({**time_span.model_dump(), **duration_info})
 
-        return results
+        return time_spans
 
     def delete_time_span(self, user_id: str, span_id: str) -> bool:
         """Delete a time span by ID."""
@@ -204,6 +202,7 @@ class TimeSpanClient:
                     (user_id, span_id),
                 )
                 return result.fetchone()[0] > 0
+
         except Exception as e:
             print(f"Error deleting time span: {e}")
             return False
@@ -254,12 +253,9 @@ class TimeSpanClient:
         """
 
         with self._duckdb.get_connection() as con:
-            df = con.execute(query, (user_id,)).df()
+            results = con.execute(query, (user_id,)).fetchall()
 
-        if df.empty:
-            return []
-
-        return df["label"].tolist()
+        return [row[0] for row in results]
 
     def get_existing_groups(self, user_id: str) -> list[str]:
         """Get all unique groups from existing time spans."""
@@ -271,12 +267,9 @@ class TimeSpanClient:
         """
 
         with self._duckdb.get_connection() as con:
-            df = con.execute(query, (user_id,)).df()
+            results = con.execute(query, (user_id,)).fetchall()
 
-        if df.empty:
-            return []
-
-        return df["group"].tolist()
+        return [row[0] for row in results]
 
     def get_summary_stats(self, user_id: str) -> dict:
         """Get summary statistics for time spans."""
@@ -347,6 +340,7 @@ class TimeSpanClient:
                         "max_minutes": None,
                     },
                 }
+
         except Exception as e:
             print(f"Error getting time span summary: {e}")
             return {

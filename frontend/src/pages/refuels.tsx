@@ -75,14 +75,11 @@ const RefuelPage: NextPage = () => {
       await apiService.createRefuelMetric(refuelData);
 
       showSuccess(t.refuels.refuelAddedSuccess);
+      setIsMobileFormOpen(false);
 
       // Refresh data
       await fetchRefuels();
       await fetchStatistics();
-
-      // Close mobile form and switch to entries tab to show the newly added entry
-      setIsMobileFormOpen(false);
-      setActiveTab("entries");
     } catch (err) {
       console.error("Error adding refuel entry:", err);
       showError(t.refuels.errorAddingRefuel);

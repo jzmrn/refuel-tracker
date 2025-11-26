@@ -2,11 +2,15 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+from dagster_duckdb import DuckDBResource
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fueldata.stations import FuelStationClient
+from tankerkoenig.client import TankerkoenigClient
 
 from app.api import (
     data_points,
+    fuel_prices,
     refuels,
     time_spans,
 )
@@ -44,6 +48,20 @@ async def lifespan(app: FastAPI):
     data_point_client = DataPointClient(duckdb_resource)
     time_span_client = TimeSpanClient(duckdb_resource)
 
+    tankerkoenig_api_key = os.getenv("TANKERKOENIG_API_KEY")
+    if not tankerkoenig_api_key:
+        print("WARNING: TANKERKOENIG_API_KEY not set")
+        tankerkoenig_client = None
+
+    tankerkoenig_client = TankerkoenigClient(tankerkoenig_api_key)
+
+    # Initialize FuelStationClient for favorites (uses fueldata.duckdb)
+    fuel_db_path = Path(data_path) / "fueldata.duckdb"
+
+    fuel_duckdb_resource = DuckDBResource(database=str(fuel_db_path))
+    fuel_station_client = FuelStationClient(fuel_duckdb_resource)
+    print(f"Fuel station client initialized at: {fuel_db_path}")
+
     print(f"DuckDB initialized at: {db_path}")
     print(f"Absolute path: {db_path.absolute()}")
 
@@ -53,6 +71,8 @@ async def lifespan(app: FastAPI):
     app.state.refuel_client = refuel_client
     app.state.data_point_client = data_point_client
     app.state.time_span_client = time_span_client
+    app.state.tankerkoenig_client = tankerkoenig_client
+    app.state.fuel_station_client = fuel_station_client
 
     yield
 
@@ -121,6 +141,7 @@ async def add_security_headers(request: Request, call_next):
 app.include_router(refuels.router, prefix="/api/metrics", tags=["metrics"])
 app.include_router(data_points.router, prefix="/api", tags=["data-points"])
 app.include_router(time_spans.router, prefix="/api", tags=["time-spans"])
+app.include_router(fuel_prices.router, prefix="/api/fuel-prices", tags=["fuel-prices"])
 
 
 @app.get("/")

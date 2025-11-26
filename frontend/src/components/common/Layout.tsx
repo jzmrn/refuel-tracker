@@ -13,7 +13,7 @@ export default function Layout({ children }: LayoutProps) {
   const router = useRouter();
   const { t } = useTranslation();
 
-  const mainNavigation = [
+  const desktopExclusive = [
     {
       name: t.navigation.dashboard,
       href: "/",
@@ -40,6 +40,9 @@ export default function Layout({ children }: LayoutProps) {
         </svg>
       ),
     },
+  ];
+
+  const mainNavigation = [
     {
       name: t.navigation.refuel,
       href: "/refuels",
@@ -100,6 +103,26 @@ export default function Layout({ children }: LayoutProps) {
         </svg>
       ),
     },
+    {
+      name: t.navigation.fuelPrices,
+      href: "/fuel-prices",
+      shortName: t.navigation.prices,
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      ),
+    },
   ];
 
   const bottomNavigation = [
@@ -131,7 +154,8 @@ export default function Layout({ children }: LayoutProps) {
     },
   ];
 
-  const allNavigation = [...mainNavigation, ...bottomNavigation];
+  const desktopNavigation = [...desktopExclusive, ...mainNavigation];
+  const mobileNavigation = [...mainNavigation, ...bottomNavigation];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:flex">
@@ -149,7 +173,7 @@ export default function Layout({ children }: LayoutProps) {
         {/* Main Navigation */}
         <nav className="flex-1 px-3">
           <ul className="space-y-1">
-            {mainNavigation.map((item) => {
+            {desktopNavigation.map((item) => {
               const isActive = router.pathname === item.href;
               return (
                 <li key={item.name}>
@@ -217,7 +241,7 @@ export default function Layout({ children }: LayoutProps) {
       {/* Mobile Bottom Navigation - Visible only on mobile */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-2 py-1">
         <nav className="flex justify-around">
-          {allNavigation.map((item) => {
+          {mobileNavigation.map((item) => {
             const isActive = router.pathname === item.href;
             return (
               <Link

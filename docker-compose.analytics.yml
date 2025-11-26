@@ -14,7 +14,7 @@ services:
 
   dagster:
     build:
-      context: .
+      context: . # Use the root context to access python packages stored in /lib
       dockerfile: analytics/Dockerfile
     expose:
       - "3000"

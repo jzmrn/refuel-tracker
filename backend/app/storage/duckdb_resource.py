@@ -8,6 +8,7 @@ but without the full Dagster dependency for use in FastAPI.
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
+from threading import Lock
 
 import duckdb
 
@@ -23,17 +24,22 @@ class BackendDuckDBResource:
             database_path: Path to the DuckDB database file
         """
         self.database_path = str(database_path)
+        self._lock = Lock()
 
     @contextmanager
     def get_connection(self) -> Generator[duckdb.DuckDBPyConnection, None, None]:
         """
         Get a connection to the DuckDB database.
 
+        Uses a lock to ensure only one connection is active at a time,
+        preventing transaction conflicts in concurrent requests.
+
         Yields:
             A DuckDB connection object
         """
-        conn = duckdb.connect(self.database_path)
-        try:
-            yield conn
-        finally:
-            conn.close()
+        with self._lock:
+            conn = duckdb.connect(self.database_path)
+            try:
+                yield conn
+            finally:
+                conn.close()

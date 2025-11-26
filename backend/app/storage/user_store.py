@@ -3,8 +3,6 @@
 import logging
 from datetime import UTC, datetime
 
-import pandas as pd
-
 from ..models import User, UserCreate
 from .duckdb_resource import BackendDuckDBResource
 
@@ -47,52 +45,70 @@ class UserStore:
         """Create or update a user in the database"""
 
         now = datetime.now(UTC)
-        if existing_user := self.get_user(user_data.id):
-            df = pd.DataFrame(
-                [
-                    User(
-                        id=user_data.id,
-                        email=user_data.email,
-                        name=user_data.name,
-                        picture_url=user_data.picture_url
-                        if user_data.picture_url
-                        else existing_user.picture_url,
-                        created_at=existing_user.created_at,
-                        last_login=now,
-                    ).model_dump()
-                ]
+        existing_user = self.get_user(user_data.id)
+        if existing_user:
+            updated_user = User(
+                id=user_data.id,
+                email=user_data.email,
+                name=user_data.name,
+                picture_url=user_data.picture_url
+                if user_data.picture_url
+                else existing_user.picture_url,
+                created_at=existing_user.created_at,
+                last_login=now,
             )
 
             try:
                 with self._duckdb.get_connection() as con:
-                    # Delete then insert (UPSERT pattern for DuckDB)
-                    con.execute("DELETE FROM users WHERE id = ?", [user_data.id])
-                    con.execute("INSERT INTO users SELECT * FROM df")
-                    result = self.get_user(user_data.id)
-                return result
+                    con.execute(
+                        """
+                        UPDATE users
+                        SET email = ?, name = ?, picture_url = ?, last_login = ?
+                        WHERE id = ?
+                        """,
+                        [
+                            updated_user.email,
+                            updated_user.name,
+                            updated_user.picture_url,
+                            updated_user.last_login,
+                            updated_user.id,
+                        ],
+                    )
+                # Connection closes here
+                return self.get_user(user_data.id)
+
             except Exception as e:
                 logger.error(f"Error updating user: {e}")
                 raise Exception("Failed to update user")
 
         else:
-            df = pd.DataFrame(  # noqa: F841 DuckDB reads the value internally
-                [
-                    User(
-                        id=user_data.id,
-                        email=user_data.email,
-                        name=user_data.name,
-                        picture_url=user_data.picture_url,
-                        created_at=now,
-                        last_login=now,
-                    ).model_dump()
-                ]
+            new_user = User(
+                id=user_data.id,
+                email=user_data.email,
+                name=user_data.name,
+                picture_url=user_data.picture_url,
+                created_at=now,
+                last_login=now,
             )
 
             try:
                 with self._duckdb.get_connection() as con:
-                    con.execute("INSERT INTO users SELECT * FROM df")
-                    result = self.get_user(user_data.id)
-                return result
+                    con.execute(
+                        """
+                        INSERT INTO users (id, email, name, picture_url, created_at, last_login)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                        """,
+                        [
+                            new_user.id,
+                            new_user.email,
+                            new_user.name,
+                            new_user.picture_url,
+                            new_user.created_at,
+                            new_user.last_login,
+                        ],
+                    )
+                # Connection closes here
+                return self.get_user(user_data.id)
             except Exception as e:
                 logger.error(f"Error creating user: {e}")
                 raise Exception("Failed to create user")
@@ -102,13 +118,16 @@ class UserStore:
 
         try:
             with self._duckdb.get_connection() as con:
-                df = con.execute("SELECT * FROM users WHERE id = ?", [user_id]).df()
+                result = con.execute(
+                    "SELECT * FROM users WHERE id = ?", [user_id]
+                ).fetchone()
+                columns = [desc[0] for desc in con.description]
 
-            if df.empty:
+            if not result:
                 return None
 
-            user = df.iloc[0].to_dict()
-            return User.from_dict(user)
+            user_dict = dict(zip(columns, result))
+            return User.from_dict(user_dict)
 
         except Exception as e:
             logger.error(f"Error getting user: {e}")
@@ -119,13 +138,16 @@ class UserStore:
 
         try:
             with self._duckdb.get_connection() as con:
-                df = con.execute("SELECT * FROM users WHERE email = ?", [email]).df()
+                result = con.execute(
+                    "SELECT * FROM users WHERE email = ?", [email]
+                ).fetchone()
+                columns = [desc[0] for desc in con.description]
 
-            if df.empty:
+            if not result:
                 return None
 
-            user = df.iloc[0].to_dict()
-            return User.from_dict(user)
+            user_dict = dict(zip(columns, result))
+            return User.from_dict(user_dict)
 
         except Exception as e:
             logger.error(f"Error getting user by email: {e}")
@@ -137,23 +159,13 @@ class UserStore:
 
         try:
             with self._duckdb.get_connection() as con:
-                df = con.execute(query).df()
-
-            if df.empty:
-                return []
+                results = con.execute(query).fetchall()
+                columns = [desc[0] for desc in con.description]
 
             users = []
-            for _, row in df.iterrows():
-                users.append(
-                    User(
-                        id=row["id"],
-                        email=row["email"],
-                        name=row["name"],
-                        picture_url=row["picture_url"],
-                        created_at=row["created_at"],
-                        last_login=row["last_login"],
-                    )
-                )
+            for row in results:
+                user_dict = dict(zip(columns, row))
+                users.append(User.from_dict(user_dict))
             return users
         except Exception as e:
             logger.error(f"Error listing users: {e}")

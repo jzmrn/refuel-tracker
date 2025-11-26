@@ -56,8 +56,8 @@ async def get_data_points(
     limit: int | None = Query(None, description="Limit number of results"),
 ):
     """Get data points with optional filtering"""
+
     try:
-        # Parse dates
         start_dt = (
             datetime.fromisoformat(start_date.replace("Z", "+00:00"))
             if start_date
@@ -69,27 +69,13 @@ async def get_data_points(
             else None
         )
 
-        rows = client.get_data_points(
-            user.id, start_date=start_dt, end_date=end_dt, label=label, limit=limit
+        return client.get_data_points(
+            user.id,
+            start_date=start_dt,
+            end_date=end_dt,
+            label=label,
+            limit=limit,
         )
-
-        # Convert to response models
-        results = []
-        for row in rows:
-            results.append(
-                DataPointResponse(
-                    id=str(row["id"]),
-                    user_id=str(row["user_id"]),
-                    timestamp=row["timestamp"],
-                    value=float(row["value"]),
-                    label=str(row["label"]),
-                    notes=str(row["notes"])
-                    if row["notes"] and row["notes"] != ""
-                    else None,
-                )
-            )
-
-        return results
 
     except Exception as e:
         raise HTTPException(
@@ -104,6 +90,7 @@ async def delete_data_point(
     client: DataPointClient = Depends(get_data_point_client),
 ):
     """Delete a data point by ID"""
+
     try:
         success = client.delete_data_point(user.id, point_id)
 
