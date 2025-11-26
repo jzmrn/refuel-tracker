@@ -16,9 +16,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: docker-release
-    outputs:
-      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
-      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
+    strategy:
+      matrix:
+        include:
+          - name: dagster
+            context: .
+            dockerfile: ./analytics/Dockerfile
+            image: jzmrn/data-tracker-dagster
+          - name: backend
+            context: .
+            dockerfile: ./backend/Dockerfile
+            image: jzmrn/data-tracker-backend
+          - name: frontend
+            context: ./frontend
+            dockerfile: ./frontend/Dockerfile
+            image: jzmrn/data-tracker-frontend
 
     steps:
       - uses: actions/checkout@v3
@@ -26,82 +38,72 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Dagster image
+      - name: Build ${{ matrix.name }} image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./analytics/Dockerfile
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
           push: false
-          tags: jzmrn/data-tracker-dagster:temp
+          tags: ${{ matrix.image }}:temp
           platforms: linux/amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          outputs: type=docker,dest=/tmp/dagster-image.tar
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          outputs: type=docker,dest=/tmp/${{ matrix.name }}-image.tar
 
-      - name: Build Backend image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./backend/Dockerfile
-          push: false
-          tags: jzmrn/data-tracker-backend:temp
-          platforms: linux/amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          outputs: type=docker,dest=/tmp/backend-image.tar
-
-      - name: Build Frontend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          push: false
-          tags: jzmrn/data-tracker-frontend:temp
-          platforms: linux/amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          outputs: type=docker,dest=/tmp/frontend-image.tar
-
-      - name: Upload Docker images as artifacts
+      - name: Upload ${{ matrix.name }} image as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: docker-images
-          path: /tmp/*.tar
+          name: docker-image-${{ matrix.name }}
+          path: /tmp/${{ matrix.name }}-image.tar
           retention-days: 1
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    environment: docker-release
+    outputs:
+      new_release_published: ${{ steps.release.outputs.new_release_published }}
+      new_release_version: ${{ steps.release.outputs.new_release_version }}
+      new_release_major_version: ${{ steps.release.outputs.new_release_major_version }}
+
+    steps:
+      - uses: actions/checkout@v3
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v3.8.1
         with:
           node-version: 20.x
 
-      - name: Install dependencies
-        run: |
-          npm install --save-dev semantic-release@22
-          npm run
-
-      - name: Run semantic-release
-        id: semantic
-        run: npx semantic-release
+      - name: Semantic Release
+        id: release
+        uses: cycjimmy/semantic-release-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   push-images:
     runs-on: ubuntu-latest
-    needs: build
-    if: needs.build.outputs.new_release_published == 'true'
+    needs: [build, release]
+    if: needs.release.outputs.new_release_published == 'true'
     environment: docker-release
+    strategy:
+      matrix:
+        include:
+          - name: dagster
+            image: jzmrn/data-tracker-dagster
+          - name: backend
+            image: jzmrn/data-tracker-backend
+          - name: frontend
+            image: jzmrn/data-tracker-frontend
 
     steps:
-      - name: Download Docker images
+      - name: Download ${{ matrix.name }} image
         uses: actions/download-artifact@v4
         with:
-          name: docker-images
+          name: docker-image-${{ matrix.name }}
           path: /tmp
 
-      - name: Load Docker images
-        run: |
-          docker load --input /tmp/dagster-image.tar
-          docker load --input /tmp/backend-image.tar
-          docker load --input /tmp/frontend-image.tar
+      - name: Load ${{ matrix.name }} image
+        run: docker load --input /tmp/${{ matrix.name }}-image.tar
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -109,23 +111,11 @@ jobs:
           username: ${{ vars.DOCKER_REGISTRY_USER }}
           password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
 
-      - name: Tag and push Dagster image
+      - name: Tag and push ${{ matrix.name }} image
         run: |
-          docker tag jzmrn/data-tracker-dagster:temp jzmrn/data-tracker-dagster:${{ needs.build.outputs.new_release_version }}
-          docker tag jzmrn/data-tracker-dagster:temp jzmrn/data-tracker-dagster:latest
-          docker push jzmrn/data-tracker-dagster:${{ needs.build.outputs.new_release_version }}
-          docker push jzmrn/data-tracker-dagster:latest
-
-      - name: Tag and push Backend image
-        run: |
-          docker tag jzmrn/data-tracker-backend:temp jzmrn/data-tracker-backend:${{ needs.build.outputs.new_release_version }}
-          docker tag jzmrn/data-tracker-backend:temp jzmrn/data-tracker-backend:latest
-          docker push jzmrn/data-tracker-backend:${{ needs.build.outputs.new_release_version }}
-          docker push jzmrn/data-tracker-backend:latest
-
-      - name: Tag and push Frontend image
-        run: |
-          docker tag jzmrn/data-tracker-frontend:temp jzmrn/data-tracker-frontend:${{ needs.build.outputs.new_release_version }}
-          docker tag jzmrn/data-tracker-frontend:temp jzmrn/data-tracker-frontend:latest
-          docker push jzmrn/data-tracker-frontend:${{ needs.build.outputs.new_release_version }}
-          docker push jzmrn/data-tracker-frontend:latest
+          docker tag ${{ matrix.image }}:temp ${{ matrix.image }}:${{ needs.release.outputs.new_release_version }}
+          docker tag ${{ matrix.image }}:temp ${{ matrix.image }}:${{ needs.release.outputs.new_release_major_version }}-latest
+          docker tag ${{ matrix.image }}:temp ${{ matrix.image }}:latest
+          docker push ${{ matrix.image }}:${{ needs.release.outputs.new_release_version }}
+          docker push ${{ matrix.image }}:${{ needs.release.outputs.new_release_major_version }}-latest
+          docker push ${{ matrix.image }}:latest
