@@ -41,8 +41,7 @@ jobs:
           npm install --save-dev \
             @semantic-release/changelog \
             @codedependant/semantic-release-docker \
-            semantic-release@22 \
-            @semantic-release/github
+            semantic-release@22
 
           npm run
 
