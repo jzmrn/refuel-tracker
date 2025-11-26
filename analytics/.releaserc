@@ -7,7 +7,7 @@ plugins:
   - "@semantic-release/commit-analyzer"
   - "@semantic-release/changelog"
   - "@semantic-release/release-notes-generator"
-  - "@semantic-release/git"
+  - "@semantic-release/github"
   - - "@codedependant/semantic-release-docker"
     - dockerImage: jzmrn/data-tracker-dagster
       dockerFile: analytics/Dockerfile

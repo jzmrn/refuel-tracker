@@ -20,7 +20,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: dagster
+    environment: release-docker
 
     steps:
       - uses: actions/checkout@v3
@@ -42,7 +42,7 @@ jobs:
             @semantic-release/changelog \
             @codedependant/semantic-release-docker \
             semantic-release@22 \
-            @semantic-release/git
+            @semantic-release/github
 
           npm run
 
