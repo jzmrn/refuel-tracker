@@ -20,7 +20,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: release-docker
+    environment: docker-release
 
     steps:
       - uses: actions/checkout@v3
