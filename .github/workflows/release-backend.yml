@@ -1,0 +1,55 @@
+name: Release Backend
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - "lib/tankerkoenig/**"
+      - "lib/metrics/**"
+      - ".github/workflows/release-backend.yml"
+
+permissions:
+  contents: write
+  packages: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: release-docker
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3.8.1
+        with:
+          node-version: 20.x
+
+      - name: Install yarn
+        run: npm install --global yarn
+
+      - name: Move release config
+        run: cp backend/.releaserc .releaserc
+
+      - name: Install dependencies
+        run: |
+          npm install --save-dev \
+            @semantic-release/changelog \
+            @codedependant/semantic-release-docker \
+            semantic-release@22 \
+            @semantic-release/github
+
+          npm run
+
+      - name: Release
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCKER_REGISTRY_USER: ${{ vars.DOCKER_REGISTRY_USER }}
+          DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+        working-directory: . # Cannot use ./backend here as the Dockerfile uses /lib

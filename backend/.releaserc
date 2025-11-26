@@ -1,0 +1,15 @@
+# NOTE: During the release workflow, this file is moved to the repository root
+# as semantic release runs with the context of the repository root
+branches:
+  - main
+tagFormat: backend-v${version}
+plugins:
+  - "@semantic-release/commit-analyzer"
+  - "@semantic-release/changelog"
+  - "@semantic-release/release-notes-generator"
+  - "@semantic-release/github"
+  - - "@codedependant/semantic-release-docker"
+    - dockerImage: jzmrn/data-tracker-backend
+      dockerFile: backend/Dockerfile
+      dockerBuildFlags:
+        platform: linux/amd64
