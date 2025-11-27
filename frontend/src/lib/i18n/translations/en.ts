@@ -434,5 +434,6 @@ export const en: TranslationStructure = {
     brand: "Brand",
     address: "Address",
     currentPrice: "Current Price",
+    showOpenOnly: "Show open stations only",
   },
 };

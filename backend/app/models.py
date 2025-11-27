@@ -355,6 +355,7 @@ class GasStationSearchRequest(BaseModel):
     sort_by: str = Field(
         default="dist", description="Sort by: 'price' or 'dist' (distance)"
     )
+    open_only: bool = Field(default=True, description="Filter for open stations only")
 
 
 class GasStationResponse(BaseModel):

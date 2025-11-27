@@ -83,7 +83,7 @@ export default function StationCard({
       <div className="flex items-start justify-between gap-4">
         {/* Left: Price */}
         <div className="flex-shrink-0 text-center">
-          {displayPrice !== undefined && displayPrice !== null ? (
+          {isOpen && displayPrice !== undefined && displayPrice !== null ? (
             <>
               <div className="text-2xl md:text-3xl font-bold text-primary">
                 {renderPrice(displayPrice, "text-sm md:text-lg")}
@@ -128,7 +128,7 @@ export default function StationCard({
             <div className="mt-2 md:mt-3 flex md:grid md:grid-cols-3 gap-2 md:gap-2 text-xs flex-wrap">
               {priceE5 && (
                 <div>
-                  <span className="text-secondary md:block">
+                  <span className="text-secondary block lg:inline">
                     {t.fuelPrices.e5}
                     {isGasStation(station) && ": "}
                   </span>
@@ -139,7 +139,7 @@ export default function StationCard({
               )}
               {priceE10 && (
                 <div>
-                  <span className="text-secondary md:block">
+                  <span className="text-secondary block lg:inline">
                     {t.fuelPrices.e10}
                     {isGasStation(station) && ": "}
                   </span>
@@ -150,9 +150,11 @@ export default function StationCard({
               )}
               {priceDiesel && (
                 <div>
-                  <span className="text-secondary md:block">
+                  <span className="text-secondary block lg:inline">
                     {t.fuelPrices.diesel}
                     {isGasStation(station) && ": "}
+                  </span>
+                  <span className="font-semibold">
                     {renderPrice(priceDiesel)} €
                   </span>
                 </div>

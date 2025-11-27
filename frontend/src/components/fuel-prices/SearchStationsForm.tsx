@@ -18,6 +18,7 @@ export default function SearchStationsForm({
   const [radius, setRadius] = useState("10");
   const [fuelType, setFuelType] = useState("all");
   const [sortBy, setSortBy] = useState("dist");
+  const [openOnly, setOpenOnly] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
 
@@ -85,6 +86,7 @@ export default function SearchStationsForm({
         rad,
         fuel_type: fuelType,
         sort_by: sortBy,
+        open_only: openOnly,
       };
 
       const results = await apiService.searchGasStations(searchParams);
@@ -176,7 +178,7 @@ export default function SearchStationsForm({
       </div>
 
       {/* Search Parameters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="field-group">
           <label htmlFor="fuelType" className="label">
             {t.fuelPrices.fuelType}
@@ -207,6 +209,21 @@ export default function SearchStationsForm({
             <option value="dist">{t.fuelPrices.distance}</option>
             <option value="price">{t.fuelPrices.price}</option>
           </select>
+        </div>
+
+        {/* Open Only Filter */}
+        <div className="field-group">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={openOnly}
+              onChange={(e) => setOpenOnly(e.target.checked)}
+              className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:focus:ring-primary dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t.fuelPrices.showOpenOnly}
+            </span>
+          </label>
         </div>
       </div>
     </StandardForm>

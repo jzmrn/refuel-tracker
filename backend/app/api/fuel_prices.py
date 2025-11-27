@@ -61,6 +61,10 @@ async def search_gas_stations(
         # Convert to response models
         result = []
         for station in stations:
+            # Filter for open stations only if requested
+            if search_params.open_only and not station.isOpen:
+                continue
+
             response = GasStationResponse(
                 id=station.id,
                 name=station.name,

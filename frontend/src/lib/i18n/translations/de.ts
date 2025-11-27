@@ -451,5 +451,6 @@ export const de: TranslationStructure = {
     brand: "Marke",
     address: "Adresse",
     currentPrice: "Aktueller Preis",
+    showOpenOnly: "Nur geöffnete Tankstellen anzeigen",
   },
 };

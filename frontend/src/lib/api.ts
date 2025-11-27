@@ -223,6 +223,7 @@ export interface GasStationSearchRequest {
   rad: number;
   fuel_type?: string;
   sort_by?: string;
+  open_only?: boolean;
 }
 
 export interface GasStationResponse {

@@ -431,5 +431,6 @@ export interface TranslationStructure {
     brand: string;
     address: string;
     currentPrice: string;
+    showOpenOnly: string;
   };
 }
