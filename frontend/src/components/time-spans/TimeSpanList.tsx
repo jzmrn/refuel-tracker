@@ -31,7 +31,12 @@ export default function TimeSpanList({
 }: TimeSpanListProps) {
   const { t } = useTranslation();
   if (loading) {
-    return <LoadingSpinner text={t.timeSpans.loadingTimeSpans} />;
+    return (
+      <div className="panel">
+        <h3 className="heading-3 mb-4">{t.timeSpans.title}</h3>
+        <LoadingSpinner text={t.timeSpans.loadingTimeSpans} />
+      </div>
+    );
   }
 
   if (!timeSpans || timeSpans.length === 0) {

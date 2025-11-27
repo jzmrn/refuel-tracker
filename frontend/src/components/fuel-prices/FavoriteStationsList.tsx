@@ -2,6 +2,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { FavoriteStationResponse } from "@/lib/api";
 import EmptyState from "@/components/common/EmptyState";
 import StationCard from "./StationCard";
+import { LoadingSpinner } from "../common";
 
 interface FavoriteStationsListProps {
   favorites: FavoriteStationResponse[];
@@ -17,12 +18,7 @@ export default function FavoriteStationsList({
   const { t } = useTranslation();
 
   if (loading) {
-    return (
-      <div className="loading-spinner-container">
-        <div className="loading-spinner"></div>
-        <p className="text-secondary mt-2">{t.common.loading}</p>
-      </div>
-    );
+    return <LoadingSpinner text={t.common.loading} />;
   }
 
   if (favorites.length === 0) {

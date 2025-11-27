@@ -94,7 +94,7 @@ export default function RefuelStats({
 
       {/* Charts Panel */}
       <div className="panel">
-        <h3 className="heading-3 mb-4">{t.refuels.priceTrendsOverTime}</h3>
+        <h3 className="heading-3 mb-4">{t.refuels.statistics}</h3>
 
         {/* Price Chart */}
         <RefuelPriceChart priceData={statistics.price_trends} />

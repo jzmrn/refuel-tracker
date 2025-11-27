@@ -1,6 +1,6 @@
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import EmptyState from "@/components/common/EmptyState";
-import { ChartIcon } from "../common";
+import { ChartIcon, LoadingSpinner } from "../common";
 
 interface PriceStatisticsProps {
   loading: boolean;
@@ -11,9 +11,8 @@ export default function PriceStatistics({ loading }: PriceStatisticsProps) {
 
   if (loading) {
     return (
-      <div className="loading-spinner-container">
-        <div className="loading-spinner"></div>
-        <p className="text-secondary mt-2">{t.common.loading}</p>
+      <div className="panel">
+        <LoadingSpinner text={t.common.loading} />
       </div>
     );
   }

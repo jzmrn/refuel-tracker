@@ -23,7 +23,12 @@ export default function DataPointList({
   const { t } = useTranslation();
 
   if (loading) {
-    return <LoadingSpinner text={t.dataTracking.loadingDataPoints} />;
+    return (
+      <div className="panel">
+        <h3 className="heading-3 mb-4">{t.dataTracking.title}</h3>
+        <LoadingSpinner text={t.dataTracking.loadingDataPoints} />
+      </div>
+    );
   }
 
   if (dataPoints.length === 0) {
