@@ -54,6 +54,9 @@ class UserStore:
                 picture_url=user_data.picture_url
                 if user_data.picture_url
                 else existing_user.picture_url,
+                picture_base64=user_data.picture_base64
+                if user_data.picture_base64
+                else existing_user.picture_base64,
                 created_at=existing_user.created_at,
                 last_login=now,
             )
@@ -63,13 +66,14 @@ class UserStore:
                     con.execute(
                         """
                         UPDATE users
-                        SET email = ?, name = ?, picture_url = ?, last_login = ?
+                        SET email = ?, name = ?, picture_url = ?, picture_base64 = ?, last_login = ?
                         WHERE id = ?
                         """,
                         [
                             updated_user.email,
                             updated_user.name,
                             updated_user.picture_url,
+                            updated_user.picture_base64,
                             updated_user.last_login,
                             updated_user.id,
                         ],
@@ -87,6 +91,7 @@ class UserStore:
                 email=user_data.email,
                 name=user_data.name,
                 picture_url=user_data.picture_url,
+                picture_base64=user_data.picture_base64,
                 created_at=now,
                 last_login=now,
             )
@@ -95,14 +100,15 @@ class UserStore:
                 with self._duckdb.get_connection() as con:
                     con.execute(
                         """
-                        INSERT INTO users (id, email, name, picture_url, created_at, last_login)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        INSERT INTO users (id, email, name, picture_url, picture_base64, created_at, last_login)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
                         """,
                         [
                             new_user.id,
                             new_user.email,
                             new_user.name,
                             new_user.picture_url,
+                            new_user.picture_base64,
                             new_user.created_at,
                             new_user.last_login,
                         ],

@@ -2,9 +2,12 @@
 Authentication using Google OAuth2 token validation
 """
 
+import base64
+import logging
 import os
 from typing import Annotated
 
+import httpx
 from fastapi import Depends, HTTPException, Request, status
 from google.auth.transport import requests
 from google.oauth2 import id_token
@@ -12,8 +15,42 @@ from google.oauth2 import id_token
 from .models import User, UserCreate
 from .storage.user_store import UserStore
 
+logger = logging.getLogger(__name__)
 
-def get_user_info_from_id_token(request: Request) -> User:
+
+async def fetch_and_encode_picture(picture_url: str | None) -> str | None:
+    """
+    Fetch profile picture from URL and encode it as base64.
+
+    Args:
+        picture_url: URL of the profile picture
+
+    Returns:
+        Base64 encoded image string with data URI prefix, or None if fetch fails
+    """
+    if not picture_url:
+        return None
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(picture_url)
+            response.raise_for_status()
+
+            # Get content type to include in data URI
+            content_type = response.headers.get("content-type", "image/jpeg")
+
+            # Encode image as base64
+            image_base64 = base64.b64encode(response.content).decode("utf-8")
+
+            # Return as data URI
+            return f"data:{content_type};base64,{image_base64}"
+
+    except Exception as e:
+        logger.warning(f"Failed to fetch profile picture from {picture_url}: {e}")
+        return None
+
+
+async def get_user_info_from_id_token(request: Request) -> User:
     """Extract and validate user ID from Google OAuth2 token"""
 
     token = request.cookies.get("IdToken")
@@ -55,11 +92,16 @@ def get_user_info_from_id_token(request: Request) -> User:
 
     user_store: UserStore = request.app.state.user_store
 
+    # Fetch and encode profile picture on every sign in
+    picture_url = idinfo.get("picture")
+    picture_base64 = await fetch_and_encode_picture(picture_url)
+
     user_create = UserCreate(
         id=user_id,
         email=email,
         name=name,
-        picture_url=idinfo.get("picture"),
+        picture_url=picture_url,
+        picture_base64=picture_base64,
     )
 
     try:

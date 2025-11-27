@@ -14,6 +14,7 @@ dependencies = [
     "google-api-python-client>=2.187.0",
     "duckdb>=0.9.0",
     "pandas>=2.0.0",
+    "httpx>=0.25.0",
     "tankerkoenig-client @ {root:uri}/../lib/tankerkoenig",
     "metrics @ {root:uri}/../lib/metrics"
 ]

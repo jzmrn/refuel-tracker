@@ -15,6 +15,7 @@ from app.api import (
     time_spans,
 )
 from app.auth import CurrentUser
+from app.migrations import run_migrations
 from app.storage.data_point_client import DataPointClient
 from app.storage.duckdb_resource import BackendDuckDBResource
 from app.storage.refuel_client import RefuelDataClient
@@ -41,6 +42,9 @@ async def lifespan(app: FastAPI):
 
     db_path = Path(data_path) / "userdata.duckdb"
     duckdb_resource = BackendDuckDBResource(db_path)
+
+    # Run database migrations
+    run_migrations(db_path)
 
     # Initialize clients (they create tables on instantiation)
     user_store = UserStore(duckdb_resource)
@@ -173,7 +177,7 @@ async def get_current_user_info(user: CurrentUser):
         "id": user.id,
         "email": user.email,
         "name": user.name,
-        "picture": user.picture_url,
+        "picture": user.picture_base64 if user.picture_base64 else user.picture_url,
     }
 
 

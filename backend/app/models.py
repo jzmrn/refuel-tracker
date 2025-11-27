@@ -10,6 +10,9 @@ class User(BaseModel):
     email: str = Field(..., description="User email from Google")
     name: str = Field(..., description="User display name")
     picture_url: str | None = Field(None, description="User profile picture URL")
+    picture_base64: str | None = Field(
+        None, description="User profile picture as base64 encoded string"
+    )
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_login: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
@@ -20,6 +23,7 @@ class User(BaseModel):
             email=data["email"],
             name=data["name"],
             picture_url=data.get("picture_url"),
+            picture_base64=data.get("picture_base64"),
             created_at=data.get("created_at", datetime.now(UTC)),
             last_login=data.get("last_login", datetime.now(UTC)),
         )
@@ -32,6 +36,7 @@ class UserCreate(BaseModel):
     email: str
     name: str
     picture_url: str | None = None
+    picture_base64: str | None = None
 
 
 class Transaction(BaseModel):
