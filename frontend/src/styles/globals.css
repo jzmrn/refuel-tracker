@@ -334,7 +334,7 @@
 
   /* Tab Navigation Styles */
   .tab-container {
-    @apply mb-8 hidden md:block;
+    @apply mb-8 hidden lg:block;
   }
 
   .tab-border {

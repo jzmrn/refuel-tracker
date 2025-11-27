@@ -127,16 +127,13 @@ export default function DataTracking() {
 
   // Reusable component functions
   const renderSummaryCards = (
-    gridCols: string = "grid-cols-1 md:grid-cols-2",
-    isMobile: boolean = false,
+    gridCols: string = "grid-cols-1 lg:grid-cols-2",
   ) => (
     <div className={`grid ${gridCols} gap-6 mb-8`}>
       <SummaryCard
-        title={isMobile ? t.common.labels : t.dataTracking.uniqueLabels}
+        title={t.dataTracking.uniqueLabels}
         value={{
-          value: isMobile
-            ? summary?.unique_labels?.toString() || "0"
-            : summary?.unique_labels || 0,
+          value: summary?.unique_labels || 0,
         }}
         loading={loading}
         iconBgColor="purple"
@@ -144,11 +141,9 @@ export default function DataTracking() {
       />
 
       <SummaryCard
-        title={isMobile ? t.common.entries : t.dataTracking.totalEntries}
+        title={t.dataTracking.totalEntries}
         value={{
-          value: isMobile
-            ? summary?.total_entries?.toString() || "0"
-            : summary?.total_entries || 0,
+          value: summary?.total_entries || 0,
         }}
         loading={loading}
         iconBgColor="blue"
@@ -291,7 +286,7 @@ export default function DataTracking() {
           </p>
         </div>
       </div>
-      {/* Desktop Tab Navigation - Hidden on mobile */}
+      {/* Desktop Tab Navigation - Hidden on mobile and md, shown from lg onwards */}
       <div className="tab-container">
         <div className="tab-border">
           <nav className="tab-nav" aria-label="Tabs">
@@ -312,12 +307,12 @@ export default function DataTracking() {
           </nav>
         </div>
       </div>
-      {/* Desktop Tab Content */}
-      <div className="min-h-[400px] hidden md:block">{renderTabContent()}</div>
-      {/* Mobile Unified View - Visible only on mobile */}
-      <div className="md:hidden space-y-6">
+      {/* Desktop Tab Content - Only shown from lg onwards */}
+      <div className="min-h-[400px] hidden lg:block">{renderTabContent()}</div>
+      {/* Mobile/Tablet Unified View - Visible on mobile and md, hidden from lg onwards */}
+      <div className="lg:hidden space-y-6">
         {/* Summary Cards */}
-        {renderSummaryCards("grid-cols-2", true)}
+        {renderSummaryCards("grid-cols-1")}
 
         {/* Statistics Section */}
         {existingLabels.length > 0 && (

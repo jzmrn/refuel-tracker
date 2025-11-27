@@ -97,16 +97,13 @@ export default function FuelPrices() {
   };
 
   const renderSummaryCards = (
-    gridCols: string = "grid-cols-1 md:grid-cols-2",
-    isMobile: boolean = false,
+    gridCols: string = "grid-cols-1 lg:grid-cols-2",
   ) => (
     <div className={`grid ${gridCols} gap-6 mb-8`}>
       <SummaryCard
-        title={isMobile ? t.common.total : t.fuelPrices.totalFavorites}
+        title={t.fuelPrices.totalFavorites}
         value={{
-          value: isMobile
-            ? summary?.total_favorites?.toString() || "0"
-            : summary?.total_favorites || 0,
+          value: summary?.total_favorites || 0,
         }}
         loading={loading}
         iconBgColor="purple"
@@ -114,11 +111,9 @@ export default function FuelPrices() {
       />
 
       <SummaryCard
-        title={isMobile ? t.fuelPrices.open : t.fuelPrices.stationsOpen}
+        title={t.fuelPrices.stationsOpen}
         value={{
-          value: isMobile
-            ? summary?.stations_open?.toString() || "0"
-            : summary?.stations_open || 0,
+          value: summary?.stations_open || 0,
         }}
         loading={loading}
         iconBgColor="green"
@@ -212,7 +207,7 @@ export default function FuelPrices() {
         </div>
       </div>
 
-      {/* Desktop Tab Navigation - Hidden on mobile */}
+      {/* Desktop Tab Navigation - Hidden on mobile and md, shown from lg onwards */}
       <div className="tab-container">
         <div className="tab-border">
           <nav className="tab-nav" aria-label="Tabs">
@@ -234,13 +229,13 @@ export default function FuelPrices() {
         </div>
       </div>
 
-      {/* Desktop Tab Content */}
-      <div className="min-h-[400px] hidden md:block">{renderTabContent()}</div>
+      {/* Desktop Tab Content - Only shown from lg onwards */}
+      <div className="min-h-[400px] hidden lg:block">{renderTabContent()}</div>
 
-      {/* Mobile Unified View - Visible only on mobile */}
-      <div className="md:hidden space-y-6">
+      {/* Mobile/Tablet Unified View - Visible on mobile and md, hidden from lg onwards */}
+      <div className="lg:hidden space-y-6">
         {/* Summary Cards */}
-        {renderSummaryCards("grid-cols-2", true)}
+        {renderSummaryCards("grid-cols-1")}
 
         {/* Favorites List */}
         <div>

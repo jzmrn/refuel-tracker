@@ -1,5 +1,6 @@
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import EmptyState from "@/components/common/EmptyState";
+import { ChartIcon } from "../common";
 
 interface PriceStatisticsProps {
   loading: boolean;
@@ -18,18 +19,10 @@ export default function PriceStatistics({ loading }: PriceStatisticsProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <EmptyState
-        icon="📊"
-        title={t.fuelPrices.statistics}
-        subtitle={t.fuelPrices.statisticsDescription}
-      />
-
-      <div className="panel p-6">
-        <p className="text-secondary text-center">
-          {t.fuelPrices.priceComparison} - Coming soon...
-        </p>
-      </div>
-    </div>
+    <EmptyState
+      icon={<ChartIcon size="xl" color="gray" className="mx-auto mb-4" />}
+      title={t.common.noStatistics}
+      className="empty-state"
+    />
   );
 }

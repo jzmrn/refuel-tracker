@@ -221,19 +221,9 @@ export default function Layout({ children }: LayoutProps) {
         </nav>
       </div>
 
-      {/* Mobile Header - Visible only on mobile */}
-      <div className="md:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-            {t.layout.appTitle}
-          </h1>
-          <UserProfile />
-        </div>
-      </div>
-
       {/* Main content */}
       <div className="flex-1 flex flex-col md:overflow-hidden">
-        <main className="flex-1 p-4 md:p-8 pb-20 md:pb-8 md:overflow-y-auto">
+        <main className="flex-1 p-1 md:p-6 pb-20 md:pb-8 md:overflow-y-auto">
           {children}
         </main>
       </div>

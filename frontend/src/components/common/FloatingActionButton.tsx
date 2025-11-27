@@ -16,10 +16,10 @@ export default function FloatingActionButton({
 }: FloatingActionButtonProps) {
   return (
     <>
-      {/* FAB Button - Only visible on mobile */}
+      {/* FAB Button - Visible on mobile and md, hidden from lg onwards */}
       <button
         onClick={onAddClick}
-        className="md:hidden fixed bottom-20 right-4 w-14 h-14 btn-primary rounded-full shadow-lg hover:shadow-xl flex items-center justify-center z-40"
+        className="lg:hidden fixed bottom-20 right-4 w-14 h-14 btn-primary rounded-full shadow-lg hover:shadow-xl flex items-center justify-center z-40"
         aria-label="Add new entry"
       >
         <svg
@@ -37,11 +37,11 @@ export default function FloatingActionButton({
         </svg>
       </button>
 
-      {/* Mobile Modal */}
+      {/* Mobile/Tablet Modal - Visible on mobile and md, hidden from lg onwards */}
       <Transition appear show={isOpen} as={Fragment}>
         <Dialog
           as="div"
-          className="relative z-50 md:hidden"
+          className="relative z-50 lg:hidden"
           onClose={onClose || (() => {})}
         >
           <Transition.Child

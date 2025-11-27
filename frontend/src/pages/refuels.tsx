@@ -210,7 +210,7 @@ const RefuelPage: NextPage = () => {
         onClose={hideSnackbar}
       />
 
-      {/* Desktop Tab Navigation - Hidden on mobile */}
+      {/* Desktop Tab Navigation - Hidden on mobile and md, shown from lg onwards */}
       <div className="tab-container">
         <div className="tab-border">
           <nav className="tab-nav" aria-label="Tabs">
@@ -232,11 +232,11 @@ const RefuelPage: NextPage = () => {
         </div>
       </div>
 
-      {/* Desktop Tab Content */}
-      <div className="min-h-[400px] hidden md:block">{renderTabContent()}</div>
+      {/* Desktop Tab Content - Only shown from lg onwards */}
+      <div className="min-h-[400px] hidden lg:block">{renderTabContent()}</div>
 
-      {/* Mobile Unified View - Visible only on mobile */}
-      <div className="md:hidden space-y-6">
+      {/* Mobile/Tablet Unified View - Visible on mobile and md, hidden from lg onwards */}
+      <div className="lg:hidden space-y-6">
         {/* Statistics Section */}
         {renderStatistics()}
 
