@@ -78,7 +78,7 @@ export default function Layout({ children }: LayoutProps) {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
           />
         </svg>
       ),

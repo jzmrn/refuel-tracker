@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
 import AddTimeSpanForm from "@/components/time-spans/AddTimeSpanForm";
 import EditTimeSpanForm from "@/components/time-spans/EditTimeSpanForm";
 import TimeSpanList from "@/components/time-spans/TimeSpanList";
@@ -8,7 +7,7 @@ import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import Snackbar from "@/components/common/Snackbar";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import SummaryCard from "@/components/common/SummaryCard";
-import { TagIcon, ClockIcon } from "@/components/common/Icons";
+import { TagIcon, HashIcon } from "@/components/common/Icons";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import apiService, {
@@ -151,8 +150,8 @@ export default function TimeSpans() {
         title={t.timeSpans.totalEntries}
         value={{ value: summary?.total_entries || 0 }}
         loading={loading}
-        iconBgColor="blue"
-        icon={<ClockIcon size="lg" color="blue" />}
+        iconBgColor="yellow"
+        icon={<HashIcon size="lg" color="yellow" />}
       />
     </div>
   );

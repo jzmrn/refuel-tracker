@@ -1,5 +1,4 @@
-import { useState, useEffect, Fragment } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import { useState, useEffect } from "react";
 import SearchStationsForm from "@/components/fuel-prices/SearchStationsForm";
 import FavoriteStationsList from "@/components/fuel-prices/FavoriteStationsList";
 import PriceStatistics from "@/components/fuel-prices/PriceStatistics";
@@ -7,7 +6,7 @@ import StationCard from "@/components/fuel-prices/StationCard";
 import Snackbar from "@/components/common/Snackbar";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import SummaryCard from "@/components/common/SummaryCard";
-import { TagIcon, ChartIcon } from "@/components/common/Icons";
+import { ClockIcon, HashIcon } from "@/components/common/Icons";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import apiService, {
@@ -106,8 +105,8 @@ export default function FuelPrices() {
           value: summary?.total_favorites || 0,
         }}
         loading={loading}
-        iconBgColor="purple"
-        icon={<TagIcon size="lg" color="purple" />}
+        iconBgColor="yellow"
+        icon={<HashIcon size="lg" color="yellow" />}
       />
 
       <SummaryCard
@@ -116,8 +115,8 @@ export default function FuelPrices() {
           value: summary?.stations_open || 0,
         }}
         loading={loading}
-        iconBgColor="green"
-        icon={<ChartIcon size="lg" color="green" />}
+        iconBgColor="blue"
+        icon={<ClockIcon size="lg" color="blue" />}
       />
     </div>
   );
