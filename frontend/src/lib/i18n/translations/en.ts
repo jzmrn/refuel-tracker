@@ -364,6 +364,15 @@ export const en: TranslationStructure = {
     welcome: "Welcome to your Personal Data Tracker",
     recentActivity: "Recent Activity",
     quickStats: "Quick Statistics",
+    gettingStartedTitle: "Getting Started",
+    gettingStartedDescription:
+      "Choose a tracking category below to begin monitoring your personal data. Each section provides specialized tools for different types of information.",
+    features: {
+      refuelDescription: "Track fuel consumption, prices, and costs",
+      dataTrackingDescription: "Monitor numerical data with custom labels",
+      timeSpansDescription: "Log activities and time periods",
+      fuelPricesDescription: "Compare gas station prices in your area",
+    },
   },
 
   fuelPrices: {
@@ -416,7 +425,6 @@ export const en: TranslationStructure = {
     avgE5: "Average E5 Price",
     avgE10: "Average E10 Price",
     avgDiesel: "Average Diesel Price",
-    priceComparison: "Price Comparison",
     statisticsDescription: "Compare prices across your favorite stations",
     radiusKm: "Radius (km)",
     latitudeRequired: "Latitude is required",

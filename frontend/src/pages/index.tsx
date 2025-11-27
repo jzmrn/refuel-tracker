@@ -3,6 +3,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import {
   ChartBarIcon,
   ClockIcon,
+  CurrencyDollarIcon,
   DocumentChartBarIcon,
   TruckIcon,
 } from "@heroicons/react/24/outline";
@@ -13,7 +14,7 @@ export default function Dashboard() {
   const features = [
     {
       name: t.navigation.refuel,
-      description: "Track fuel consumption, prices, and costs",
+      description: t.dashboard.features.refuelDescription,
       href: "/refuels",
       icon: TruckIcon,
       color: "text-blue-600",
@@ -21,7 +22,7 @@ export default function Dashboard() {
     },
     {
       name: t.navigation.dataTracking,
-      description: "Monitor numerical data with custom labels",
+      description: t.dashboard.features.dataTrackingDescription,
       href: "/data-tracking",
       icon: ChartBarIcon,
       color: "text-green-600",
@@ -29,11 +30,19 @@ export default function Dashboard() {
     },
     {
       name: t.navigation.timeSpans,
-      description: "Log activities and time periods",
+      description: t.dashboard.features.timeSpansDescription,
       href: "/time-spans",
       icon: ClockIcon,
       color: "text-purple-600",
       bgColor: "bg-purple-100",
+    },
+    {
+      name: t.navigation.fuelPrices,
+      description: t.dashboard.features.fuelPricesDescription,
+      href: "/fuel-prices",
+      icon: CurrencyDollarIcon,
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-100",
     },
   ];
 
@@ -51,15 +60,13 @@ export default function Dashboard() {
       {/* Getting Started */}
       <div className="mb-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 p-6">
         <div className="flex items-center">
-          <DocumentChartBarIcon className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+          <DocumentChartBarIcon className="h-10 w-10 flex-shrink-0 text-blue-600 dark:text-blue-400" />
           <div className="ml-4">
             <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
-              Getting Started
+              {t.dashboard.gettingStartedTitle}
             </h3>
             <p className="mt-2 text-sm text-blue-700 dark:text-blue-300">
-              Choose a tracking category below to begin monitoring your personal
-              data. Each section provides specialized tools for different types
-              of information.
+              {t.dashboard.gettingStartedDescription}
             </p>
           </div>
         </div>

@@ -362,6 +362,14 @@ export interface TranslationStructure {
     welcome: string;
     recentActivity: string;
     quickStats: string;
+    gettingStartedTitle: string;
+    gettingStartedDescription: string;
+    features: {
+      refuelDescription: string;
+      dataTrackingDescription: string;
+      timeSpansDescription: string;
+      fuelPricesDescription: string;
+    };
   };
 
   // Fuel Prices
@@ -414,7 +422,6 @@ export interface TranslationStructure {
     avgE5: string;
     avgE10: string;
     avgDiesel: string;
-    priceComparison: string;
     statisticsDescription: string;
     radiusKm: string;
     latitudeRequired: string;

@@ -377,6 +377,16 @@ export const de: TranslationStructure = {
     welcome: "Willkommen zu Ihrem Persönlichen Datentracker",
     recentActivity: "Letzte Aktivität",
     quickStats: "Schnellstatistiken",
+    gettingStartedTitle: "Erste Schritte",
+    gettingStartedDescription:
+      "Wählen Sie unten eine Tracking-Kategorie aus, um mit der Überwachung Ihrer persönlichen Daten zu beginnen. Jeder Bereich bietet spezialisierte Werkzeuge für verschiedene Arten von Informationen.",
+    features: {
+      refuelDescription: "Kraftstoffverbrauch, Preise und Kosten verfolgen",
+      dataTrackingDescription:
+        "Numerische Daten mit benutzerdefinierten Labels überwachen",
+      timeSpansDescription: "Aktivitäten und Zeiträume protokollieren",
+      fuelPricesDescription: "Tankstellenpreise in Ihrer Nähe vergleichen",
+    },
   },
 
   fuelPrices: {
@@ -432,7 +442,6 @@ export const de: TranslationStructure = {
     avgE5: "Durchschn. E5-Preis",
     avgE10: "Durchschn. E10-Preis",
     avgDiesel: "Durchschn. Diesel-Preis",
-    priceComparison: "Preisvergleich",
     statisticsDescription: "Vergleichen Sie Preise Ihrer Favoriten",
     radiusKm: "Radius (km)",
     latitudeRequired: "Breitengrad ist erforderlich",
