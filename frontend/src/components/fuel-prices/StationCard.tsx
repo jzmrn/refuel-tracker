@@ -85,17 +85,10 @@ export default function StationCard({
                 ({distance.toFixed(1)} {t.fuelPrices.kmAway})
               </span>
             )}
-          </div>
-          <p className="text-sm text-secondary mt-1">
-            {station.street} {station.house_number}, {station.post_code}{" "}
-            {station.place}
-          </p>
-
-          {/* Open/Closed Badge for Favorites */}
-          {!isGasStation(station) && (
-            <div className="mt-2">
+            {/* Open/Closed Badge for Favorites */}
+            {!isGasStation(station) && (
               <span
-                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
                   isOpen
                     ? "bg-green-100 text-green-800"
                     : "bg-gray-100 text-gray-800"
@@ -103,8 +96,12 @@ export default function StationCard({
               >
                 {isOpen ? t.fuelPrices.open : t.fuelPrices.closed}
               </span>
-            </div>
-          )}
+            )}
+          </div>
+          <p className="text-sm text-secondary mt-1">
+            {station.street} {station.house_number}, {station.post_code}{" "}
+            {station.place}
+          </p>
         </div>
 
         {/* Right: Prices */}
@@ -193,6 +190,18 @@ export default function StationCard({
                   ({distance.toFixed(1)} {t.fuelPrices.kmAway})
                 </span>
               )}
+              {/* Open/Closed Badge for Favorites */}
+              {!isGasStation(station) && (
+                <span
+                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
+                    isOpen
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {isOpen ? t.fuelPrices.open : t.fuelPrices.closed}
+                </span>
+              )}
             </div>
             <p className="text-sm text-secondary mt-1">
               {station.street} {station.house_number}, {station.post_code}{" "}
@@ -238,21 +247,6 @@ export default function StationCard({
                       </div>
                     </div>
                   )}
-              </div>
-            )}
-
-            {/* Open/Closed Badge for Favorites - Mobile */}
-            {!isGasStation(station) && (
-              <div className="mt-2">
-                <span
-                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    isOpen
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {isOpen ? t.fuelPrices.open : t.fuelPrices.closed}
-                </span>
               </div>
             )}
           </div>

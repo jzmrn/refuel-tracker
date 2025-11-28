@@ -165,8 +165,10 @@ async def add_favorite_station(
 @router.get("/favorites", response_model=list[FavoriteStationResponse])
 async def get_favorite_stations(
     user: CurrentUser,
-    fuel_station_client=Depends(get_fuel_station_client),
-    tankerkoenig_client=Depends(get_tankerkoenig_client),
+    fuel_station_client: Annotated[FuelStationClient, Depends(get_fuel_station_client)],
+    tankerkoenig_client: Annotated[
+        TankerkoenigClient, Depends(get_tankerkoenig_client)
+    ],
 ):
     """Get user's favorite stations with current prices"""
     try:
@@ -177,7 +179,7 @@ async def get_favorite_stations(
             return []
 
         # Get station info from database
-        station_ids = [fav.station_id for fav in favorites]
+        station_ids = [favorite.station_id for favorite in favorites]
         all_station_info = fuel_station_client.get_gas_station_info()
         station_info_map = {info.station_id: info for info in all_station_info}
 
@@ -185,9 +187,11 @@ async def get_favorite_stations(
         results = []
         for i in range(0, len(station_ids), 10):
             batch_ids = station_ids[i : i + 10]
+
             try:
                 prices = tankerkoenig_client.get_gas_station_prices(batch_ids)
-                price_map = {price.id: price for price in prices}
+                price_map = {price.station_id: price for price in prices}
+
             except Exception as e:
                 print(f"Error fetching prices for batch: {e}")
                 price_map = {}
