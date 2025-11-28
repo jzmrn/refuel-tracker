@@ -237,7 +237,6 @@ export interface GasStationResponse {
   lat: number;
   lng: number;
   dist?: number;
-  price?: number;
   diesel?: number;
   e5?: number;
   e10?: number;

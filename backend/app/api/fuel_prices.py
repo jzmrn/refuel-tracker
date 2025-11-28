@@ -3,7 +3,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fueldata.stations import FuelStationClient
 from tankerkoenig import TankerkoenigClient
-from tankerkoenig.models import FuelType, SortBy
+from tankerkoenig.models import (
+    FuelType,
+    GasStationAllPrices,
+    GasStationOnePrice,
+    SortBy,
+)
 
 from ..auth import CurrentUser
 from ..models import (
@@ -65,6 +70,23 @@ async def search_gas_stations(
             if search_params.open_only and not station.isOpen:
                 continue
 
+            # Handle both GasStationOnePrice (has 'price' field) and GasStationAllPrices (has e5/e10/diesel)
+            diesel = None
+            e5 = None
+            e10 = None
+
+            if isinstance(station, GasStationOnePrice):
+                if fuel_type == FuelType.DIESEL:
+                    diesel = station.price
+                elif fuel_type == FuelType.E5:
+                    e5 = station.price
+                elif fuel_type == FuelType.E10:
+                    e10 = station.price
+            elif isinstance(station, GasStationAllPrices):
+                diesel = station.diesel
+                e5 = station.e5
+                e10 = station.e10
+
             response = GasStationResponse(
                 id=station.id,
                 name=station.name,
@@ -76,10 +98,9 @@ async def search_gas_stations(
                 lat=station.lat,
                 lng=station.lng,
                 dist=station.dist if hasattr(station, "dist") else None,
-                price=station.price if hasattr(station, "price") else None,
-                diesel=station.diesel if hasattr(station, "diesel") else None,
-                e5=station.e5 if hasattr(station, "e5") else None,
-                e10=station.e10 if hasattr(station, "e10") else None,
+                diesel=diesel,
+                e5=e5,
+                e10=e10,
                 is_open=station.isOpen,
             )
             result.append(response)

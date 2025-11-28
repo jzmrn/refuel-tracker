@@ -371,7 +371,6 @@ class GasStationResponse(BaseModel):
     lat: float
     lng: float
     dist: float | None = None
-    price: float | None = None
     diesel: float | None = None
     e5: float | None = None
     e10: float | None = None

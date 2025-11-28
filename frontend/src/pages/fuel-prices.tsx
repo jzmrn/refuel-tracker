@@ -267,7 +267,7 @@ export default function FuelPrices() {
 
       {/* Mobile Results Popup - Without FAB button */}
       {isMobileResultsOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden">
           <div
             className="fixed inset-0 bg-black bg-opacity-25"
             onClick={() => setIsMobileResultsOpen(false)}

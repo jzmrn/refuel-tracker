@@ -36,24 +36,16 @@ export default function StationCard({
   let priceE10: number | undefined;
   let priceDiesel: number | undefined;
   let distance: number | undefined;
-  let displayPrice: number | undefined;
 
   if (isGasStation(station)) {
     priceE5 = station.e5;
     priceE10 = station.e10;
     priceDiesel = station.diesel;
     distance = station.dist;
-    displayPrice = station.price || station.e5 || station.e10 || station.diesel;
   } else {
     priceE5 = station.current_price_e5;
     priceE10 = station.current_price_e10;
     priceDiesel = station.current_price_diesel;
-
-    // Get best price for favorites
-    const prices = [priceE5, priceE10, priceDiesel].filter(
-      (p) => p !== undefined && p !== null,
-    ) as number[];
-    displayPrice = prices.length > 0 ? Math.min(...prices) : undefined;
   }
 
   const formatPrice = (price?: number) => {
@@ -80,24 +72,26 @@ export default function StationCard({
 
   return (
     <div className="card hover:shadow-lg transition-shadow">
-      <div className="flex items-start justify-between gap-4">
-        {/* Left: Price */}
-        <div className="flex-shrink-0 text-center">
-          {isOpen && displayPrice !== undefined && displayPrice !== null ? (
-            <>
-              <div className="text-2xl md:text-3xl font-bold text-primary">
-                {renderPrice(displayPrice, "text-sm md:text-lg")}
-              </div>
-              <div className="text-xs text-secondary mt-1">€ / L</div>
-            </>
-          ) : (
-            <div className="text-lg md:text-2xl text-secondary">-</div>
-          )}
-          {distance !== undefined && (
-            <div className="text-xs text-secondary mt-2">
-              {distance.toFixed(1)} {t.fuelPrices.kmAway}
-            </div>
-          )}
+      {/* Desktop Layout */}
+      <div className="hidden lg:flex items-start justify-between gap-4">
+        {/* Left: Station Info */}
+        <div className="flex-grow min-w-0">
+          <div className="flex items-center gap-2">
+            <h4 className="heading-3 truncate">
+              {station.brand ?? station.name}
+            </h4>
+            {distance !== undefined && (
+              <span className="text-xs text-secondary flex-shrink-0">
+                ({distance.toFixed(1)} {t.fuelPrices.kmAway})
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-secondary mt-1">
+            {station.street} {station.house_number}, {station.post_code}{" "}
+            {station.place}
+          </p>
+
+          {/* Open/Closed Badge for Favorites */}
           {!isGasStation(station) && (
             <div className="mt-2">
               <span
@@ -113,57 +107,53 @@ export default function StationCard({
           )}
         </div>
 
-        {/* Center: Station Info */}
-        <div className="flex-grow min-w-0">
-          <h4 className="heading-4 md:heading-3 truncate">
-            {station.brand ?? station.name}
-          </h4>
-          <p className="text-sm text-secondary mt-1">
-            {station.street} {station.house_number}, {station.post_code}{" "}
-            {station.place}
-          </p>
-
-          {/* Price Details */}
-          {isOpen && (
-            <div className="mt-2 md:mt-3 flex md:grid md:grid-cols-3 gap-2 md:gap-2 text-xs flex-wrap">
-              {priceE5 && (
-                <div>
-                  <span className="text-secondary block lg:inline">
-                    {t.fuelPrices.e5}
-                    {isGasStation(station) && ": "}
-                  </span>
-                  <span className="font-semibold">
-                    {renderPrice(priceE5)} €
-                  </span>
-                </div>
-              )}
-              {priceE10 && (
-                <div>
-                  <span className="text-secondary block lg:inline">
-                    {t.fuelPrices.e10}
-                    {isGasStation(station) && ": "}
-                  </span>
-                  <span className="font-semibold">
-                    {renderPrice(priceE10)} €
-                  </span>
-                </div>
-              )}
-              {priceDiesel && (
-                <div>
-                  <span className="text-secondary block lg:inline">
-                    {t.fuelPrices.diesel}
-                    {isGasStation(station) && ": "}
-                  </span>
-                  <span className="font-semibold">
-                    {renderPrice(priceDiesel)} €
-                  </span>
-                </div>
-              )}
+        {/* Right: Prices */}
+        <div className="flex-shrink-0">
+          {isOpen ? (
+            <div className="flex gap-6">
+              {priceE5 !== undefined &&
+                priceE5 !== null &&
+                typeof priceE5 === "number" && (
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-primary">
+                      {renderPrice(priceE5, "text-lg")}
+                    </div>
+                    <div className="text-xs text-secondary mt-1">
+                      {t.fuelPrices.e5}
+                    </div>
+                  </div>
+                )}
+              {priceE10 !== undefined &&
+                priceE10 !== null &&
+                typeof priceE10 === "number" && (
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-primary">
+                      {renderPrice(priceE10, "text-lg")}
+                    </div>
+                    <div className="text-xs text-secondary mt-1">
+                      {t.fuelPrices.e10}
+                    </div>
+                  </div>
+                )}
+              {priceDiesel !== undefined &&
+                priceDiesel !== null &&
+                typeof priceDiesel === "number" && (
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-primary">
+                      {renderPrice(priceDiesel, "text-lg")}
+                    </div>
+                    <div className="text-xs text-secondary mt-1">
+                      {t.fuelPrices.diesel}
+                    </div>
+                  </div>
+                )}
             </div>
+          ) : (
+            <div className="text-2xl text-secondary">-</div>
           )}
         </div>
 
-        {/* Right: Add/Remove Button */}
+        {/* Far Right: Add/Remove Button */}
         <div className="flex-shrink-0">
           {isFavorite
             ? onRemoveFromFavorites && (
@@ -186,6 +176,113 @@ export default function StationCard({
                   ☆
                 </button>
               )}
+        </div>
+      </div>
+
+      {/* Mobile Layout */}
+      <div className="lg:hidden">
+        <div className="flex items-start justify-between gap-4">
+          {/* Station Info */}
+          <div className="flex-grow min-w-0">
+            <div className="flex items-center gap-2">
+              <h4 className="heading-4 truncate">
+                {station.brand ?? station.name}
+              </h4>
+              {distance !== undefined && (
+                <span className="text-xs text-secondary flex-shrink-0">
+                  ({distance.toFixed(1)} {t.fuelPrices.kmAway})
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-secondary mt-1">
+              {station.street} {station.house_number}, {station.post_code}{" "}
+              {station.place}
+            </p>
+
+            {/* Prices Below Address - Mobile */}
+            {isOpen && (
+              <div className="flex gap-4 mt-3">
+                {priceE5 !== undefined &&
+                  priceE5 !== null &&
+                  typeof priceE5 === "number" && (
+                    <div className="text-center">
+                      <div className="text-xs text-secondary">
+                        {t.fuelPrices.e5}
+                      </div>
+                      <div className="text-lg font-bold text-primary">
+                        {renderPrice(priceE5, "text-sm")}
+                      </div>
+                    </div>
+                  )}
+                {priceE10 !== undefined &&
+                  priceE10 !== null &&
+                  typeof priceE10 === "number" && (
+                    <div className="text-center">
+                      <div className="text-xs text-secondary">
+                        {t.fuelPrices.e10}
+                      </div>
+                      <div className="text-lg font-bold text-primary">
+                        {renderPrice(priceE10, "text-sm")}
+                      </div>
+                    </div>
+                  )}
+                {priceDiesel !== undefined &&
+                  priceDiesel !== null &&
+                  typeof priceDiesel === "number" && (
+                    <div className="text-center">
+                      <div className="text-xs text-secondary">
+                        {t.fuelPrices.diesel}
+                      </div>
+                      <div className="text-lg font-bold text-primary">
+                        {renderPrice(priceDiesel, "text-sm")}
+                      </div>
+                    </div>
+                  )}
+              </div>
+            )}
+
+            {/* Open/Closed Badge for Favorites - Mobile */}
+            {!isGasStation(station) && (
+              <div className="mt-2">
+                <span
+                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    isOpen
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {isOpen ? t.fuelPrices.open : t.fuelPrices.closed}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Add/Remove Button */}
+          <div className="flex-shrink-0">
+            {isFavorite
+              ? onRemoveFromFavorites && (
+                  <button
+                    onClick={onRemoveFromFavorites}
+                    className={
+                      isGasStation(station)
+                        ? "btn-sm-secondary"
+                        : "btn-sm-danger"
+                    }
+                    title={t.fuelPrices.removeFromFavorites}
+                  >
+                    {isGasStation(station) ? "⭐" : "✕"}
+                  </button>
+                )
+              : onAddToFavorites && (
+                  <button
+                    onClick={onAddToFavorites}
+                    className="btn-sm-primary"
+                    title={t.fuelPrices.addToFavorites}
+                  >
+                    ☆
+                  </button>
+                )}
+          </div>
         </div>
       </div>
     </div>
