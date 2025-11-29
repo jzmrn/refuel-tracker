@@ -38,7 +38,7 @@ export const en: TranslationStructure = {
     fuelPrices: "Fuel Prices",
     settings: "Settings",
     home: "Home",
-    fuel: "Fuel",
+    more: "More",
     data: "Data",
     time: "Time",
     prices: "Prices",

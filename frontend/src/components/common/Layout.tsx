@@ -46,7 +46,7 @@ export default function Layout({ children }: LayoutProps) {
     {
       name: t.navigation.refuel,
       href: "/refuels",
-      shortName: t.navigation.fuel,
+      shortName: t.navigation.refuel,
       icon: (
         <svg
           className="w-5 h-5"
@@ -129,7 +129,7 @@ export default function Layout({ children }: LayoutProps) {
     {
       name: t.navigation.settings,
       href: "/settings",
-      shortName: t.navigation.settings,
+      shortName: t.navigation.more,
       icon: (
         <svg
           className="w-5 h-5"
@@ -237,15 +237,19 @@ export default function Layout({ children }: LayoutProps) {
               <Link
                 key={item.name}
                 href={item.href}
-                className={clsx(
-                  "flex flex-col items-center py-2 px-3 rounded-lg text-xs font-medium transition-colors min-w-0",
-                  isActive
-                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                    : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100",
-                )}
+                className="flex flex-1 flex-col items-center py-2 px-1 min-w-0"
               >
-                <span className="mb-1">{item.icon}</span>
-                <span className="truncate">{item.shortName}</span>
+                <div
+                  className={clsx(
+                    "flex flex-col items-center py-1.5 px-2 rounded-lg text-xs font-medium transition-colors",
+                    isActive
+                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                      : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100",
+                  )}
+                >
+                  <span className="mb-1">{item.icon}</span>
+                  <span className="truncate">{item.shortName}</span>
+                </div>
               </Link>
             );
           })}

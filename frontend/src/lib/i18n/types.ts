@@ -40,7 +40,7 @@ export interface TranslationStructure {
     fuelPrices: string;
     settings: string;
     home: string;
-    fuel: string;
+    more: string;
     data: string;
     time: string;
     prices: string;
