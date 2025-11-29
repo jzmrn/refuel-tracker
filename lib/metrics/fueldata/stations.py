@@ -232,6 +232,46 @@ class FuelStationClient:
         records = df.to_dict(orient="records")
         return [GasStationInfo.model_validate(record) for record in records]
 
+    def get_favorite_stations_with_info(self, user_id: str) -> list[GasStationInfo]:
+        """
+        Get favorite gas stations for a user with complete station information.
+
+        Uses SQL JOIN for optimal performance to retrieve favorite stations
+        filtered by user_id and enriched with gas station details.
+
+        Args:
+            user_id: The user ID to filter favorite stations
+
+        Returns:
+            List of GasStationInfo objects for the user's favorite stations
+        """
+
+        query = """
+            SELECT
+                gsi.station_id,
+                gsi.name,
+                gsi.brand,
+                gsi.street,
+                gsi.place,
+                gsi.lat,
+                gsi.lng,
+                gsi.house_number,
+                gsi.post_code
+            FROM favorite_stations fs
+            INNER JOIN gas_station_info gsi
+                ON fs.station_id = gsi.station_id
+            WHERE fs.user_id = ?
+            ORDER BY fs.timestamp DESC
+        """
+
+        with self._duckdb.get_connection() as con:
+            df = con.execute(query, [user_id]).df()
+
+        print(f"Retrieved {len(df)} favorite stations with info for user {user_id}")
+
+        records = df.to_dict(orient="records")
+        return [GasStationInfo.model_validate(record) for record in records]
+
     def delete_gas_station_info(self, station_id: str) -> None:
         """
         Delete gas station information from the database.

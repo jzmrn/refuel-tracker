@@ -388,7 +388,6 @@ class FavoriteStationResponse(BaseModel):
 
     user_id: str
     station_id: str
-    timestamp: datetime
     name: str | None = None
     brand: str | None = None
     street: str | None = None
