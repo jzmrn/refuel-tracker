@@ -56,7 +56,7 @@
 
   /* Layout Components */
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700;
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-3 dark:bg-gray-800 dark:border-gray-700;
   }
 
   .panel {

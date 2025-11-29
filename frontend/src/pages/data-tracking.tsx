@@ -126,12 +126,10 @@ export default function DataTracking() {
   };
 
   // Reusable component functions
-  const renderSummaryCards = (
-    gridCols: string = "grid-cols-1 lg:grid-cols-2",
-  ) => (
-    <div className={`grid ${gridCols} gap-6 mb-8`}>
+  const renderSummaryCards = () => (
+    <div className={`grid grid-cols-2 gap-6 mb-8`}>
       <SummaryCard
-        title={t.dataTracking.uniqueLabels}
+        title={t.common.labels}
         value={{
           value: summary?.unique_labels || 0,
         }}
@@ -141,7 +139,7 @@ export default function DataTracking() {
       />
 
       <SummaryCard
-        title={t.dataTracking.totalEntries}
+        title={t.common.entries}
         value={{
           value: summary?.total_entries || 0,
         }}
@@ -312,7 +310,7 @@ export default function DataTracking() {
       {/* Mobile/Tablet Unified View - Visible on mobile and md, hidden from lg onwards */}
       <div className="lg:hidden space-y-6">
         {/* Summary Cards */}
-        {renderSummaryCards("grid-cols-1")}
+        {renderSummaryCards()}
 
         {/* Statistics Section */}
         {existingLabels.length > 0 && (

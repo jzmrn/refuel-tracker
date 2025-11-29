@@ -24,18 +24,20 @@ export default function Settings() {
       {/* Settings Sections */}
       <div className="space-y-6">
         {/* Account Settings */}
-        <SettingCard
-          title={user?.name || "Account"}
-          description={user?.email || ""}
-        >
-          {user?.picture && (
-            <img
-              src={user.picture}
-              alt={user.name}
-              className="w-16 h-16 rounded-full"
-            />
-          )}
-        </SettingCard>
+        {user && (
+          <SettingCard
+            title={user.name || "Account"}
+            description={user.email || ""}
+          >
+            {user.picture && (
+              <img
+                src={user.picture}
+                alt={user.name}
+                className="w-16 h-16 rounded-full"
+              />
+            )}
+          </SettingCard>
+        )}
 
         {/* Language Settings */}
         <SettingCard

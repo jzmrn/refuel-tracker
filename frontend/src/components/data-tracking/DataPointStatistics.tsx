@@ -188,7 +188,7 @@ export default function DataPointStatistics({
         />
 
         <SummaryCard
-          title={t.dataTracking.totalEntries}
+          title={t.common.entries}
           value={{ value: count.toString() }}
           icon={<HashIcon size="md" color="purple" />}
           iconBgColor="purple"

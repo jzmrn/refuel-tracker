@@ -114,12 +114,10 @@ export default function FuelPrices() {
     }
   };
 
-  const renderSummaryCards = (
-    gridCols: string = "grid-cols-1 lg:grid-cols-2",
-  ) => (
-    <div className={`grid ${gridCols} gap-6 mb-8`}>
+  const renderSummaryCards = () => (
+    <div className={`grid grid-cols-2 gap-6 mb-8`}>
       <SummaryCard
-        title={t.fuelPrices.totalFavorites}
+        title={t.fuelPrices.favorites}
         value={{
           value: summary?.total_favorites || 0,
         }}
@@ -212,7 +210,7 @@ export default function FuelPrices() {
                       onClick={() => handleSortChange("e5")}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         sortBy === "e5"
-                          ? "bg-primary text-white"
+                          ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
                           : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                       }`}
                     >
@@ -222,7 +220,7 @@ export default function FuelPrices() {
                       onClick={() => handleSortChange("e10")}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         sortBy === "e10"
-                          ? "bg-primary text-white"
+                          ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
                           : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                       }`}
                     >
@@ -232,7 +230,7 @@ export default function FuelPrices() {
                       onClick={() => handleSortChange("diesel")}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         sortBy === "diesel"
-                          ? "bg-primary text-white"
+                          ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
                           : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                       }`}
                     >
@@ -298,7 +296,7 @@ export default function FuelPrices() {
       {/* Mobile/Tablet Unified View - Visible on mobile and md, hidden from lg onwards */}
       <div className="lg:hidden space-y-6">
         {/* Summary Cards */}
-        {renderSummaryCards("grid-cols-1")}
+        {renderSummaryCards()}
 
         {/* Favorites List */}
         <div>
@@ -316,7 +314,7 @@ export default function FuelPrices() {
                     onClick={() => handleSortChange("e5")}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       sortBy === "e5"
-                        ? "bg-primary text-white"
+                        ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
                         : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                     }`}
                   >
@@ -326,7 +324,7 @@ export default function FuelPrices() {
                     onClick={() => handleSortChange("e10")}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       sortBy === "e10"
-                        ? "bg-primary text-white"
+                        ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
                         : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                     }`}
                   >
@@ -336,7 +334,7 @@ export default function FuelPrices() {
                     onClick={() => handleSortChange("diesel")}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       sortBy === "diesel"
-                        ? "bg-primary text-white"
+                        ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
                         : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                     }`}
                   >

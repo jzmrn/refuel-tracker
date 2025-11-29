@@ -73,7 +73,7 @@ export default function StationCard({
   return (
     <div className="card hover:shadow-lg transition-shadow">
       {/* Desktop Layout */}
-      <div className="hidden lg:flex items-start justify-between gap-4">
+      <div className="hidden lg:flex items-center justify-between gap-4">
         {/* Left: Station Info */}
         <div className="flex-grow min-w-0">
           <div className="flex items-center gap-2">
@@ -178,7 +178,7 @@ export default function StationCard({
 
       {/* Mobile Layout */}
       <div className="lg:hidden">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center justify-between gap-4">
           {/* Station Info */}
           <div className="flex-grow min-w-0">
             <div className="flex items-center gap-2">
@@ -210,7 +210,7 @@ export default function StationCard({
 
             {/* Prices Below Address - Mobile */}
             {isOpen && (
-              <div className="flex gap-4 mt-3">
+              <div className="flex gap-4 mt-3 justify-center">
                 {priceE5 !== undefined &&
                   priceE5 !== null &&
                   typeof priceE5 === "number" && (

@@ -15,6 +15,7 @@ import {
 } from "../lib/api";
 
 type TabType = "add" | "statistics" | "entries";
+type FilterType = "all" | "month" | "year";
 
 const RefuelPage: NextPage = () => {
   const { t } = useTranslation();
@@ -24,6 +25,7 @@ const RefuelPage: NextPage = () => {
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
   const [isMobileFormOpen, setIsMobileFormOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const { snackbar, showSuccess, showError, hideSnackbar } = useSnackbar();
 
   // Fetch refuel data
@@ -90,6 +92,7 @@ const RefuelPage: NextPage = () => {
   const filterThisMonth = async () => {
     try {
       setLoading(true);
+      setActiveFilter("month");
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const data = await apiService.getRefuelMetrics({
@@ -108,6 +111,7 @@ const RefuelPage: NextPage = () => {
   const filterThisYear = async () => {
     try {
       setLoading(true);
+      setActiveFilter("year");
       const now = new Date();
       const startOfYear = new Date(now.getFullYear(), 0, 1);
       const data = await apiService.getRefuelMetrics({
@@ -124,6 +128,7 @@ const RefuelPage: NextPage = () => {
   };
 
   const showAll = () => {
+    setActiveFilter("all");
     fetchRefuels();
   };
 
@@ -137,27 +142,43 @@ const RefuelPage: NextPage = () => {
   );
 
   const renderFilterOptions = () => (
-    <div className="filter-container flex justify-between items-center">
-      <h3 className="filter-title">{t.refuels.filter}</h3>
-      <div className="filter-buttons">
-        <button
-          onClick={showAll}
-          className="filter-button filter-button-primary"
-        >
-          {t.refuels.showAll}
-        </button>
-        <button
-          onClick={filterThisMonth}
-          className="filter-button filter-button-success"
-        >
-          {t.refuels.thisMonth}
-        </button>
-        <button
-          onClick={filterThisYear}
-          className="filter-button filter-button-accent"
-        >
-          {t.refuels.thisYear}
-        </button>
+    <div className="panel p-4 mb-6">
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.refuels.filter}:
+        </label>
+        <div className="flex gap-2">
+          <button
+            onClick={showAll}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeFilter === "all"
+                ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            }`}
+          >
+            {t.refuels.showAll}
+          </button>
+          <button
+            onClick={filterThisMonth}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeFilter === "month"
+                ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            }`}
+          >
+            {t.refuels.thisMonth}
+          </button>
+          <button
+            onClick={filterThisYear}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeFilter === "year"
+                ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            }`}
+          >
+            {t.refuels.thisYear}
+          </button>
+        </div>
       </div>
     </div>
   );

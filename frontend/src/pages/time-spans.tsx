@@ -134,12 +134,10 @@ export default function TimeSpans() {
   };
 
   // Reusable component functions
-  const renderSummaryCards = (
-    gridCols: string = "grid-cols-1 lg:grid-cols-2",
-  ) => (
-    <div className={`grid ${gridCols} gap-6 mb-8`}>
+  const renderSummaryCards = () => (
+    <div className={`grid grid-cols-2 gap-6 mb-8`}>
       <SummaryCard
-        title={t.timeSpans.uniqueLabels}
+        title={t.common.labels}
         value={{ value: summary?.unique_labels || 0 }}
         loading={loading}
         iconBgColor="purple"
@@ -147,7 +145,7 @@ export default function TimeSpans() {
       />
 
       <SummaryCard
-        title={t.timeSpans.totalEntries}
+        title={t.common.entries}
         value={{ value: summary?.total_entries || 0 }}
         loading={loading}
         iconBgColor="yellow"
@@ -280,7 +278,7 @@ export default function TimeSpans() {
       {/* Mobile/Tablet Unified View - Visible on mobile and md, hidden from lg onwards */}
       <div className="lg:hidden space-y-6">
         {/* Summary Cards */}
-        {renderSummaryCards("grid-cols-1")}
+        {renderSummaryCards()}
 
         {/* Statistics Section */}
         {renderStatistics()}

@@ -93,7 +93,6 @@ export interface TranslationStructure {
     average: string;
     median: string;
     range: string;
-    totalEntries: string;
     maximum: string;
     minimum: string;
     stdDeviation: string;
@@ -226,8 +225,6 @@ export interface TranslationStructure {
     endDate: string;
     duration: string;
     trackActivities: string;
-    uniqueLabels: string;
-    totalEntries: string;
     filterByGroup: string;
     allGroups: string;
     allTimeSpans: string;
@@ -414,7 +411,6 @@ export interface TranslationStructure {
     locationPermissionDenied: string;
     gettingLocation: string;
     kmAway: string;
-    totalFavorites: string;
     stationsOpen: string;
     lowestE5: string;
     lowestE10: string;
