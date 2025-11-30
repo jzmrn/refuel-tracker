@@ -98,6 +98,9 @@ class RefuelMetricCreate(BaseModel):
         None, description="Optional timestamp for historical entries"
     )
     notes: str | None = Field(None, description="Optional notes")
+    station_id: str | None = Field(
+        None, description="Optional ID of the gas station where refuel occurred"
+    )
 
     @field_validator("timestamp")
     @classmethod
@@ -129,6 +132,9 @@ class RefuelMetricResponse(BaseModel):
     kilometers_since_last_refuel: float
     estimated_fuel_consumption: float
     notes: str | None = None
+    station_id: str | None = Field(
+        None, description="ID of the gas station where refuel occurred"
+    )
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}

@@ -102,6 +102,7 @@ export interface RefuelMetric {
   kilometers_since_last_refuel: number;
   estimated_fuel_consumption: number;
   notes?: string;
+  station_id?: string;
 }
 
 export interface RefuelMetricCreate {
@@ -111,6 +112,7 @@ export interface RefuelMetricCreate {
   estimated_fuel_consumption: number;
   timestamp?: string;
   notes?: string;
+  station_id?: string;
 }
 
 export interface RefuelStatistics {
@@ -138,6 +140,21 @@ export interface RefuelMonthlySummary {
   min_price: number;
   largest_fillup: number;
   smallest_fillup: number;
+}
+
+export interface FavoriteStationDropdown {
+  station_id: string;
+  brand: string;
+  street: string;
+  house_number: string;
+  place: string;
+}
+
+export interface DataPointCreate {
+  timestamp: string;
+  value: number;
+  label: string;
+  notes?: string;
 }
 
 export interface DataPointCreate {
@@ -508,6 +525,13 @@ class ApiService {
   ): Promise<RefuelMonthlySummary> {
     const response = await this.api.get(
       `/api/metrics/refuel/monthly/${year}/${month}`
+    );
+    return response.data;
+  }
+
+  async getFavoriteStationsForDropdown(): Promise<FavoriteStationDropdown[]> {
+    const response = await this.api.get(
+      "/api/metrics/refuel/favorite-stations"
     );
     return response.data;
   }

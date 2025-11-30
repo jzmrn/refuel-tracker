@@ -31,6 +31,7 @@ class RefuelDataClient:
                     kilometers_since_last_refuel DOUBLE NOT NULL,
                     estimated_fuel_consumption DOUBLE NOT NULL,
                     notes VARCHAR,
+                    station_id VARCHAR,
                     PRIMARY KEY (user_id, timestamp)
                 )
             """
@@ -58,8 +59,8 @@ class RefuelDataClient:
                     con.execute(
                         """
                         INSERT INTO refuel_metrics (timestamp, user_id, price, amount,
-                        kilometers_since_last_refuel, estimated_fuel_consumption, notes)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        kilometers_since_last_refuel, estimated_fuel_consumption, notes, station_id)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         [
                             metric.timestamp,
@@ -69,6 +70,7 @@ class RefuelDataClient:
                             metric.kilometers_since_last_refuel,
                             metric.estimated_fuel_consumption,
                             metric.notes,
+                            metric.station_id,
                         ],
                     )
             return True
@@ -272,3 +274,40 @@ class RefuelDataClient:
                 "largest_fillup": 0.0,
                 "smallest_fillup": 0.0,
             }
+
+    def get_favorite_stations_for_dropdown(
+        self, user_id: str, fuel_station_client
+    ) -> list[dict[str, Any]]:
+        """
+        Get user's favorite stations with basic info for dropdown selection.
+        Returns station information without fuel prices.
+
+        Args:
+            user_id: The user ID
+            fuel_station_client: FuelStationClient instance for fetching station data
+
+        Returns:
+            List of dictionaries with station_id, brand, street, house_number, and place
+        """
+        try:
+            # Get favorite stations with full info using the FuelStationClient
+            stations = fuel_station_client.get_favorite_stations_with_info(user_id)
+
+            # Convert to simplified format for dropdown
+            dropdown_stations = []
+            for station in stations:
+                dropdown_stations.append(
+                    {
+                        "station_id": station.station_id,
+                        "brand": station.brand,
+                        "street": station.street,
+                        "house_number": station.house_number,
+                        "place": station.place,
+                    }
+                )
+
+            return dropdown_stations
+
+        except Exception as e:
+            print(f"Error getting favorite stations for dropdown: {e}")
+            return []

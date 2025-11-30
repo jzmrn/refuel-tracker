@@ -42,3 +42,4 @@ class RefuelMetric(BaseModel):
     kilometers_since_last_refuel: float
     estimated_fuel_consumption: float
     notes: str | None = None
+    station_id: str | None = None

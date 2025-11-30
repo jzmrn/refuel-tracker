@@ -111,7 +111,7 @@ export default function StationCard({
               {priceE5 !== undefined &&
                 priceE5 !== null &&
                 typeof priceE5 === "number" && (
-                  <div className="text-center">
+                  <div className="text-center w-24">
                     <div className="text-3xl font-bold text-primary">
                       {renderPrice(priceE5, "text-lg")}
                     </div>
@@ -123,7 +123,7 @@ export default function StationCard({
               {priceE10 !== undefined &&
                 priceE10 !== null &&
                 typeof priceE10 === "number" && (
-                  <div className="text-center">
+                  <div className="text-center w-24">
                     <div className="text-3xl font-bold text-primary">
                       {renderPrice(priceE10, "text-lg")}
                     </div>
@@ -135,7 +135,7 @@ export default function StationCard({
               {priceDiesel !== undefined &&
                 priceDiesel !== null &&
                 typeof priceDiesel === "number" && (
-                  <div className="text-center">
+                  <div className="text-center w-24">
                     <div className="text-3xl font-bold text-primary">
                       {renderPrice(priceDiesel, "text-lg")}
                     </div>

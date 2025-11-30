@@ -132,6 +132,8 @@ export const en: TranslationStructure = {
     notes: "Notes",
     optional: "optional",
     cancel: "Cancel",
+    gasStation: "Gas Station",
+    selectStation: "Select a station...",
 
     // Validation messages
     priceMinRequired: "Price must be at least 0.001 €/L",

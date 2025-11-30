@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fueldata.stations import FuelStationClient
 
 from ..auth import CurrentUser
 from ..models import (
@@ -21,6 +22,11 @@ def get_refuel_client(request: Request) -> RefuelDataClient:
     return request.app.state.refuel_client
 
 
+def get_fuel_station_client(request: Request) -> FuelStationClient:
+    """Dependency to get the fuel station client from app state"""
+    return request.app.state.fuel_station_client
+
+
 # Refuel-specific endpoints
 @router.post("/refuel", response_model=dict)
 async def create_refuel_metric(
@@ -35,11 +41,13 @@ async def create_refuel_metric(
 
         metric = RefuelMetric(
             timestamp=metric_data.timestamp,
+            user_id=user.id,
             price=metric_data.price,
             amount=metric_data.amount,
             kilometers_since_last_refuel=metric_data.kilometers_since_last_refuel,
             estimated_fuel_consumption=metric_data.estimated_fuel_consumption,
             notes=metric_data.notes,
+            station_id=metric_data.station_id,
         )
 
         success = client.add_metric(metric, user.id)
@@ -165,3 +173,22 @@ async def get_refuel_monthly_summary(
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/refuel/favorite-stations", response_model=list[dict])
+async def get_favorite_stations_for_dropdown(
+    user: CurrentUser,
+    refuel_client: RefuelDataClient = Depends(get_refuel_client),
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+):
+    """Get user's favorite stations for refuel dropdown (without fuel prices)"""
+    try:
+        stations = refuel_client.get_favorite_stations_for_dropdown(
+            user.id, fuel_station_client
+        )
+        return stations
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch favorite stations: {str(e)}"
+        )

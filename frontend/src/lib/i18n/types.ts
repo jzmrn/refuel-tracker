@@ -137,6 +137,8 @@ export interface TranslationStructure {
     notes: string;
     optional: string;
     cancel: string;
+    gasStation: string;
+    selectStation: string;
 
     // Validation messages
     priceMinRequired: string;

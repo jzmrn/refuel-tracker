@@ -35,6 +35,7 @@ def run_migrations(db_path: Path) -> None:
     # Run each migration in order
     migrations = [
         (1, add_picture_base64_column),
+        (2, add_station_id_to_refuel),
     ]
 
     for version, migration_func in migrations:
@@ -96,3 +97,32 @@ def add_picture_base64_column(duckdb_resource: BackendDuckDBResource) -> None:
             logger.info("picture_base64 column added successfully")
         else:
             logger.info("picture_base64 column already exists")
+
+
+def add_station_id_to_refuel(duckdb_resource: BackendDuckDBResource) -> None:
+    """
+    Migration #2: Add station_id column to refuel_metrics table
+    This allows users to track which gas station they refueled at.
+    The column is nullable as existing entries don't have this information.
+    """
+    with duckdb_resource.get_connection() as con:
+        # Check if column already exists
+        result = con.execute(
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'refuel_metrics' AND column_name = 'station_id'
+            """
+        ).fetchone()
+
+        if not result:
+            logger.info("Adding station_id column to refuel_metrics table")
+            con.execute(
+                """
+                ALTER TABLE refuel_metrics
+                ADD COLUMN station_id VARCHAR
+                """
+            )
+            logger.info("station_id column added successfully")
+        else:
+            logger.info("station_id column already exists")

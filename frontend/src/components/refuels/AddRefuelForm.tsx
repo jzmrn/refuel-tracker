@@ -1,5 +1,9 @@
-import React, { useState } from "react";
-import { RefuelMetricCreate } from "../../lib/api";
+import React, { useState, useEffect } from "react";
+import {
+  RefuelMetricCreate,
+  FavoriteStationDropdown,
+  apiService,
+} from "../../lib/api";
 import { StandardForm } from "../common/StandardForm";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
 
@@ -20,12 +24,37 @@ export default function AddRefuelForm({
     estimated_fuel_consumption: 0,
     timestamp: new Date().toISOString().slice(0, 16), // Current date/time in YYYY-MM-DDTHH:mm format
     notes: "",
+    station_id: undefined,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [favoriteStations, setFavoriteStations] = useState<
+    FavoriteStationDropdown[]
+  >([]);
+  const [loadingStations, setLoadingStations] = useState(false);
+
+  // Fetch favorite stations on mount
+  useEffect(() => {
+    const fetchFavoriteStations = async () => {
+      try {
+        setLoadingStations(true);
+        const stations = await apiService.getFavoriteStationsForDropdown();
+        setFavoriteStations(stations);
+      } catch (error) {
+        console.error("Error fetching favorite stations:", error);
+        // Silently fail - dropdown will just be empty
+      } finally {
+        setLoadingStations(false);
+      }
+    };
+
+    fetchFavoriteStations();
+  }, []);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value } = e.target;
 
@@ -148,6 +177,7 @@ export default function AddRefuelForm({
           ? new Date(formData.timestamp).toISOString()
           : new Date().toISOString(),
         notes: formData.notes?.trim() || undefined,
+        station_id: formData.station_id || undefined,
       };
       onSubmit(submissionData);
 
@@ -159,6 +189,7 @@ export default function AddRefuelForm({
         estimated_fuel_consumption: 0,
         timestamp: new Date().toISOString().slice(0, 16), // Reset to current date/time
         notes: "",
+        station_id: undefined,
       });
     }
   };
@@ -223,6 +254,28 @@ export default function AddRefuelForm({
           </button>
         </div>
         {errors.timestamp && <p className="error-text">{errors.timestamp}</p>}
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="station_id" className="label">
+          {t.refuels.gasStation} ({t.refuels.optional})
+        </label>
+        <select
+          id="station_id"
+          name="station_id"
+          value={formData.station_id || ""}
+          onChange={handleChange}
+          className="input"
+          disabled={loadingStations}
+        >
+          <option value="">{t.refuels.selectStation}</option>
+          {favoriteStations.map((station) => (
+            <option key={station.station_id} value={station.station_id}>
+              {station.brand} - {station.street} {station.house_number},{" "}
+              {station.place}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="form-row">

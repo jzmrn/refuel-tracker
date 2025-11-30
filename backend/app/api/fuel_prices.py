@@ -1,5 +1,3 @@
-from typing import Annotated
-
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fueldata.stations import FuelStationClient
 from tankerkoenig import TankerkoenigClient
@@ -37,9 +35,7 @@ def get_fuel_station_client(request: Request):
 async def search_gas_stations(
     search_params: GasStationSearchRequest,
     user: CurrentUser,
-    tankerkoenig_client: Annotated[
-        TankerkoenigClient, Depends(get_tankerkoenig_client)
-    ],
+    tankerkoenig_client: TankerkoenigClient = Depends(get_tankerkoenig_client),
 ):
     """Search for gas stations near a location"""
     try:
@@ -121,10 +117,8 @@ async def search_gas_stations(
 async def add_favorite_station(
     favorite_data: FavoriteStationCreate,
     user: CurrentUser,
-    fuel_station_client: Annotated[FuelStationClient, Depends(get_fuel_station_client)],
-    tankerkoenig_client: Annotated[
-        TankerkoenigClient, Depends(get_tankerkoenig_client)
-    ],
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+    tankerkoenig_client: TankerkoenigClient = Depends(get_tankerkoenig_client),
 ):
     """Add a gas station to favorites and store its information"""
 
@@ -168,10 +162,8 @@ async def add_favorite_station(
 @router.get("/favorites", response_model=list[FavoriteStationResponse])
 async def get_favorite_stations(
     user: CurrentUser,
-    fuel_station_client: Annotated[FuelStationClient, Depends(get_fuel_station_client)],
-    tankerkoenig_client: Annotated[
-        TankerkoenigClient, Depends(get_tankerkoenig_client)
-    ],
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+    tankerkoenig_client: TankerkoenigClient = Depends(get_tankerkoenig_client),
 ):
     """Get user's favorite stations with current prices"""
 
@@ -229,7 +221,7 @@ async def get_favorite_stations(
 async def delete_favorite_station(
     station_id: str,
     user: CurrentUser,
-    fuel_station_client: Annotated[FuelStationClient, Depends(get_fuel_station_client)],
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
 ):
     """Remove a station from favorites"""
 
@@ -251,10 +243,8 @@ async def delete_favorite_station(
 @router.get("/summary", response_model=FuelPricesSummaryResponse)
 async def get_fuel_prices_summary(
     user: CurrentUser,
-    fuel_station_client: Annotated[FuelStationClient, Depends(get_fuel_station_client)],
-    tankerkoenig_client: Annotated[
-        TankerkoenigClient, Depends(get_tankerkoenig_client)
-    ],
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+    tankerkoenig_client: TankerkoenigClient = Depends(get_tankerkoenig_client),
 ):
     """Get summary statistics for user's favorite stations"""
 

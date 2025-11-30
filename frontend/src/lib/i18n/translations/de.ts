@@ -138,6 +138,8 @@ export const de: TranslationStructure = {
     notes: "Notizen",
     optional: "optional",
     cancel: "Abbrechen",
+    gasStation: "Tankstelle",
+    selectStation: "Tankstelle auswählen...",
 
     // Validation messages
     priceMinRequired: "Preis muss mindestens 0,001 €/L betragen",
