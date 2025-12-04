@@ -1,6 +1,6 @@
 node:
-  id: app
-  cluster: app
+  id: analytics
+  cluster: analytics
 
 static_resources:
   listeners:
@@ -59,7 +59,7 @@ static_resources:
                           - name: ":method"
                             string_match:
                               exact: "OPTIONS"
-                          
+
                   - name: envoy.filters.http.jwt_authn
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
@@ -78,20 +78,26 @@ static_resources:
                             - "IdToken"
                           forward: true
                           payload_in_metadata: jwt_payload
-                          claim_to_headers:
-                            - header_name: x-jwt-sub
-                              claim_name: sub
-                            - header_name: x-jwt-email
-                              claim_name: email
-                            - header_name: x-jwt-name
-                              claim_name: name
-                            - header_name: x-jwt-picture
-                              claim_name: picture
                       rules:
                         - match:
                             prefix: "/"
                           requires:
                             provider_name: google_jwt
+
+                  - name: envoy.filters.http.ext_authz
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
+                      transport_api_version: V3
+                      with_request_body:
+                        max_request_bytes: 8192
+                        allow_partial_message: true
+                      failure_mode_allow: false
+                      grpc_service:
+                        envoy_grpc:
+                          cluster_name: opa_cluster
+                        timeout: 1s
+                      metadata_context_namespaces:
+                        - envoy.filters.http.jwt_authn
 
                   - name: envoy.filters.http.router
                     typed_config:
@@ -103,13 +109,9 @@ static_resources:
                       domains: ["*"]
                       routes:
                         - match:
-                            prefix: "/api/"
-                          route:
-                            cluster: backend_cluster
-                        - match:
                             prefix: "/"
                           route:
-                            cluster: frontend_cluster
+                            cluster: dagster_cluster
 
   clusters:
     # OAuth2 token endpoint cluster
@@ -150,31 +152,37 @@ static_resources:
           "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
           sni: www.googleapis.com
 
-    - name: frontend_cluster
+    - name: dagster_cluster
       type: LOGICAL_DNS
       dns_lookup_family: V4_ONLY
       load_assignment:
-        cluster_name: frontend_cluster
+        cluster_name: dagster_cluster
         endpoints:
           - lb_endpoints:
               - endpoint:
                   address:
                     socket_address:
-                      address: frontend
+                      address: dagster
                       port_value: 3000
 
-    - name: backend_cluster
+    # OPA cluster for external authorization
+    - name: opa_cluster
       type: LOGICAL_DNS
       dns_lookup_family: V4_ONLY
+      typed_extension_protocol_options:
+        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+          "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+          explicit_http_config:
+            http2_protocol_options: {}
       load_assignment:
-        cluster_name: backend_cluster
+        cluster_name: opa_cluster
         endpoints:
           - lb_endpoints:
               - endpoint:
                   address:
                     socket_address:
-                      address: backend
-                      port_value: 8000
+                      address: opa
+                      port_value: 9191
 
 admin:
   address:

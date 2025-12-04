@@ -94,6 +94,9 @@ dev-analytics: install-analytics
 
 # Render Envoy config templates
 render-envoy-config DEPLOYMENT="app" ENV="development":
-    jinja2 config/{{ DEPLOYMENT }}-envoy.yaml.j2 "config/variables.{{ DEPLOYMENT }}.{{ ENV }}.yaml" --format=yaml > config/out/{{ DEPLOYMENT }}/envoy.yaml
-    jinja2 config/envoy-hmac-secret.yaml.j2 "config/variables.{{ DEPLOYMENT }}.{{ ENV }}.yaml" --format=yaml > config/out/{{ DEPLOYMENT }}/envoy-hmac-secret.yaml
-    jinja2 config/envoy-token-secret.yaml.j2 "config/variables.{{ DEPLOYMENT }}.{{ ENV }}.yaml" --format=yaml > config/out/{{ DEPLOYMENT }}/envoy-token-secret.yaml
+    @mkdir -p config/out/{{ DEPLOYMENT }}
+    jinja2 config/templates/{{ DEPLOYMENT }}-envoy.yaml.j2 "config/variables.{{ DEPLOYMENT }}.{{ ENV }}.yaml" --format=yaml > config/out/{{ DEPLOYMENT }}/envoy.yaml
+    jinja2 config/templates/envoy-hmac-secret.yaml.j2 "config/variables.{{ DEPLOYMENT }}.{{ ENV }}.yaml" --format=yaml > config/out/{{ DEPLOYMENT }}/envoy-hmac-secret.yaml
+    jinja2 config/templates/envoy-token-secret.yaml.j2 "config/variables.{{ DEPLOYMENT }}.{{ ENV }}.yaml" --format=yaml > config/out/{{ DEPLOYMENT }}/envoy-token-secret.yaml
+    jinja2 config/templates/opa-data.json.j2 "config/variables.{{ DEPLOYMENT }}.{{ ENV }}.yaml" --format=yaml > config/out/{{ DEPLOYMENT }}/opa-data.json
+    @echo "Rendered {{ DEPLOYMENT }} configuration for {{ ENV }} environment"

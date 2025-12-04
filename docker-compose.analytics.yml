@@ -10,6 +10,28 @@ services:
       - ./config/out/analytics/envoy-hmac-secret.yaml:/etc/envoy/hmac-secret.yaml:ro
     depends_on:
       - dagster
+      - opa
+    restart: unless-stopped
+
+  opa:
+    image: openpolicyagent/opa:latest-envoy
+    expose:
+      - "9191"
+      - "8181"
+    ports:
+      - "8182:8181"
+    volumes:
+      - ./config/policies:/policies:ro
+      - ./config/out/analytics/opa-data.json:/data/data.json:ro
+      - ./config/opa-config.yaml:/config/opa-config.yaml:ro
+    command:
+      - "run"
+      - "--server"
+      - "--addr=0.0.0.0:8181"
+      - "--diagnostic-addr=0.0.0.0:8282"
+      - "--config-file=/config/opa-config.yaml"
+      - "/policies/user_allowlist.rego"
+      - "/data/data.json"
     restart: unless-stopped
 
   dagster:
