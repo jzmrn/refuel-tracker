@@ -7,7 +7,7 @@ import {
   apiService,
 } from "../../lib/api";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
-import { TrashIcon } from "../common/Icons";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 interface CarFormProps {
   car?: Car; // If provided, form is in edit mode
@@ -321,7 +321,7 @@ const CarForm: React.FC<CarFormProps> = ({
                         className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                         title="Remove access"
                       >
-                        <TrashIcon size="sm" />
+                        <DeleteIcon className="icon-sm" />
                       </button>
                     </div>
                   ))}

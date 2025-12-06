@@ -11,13 +11,11 @@ import {
 } from "recharts";
 import SummaryCard from "../common/SummaryCard";
 import { GridLayout } from "../common/GridLayout";
-import {
-  ChartIcon,
-  HashIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
-  CheckCircleIcon,
-} from "../common/Icons";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import NumbersIcon from "@mui/icons-material/Numbers";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import TrendingDownIcon from "@mui/icons-material/TrendingDown";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import {
   useTranslation,
   useLocalization,
@@ -277,14 +275,18 @@ export default function RefuelConsumptionChart({
           <SummaryCard
             title={t.refuels.avgActual}
             value={{ value: formatConsumption(avgActual), unit: "L/100km" }}
-            icon={<ChartIcon size="lg" color="green" />}
+            icon={
+              <BarChartIcon className="icon-lg text-green-600 dark:text-green-400" />
+            }
             iconBgColor="green"
           />
 
           <SummaryCard
             title={t.refuels.avgEstimated}
             value={{ value: formatConsumption(avgEstimated), unit: "L/100km" }}
-            icon={<HashIcon size="lg" color="blue" />}
+            icon={
+              <NumbersIcon className="icon-lg text-blue-600 dark:text-blue-400" />
+            }
             iconBgColor="blue"
           />
 
@@ -298,9 +300,9 @@ export default function RefuelConsumptionChart({
             }}
             icon={
               avgDifference > 0 ? (
-                <TrendingUpIcon size="lg" color="red" />
+                <TrendingUpIcon className="icon-lg text-red-600 dark:text-red-400" />
               ) : (
-                <TrendingDownIcon size="lg" color="green" />
+                <TrendingDownIcon className="icon-lg text-green-600 dark:text-green-400" />
               )
             }
             iconBgColor={avgDifference > 0 ? "red" : "green"}
@@ -309,7 +311,9 @@ export default function RefuelConsumptionChart({
           <SummaryCard
             title={t.refuels.accuracy}
             value={{ value: `${accuracyPercentage.toFixed(0)}`, unit: "%" }}
-            icon={<CheckCircleIcon size="lg" color="purple" />}
+            icon={
+              <CheckCircleOutlineIcon className="icon-lg text-purple-600 dark:text-purple-400" />
+            }
             iconBgColor="purple"
           />
         </GridLayout>

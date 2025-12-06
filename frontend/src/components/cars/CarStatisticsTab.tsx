@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Car, CarStatistics as CarStats, apiService } from "../../lib/api";
-import { ChartIcon, CarIcon, CurrencyIcon, BeakerIcon } from "../common/Icons";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import ScienceIcon from "@mui/icons-material/Science";
 
 interface CarStatisticsTabProps {
   cars: Car[];
@@ -60,7 +63,7 @@ const CarStatisticsTab: React.FC<CarStatisticsTabProps> = ({
 
       {cars.length === 0 ? (
         <div className="card text-center py-12">
-          <CarIcon size="xl" color="gray" className="mx-auto mb-4" />
+          <DirectionsCarIcon className="icon-xl text-gray-600 dark:text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-400">
             No cars available. Add a car in the "My Cars" tab to view
             statistics.
@@ -101,7 +104,7 @@ const CarStatisticsTab: React.FC<CarStatisticsTabProps> = ({
                   {selectedCarData && (
                     <div className="card bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
                       <div className="flex items-center gap-3 mb-2">
-                        <CarIcon size="lg" color="blue" />
+                        <DirectionsCarIcon className="icon-lg text-blue-600 dark:text-blue-400" />
                         <div>
                           <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                             {selectedCarData.name}
@@ -122,11 +125,7 @@ const CarStatisticsTab: React.FC<CarStatisticsTabProps> = ({
 
                   {statistics.total_refuels === 0 ? (
                     <div className="card text-center py-12">
-                      <ChartIcon
-                        size="xl"
-                        color="gray"
-                        className="mx-auto mb-4"
-                      />
+                      <BarChartIcon className="icon-xl text-gray-600 dark:text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-600 dark:text-gray-400">
                         No refuel data available for this car yet
                       </p>
@@ -140,7 +139,7 @@ const CarStatisticsTab: React.FC<CarStatisticsTabProps> = ({
                             <span className="text-sm text-gray-600 dark:text-gray-400">
                               Total Refuels
                             </span>
-                            <ChartIcon size="sm" color="blue" />
+                            <BarChartIcon className="icon-sm text-blue-600 dark:text-blue-400" />
                           </div>
                           <div className="text-2xl font-bold text-gray-900 dark:text-white">
                             {statistics.total_refuels}
@@ -152,7 +151,7 @@ const CarStatisticsTab: React.FC<CarStatisticsTabProps> = ({
                             <span className="text-sm text-gray-600 dark:text-gray-400">
                               Total Distance
                             </span>
-                            <ChartIcon size="sm" color="green" />
+                            <BarChartIcon className="icon-sm text-green-600 dark:text-green-400" />
                           </div>
                           <div className="text-2xl font-bold text-gray-900 dark:text-white">
                             {statistics.total_distance.toLocaleString()} km
@@ -164,7 +163,7 @@ const CarStatisticsTab: React.FC<CarStatisticsTabProps> = ({
                             <span className="text-sm text-gray-600 dark:text-gray-400">
                               Total Fuel
                             </span>
-                            <BeakerIcon size="sm" color="purple" />
+                            <ScienceIcon className="icon-sm text-purple-600 dark:text-purple-400" />
                           </div>
                           <div className="text-2xl font-bold text-gray-900 dark:text-white">
                             {statistics.total_fuel.toFixed(1)} L
@@ -176,7 +175,7 @@ const CarStatisticsTab: React.FC<CarStatisticsTabProps> = ({
                             <span className="text-sm text-gray-600 dark:text-gray-400">
                               Total Cost
                             </span>
-                            <CurrencyIcon size="sm" color="orange" />
+                            <AttachMoneyIcon className="icon-sm text-orange-600 dark:text-orange-400" />
                           </div>
                           <div className="text-2xl font-bold text-gray-900 dark:text-white">
                             €{statistics.total_cost.toFixed(2)}

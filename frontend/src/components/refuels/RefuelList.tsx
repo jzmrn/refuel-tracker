@@ -2,7 +2,9 @@ import React from "react";
 import { RefuelMetric } from "../../lib/api";
 import LoadingSpinner from "../common/LoadingSpinner";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
-import { EmptyState, ChartIcon, CollectionIcon } from "../common";
+import { EmptyState } from "../common";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import CollectionsIcon from "@mui/icons-material/Collections";
 
 interface RefuelListProps {
   refuels: RefuelMetric[];
@@ -24,7 +26,7 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
     return (
       <EmptyState
         icon={
-          <CollectionIcon size="xl" color="gray" className="mx-auto mb-4" />
+          <CollectionsIcon className="icon-xl text-gray-600 dark:text-gray-400 mx-auto mb-4" />
         }
         title={t.refuels.noRefuelEntriesYet}
       />

@@ -1,5 +1,7 @@
 import React, { useEffect } from "react";
-import { CheckCircleIcon, WarningIcon, XIcon } from "./Icons";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import CloseIcon from "@mui/icons-material/Close";
 
 export type SnackbarType = "success" | "error" | "warning" | "info";
 
@@ -70,13 +72,13 @@ const Snackbar: React.FC<SnackbarProps> = ({
   const getIcon = () => {
     switch (type) {
       case "success":
-        return <CheckCircleIcon size="sm" color="current" />;
+        return <CheckCircleOutlineIcon className="icon-sm text-current" />;
       case "error":
-        return <XIcon size="sm" color="current" />;
+        return <CloseIcon className="icon-sm text-current" />;
       case "warning":
-        return <WarningIcon size="sm" color="current" />;
+        return <WarningAmberIcon className="icon-sm text-current" />;
       case "info":
-        return <CheckCircleIcon size="sm" color="current" />;
+        return <CheckCircleOutlineIcon className="icon-sm text-current" />;
       default:
         return null;
     }

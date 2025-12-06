@@ -7,7 +7,8 @@ import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import Snackbar from "@/components/common/Snackbar";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import SummaryCard from "@/components/common/SummaryCard";
-import { TagIcon, HashIcon } from "@/components/common/Icons";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import NumbersIcon from "@mui/icons-material/Numbers";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import apiService, {
@@ -141,7 +142,9 @@ export default function TimeSpans() {
         value={{ value: summary?.unique_labels || 0 }}
         loading={loading}
         iconBgColor="purple"
-        icon={<TagIcon size="lg" color="purple" />}
+        icon={
+          <LocalOfferIcon className="icon-lg text-purple-600 dark:text-purple-400" />
+        }
       />
 
       <SummaryCard
@@ -149,7 +152,9 @@ export default function TimeSpans() {
         value={{ value: summary?.total_entries || 0 }}
         loading={loading}
         iconBgColor="yellow"
-        icon={<HashIcon size="lg" color="yellow" />}
+        icon={
+          <NumbersIcon className="icon-lg text-yellow-600 dark:text-yellow-400" />
+        }
       />
     </div>
   );

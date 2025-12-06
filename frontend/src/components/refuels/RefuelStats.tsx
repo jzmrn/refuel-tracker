@@ -7,7 +7,10 @@ import RefuelPriceChart from "./RefuelPriceChart";
 import RefuelConsumptionChart from "./RefuelConsumptionChart";
 import SummaryCard from "../common/SummaryCard";
 import LoadingSpinner from "../common/LoadingSpinner";
-import { CurrencyIcon, BeakerIcon, ChartIcon, HashIcon } from "../common/Icons";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import ScienceIcon from "@mui/icons-material/Science";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import NumbersIcon from "@mui/icons-material/Numbers";
 import { EmptyState } from "../common";
 import { GridLayout } from "../common/GridLayout";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
@@ -36,7 +39,9 @@ export default function RefuelStats({
   if (!statistics) {
     return (
       <EmptyState
-        icon={<ChartIcon size="xl" color="gray" className="mx-auto mb-4" />}
+        icon={
+          <BarChartIcon className="icon-xl text-gray-600 dark:text-gray-400 mx-auto mb-4" />
+        }
         title={t.common.noStatistics}
         className="empty-state"
       />
@@ -57,7 +62,9 @@ export default function RefuelStats({
           <SummaryCard
             title={t.refuels.totalCost}
             value={{ value: cost_statistics.total_cost, unit: "€" }}
-            icon={<CurrencyIcon size="lg" color="blue" />}
+            icon={
+              <AttachMoneyIcon className="icon-lg text-blue-600 dark:text-blue-400" />
+            }
             iconBgColor="blue"
           />
 
@@ -67,7 +74,9 @@ export default function RefuelStats({
               value: formatLiters(cost_statistics.total_liters),
               unit: "L",
             }}
-            icon={<BeakerIcon size="lg" color="green" />}
+            icon={
+              <ScienceIcon className="icon-lg text-green-600 dark:text-green-400" />
+            }
             iconBgColor="green"
           />
 
@@ -79,14 +88,18 @@ export default function RefuelStats({
               ),
               unit: "€/L",
             }}
-            icon={<ChartIcon size="lg" color="yellow" />}
+            icon={
+              <BarChartIcon className="icon-lg text-yellow-600 dark:text-yellow-400" />
+            }
             iconBgColor="yellow"
           />
 
           <SummaryCard
             title={t.refuels.refuelEntries}
             value={{ value: cost_statistics.fill_up_count.toString() }}
-            icon={<HashIcon size="lg" color="purple" />}
+            icon={
+              <NumbersIcon className="icon-lg text-purple-600 dark:text-purple-400" />
+            }
             iconBgColor="purple"
           />
         </GridLayout>

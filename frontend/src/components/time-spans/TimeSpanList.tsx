@@ -7,12 +7,10 @@ import {
 } from "date-fns";
 import { TimeSpanResponse } from "@/lib/api";
 import LoadingSpinner from "../common/LoadingSpinner";
-import {
-  EditIcon,
-  TrashIcon,
-  ClockIcon,
-  CollectionIcon,
-} from "../common/Icons";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import CollectionsIcon from "@mui/icons-material/Collections";
 import { EmptyState } from "../common";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
@@ -42,7 +40,9 @@ export default function TimeSpanList({
   if (!timeSpans || timeSpans.length === 0) {
     return (
       <EmptyState
-        icon={<ClockIcon size="xl" color="gray" className="mx-auto mb-4" />}
+        icon={
+          <AccessTimeIcon className="icon-xl text-gray-600 dark:text-gray-400 mx-auto mb-4" />
+        }
         title={t.timeSpans.noTimeSpansYet}
         className="empty-state"
       />
@@ -219,7 +219,7 @@ export default function TimeSpanList({
                             className="action-btn-edit"
                             title={t.timeSpans.editTimeSpanTitle}
                           >
-                            <EditIcon size="sm" color="indigo" />
+                            <EditIcon className="icon-sm text-indigo-600 dark:text-indigo-400" />
                           </button>
                         )}
                         <button
@@ -227,7 +227,7 @@ export default function TimeSpanList({
                           className="action-btn-delete"
                           title={t.timeSpans.deleteTitle}
                         >
-                          <TrashIcon size="sm" color="red" />
+                          <DeleteIcon className="icon-sm text-red-600 dark:text-red-400" />
                           {t.common.delete}
                         </button>
                       </div>

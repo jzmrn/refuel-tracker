@@ -12,7 +12,6 @@ export { default as ThemeSelector } from "./ThemeSelector";
 export { default as EmptyState } from "./EmptyState";
 
 // Export new centralized components
-export * from "./Icons";
 export { GridLayout } from "./GridLayout";
 export { StandardCard } from "./StandardCard";
 export { StandardForm } from "./StandardForm";

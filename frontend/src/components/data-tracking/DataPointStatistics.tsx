@@ -13,13 +13,11 @@ import { format } from "date-fns";
 import { DataPointResponse } from "@/lib/api";
 import SummaryCard from "../common/SummaryCard";
 import LoadingSpinner from "../common/LoadingSpinner";
-import {
-  ChartIcon,
-  TagIcon,
-  HashIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
-} from "../common/Icons";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import NumbersIcon from "@mui/icons-material/Numbers";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import { EmptyState } from "../common";
 import { GridLayout } from "../common/GridLayout";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -51,7 +49,9 @@ export default function DataPointStatistics({
   if (!dataPoints || dataPoints.length === 0) {
     return (
       <EmptyState
-        icon={<ChartIcon size="xl" color="gray" className="mx-auto mb-4" />}
+        icon={
+          <BarChartIcon className="icon-xl text-gray-600 dark:text-gray-400 mx-auto mb-4" />
+        }
         title={t.common.noStatistics}
         className="empty-state"
       />
@@ -169,28 +169,36 @@ export default function DataPointStatistics({
         <SummaryCard
           title={t.dataTracking.average}
           value={{ value: formatValue(average) }}
-          icon={<ChartIcon size="md" color="blue" />}
+          icon={
+            <BarChartIcon className="icon-md text-blue-600 dark:text-blue-400" />
+          }
           iconBgColor="blue"
         />
 
         <SummaryCard
           title={t.dataTracking.median}
           value={{ value: formatValue(median) }}
-          icon={<ChartIcon size="md" color="green" />}
+          icon={
+            <BarChartIcon className="icon-md text-green-600 dark:text-green-400" />
+          }
           iconBgColor="green"
         />
 
         <SummaryCard
           title={t.dataTracking.range}
           value={{ value: formatValue(range) }}
-          icon={<TagIcon size="md" color="yellow" />}
+          icon={
+            <LocalOfferIcon className="icon-md text-yellow-600 dark:text-yellow-400" />
+          }
           iconBgColor="yellow"
         />
 
         <SummaryCard
           title={t.common.entries}
           value={{ value: count.toString() }}
-          icon={<HashIcon size="md" color="purple" />}
+          icon={
+            <NumbersIcon className="icon-md text-purple-600 dark:text-purple-400" />
+          }
           iconBgColor="purple"
         />
       </GridLayout>

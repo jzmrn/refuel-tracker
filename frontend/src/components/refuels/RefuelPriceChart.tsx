@@ -11,12 +11,10 @@ import {
 } from "recharts";
 import SummaryCard from "../common/SummaryCard";
 import { GridLayout } from "../common/GridLayout";
-import {
-  CurrencyIcon,
-  TrendingDownIcon,
-  TrendingUpIcon,
-  ChartIcon,
-} from "../common/Icons";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import TrendingDownIcon from "@mui/icons-material/TrendingDown";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
 import { useChartTheme } from "../../lib/theme";
 
@@ -206,7 +204,9 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
                 ),
                 unit: "€/L",
               }}
-              icon={<CurrencyIcon size="lg" color="blue" />}
+              icon={
+                <AttachMoneyIcon className="icon-lg text-blue-600 dark:text-blue-400" />
+              }
               iconBgColor="blue"
             />
 
@@ -216,7 +216,9 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
                 value: formatPricePerLiter(minPrice),
                 unit: "€/L",
               }}
-              icon={<TrendingDownIcon size="lg" color="green" />}
+              icon={
+                <TrendingDownIcon className="icon-lg text-green-600 dark:text-green-400" />
+              }
               iconBgColor="green"
             />
 
@@ -226,7 +228,9 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
                 value: formatPricePerLiter(maxPrice),
                 unit: "€/L",
               }}
-              icon={<TrendingUpIcon size="lg" color="red" />}
+              icon={
+                <TrendingUpIcon className="icon-lg text-red-600 dark:text-red-400" />
+              }
               iconBgColor="red"
             />
 
@@ -236,7 +240,9 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
                 value: formatPricePerLiter(priceRange),
                 unit: "€/L",
               }}
-              icon={<ChartIcon size="lg" color="gray" />}
+              icon={
+                <BarChartIcon className="icon-lg text-gray-600 dark:text-gray-400" />
+              }
               iconBgColor="gray"
             />
           </GridLayout>

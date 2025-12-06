@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Car, apiService } from "../../lib/api";
-import { CarIcon, EditIcon, TrashIcon } from "../common/Icons";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 import ConfirmationDialog from "../common/ConfirmationDialog";
 import CarForm from "./CarForm";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
@@ -76,7 +78,7 @@ const CarsTab: React.FC<CarsTabProps> = ({
 
         {ownedCars.length === 0 ? (
           <div className="card text-center py-12">
-            <CarIcon size="xl" color="gray" className="mx-auto mb-4" />
+            <DirectionsCarIcon className="icon-xl text-gray-600 dark:text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               {t.cars.noCarsYet}
             </p>
@@ -90,7 +92,7 @@ const CarsTab: React.FC<CarsTabProps> = ({
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <CarIcon size="md" color="blue" />
+                    <DirectionsCarIcon className="icon-md text-blue-600 dark:text-blue-400" />
                     <h4 className="font-semibold text-gray-900 dark:text-white">
                       {car.name}
                     </h4>
@@ -101,14 +103,14 @@ const CarsTab: React.FC<CarsTabProps> = ({
                       className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                       title={t.common.edit}
                     >
-                      <EditIcon size="sm" />
+                      <EditIcon className="icon-sm" />
                     </button>
                     <button
                       onClick={() => handleDelete(car)}
                       className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                       title={t.common.delete}
                     >
-                      <TrashIcon size="sm" />
+                      <DeleteIcon className="icon-sm" />
                     </button>
                   </div>
                 </div>
@@ -158,7 +160,7 @@ const CarsTab: React.FC<CarsTabProps> = ({
                 className="card hover:shadow-lg transition-shadow"
               >
                 <div className="flex items-start gap-2 mb-3">
-                  <CarIcon size="md" color="purple" />
+                  <DirectionsCarIcon className="icon-md text-purple-600 dark:text-purple-400" />
                   <div>
                     <h4 className="font-semibold text-gray-900 dark:text-white">
                       {car.name}

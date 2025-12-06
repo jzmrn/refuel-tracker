@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import {
-  ChartBarIcon,
-  ClockIcon,
-  CurrencyDollarIcon,
-  DocumentChartBarIcon,
-  TruckIcon,
-} from "@heroicons/react/24/outline";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -16,7 +14,7 @@ export default function Dashboard() {
       name: t.navigation.refuel,
       description: t.dashboard.features.refuelDescription,
       href: "/refuels",
-      icon: TruckIcon,
+      icon: LocalShippingIcon,
       color: "text-blue-600",
       bgColor: "bg-blue-100",
     },
@@ -24,7 +22,7 @@ export default function Dashboard() {
       name: t.navigation.dataTracking,
       description: t.dashboard.features.dataTrackingDescription,
       href: "/data-tracking",
-      icon: ChartBarIcon,
+      icon: BarChartIcon,
       color: "text-green-600",
       bgColor: "bg-green-100",
     },
@@ -32,7 +30,7 @@ export default function Dashboard() {
       name: t.navigation.timeSpans,
       description: t.dashboard.features.timeSpansDescription,
       href: "/time-spans",
-      icon: ClockIcon,
+      icon: AccessTimeIcon,
       color: "text-purple-600",
       bgColor: "bg-purple-100",
     },
@@ -40,7 +38,7 @@ export default function Dashboard() {
       name: t.navigation.fuelPrices,
       description: t.dashboard.features.fuelPricesDescription,
       href: "/fuel-prices",
-      icon: CurrencyDollarIcon,
+      icon: AttachMoneyIcon,
       color: "text-yellow-600",
       bgColor: "bg-yellow-100",
     },
@@ -60,7 +58,7 @@ export default function Dashboard() {
       {/* Getting Started */}
       <div className="mb-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 p-6">
         <div className="flex items-center">
-          <DocumentChartBarIcon className="h-10 w-10 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+          <AssessmentIcon className="h-10 w-10 flex-shrink-0 text-blue-600 dark:text-blue-400" />
           <div className="ml-4">
             <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
               {t.dashboard.gettingStartedTitle}

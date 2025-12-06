@@ -22,14 +22,12 @@ import {
 import { TimeSpanResponse } from "@/lib/api";
 import SummaryCard, { type ValueUnit } from "../common/SummaryCard";
 import LoadingSpinner from "../common/LoadingSpinner";
-import {
-  ClockIcon,
-  ChartIcon,
-  TrendingUpIcon,
-  CheckCircleIcon,
-  TrendingDownIcon,
-  HashIcon,
-} from "../common/Icons";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import TrendingDownIcon from "@mui/icons-material/TrendingDown";
+import NumbersIcon from "@mui/icons-material/Numbers";
 import { EmptyState } from "../common";
 import { GridLayout } from "../common/GridLayout";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -485,7 +483,9 @@ export default function TimeSpanStatistics({
   if (!timeSpans || timeSpans.length === 0) {
     return (
       <EmptyState
-        icon={<ChartIcon size="xl" color="gray" className="mx-auto mb-4" />}
+        icon={
+          <BarChartIcon className="icon-xl text-gray-600 dark:text-gray-400 mx-auto mb-4" />
+        }
         title={t.common.noStatistics}
         className="empty-state"
       />
@@ -533,28 +533,36 @@ export default function TimeSpanStatistics({
         <SummaryCard
           title={t.timeSpans.avgDuration}
           value={formatDuration(stats.average)}
-          icon={<ClockIcon size="lg" color="blue" />}
+          icon={
+            <AccessTimeIcon className="icon-lg text-blue-600 dark:text-blue-400" />
+          }
           iconBgColor="blue"
         />
 
         <SummaryCard
           title={t.timeSpans.totalTime}
           value={formatDuration(stats.total)}
-          icon={<ChartIcon size="lg" color="green" />}
+          icon={
+            <BarChartIcon className="icon-lg text-green-600 dark:text-green-400" />
+          }
           iconBgColor="green"
         />
 
         <SummaryCard
           title={t.timeSpans.longest}
           value={formatDuration(stats.max)}
-          icon={<TrendingUpIcon size="lg" color="yellow" />}
+          icon={
+            <TrendingUpIcon className="icon-lg text-yellow-600 dark:text-yellow-400" />
+          }
           iconBgColor="yellow"
         />
 
         <SummaryCard
           title={t.timeSpans.completed}
           value={{ value: count.toString(), unit: "" }}
-          icon={<CheckCircleIcon size="lg" color="purple" />}
+          icon={
+            <CheckCircleOutlineIcon className="icon-lg text-purple-600 dark:text-purple-400" />
+          }
           iconBgColor="purple"
         />
       </GridLayout>
@@ -564,28 +572,36 @@ export default function TimeSpanStatistics({
         <SummaryCard
           title={t.timeSpans.shortest}
           value={formatDuration(stats.min)}
-          icon={<TrendingDownIcon size="lg" color="red" />}
+          icon={
+            <TrendingDownIcon className="icon-lg text-red-600 dark:text-red-400" />
+          }
           iconBgColor="red"
         />
 
         <SummaryCard
           title={t.timeSpans.median}
           value={formatDuration(stats.median)}
-          icon={<ChartIcon size="lg" color="indigo" />}
+          icon={
+            <BarChartIcon className="icon-lg text-indigo-600 dark:text-indigo-400" />
+          }
           iconBgColor="indigo"
         />
 
         <SummaryCard
           title={t.timeSpans.ongoing}
           value={{ value: ongoingCount.toString(), unit: "" }}
-          icon={<ClockIcon size="lg" color="orange" />}
+          icon={
+            <AccessTimeIcon className="icon-lg text-orange-600 dark:text-orange-400" />
+          }
           iconBgColor="orange"
         />
 
         <SummaryCard
           title={t.timeSpans.totalSpansCount}
           value={{ value: (count + ongoingCount).toString(), unit: "" }}
-          icon={<HashIcon size="lg" color="gray" />}
+          icon={
+            <NumbersIcon className="icon-lg text-gray-600 dark:text-gray-400" />
+          }
           iconBgColor="gray"
         />
       </GridLayout>

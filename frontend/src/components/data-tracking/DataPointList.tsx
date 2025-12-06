@@ -3,7 +3,9 @@ import { format } from "date-fns";
 
 import { DataPointResponse } from "@/lib/api";
 import LoadingSpinner from "../common/LoadingSpinner";
-import { TrashIcon, ChartIcon, CollectionIcon } from "../common/Icons";
+import DeleteIcon from "@mui/icons-material/Delete";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import CollectionsIcon from "@mui/icons-material/Collections";
 import { EmptyState } from "../common";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
@@ -35,7 +37,7 @@ export default function DataPointList({
     return (
       <EmptyState
         icon={
-          <CollectionIcon size="xl" color="gray" className="mx-auto mb-4" />
+          <CollectionsIcon className="icon-xl text-gray-600 dark:text-gray-400 mx-auto mb-4" />
         }
         title={t.dataTracking.noDataPointsYet}
         className="empty-state"
@@ -151,7 +153,7 @@ export default function DataPointList({
                           className="action-btn-delete"
                           title={t.dataTracking.deleteDataPoint}
                         >
-                          <TrashIcon size="sm" color="red" />
+                          <DeleteIcon className="icon-sm text-red-600 dark:text-red-400" />
                           {t.common.delete}
                         </button>
                       </div>

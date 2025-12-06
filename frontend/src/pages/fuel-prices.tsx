@@ -6,7 +6,8 @@ import StationCard from "@/components/fuel-prices/StationCard";
 import Snackbar from "@/components/common/Snackbar";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import SummaryCard from "@/components/common/SummaryCard";
-import { ClockIcon, HashIcon } from "@/components/common/Icons";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import NumbersIcon from "@mui/icons-material/Numbers";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import apiService, {
@@ -123,7 +124,9 @@ export default function FuelPrices() {
         }}
         loading={loading}
         iconBgColor="yellow"
-        icon={<HashIcon size="lg" color="yellow" />}
+        icon={
+          <NumbersIcon className="icon-lg text-yellow-600 dark:text-yellow-400" />
+        }
       />
 
       <SummaryCard
@@ -133,7 +136,9 @@ export default function FuelPrices() {
         }}
         loading={loading}
         iconBgColor="blue"
-        icon={<ClockIcon size="lg" color="blue" />}
+        icon={
+          <AccessTimeIcon className="icon-lg text-blue-600 dark:text-blue-400" />
+        }
       />
     </div>
   );
