@@ -296,3 +296,37 @@ export const BeakerIcon = ({ className = "", size, color }: IconProps) => (
     />
   </svg>
 );
+
+// Car Icon - For vehicles
+export const CarIcon = ({ className = "", size, color }: IconProps) => (
+  <svg
+    className={`${getIconSize(size)} ${getIconColor(color)} ${className}`}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M5 12h14l-1.5-4.5h-11L5 12zm14 0v5h-2m-10 0H5v-5m2 5a2 2 0 110-4 2 2 0 010 4zm10 0a2 2 0 110-4 2 2 0 010 4z"
+    />
+  </svg>
+);
+
+// Users/Share Icon - For sharing features
+export const UsersIcon = ({ className = "", size, color }: IconProps) => (
+  <svg
+    className={`${getIconSize(size)} ${getIconColor(color)} ${className}`}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+    />
+  </svg>
+);

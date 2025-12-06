@@ -12,6 +12,7 @@ import {
   RefuelMetric,
   RefuelStatistics,
   RefuelMetricCreate,
+  Car,
 } from "../lib/api";
 
 type TabType = "add" | "statistics" | "entries";
@@ -26,15 +27,50 @@ const RefuelPage: NextPage = () => {
   const [statsLoading, setStatsLoading] = useState(true);
   const [isMobileFormOpen, setIsMobileFormOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const [selectedCar, setSelectedCar] = useState<string>("");
+  const [cars, setCars] = useState<Car[]>([]);
   const { snackbar, showSuccess, showError, hideSnackbar } = useSnackbar();
+
+  // Fetch cars on mount
+  useEffect(() => {
+    const fetchCars = async () => {
+      try {
+        const data = await apiService.getCars();
+        setCars(data);
+        // Auto-select first car if available
+        if (data.length > 0 && !selectedCar) {
+          setSelectedCar(data[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching cars:", error);
+      }
+    };
+    fetchCars();
+  }, []);
+
+  // Refetch data when selected car changes
+  useEffect(() => {
+    if (selectedCar) {
+      fetchRefuels();
+      fetchStatistics();
+    }
+  }, [selectedCar]);
 
   // Fetch refuel data
   const fetchRefuels = async () => {
+    if (!selectedCar) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       console.log("Fetching refuel data...");
 
-      const data = await apiService.getRefuelMetrics({ limit: 50 });
+      const data = await apiService.getRefuelMetrics({
+        car_id: selectedCar,
+        limit: 50,
+      });
       console.log("Refuel data received:", data);
 
       setRefuels(data);
@@ -48,6 +84,11 @@ const RefuelPage: NextPage = () => {
 
   // Fetch statistics
   const fetchStatistics = async () => {
+    if (!selectedCar) {
+      setStatsLoading(false);
+      return;
+    }
+
     try {
       setStatsLoading(true);
       // Get statistics for the last 6 months
@@ -55,6 +96,7 @@ const RefuelPage: NextPage = () => {
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
       const data = await apiService.getRefuelStatistics({
+        car_id: selectedCar,
         start_date: sixMonthsAgo.toISOString().split("T")[0],
       });
       setStatistics(data);
@@ -64,12 +106,6 @@ const RefuelPage: NextPage = () => {
       setStatsLoading(false);
     }
   };
-
-  // Load data on component mount
-  useEffect(() => {
-    fetchRefuels();
-    fetchStatistics();
-  }, []);
 
   // Handle form submission
   const handleAddRefuel = async (refuelData: RefuelMetricCreate) => {
@@ -96,6 +132,7 @@ const RefuelPage: NextPage = () => {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const data = await apiService.getRefuelMetrics({
+        car_id: selectedCar || undefined,
         start_date: startOfMonth.toISOString().split("T")[0],
         limit: 100,
       });
@@ -115,6 +152,7 @@ const RefuelPage: NextPage = () => {
       const now = new Date();
       const startOfYear = new Date(now.getFullYear(), 0, 1);
       const data = await apiService.getRefuelMetrics({
+        car_id: selectedCar || undefined,
         start_date: startOfYear.toISOString().split("T")[0],
         limit: 365,
       });
@@ -142,42 +180,67 @@ const RefuelPage: NextPage = () => {
   );
 
   const renderFilterOptions = () => (
-    <div className="panel p-4 mb-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          {t.refuels.filter}:
-        </label>
-        <div className="flex gap-2">
-          <button
-            onClick={showAll}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              activeFilter === "all"
-                ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-            }`}
-          >
-            {t.refuels.showAll}
-          </button>
-          <button
-            onClick={filterThisMonth}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              activeFilter === "month"
-                ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-            }`}
-          >
-            {t.refuels.thisMonth}
-          </button>
-          <button
-            onClick={filterThisYear}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              activeFilter === "year"
-                ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-            }`}
-          >
-            {t.refuels.thisYear}
-          </button>
+    <div className="space-y-4 mb-6">
+      {/* Car Selector */}
+      {cars.length > 0 && (
+        <div className="panel p-4">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Car:
+            </label>
+            <select
+              value={selectedCar}
+              onChange={(e) => setSelectedCar(e.target.value)}
+              className="flex-1 max-w-md px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              {cars.map((car) => (
+                <option key={car.id} value={car.id}>
+                  {car.name} ({car.year})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Time Window Filter */}
+      <div className="panel p-4">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t.refuels.filter}:
+          </label>
+          <div className="flex gap-2">
+            <button
+              onClick={showAll}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeFilter === "all"
+                  ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              {t.refuels.showAll}
+            </button>
+            <button
+              onClick={filterThisMonth}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeFilter === "month"
+                  ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              {t.refuels.thisMonth}
+            </button>
+            <button
+              onClick={filterThisYear}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeFilter === "year"
+                  ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              {t.refuels.thisYear}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -196,7 +259,12 @@ const RefuelPage: NextPage = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case "add":
-        return <AddRefuelForm onSubmit={handleAddRefuel} />;
+        return (
+          <AddRefuelForm
+            onSubmit={handleAddRefuel}
+            preselectedCar={selectedCar}
+          />
+        );
       case "statistics":
         return renderStatistics();
       case "entries":
@@ -258,14 +326,14 @@ const RefuelPage: NextPage = () => {
 
       {/* Mobile/Tablet Unified View - Visible on mobile and md, hidden from lg onwards */}
       <div className="lg:hidden space-y-6">
-        {/* Statistics Section */}
-        {renderStatistics()}
-
         {/* Filter Options */}
         {renderFilterOptions()}
 
         {/* Refuel Entries */}
         {renderRefuelList()}
+
+        {/* Statistics Section */}
+        {renderStatistics()}
       </div>
 
       {/* Floating Action Button for Mobile */}

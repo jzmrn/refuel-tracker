@@ -178,11 +178,7 @@ async def get_favorite_stations(
         for i in range(0, len(station_ids), 10):
             batch_ids = station_ids[i : i + 10]
 
-            try:
-                prices = tankerkoenig_client.get_gas_station_prices(batch_ids)
-
-            except Exception as e:
-                print(f"Error fetching prices for batch: {e}")
+            prices = tankerkoenig_client.get_gas_station_prices(batch_ids)
 
             for price in prices:
                 info = station_info_map.get(price.station_id)

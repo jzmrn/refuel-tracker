@@ -26,6 +26,7 @@ class RefuelDataClient:
                 CREATE TABLE IF NOT EXISTS refuel_metrics (
                     timestamp TIMESTAMP NOT NULL,
                     user_id VARCHAR NOT NULL,
+                    car_id VARCHAR,
                     price DOUBLE NOT NULL,
                     amount DOUBLE NOT NULL,
                     kilometers_since_last_refuel DOUBLE NOT NULL,
@@ -58,13 +59,14 @@ class RefuelDataClient:
                 for metric in metrics:
                     con.execute(
                         """
-                        INSERT INTO refuel_metrics (timestamp, user_id, price, amount,
+                        INSERT INTO refuel_metrics (timestamp, user_id, car_id, price, amount,
                         kilometers_since_last_refuel, estimated_fuel_consumption, notes, station_id)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         [
                             metric.timestamp,
                             user_id,
+                            metric.car_id,
                             metric.price,
                             metric.amount,
                             metric.kilometers_since_last_refuel,
@@ -82,6 +84,7 @@ class RefuelDataClient:
     def get_metrics(
         self,
         user_id: str,
+        car_id: str | None = None,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         limit: int | None = None,
@@ -89,6 +92,10 @@ class RefuelDataClient:
         """Get refuel metrics with optional filters."""
         query = "SELECT * FROM refuel_metrics WHERE user_id = ?"
         params = [user_id]
+
+        if car_id is not None:
+            query += " AND car_id = ?"
+            params.append(car_id)
 
         if start_date is not None:
             query += " AND timestamp >= ?"
@@ -125,6 +132,7 @@ class RefuelDataClient:
     def get_total_cost_by_period(
         self,
         user_id: str,
+        car_id: str | None = None,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
     ) -> dict[str, Any]:
@@ -142,6 +150,10 @@ class RefuelDataClient:
             WHERE user_id = ?
         """
         params = [user_id]
+
+        if car_id is not None:
+            query += " AND car_id = ?"
+            params.append(car_id)
 
         if start_date is not None:
             query += " AND timestamp >= ?"
@@ -173,6 +185,7 @@ class RefuelDataClient:
     def get_price_trends(
         self,
         user_id: str,
+        car_id: str | None = None,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
     ) -> list[dict[str, Any]]:
@@ -188,6 +201,10 @@ class RefuelDataClient:
             WHERE user_id = ?
         """
         params = [user_id]
+
+        if car_id is not None:
+            query += " AND car_id = ?"
+            params.append(car_id)
 
         if start_date is not None:
             query += " AND timestamp >= ?"

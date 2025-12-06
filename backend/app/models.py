@@ -81,6 +81,7 @@ class MonthlySummaryResponse(BaseModel):
 class RefuelMetricCreate(BaseModel):
     """Request model for creating a refuel entry"""
 
+    car_id: str = Field(..., description="ID of the car being refueled")
     price: float = Field(
         ..., gt=0, le=10, description="Price per liter in euros (max 10€/L)"
     )
@@ -127,6 +128,7 @@ class RefuelMetricResponse(BaseModel):
 
     timestamp: datetime
     user_id: str = Field(..., description="User ID who owns this refuel entry")
+    car_id: str = Field(..., description="ID of the car that was refueled")
     price: float
     amount: float
     kilometers_since_last_refuel: float
@@ -422,3 +424,100 @@ class FuelPricesSummaryResponse(BaseModel):
     average_e5_price: float | None = None
     average_e10_price: float | None = None
     average_diesel_price: float | None = None
+
+
+# Car Models
+class CarCreate(BaseModel):
+    """Request model for creating a car"""
+
+    name: str = Field(
+        ..., min_length=1, max_length=100, description="Car nickname/name"
+    )
+    year: int = Field(..., ge=1900, le=2100, description="Manufacturing year")
+    fuel_tank_size: float = Field(
+        ..., gt=0, le=200, description="Fuel tank size in liters (max 200L)"
+    )
+    notes: str | None = Field(None, max_length=500, description="Optional notes")
+    shared_user_ids: list[str] = Field(
+        default_factory=list, description="User IDs to share the car with"
+    )
+
+
+class CarUpdate(BaseModel):
+    """Request model for updating a car"""
+
+    name: str | None = Field(
+        None, min_length=1, max_length=100, description="Car nickname/name"
+    )
+    year: int | None = Field(None, ge=1900, le=2100, description="Manufacturing year")
+    fuel_tank_size: float | None = Field(
+        None, gt=0, le=200, description="Fuel tank size in liters (max 200L)"
+    )
+    notes: str | None = Field(None, max_length=500, description="Optional notes")
+    shared_user_ids: list[str] = Field(
+        default_factory=list, description="User IDs to share the car with"
+    )
+
+
+class CarResponse(BaseModel):
+    """Response model for car"""
+
+    id: str
+    owner_user_id: str
+    name: str
+    year: int
+    fuel_tank_size: float
+    notes: str | None = None
+    created_at: datetime
+    is_owner: bool = True
+    shared_by: str | None = None  # User name who shared this car (if not owner)
+    shared_users: list["CarAccessUser"] = Field(
+        default_factory=list, description="Users who have access to this car"
+    )
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class CarAccessUser(BaseModel):
+    """User with access to a car"""
+
+    user_id: str
+    user_name: str
+    user_email: str
+    granted_at: datetime
+    granted_by_user_id: str
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class CarShareRequest(BaseModel):
+    """Request model for sharing a car"""
+
+    user_id: str = Field(..., description="User ID to share the car with")
+
+
+class UserSearchResponse(BaseModel):
+    """Response model for user search"""
+
+    id: str
+    name: str
+    email: str
+
+
+class CarStatistics(BaseModel):
+    """Statistics for a specific car"""
+
+    car_id: str
+    total_refuels: int
+    total_distance: float
+    total_fuel: float
+    total_cost: float
+    average_consumption: float
+    average_price_per_liter: float
+    first_refuel: datetime | None = None
+    last_refuel: datetime | None = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}

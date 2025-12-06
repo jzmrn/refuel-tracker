@@ -1,6 +1,6 @@
 import axios from "axios";
 
-function getApiBaseUrl(): string {
+export function getApiBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
@@ -97,6 +97,7 @@ export interface MetricSummary {
 
 export interface RefuelMetric {
   timestamp: string;
+  car_id: string;
   price: number;
   amount: number;
   kilometers_since_last_refuel: number;
@@ -106,6 +107,7 @@ export interface RefuelMetric {
 }
 
 export interface RefuelMetricCreate {
+  car_id: string;
   price: number;
   amount: number;
   kilometers_since_last_refuel: number;
@@ -148,6 +150,62 @@ export interface FavoriteStationDropdown {
   street: string;
   house_number: string;
   place: string;
+}
+
+// Car interfaces
+export interface Car {
+  id: string;
+  owner_user_id: string;
+  name: string;
+  year: number;
+  fuel_tank_size: number;
+  notes?: string;
+  created_at: string;
+  is_owner: boolean;
+  shared_by?: string;
+  shared_users: CarAccessUser[];
+}
+
+export interface CarCreate {
+  name: string;
+  year: number;
+  fuel_tank_size: number;
+  notes?: string;
+  shared_user_ids?: string[];
+}
+
+export interface CarUpdate {
+  name?: string;
+  year?: number;
+  fuel_tank_size?: number;
+  notes?: string;
+  shared_user_ids?: string[];
+}
+
+export interface CarAccessUser {
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  granted_at: string;
+  granted_by_user_id: string;
+}
+
+export interface UserSearchResult {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface CarStatistics {
+  car_id: string;
+  total_refuels: number;
+  total_distance: number;
+  total_fuel: number;
+  total_cost: number;
+  average_consumption: number;
+  average_price_per_liter: number;
+  first_refuel?: string;
+  last_refuel?: string;
 }
 
 export interface DataPointCreate {
@@ -499,6 +557,7 @@ class ApiService {
   }
 
   async getRefuelMetrics(params?: {
+    car_id?: string;
     start_date?: string;
     end_date?: string;
     limit?: number;
@@ -510,6 +569,7 @@ class ApiService {
   }
 
   async getRefuelStatistics(params?: {
+    car_id?: string;
     start_date?: string;
     end_date?: string;
   }): Promise<RefuelStatistics> {
@@ -637,6 +697,56 @@ class ApiService {
 
   async getFuelPricesSummary(): Promise<FuelPricesSummaryResponse> {
     const response = await this.api.get("/api/fuel-prices/summary");
+    return response.data;
+  }
+
+  // Car Management endpoints
+  async createCar(car: CarCreate): Promise<Car> {
+    const response = await this.api.post("/api/cars", car);
+    return response.data;
+  }
+
+  async getCars(): Promise<Car[]> {
+    const response = await this.api.get("/api/cars");
+    return response.data;
+  }
+
+  async getCar(carId: string): Promise<Car> {
+    const response = await this.api.get(`/api/cars/${carId}`);
+    return response.data;
+  }
+
+  async updateCar(carId: string, update: CarUpdate): Promise<Car> {
+    const response = await this.api.patch(`/api/cars/${carId}`, update);
+    return response.data;
+  }
+
+  async deleteCar(carId: string): Promise<void> {
+    await this.api.delete(`/api/cars/${carId}`);
+  }
+
+  async shareCar(carId: string, userId: string): Promise<void> {
+    await this.api.post(`/api/cars/${carId}/share`, { user_id: userId });
+  }
+
+  async revokeCarAccess(carId: string, userId: string): Promise<void> {
+    await this.api.delete(`/api/cars/${carId}/share/${userId}`);
+  }
+
+  async getCarSharedUsers(carId: string): Promise<CarAccessUser[]> {
+    const response = await this.api.get(`/api/cars/${carId}/shared-users`);
+    return response.data;
+  }
+
+  async searchUsers(query: string): Promise<UserSearchResult[]> {
+    const response = await this.api.get("/api/users/search", {
+      params: { q: query },
+    });
+    return response.data;
+  }
+
+  async getCarStatistics(carId: string): Promise<CarStatistics> {
+    const response = await this.api.get(`/api/cars/${carId}/statistics`);
     return response.data;
   }
 }

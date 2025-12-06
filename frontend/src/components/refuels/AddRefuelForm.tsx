@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   RefuelMetricCreate,
   FavoriteStationDropdown,
+  Car,
   apiService,
 } from "../../lib/api";
 import { StandardForm } from "../common/StandardForm";
@@ -10,14 +11,17 @@ import { useTranslation } from "../../lib/i18n/LanguageContext";
 interface AddRefuelFormProps {
   onSubmit: (refuel: RefuelMetricCreate) => void;
   onCancel?: () => void;
+  preselectedCar?: string;
 }
 
 export default function AddRefuelForm({
   onSubmit,
   onCancel,
+  preselectedCar,
 }: AddRefuelFormProps) {
   const { t } = useTranslation();
   const [formData, setFormData] = useState<RefuelMetricCreate>({
+    car_id: preselectedCar || "",
     price: 0,
     amount: 0,
     kilometers_since_last_refuel: 0,
@@ -28,28 +32,47 @@ export default function AddRefuelForm({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [cars, setCars] = useState<Car[]>([]);
   const [favoriteStations, setFavoriteStations] = useState<
     FavoriteStationDropdown[]
   >([]);
   const [loadingStations, setLoadingStations] = useState(false);
+  const [loadingCars, setLoadingCars] = useState(false);
 
-  // Fetch favorite stations on mount
+  // Fetch cars and favorite stations on mount
   useEffect(() => {
-    const fetchFavoriteStations = async () => {
+    const fetchData = async () => {
+      try {
+        setLoadingCars(true);
+        const carsData = await apiService.getCars();
+        setCars(carsData);
+
+        // If preselectedCar is provided and valid, use it
+        if (preselectedCar && carsData.some((c) => c.id === preselectedCar)) {
+          setFormData((prev) => ({ ...prev, car_id: preselectedCar }));
+        } else if (carsData.length > 0 && !preselectedCar) {
+          // Auto-select first car if none selected
+          setFormData((prev) => ({ ...prev, car_id: carsData[0].id }));
+        }
+      } catch (error) {
+        console.error("Error fetching cars:", error);
+      } finally {
+        setLoadingCars(false);
+      }
+
       try {
         setLoadingStations(true);
         const stations = await apiService.getFavoriteStationsForDropdown();
         setFavoriteStations(stations);
       } catch (error) {
         console.error("Error fetching favorite stations:", error);
-        // Silently fail - dropdown will just be empty
       } finally {
         setLoadingStations(false);
       }
     };
 
-    fetchFavoriteStations();
-  }, []);
+    fetchData();
+  }, [preselectedCar]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -110,6 +133,11 @@ export default function AddRefuelForm({
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
+
+    // Car validation
+    if (!formData.car_id) {
+      newErrors.car_id = "Please select a car";
+    }
 
     // Price validation
     if (!formData.price || formData.price < 0.001) {
@@ -181,8 +209,9 @@ export default function AddRefuelForm({
       };
       onSubmit(submissionData);
 
-      // Reset form
-      setFormData({
+      // Reset form (keep car selection)
+      setFormData((prev) => ({
+        car_id: prev.car_id, // Keep the selected car
         price: 0,
         amount: 0,
         kilometers_since_last_refuel: 0,
@@ -190,7 +219,7 @@ export default function AddRefuelForm({
         timestamp: new Date().toISOString().slice(0, 16), // Reset to current date/time
         notes: "",
         station_id: undefined,
-      });
+      }));
     }
   };
 
@@ -256,26 +285,58 @@ export default function AddRefuelForm({
         {errors.timestamp && <p className="error-text">{errors.timestamp}</p>}
       </div>
 
-      <div className="form-group">
-        <label htmlFor="station_id" className="label">
-          {t.refuels.gasStation} ({t.refuels.optional})
-        </label>
-        <select
-          id="station_id"
-          name="station_id"
-          value={formData.station_id || ""}
-          onChange={handleChange}
-          className="input"
-          disabled={loadingStations}
-        >
-          <option value="">{t.refuels.selectStation}</option>
-          {favoriteStations.map((station) => (
-            <option key={station.station_id} value={station.station_id}>
-              {station.brand} - {station.street} {station.house_number},{" "}
-              {station.place}
-            </option>
-          ))}
-        </select>
+      <div className="form-row">
+        {/* Car Selection */}
+        <div className="form-group">
+          <label htmlFor="car_id" className="label">
+            Car *
+          </label>
+          <select
+            id="car_id"
+            name="car_id"
+            value={formData.car_id}
+            onChange={handleChange}
+            className={`input ${errors.car_id ? "border-red-300" : ""}`}
+            disabled={loadingCars}
+            required
+          >
+            <option value="">-- Select a car --</option>
+            {cars.map((car) => (
+              <option key={car.id} value={car.id}>
+                {car.name} ({car.year})
+                {!car.is_owner && ` - Shared by ${car.shared_by}`}
+              </option>
+            ))}
+          </select>
+          {errors.car_id && <p className="error-text">{errors.car_id}</p>}
+          {cars.length === 0 && !loadingCars && (
+            <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
+              No cars available. Please add a car in the Cars page first.
+            </p>
+          )}
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="station_id" className="label">
+            {t.refuels.gasStation} ({t.refuels.optional})
+          </label>
+          <select
+            id="station_id"
+            name="station_id"
+            value={formData.station_id || ""}
+            onChange={handleChange}
+            className="input"
+            disabled={loadingStations}
+          >
+            <option value="">{t.refuels.selectStation}</option>
+            {favoriteStations.map((station) => (
+              <option key={station.station_id} value={station.station_id}>
+                {station.brand} - {station.street} {station.house_number},{" "}
+                {station.place}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="form-row">

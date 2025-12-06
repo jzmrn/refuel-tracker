@@ -28,6 +28,7 @@ export const de: TranslationStructure = {
     labels: "Labels",
     entries: "Einträge",
     signOut: "Abmelden",
+    name: "Name",
   },
 
   navigation: {
@@ -227,7 +228,6 @@ export const de: TranslationStructure = {
     addTimeSpan: "Zeitspanne hinzufügen",
     editTimeSpan: "Zeitspanne bearbeiten",
     statistics: "Statistiken",
-    name: "Name",
     startDate: "Startdatum",
     endDate: "Enddatum",
     duration: "Dauer",
@@ -386,6 +386,84 @@ export const de: TranslationStructure = {
       timeSpansDescription: "Aktivitäten und Zeiträume protokollieren",
       fuelPricesDescription: "Tankstellenpreise in Ihrer Nähe vergleichen",
     },
+  },
+
+  cars: {
+    title: "Autos",
+    description:
+      "Verwalten Sie Ihre Fahrzeuge und verfolgen Sie den Kraftstoffverbrauch",
+    addCar: "Auto hinzufügen",
+    myCars: "Meine Autos",
+    sharedAccess: "Geteilter Zugriff",
+    statistics: "Statistiken",
+    addNewCar: "Neues Auto hinzufügen",
+    editCar: "Auto bearbeiten",
+    year: "Jahr",
+    notes: "Notizen",
+    clear: "Löschen",
+    cancel: "Abbrechen",
+    updateCar: "Auto aktualisieren",
+    sharedWithMe: "Mit mir geteilt",
+    noCarsYet:
+      'Noch keine Autos hinzugefügt. Verwenden Sie die Registerkarte "Auto hinzufügen", um Ihr erstes Auto hinzuzufügen.',
+    sharedBy: "Geteilt von",
+    deleteCarConfirm:
+      "Sind Sie sicher, dass Sie dieses Auto löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    carAddedSuccess: "Auto erfolgreich hinzugefügt",
+    carUpdatedSuccess: "Auto erfolgreich aktualisiert",
+    carDeletedSuccess: "Auto erfolgreich gelöscht",
+    carSharedSuccess: "Auto erfolgreich geteilt",
+    accessRevokedSuccess: "Zugriff erfolgreich widerrufen",
+    failedToLoadCars: "Fehler beim Laden der Autos",
+    failedToCreateCar: "Fehler beim Erstellen des Autos",
+    failedToUpdateCar: "Fehler beim Aktualisieren des Autos",
+    failedToDeleteCar: "Fehler beim Löschen des Autos",
+    failedToShareCar: "Fehler beim Teilen des Autos",
+    failedToRevokeAccess: "Fehler beim Widerrufen des Zugriffs",
+
+    // Placeholders
+    carNamePlaceholder: "z.B. Mein blaues Auto",
+    makePlaceholder: "z.B. Toyota",
+    modelPlaceholder: "z.B. Corolla",
+    yearPlaceholder: "z.B. 2020",
+    licensePlatePlaceholder: "z.B. ABC-123",
+    notesPlaceholder: "Zusätzliche Notizen zu diesem Auto...",
+
+    // Shared Access Tab
+    shareWithUsers: "Mit Benutzern teilen",
+    searchUsers: "Benutzer suchen",
+    searchByEmail: "Nach E-Mail-Adresse suchen...",
+    noUsersFound: "Keine Benutzer gefunden",
+    share: "Teilen",
+    revoke: "Widerrufen",
+    sharedWith: "Geteilt mit",
+    noSharedAccess: "Dieses Auto ist mit niemandem geteilt",
+    carsSharedWithMe: "Mit mir geteilte Autos",
+    noCarsSharedWithYou: "Keine Autos wurden mit Ihnen geteilt",
+    carsIShared: "Von mir geteilte Autos",
+    noSharedCars: "Sie haben noch keine Autos geteilt",
+    searchForUsers:
+      "Suchen Sie nach Benutzern per E-Mail, um Ihr Auto zu teilen",
+
+    // Statistics Tab
+    selectCar: "Auto auswählen",
+    selectCarToView: "Wählen Sie ein Auto aus, um seine Statistiken anzuzeigen",
+    noStatistics: "Keine Statistiken für dieses Auto verfügbar",
+    addRefuelsToSeeStats:
+      "Fügen Sie Tankeinträge hinzu, um Statistiken zu sehen",
+    refuelCount: "Tankanzahl",
+    totalDistance: "Gesamtstrecke",
+    totalFuel: "Gesamtkraftstoff",
+    totalCost: "Gesamtkosten",
+    avgConsumption: "Durchschn. Verbrauch",
+    avgPricePerLiter: "Durchschn. Preis pro Liter",
+    avgCostPerRefuel: "Durchschn. Kosten pro Tankfüllung",
+    refuels: "Tankfüllungen",
+    km: "km",
+    liters: "Liter",
+    firstRefuel: "Erste Tankfüllung",
+    lastRefuel: "Letzte Tankfüllung",
+    timeline: "Zeitachse",
   },
 
   fuelPrices: {

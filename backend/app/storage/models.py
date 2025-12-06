@@ -37,6 +37,7 @@ class RefuelMetric(BaseModel):
 
     timestamp: datetime
     user_id: str
+    car_id: str
     price: float
     amount: float
     kilometers_since_last_refuel: float

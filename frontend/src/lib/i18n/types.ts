@@ -29,6 +29,7 @@ export interface TranslationStructure {
     labels: string;
     entries: string;
     signOut: string;
+    name: string;
   };
 
   // Navigation
@@ -222,7 +223,6 @@ export interface TranslationStructure {
     editTimeSpan: string;
     updateTimeSpan: string;
     statistics: string;
-    name: string;
     startDate: string;
     endDate: string;
     duration: string;
@@ -369,6 +369,74 @@ export interface TranslationStructure {
       timeSpansDescription: string;
       fuelPricesDescription: string;
     };
+  };
+
+  // Cars
+  cars: {
+    title: string;
+    description: string;
+    addCar: string;
+    sharedAccess: string;
+    statistics: string;
+    addNewCar: string;
+    editCar: string;
+    year: string;
+    notes: string;
+    clear: string;
+    cancel: string;
+    updateCar: string;
+    myCars: string;
+    sharedWithMe: string;
+    noCarsYet: string;
+    sharedBy: string;
+    deleteCarConfirm: string;
+    carAddedSuccess: string;
+    carUpdatedSuccess: string;
+    carDeletedSuccess: string;
+    carSharedSuccess: string;
+    accessRevokedSuccess: string;
+    failedToLoadCars: string;
+    failedToCreateCar: string;
+    failedToUpdateCar: string;
+    failedToDeleteCar: string;
+    failedToShareCar: string;
+    failedToRevokeAccess: string;
+    carNamePlaceholder: string;
+    makePlaceholder: string;
+    modelPlaceholder: string;
+    yearPlaceholder: string;
+    licensePlatePlaceholder: string;
+    notesPlaceholder: string;
+    shareWithUsers: string;
+    searchUsers: string;
+    searchByEmail: string;
+    noUsersFound: string;
+    share: string;
+    revoke: string;
+    sharedWith: string;
+    noSharedAccess: string;
+    carsSharedWithMe: string;
+    noCarsSharedWithYou: string;
+    carsIShared: string;
+    noSharedCars: string;
+    searchForUsers: string;
+    selectCar: string;
+    selectCarToView: string;
+    noStatistics: string;
+    addRefuelsToSeeStats: string;
+    refuelCount: string;
+    totalDistance: string;
+    totalFuel: string;
+    totalCost: string;
+    avgConsumption: string;
+    avgPricePerLiter: string;
+    avgCostPerRefuel: string;
+    refuels: string;
+    km: string;
+    liters: string;
+    firstRefuel: string;
+    lastRefuel: string;
+    timeline: string;
   };
 
   // Fuel Prices

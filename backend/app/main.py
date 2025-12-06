@@ -9,6 +9,7 @@ from fueldata.stations import FuelStationClient
 from tankerkoenig.client import TankerkoenigClient
 
 from app.api import (
+    cars,
     data_points,
     fuel_prices,
     refuels,
@@ -16,6 +17,7 @@ from app.api import (
 )
 from app.auth import CurrentUser
 from app.migrations import run_migrations
+from app.storage.car_client import CarClient
 from app.storage.data_point_client import DataPointClient
 from app.storage.duckdb_resource import BackendDuckDBResource
 from app.storage.refuel_client import RefuelDataClient
@@ -51,6 +53,7 @@ async def lifespan(app: FastAPI):
     refuel_client = RefuelDataClient(duckdb_resource)
     data_point_client = DataPointClient(duckdb_resource)
     time_span_client = TimeSpanClient(duckdb_resource)
+    car_client = CarClient(duckdb_resource)
 
     tankerkoenig_api_key = os.getenv("TANKERKOENIG_API_KEY")
     if not tankerkoenig_api_key:
@@ -75,6 +78,7 @@ async def lifespan(app: FastAPI):
     app.state.refuel_client = refuel_client
     app.state.data_point_client = data_point_client
     app.state.time_span_client = time_span_client
+    app.state.car_client = car_client
     app.state.tankerkoenig_client = tankerkoenig_client
     app.state.fuel_station_client = fuel_station_client
 
@@ -142,6 +146,7 @@ async def add_security_headers(request: Request, call_next):
 
 
 # Include routers
+app.include_router(cars.router, prefix="/api", tags=["cars"])
 app.include_router(refuels.router, prefix="/api/metrics", tags=["metrics"])
 app.include_router(data_points.router, prefix="/api", tags=["data-points"])
 app.include_router(time_spans.router, prefix="/api", tags=["time-spans"])

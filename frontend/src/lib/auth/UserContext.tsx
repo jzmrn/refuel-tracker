@@ -5,6 +5,7 @@ import {
   useState,
   ReactNode,
 } from "react";
+import { getApiBaseUrl } from "../api";
 
 export interface User {
   id: string;
@@ -88,7 +89,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = async () => {
     try {
-      const response = await fetch("/api/auth/me", {
+      const response = await fetch(`${getApiBaseUrl()}/api/auth/me`, {
         credentials: "include",
       });
 

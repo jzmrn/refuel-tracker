@@ -42,6 +42,7 @@ async def create_refuel_metric(
         metric = RefuelMetric(
             timestamp=metric_data.timestamp,
             user_id=user.id,
+            car_id=metric_data.car_id,
             price=metric_data.price,
             amount=metric_data.amount,
             kilometers_since_last_refuel=metric_data.kilometers_since_last_refuel,
@@ -73,6 +74,7 @@ async def create_refuel_metric(
 async def get_refuel_metrics(
     user: CurrentUser,
     client: RefuelDataClient = Depends(get_refuel_client),
+    car_id: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
     limit: int | None = 100,
@@ -86,6 +88,7 @@ async def get_refuel_metrics(
 
         metrics = client.get_metrics(
             user.id,
+            car_id=car_id,
             start_date=start_dt,
             end_date=end_dt,
             limit=limit,
@@ -98,6 +101,7 @@ async def get_refuel_metrics(
                 RefuelMetricResponse(
                     timestamp=metric.timestamp,
                     user_id=user.id,
+                    car_id=metric.car_id,
                     price=metric.price,
                     amount=metric.amount,
                     kilometers_since_last_refuel=metric.kilometers_since_last_refuel,
@@ -117,6 +121,7 @@ async def get_refuel_metrics(
 async def get_refuel_statistics(
     user: CurrentUser,
     client: RefuelDataClient = Depends(get_refuel_client),
+    car_id: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
 ):
@@ -127,10 +132,10 @@ async def get_refuel_statistics(
         end_dt = datetime.fromisoformat(end_date) if end_date else None
 
         # Get cost statistics
-        cost_stats = client.get_total_cost_by_period(user.id, start_dt, end_dt)
+        cost_stats = client.get_total_cost_by_period(user.id, car_id, start_dt, end_dt)
 
         # Get price trends
-        price_trends_raw = client.get_price_trends(user.id, start_dt, end_dt)
+        price_trends_raw = client.get_price_trends(user.id, car_id, start_dt, end_dt)
 
         # Convert to Pydantic models
         cost_statistics = RefuelCostStatistics(**cost_stats)

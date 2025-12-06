@@ -36,6 +36,8 @@ def run_migrations(db_path: Path) -> None:
     migrations = [
         (1, add_picture_base64_column),
         (2, add_station_id_to_refuel),
+        (3, add_car_id_to_refuel),
+        (4, update_cars_schema),
     ]
 
     for version, migration_func in migrations:
@@ -126,3 +128,96 @@ def add_station_id_to_refuel(duckdb_resource: BackendDuckDBResource) -> None:
             logger.info("station_id column added successfully")
         else:
             logger.info("station_id column already exists")
+
+
+def add_car_id_to_refuel(duckdb_resource: BackendDuckDBResource) -> None:
+    """
+    Migration #3: Add car_id column to refuel_metrics table
+    This allows users to track refuels for multiple cars.
+    The column is nullable for backward compatibility with existing data.
+    """
+    with duckdb_resource.get_connection() as con:
+        # Check if column already exists
+        result = con.execute(
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'refuel_metrics' AND column_name = 'car_id'
+            """
+        ).fetchone()
+
+        if not result:
+            logger.info("Adding car_id column to refuel_metrics table")
+            con.execute(
+                """
+                ALTER TABLE refuel_metrics
+                ADD COLUMN car_id VARCHAR
+                """
+            )
+            logger.info("car_id column added successfully")
+        else:
+            logger.info("car_id column already exists")
+
+
+def update_cars_schema(duckdb_resource: BackendDuckDBResource) -> None:
+    """
+    Migration #4: Update cars table schema
+    - Remove make, model, license_plate columns
+    - Add fuel_tank_size column
+    This migration preserves existing car records by removing obsolete fields
+    and adding the new fuel tank size field.
+    """
+    with duckdb_resource.get_connection() as con:
+        # Check if make column still exists (indicator that migration hasn't run)
+        result = con.execute(
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'cars' AND column_name = 'make'
+            """
+        ).fetchone()
+
+        if result:
+            logger.info("Updating cars table schema")
+
+            # Create a new table with the updated schema
+            con.execute(
+                """
+                CREATE TABLE cars_new (
+                    id VARCHAR PRIMARY KEY,
+                    owner_user_id VARCHAR NOT NULL,
+                    name VARCHAR NOT NULL,
+                    year INTEGER NOT NULL,
+                    fuel_tank_size DOUBLE NOT NULL,
+                    notes VARCHAR,
+                    created_at TIMESTAMP NOT NULL
+                )
+                """
+            )
+
+            # Copy data from old table to new table
+            con.execute(
+                """
+                INSERT INTO cars_new (id, owner_user_id, name, year, notes, created_at)
+                SELECT id, owner_user_id, name, year, notes, created_at
+                FROM cars
+                """
+            )
+
+            # Drop the old table
+            con.execute("DROP TABLE cars")
+
+            # Rename new table to cars
+            con.execute("ALTER TABLE cars_new RENAME TO cars")
+
+            # Recreate indexes
+            con.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_cars_owner
+                ON cars(owner_user_id)
+                """
+            )
+
+            logger.info("Cars table schema updated successfully")
+        else:
+            logger.info("Cars table schema already updated")

@@ -212,7 +212,7 @@ export default function SearchStationsForm({
         </div>
 
         {/* Open Only Filter */}
-        <div className="field-group">
+        <div className="field-group flex items-center">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
