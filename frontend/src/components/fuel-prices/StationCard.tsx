@@ -6,6 +6,7 @@ interface StationCardProps {
   isFavorite: boolean;
   onAddToFavorites?: () => void;
   onRemoveFromFavorites?: () => void;
+  rankIndex?: number;
 }
 
 export default function StationCard({
@@ -13,6 +14,7 @@ export default function StationCard({
   isFavorite,
   onAddToFavorites,
   onRemoveFromFavorites,
+  rankIndex,
 }: StationCardProps) {
   const { t } = useTranslation();
 
@@ -65,7 +67,9 @@ export default function StationCard({
     return (
       <>
         {formatted.mainPart}
-        <sup className={supClassName}>{formatted.superscript}</sup>
+        <sup className={`${supClassName} align-baseline`}>
+          {formatted.superscript}
+        </sup>
       </>
     );
   };
@@ -77,6 +81,12 @@ export default function StationCard({
         {/* Left: Station Info */}
         <div className="flex-grow min-w-0">
           <div className="flex items-center gap-2">
+            {/* Rank Badge for Open Favorite Stations */}
+            {!isGasStation(station) && isOpen && rankIndex !== undefined && (
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold flex-shrink-0 bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300">
+                #{rankIndex}
+              </span>
+            )}
             <h4 className="heading-3 truncate">
               {station.brand ?? station.name}
             </h4>
@@ -85,20 +95,8 @@ export default function StationCard({
                 ({distance.toFixed(1)} {t.fuelPrices.kmAway})
               </span>
             )}
-            {/* Open/Closed Badge for Favorites */}
-            {!isGasStation(station) && (
-              <span
-                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
-                  isOpen
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-800"
-                }`}
-              >
-                {isOpen ? t.fuelPrices.open : t.fuelPrices.closed}
-              </span>
-            )}
           </div>
-          <p className="text-sm text-secondary mt-1">
+          <p className="text-sm text-secondary mt-1 truncate">
             {station.street} {station.house_number}, {station.post_code}{" "}
             {station.place}
           </p>
@@ -182,6 +180,12 @@ export default function StationCard({
           {/* Station Info */}
           <div className="flex-grow min-w-0">
             <div className="flex items-center gap-2">
+              {/* Rank Badge for Open Favorite Stations */}
+              {!isGasStation(station) && isOpen && rankIndex !== undefined && (
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold flex-shrink-0 bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300">
+                  #{rankIndex}
+                </span>
+              )}
               <h4 className="heading-4 truncate">
                 {station.brand ?? station.name}
               </h4>
@@ -190,20 +194,8 @@ export default function StationCard({
                   ({distance.toFixed(1)} {t.fuelPrices.kmAway})
                 </span>
               )}
-              {/* Open/Closed Badge for Favorites */}
-              {!isGasStation(station) && (
-                <span
-                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
-                    isOpen
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {isOpen ? t.fuelPrices.open : t.fuelPrices.closed}
-                </span>
-              )}
             </div>
-            <p className="text-sm text-secondary mt-1">
+            <p className="text-sm text-secondary mt-1 truncate">
               {station.street} {station.house_number}, {station.post_code}{" "}
               {station.place}
             </p>

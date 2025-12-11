@@ -35,17 +35,21 @@ export default function FavoriteStationsList({
     );
   }
 
-  // Sort favorites based on sortBy preference
-  const sortedFavorites = [...favorites].sort((a, b) => {
-    const aIsOpen = a.is_open ?? true;
-    const bIsOpen = b.is_open ?? true;
+  // Split stations into open and closed
+  const openStations: FavoriteStationResponse[] = [];
+  const closedStations: FavoriteStationResponse[] = [];
 
-    // First priority: Always keep open stations before closed stations
-    if (aIsOpen !== bIsOpen) {
-      return aIsOpen ? -1 : 1;
+  favorites.forEach((station) => {
+    const isOpen = station.is_open ?? true;
+    if (isOpen) {
+      openStations.push(station);
+    } else {
+      closedStations.push(station);
     }
+  });
 
-    // Second priority: If both have the same open/closed status, sort by fuel type price
+  // Sort open stations by price
+  const sortedOpenStations = openStations.sort((a, b) => {
     let priceA: number | undefined;
     let priceB: number | undefined;
 
@@ -70,15 +74,37 @@ export default function FavoriteStationsList({
   });
 
   return (
-    <div className="space-y-4">
-      {sortedFavorites.map((station) => (
-        <StationCard
-          key={station.station_id}
-          station={station}
-          isFavorite={true}
-          onRemoveFromFavorites={() => onRemove(station.station_id)}
-        />
-      ))}
+    <div className="space-y-6">
+      {/* Open Stations */}
+      {sortedOpenStations.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="heading-3">{t.fuelPrices.open}</h3>
+          {sortedOpenStations.map((station, index) => (
+            <StationCard
+              key={station.station_id}
+              station={station}
+              isFavorite={true}
+              onRemoveFromFavorites={() => onRemove(station.station_id)}
+              rankIndex={index + 1}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Closed Stations */}
+      {closedStations.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="heading-3">{t.fuelPrices.closed}</h3>
+          {closedStations.map((station) => (
+            <StationCard
+              key={station.station_id}
+              station={station}
+              isFavorite={true}
+              onRemoveFromFavorites={() => onRemove(station.station_id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
