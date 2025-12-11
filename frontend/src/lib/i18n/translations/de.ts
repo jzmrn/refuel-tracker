@@ -495,6 +495,7 @@ export const de: TranslationStructure = {
     removeFromFavorites: "Aus Favoriten entfernen",
     open: "Geöffnet",
     closed: "Geschlossen",
+    statusNotAvailable: "Status nicht verfügbar",
     myFavorites: "Meine Favoriten",
     noFavorites: "Noch keine Favoriten",
     addStationsToFavorites:
@@ -528,5 +529,6 @@ export const de: TranslationStructure = {
     address: "Adresse",
     currentPrice: "Aktueller Preis",
     showOpenOnly: "Nur geöffnete Tankstellen anzeigen",
+    priceNotAvailable: "Preis nicht verfügbar",
   },
 };

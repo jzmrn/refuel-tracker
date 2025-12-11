@@ -476,6 +476,7 @@ export const en: TranslationStructure = {
     removeFromFavorites: "Remove from Favorites",
     open: "Open",
     closed: "Closed",
+    statusNotAvailable: "Status Not Available",
     myFavorites: "My Favorite Stations",
     noFavorites: "No favorite stations yet",
     addStationsToFavorites:
@@ -508,5 +509,6 @@ export const en: TranslationStructure = {
     address: "Address",
     currentPrice: "Current Price",
     showOpenOnly: "Show open stations only",
+    priceNotAvailable: "Price not available",
   },
 };

@@ -104,48 +104,44 @@ export default function StationCard({
 
         {/* Right: Prices */}
         <div className="flex-shrink-0">
-          {isOpen ? (
-            <div className="flex gap-6">
-              {priceE5 !== undefined &&
-                priceE5 !== null &&
-                typeof priceE5 === "number" && (
-                  <div className="text-center w-24">
-                    <div className="text-3xl font-bold text-primary">
-                      {renderPrice(priceE5, "text-lg")}
-                    </div>
-                    <div className="text-xs text-secondary mt-1">
-                      {t.fuelPrices.e5}
-                    </div>
+          <div className="flex gap-6">
+            {priceE5 !== undefined &&
+              priceE5 !== null &&
+              typeof priceE5 === "number" && (
+                <div className="text-center w-24">
+                  <div className="text-3xl font-bold text-primary">
+                    {renderPrice(priceE5, "text-lg")}
                   </div>
-                )}
-              {priceE10 !== undefined &&
-                priceE10 !== null &&
-                typeof priceE10 === "number" && (
-                  <div className="text-center w-24">
-                    <div className="text-3xl font-bold text-primary">
-                      {renderPrice(priceE10, "text-lg")}
-                    </div>
-                    <div className="text-xs text-secondary mt-1">
-                      {t.fuelPrices.e10}
-                    </div>
+                  <div className="text-xs text-secondary mt-1">
+                    {t.fuelPrices.e5}
                   </div>
-                )}
-              {priceDiesel !== undefined &&
-                priceDiesel !== null &&
-                typeof priceDiesel === "number" && (
-                  <div className="text-center w-24">
-                    <div className="text-3xl font-bold text-primary">
-                      {renderPrice(priceDiesel, "text-lg")}
-                    </div>
-                    <div className="text-xs text-secondary mt-1">
-                      {t.fuelPrices.diesel}
-                    </div>
+                </div>
+              )}
+            {priceE10 !== undefined &&
+              priceE10 !== null &&
+              typeof priceE10 === "number" && (
+                <div className="text-center w-24">
+                  <div className="text-3xl font-bold text-primary">
+                    {renderPrice(priceE10, "text-lg")}
                   </div>
-                )}
-            </div>
-          ) : (
-            <div className="text-2xl text-secondary">-</div>
-          )}
+                  <div className="text-xs text-secondary mt-1">
+                    {t.fuelPrices.e10}
+                  </div>
+                </div>
+              )}
+            {priceDiesel !== undefined &&
+              priceDiesel !== null &&
+              typeof priceDiesel === "number" && (
+                <div className="text-center w-24">
+                  <div className="text-3xl font-bold text-primary">
+                    {renderPrice(priceDiesel, "text-lg")}
+                  </div>
+                  <div className="text-xs text-secondary mt-1">
+                    {t.fuelPrices.diesel}
+                  </div>
+                </div>
+              )}
+          </div>
         </div>
 
         {/* Far Right: Add/Remove Button */}
@@ -201,46 +197,44 @@ export default function StationCard({
             </p>
 
             {/* Prices Below Address - Mobile */}
-            {isOpen && (
-              <div className="flex gap-4 mt-3 justify-center">
-                {priceE5 !== undefined &&
-                  priceE5 !== null &&
-                  typeof priceE5 === "number" && (
-                    <div className="text-center">
-                      <div className="text-xs text-secondary">
-                        {t.fuelPrices.e5}
-                      </div>
-                      <div className="text-lg font-bold text-primary">
-                        {renderPrice(priceE5, "text-sm")}
-                      </div>
+            <div className="flex gap-4 mt-3 justify-center">
+              {priceE5 !== undefined &&
+                priceE5 !== null &&
+                typeof priceE5 === "number" && (
+                  <div className="text-center">
+                    <div className="text-xs text-secondary">
+                      {t.fuelPrices.e5}
                     </div>
-                  )}
-                {priceE10 !== undefined &&
-                  priceE10 !== null &&
-                  typeof priceE10 === "number" && (
-                    <div className="text-center">
-                      <div className="text-xs text-secondary">
-                        {t.fuelPrices.e10}
-                      </div>
-                      <div className="text-lg font-bold text-primary">
-                        {renderPrice(priceE10, "text-sm")}
-                      </div>
+                    <div className="text-lg font-bold text-primary">
+                      {renderPrice(priceE5, "text-sm")}
                     </div>
-                  )}
-                {priceDiesel !== undefined &&
-                  priceDiesel !== null &&
-                  typeof priceDiesel === "number" && (
-                    <div className="text-center">
-                      <div className="text-xs text-secondary">
-                        {t.fuelPrices.diesel}
-                      </div>
-                      <div className="text-lg font-bold text-primary">
-                        {renderPrice(priceDiesel, "text-sm")}
-                      </div>
+                  </div>
+                )}
+              {priceE10 !== undefined &&
+                priceE10 !== null &&
+                typeof priceE10 === "number" && (
+                  <div className="text-center">
+                    <div className="text-xs text-secondary">
+                      {t.fuelPrices.e10}
                     </div>
-                  )}
-              </div>
-            )}
+                    <div className="text-lg font-bold text-primary">
+                      {renderPrice(priceE10, "text-sm")}
+                    </div>
+                  </div>
+                )}
+              {priceDiesel !== undefined &&
+                priceDiesel !== null &&
+                typeof priceDiesel === "number" && (
+                  <div className="text-center">
+                    <div className="text-xs text-secondary">
+                      {t.fuelPrices.diesel}
+                    </div>
+                    <div className="text-lg font-bold text-primary">
+                      {renderPrice(priceDiesel, "text-sm")}
+                    </div>
+                  </div>
+                )}
+            </div>
           </div>
 
           {/* Add/Remove Button */}

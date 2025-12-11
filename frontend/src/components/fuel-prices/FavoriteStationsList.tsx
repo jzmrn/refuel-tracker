@@ -35,13 +35,18 @@ export default function FavoriteStationsList({
     );
   }
 
-  // Split stations into open and closed
+  // Split stations into open, closed, and unavailable
   const openStations: FavoriteStationResponse[] = [];
   const closedStations: FavoriteStationResponse[] = [];
+  const unavailableStations: FavoriteStationResponse[] = [];
 
   favorites.forEach((station) => {
-    const isOpen = station.is_open ?? true;
-    if (isOpen) {
+    const isOpen = station.is_open;
+
+    // If is_open is null or undefined, consider it as unavailable
+    if (isOpen === null || isOpen === undefined) {
+      unavailableStations.push(station);
+    } else if (isOpen) {
       openStations.push(station);
     } else {
       closedStations.push(station);
@@ -96,6 +101,21 @@ export default function FavoriteStationsList({
         <div className="space-y-4">
           <h3 className="heading-3">{t.fuelPrices.closed}</h3>
           {closedStations.map((station) => (
+            <StationCard
+              key={station.station_id}
+              station={station}
+              isFavorite={true}
+              onRemoveFromFavorites={() => onRemove(station.station_id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Unavailable Stations */}
+      {unavailableStations.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="heading-3">{t.fuelPrices.statusNotAvailable}</h3>
+          {unavailableStations.map((station) => (
             <StationCard
               key={station.station_id}
               station={station}

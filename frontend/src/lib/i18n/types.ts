@@ -467,6 +467,7 @@ export interface TranslationStructure {
     removeFromFavorites: string;
     open: string;
     closed: string;
+    statusNotAvailable: string;
     myFavorites: string;
     noFavorites: string;
     addStationsToFavorites: string;
@@ -498,5 +499,6 @@ export interface TranslationStructure {
     address: string;
     currentPrice: string;
     showOpenOnly: string;
+    priceNotAvailable: string;
   };
 }
