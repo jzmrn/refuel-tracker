@@ -5,15 +5,12 @@ import PriceStatistics from "@/components/fuel-prices/PriceStatistics";
 import StationCard from "@/components/fuel-prices/StationCard";
 import Snackbar from "@/components/common/Snackbar";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
-import SummaryCard from "@/components/common/SummaryCard";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import NumbersIcon from "@mui/icons-material/Numbers";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import apiService, {
   GasStationResponse,
   FavoriteStationResponse,
-  FuelPricesSummaryResponse,
 } from "@/lib/api";
 
 type TabType = "favorites" | "statistics" | "search";
@@ -26,9 +23,6 @@ export default function FuelPrices() {
   const [activeTab, setActiveTab] = useState<TabType>("favorites");
   const [searchResults, setSearchResults] = useState<GasStationResponse[]>([]);
   const [favorites, setFavorites] = useState<FavoriteStationResponse[]>([]);
-  const [summary, setSummary] = useState<FuelPricesSummaryResponse | null>(
-    null,
-  );
   const [loading, setLoading] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isMobileFormOpen, setIsMobileFormOpen] = useState(false);
@@ -53,7 +47,6 @@ export default function FuelPrices() {
 
   useEffect(() => {
     fetchFavorites();
-    fetchSummary();
   }, [refreshTrigger]);
 
   const fetchFavorites = async () => {
@@ -66,15 +59,6 @@ export default function FuelPrices() {
       showError(t.fuelPrices.failedToLoadFavorites);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchSummary = async () => {
-    try {
-      const data = await apiService.getFuelPricesSummary();
-      setSummary(data);
-    } catch (error) {
-      console.error("Error fetching summary:", error);
     }
   };
 
@@ -114,34 +98,6 @@ export default function FuelPrices() {
       showError(t.fuelPrices.failedToRemoveFavorite);
     }
   };
-
-  const renderSummaryCards = () => (
-    <div className={`grid grid-cols-2 gap-6 mb-8`}>
-      <SummaryCard
-        title={t.fuelPrices.favorites}
-        value={{
-          value: summary?.total_favorites || 0,
-        }}
-        loading={loading}
-        iconBgColor="yellow"
-        icon={
-          <NumbersIcon className="icon-lg text-yellow-600 dark:text-yellow-400" />
-        }
-      />
-
-      <SummaryCard
-        title={t.fuelPrices.stationsOpen}
-        value={{
-          value: summary?.stations_open || 0,
-        }}
-        loading={loading}
-        iconBgColor="blue"
-        icon={
-          <AccessTimeIcon className="icon-lg text-blue-600 dark:text-blue-400" />
-        }
-      />
-    </div>
-  );
 
   const renderSearchResults = () => {
     if (searchResults.length === 0) {
@@ -201,7 +157,18 @@ export default function FuelPrices() {
       case "favorites":
         return (
           <div>
-            {renderSummaryCards()}
+            {/* Heading with Refresh Button */}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="heading-2">
+                {t.fuelPrices.myFavorites} ({favorites.length})
+              </h2>
+              <button
+                onClick={() => setRefreshTrigger((prev) => prev + 1)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <RefreshIcon className="icon text-gray-600 dark:text-gray-400" />
+              </button>
+            </div>
 
             {/* Sort Control Panel */}
             {sortBy && (
@@ -300,12 +267,17 @@ export default function FuelPrices() {
 
       {/* Mobile/Tablet Unified View - Visible on mobile and md, hidden from lg onwards */}
       <div className="lg:hidden space-y-6">
-        {/* Summary Cards */}
-        {renderSummaryCards()}
-
         {/* Favorites List */}
         <div>
-          <h2 className="heading-2 mb-4">{t.fuelPrices.myFavorites}</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="heading-2">{t.fuelPrices.myFavorites}</h2>
+            <button
+              onClick={() => setRefreshTrigger((prev) => prev + 1)}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <RefreshIcon className="icon text-gray-600 dark:text-gray-400" />
+            </button>
+          </div>
 
           {/* Sort Control Panel */}
           {sortBy && (

@@ -6,6 +6,7 @@ from enum import Enum
 from pydantic import BaseModel, Field
 from typing import Annotated, Literal
 from pydantic import TypeAdapter
+from datetime import datetime
 
 
 class FuelType(str, Enum):
@@ -157,6 +158,7 @@ DetailResponseAdapter: TypeAdapter[DetailResponse] = TypeAdapter(DetailResponse)
 class GasStationPrice(BaseModel):
     """Represents the price information for a gas station."""
 
+    timestamp: datetime
     station_id: str
     status: str
     e5: float | None = None
@@ -164,8 +166,13 @@ class GasStationPrice(BaseModel):
     diesel: float | None = None
 
     @classmethod
-    def from_gas_station_data(cls, station_id: str, data: GasStationData):
+    def from_gas_station_data(
+        cls, station_id: str, data: GasStationData, timestamp: datetime | None = None
+    ):
         """Create GasStationPrice from GasStationData."""
+
+        if timestamp is None:
+            timestamp = datetime.now()
 
         if isinstance(data, GasStationOpen):
             e5 = data.e5 if data.e5 is not False else None
@@ -175,6 +182,7 @@ class GasStationPrice(BaseModel):
             e5 = e10 = diesel = None
 
         return cls(
+            timestamp=timestamp,
             station_id=station_id,
             status=data.status,
             e5=e5,

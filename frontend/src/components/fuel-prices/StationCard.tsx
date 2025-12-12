@@ -33,6 +33,19 @@ export default function StationCard({
   const place = station.place;
   const isOpen = station.is_open ?? false;
 
+  // Extract timestamp for favorite stations
+  const timestamp = !isGasStation(station) ? station.timestamp : undefined;
+
+  // Format timestamp to show only time
+  const formatTime = (timestamp?: string) => {
+    if (!timestamp) return null;
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString("de-DE", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   // Get prices
   let priceE5: number | undefined;
   let priceE10: number | undefined;
@@ -90,6 +103,11 @@ export default function StationCard({
             <h4 className="heading-3 truncate">
               {station.brand ?? station.name}
             </h4>
+            {timestamp && (
+              <span className="text-xs text-secondary flex-shrink-0">
+                ({formatTime(timestamp)})
+              </span>
+            )}
             {distance !== undefined && (
               <span className="text-xs text-secondary flex-shrink-0">
                 ({distance.toFixed(1)} {t.fuelPrices.kmAway})
@@ -185,6 +203,11 @@ export default function StationCard({
               <h4 className="heading-4 truncate">
                 {station.brand ?? station.name}
               </h4>
+              {timestamp && (
+                <span className="text-xs text-secondary flex-shrink-0">
+                  ({formatTime(timestamp)})
+                </span>
+              )}
               {distance !== undefined && (
                 <span className="text-xs text-secondary flex-shrink-0">
                   ({distance.toFixed(1)} {t.fuelPrices.kmAway})

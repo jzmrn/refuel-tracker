@@ -3,6 +3,9 @@ import { FavoriteStationResponse } from "@/lib/api";
 import EmptyState from "@/components/common/EmptyState";
 import StationCard from "./StationCard";
 import { LoadingSpinner } from "../common";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 type SortByType = "e5" | "e10" | "diesel";
 
@@ -83,7 +86,10 @@ export default function FavoriteStationsList({
       {/* Open Stations */}
       {sortedOpenStations.length > 0 && (
         <div className="space-y-4">
-          <h3 className="heading-3">{t.fuelPrices.open}</h3>
+          <h3 className="heading-3 flex items-center gap-2">
+            <CheckCircleIcon className="icon text-green-600 dark:text-green-400" />
+            {t.fuelPrices.open} ({sortedOpenStations.length})
+          </h3>
           {sortedOpenStations.map((station, index) => (
             <StationCard
               key={station.station_id}
@@ -99,7 +105,10 @@ export default function FavoriteStationsList({
       {/* Closed Stations */}
       {closedStations.length > 0 && (
         <div className="space-y-4">
-          <h3 className="heading-3">{t.fuelPrices.closed}</h3>
+          <h3 className="heading-3 flex items-center gap-2">
+            <CancelIcon className="icon text-red-600 dark:text-red-400" />
+            {t.fuelPrices.closed} ({closedStations.length})
+          </h3>
           {closedStations.map((station) => (
             <StationCard
               key={station.station_id}
@@ -114,7 +123,10 @@ export default function FavoriteStationsList({
       {/* Unavailable Stations */}
       {unavailableStations.length > 0 && (
         <div className="space-y-4">
-          <h3 className="heading-3">{t.fuelPrices.statusNotAvailable}</h3>
+          <h3 className="heading-3 flex items-center gap-2">
+            <HelpOutlineIcon className="icon text-gray-600 dark:text-gray-400" />
+            {t.fuelPrices.statusNotAvailable} ({unavailableStations.length})
+          </h3>
           {unavailableStations.map((station) => (
             <StationCard
               key={station.station_id}

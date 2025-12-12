@@ -404,6 +404,7 @@ class FavoriteStationResponse(BaseModel):
     place: str | None = None
     lat: float | None = None
     lng: float | None = None
+    timestamp: datetime | None = None
     current_price_e5: float | None = None
     current_price_e10: float | None = None
     current_price_diesel: float | None = None
@@ -411,19 +412,6 @@ class FavoriteStationResponse(BaseModel):
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}
-
-
-class FuelPricesSummaryResponse(BaseModel):
-    """Summary statistics for fuel prices"""
-
-    total_favorites: int
-    stations_open: int
-    lowest_e5_price: float | None = None
-    lowest_e10_price: float | None = None
-    lowest_diesel_price: float | None = None
-    average_e5_price: float | None = None
-    average_e10_price: float | None = None
-    average_diesel_price: float | None = None
 
 
 # Car Models

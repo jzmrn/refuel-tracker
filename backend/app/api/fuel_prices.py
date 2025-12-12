@@ -1,5 +1,7 @@
+from datetime import UTC, datetime, timedelta
+
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fueldata.stations import FuelStationClient
+from fueldata.stations import FuelStationClient, GasStationInfo
 from tankerkoenig import TankerkoenigClient
 from tankerkoenig.models import (
     FuelType,
@@ -13,12 +15,45 @@ from ..auth import CurrentUser
 from ..models import (
     FavoriteStationCreate,
     FavoriteStationResponse,
-    FuelPricesSummaryResponse,
     GasStationResponse,
     GasStationSearchRequest,
 )
 
 router = APIRouter()
+
+# Cache is valid for 5 minutes
+CACHE_DURATION_MINUTES = 5
+
+
+class FuelPriceCache:
+    """Cache for fuel prices with automatic expiry handling"""
+
+    def __init__(self, cache_duration_minutes: int = CACHE_DURATION_MINUTES):
+        self._cache: dict[str, tuple[GasStationPrice, datetime]] = {}
+        self._cache_duration = timedelta(minutes=cache_duration_minutes)
+
+    def get(self, station_id: str) -> GasStationPrice | None:
+        """Get a price from cache if it exists and hasn't expired"""
+
+        if station_id not in self._cache:
+            return None
+
+        price, cached_at = self._cache[station_id]
+
+        # Check if entry has expired based on when we cached it
+        if datetime.now(UTC) - cached_at >= self._cache_duration:
+            del self._cache[station_id]
+            return None
+
+        return price
+
+    def set(self, station_id: str, price: GasStationPrice) -> None:
+        """Store a price in the cache with the current time as cache timestamp"""
+        self._cache[station_id] = (price, datetime.now(UTC))
+
+
+# Initialize the cache
+fuel_price_cache = FuelPriceCache()
 
 
 def get_tankerkoenig_client(request: Request):
@@ -123,8 +158,6 @@ async def add_favorite_station(
     """Add a gas station to favorites and store its information"""
 
     try:
-        from fueldata.stations import GasStationInfo
-
         # Get station details from Tankerkoenig API
         station_detail = tankerkoenig_client.get_gas_station_detail(
             favorite_data.station_id
@@ -167,57 +200,83 @@ async def get_favorite_stations(
 ):
     """Get user's favorite stations with current prices"""
 
-    try:
-        # Get favorites from database
-        favorites = fuel_station_client.get_favorite_stations_with_info(user.id)
-        station_info_map = {favorite.station_id: favorite for favorite in favorites}
-        station_ids = list(station_info_map.keys())
+    # Get favorites from database
+    favorites = fuel_station_client.get_favorite_stations_with_info(user.id)
+    station_info_map = {favorite.station_id: favorite for favorite in favorites}
 
-        # Get current prices for up to 10 stations at a time
-        results = []
-        for i in range(0, len(station_ids), 10):
-            batch_ids = station_ids[i : i + 10]
-            prices_map = {}
+    # Check cache for existing prices (valid for 5 minutes)
+    stations_to_fetch: list[GasStationInfo] = []
+    results = []
 
-            try:
-                prices = tankerkoenig_client.get_gas_station_prices(batch_ids)
-                prices_map = {price.station_id: price for price in prices}
+    for station in station_info_map.values():
+        # Try to get from cache (automatically checks expiry)
+        cache_entry = fuel_price_cache.get(station.station_id)
 
-            except Exception as e:
-                print(f"Error fetching prices for batch: {e}")
+        if cache_entry is None:
+            stations_to_fetch.append(station)
+            continue
 
-            for station_id in batch_ids:
-                info = station_info_map.get(station_id)
-                price = prices_map.get(station_id)
-
-                if not info:
-                    continue
-
-                results.append(
-                    FavoriteStationResponse(
-                        user_id=user.id,
-                        station_id=info.station_id,
-                        name=info.name,
-                        brand=info.brand,
-                        street=info.street,
-                        house_number=info.house_number,
-                        post_code=info.post_code,
-                        place=info.place,
-                        lat=info.lat,
-                        lng=info.lng,
-                        current_price_e5=price.e5 if price else None,
-                        current_price_e10=price.e10 if price else None,
-                        current_price_diesel=price.diesel if price else None,
-                        is_open=price.status == "open" if price else None,
-                    )
-                )
-
-        return results
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get favorite stations: {str(e)}"
+        results.append(
+            FavoriteStationResponse(
+                user_id=user.id,
+                station_id=station.station_id,
+                name=station.name,
+                brand=station.brand,
+                street=station.street,
+                house_number=station.house_number,
+                post_code=station.post_code,
+                place=station.place,
+                lat=station.lat,
+                lng=station.lng,
+                timestamp=cache_entry.timestamp,
+                current_price_e5=cache_entry.e5,
+                current_price_e10=cache_entry.e10,
+                current_price_diesel=cache_entry.diesel,
+                is_open=cache_entry.status == "open" if cache_entry.status else None,
+            )
         )
+
+    # Get current prices for stations not in cache, up to 10 stations at a time
+    for i in range(0, len(stations_to_fetch), 10):
+        stations = stations_to_fetch[i : i + 10]
+        prices_map: dict[str, GasStationPrice] = {}
+
+        try:
+            batch_ids = [station.station_id for station in stations]
+            prices = tankerkoenig_client.get_gas_station_prices(batch_ids)
+            prices_map = {price.station_id: price for price in prices}
+
+            # Update cache with new prices
+            for price in prices:
+                fuel_price_cache.set(price.station_id, price)
+
+        except Exception as e:
+            print(f"Error fetching prices for batch: {e}")
+
+        for station in stations:
+            price = prices_map.get(station.station_id)
+
+            results.append(
+                FavoriteStationResponse(
+                    user_id=user.id,
+                    station_id=station.station_id,
+                    name=station.name,
+                    brand=station.brand,
+                    street=station.street,
+                    house_number=station.house_number,
+                    post_code=station.post_code,
+                    place=station.place,
+                    lat=station.lat,
+                    lng=station.lng,
+                    timestamp=price.timestamp if price else None,
+                    current_price_e5=price.e5 if price else None,
+                    current_price_e10=price.e10 if price else None,
+                    current_price_diesel=price.diesel if price else None,
+                    is_open=price.status == "open" if price else None,
+                )
+            )
+
+    return results
 
 
 @router.delete("/favorites/{station_id}")
@@ -241,66 +300,3 @@ async def delete_favorite_station(
             status_code=500,
             detail=f"Failed to remove favorite station: {str(e)}",
         )
-
-
-@router.get("/summary", response_model=FuelPricesSummaryResponse)
-async def get_fuel_prices_summary(
-    user: CurrentUser,
-    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
-    tankerkoenig_client: TankerkoenigClient = Depends(get_tankerkoenig_client),
-):
-    """Get summary statistics for user's favorite stations"""
-
-    try:
-        # Get favorites
-        favorites = fuel_station_client.get_favorite_stations(user.id)
-        total_favorites = len(favorites)
-
-        if total_favorites == 0:
-            return FuelPricesSummaryResponse(
-                total_favorites=0,
-                stations_open=0,
-            )
-
-        # Get current prices
-        station_ids = [fav.station_id for fav in favorites]
-        all_prices: list[GasStationPrice] = []
-
-        for i in range(0, len(station_ids), 10):
-            batch_ids = station_ids[i : i + 10]
-
-            try:
-                prices = tankerkoenig_client.get_gas_station_prices(batch_ids)
-                all_prices.extend(prices)
-
-            except Exception as e:
-                print(f"Error fetching prices for batch: {e}")
-
-        # Calculate statistics
-        stations_open = sum(1 for p in all_prices if p.status == "open")
-
-        e5_prices = [
-            p.e5 for p in all_prices if p.e5 is not None and p.status == "open"
-        ]
-        e10_prices = [
-            p.e10 for p in all_prices if p.e10 is not None and p.status == "open"
-        ]
-        diesel_prices = [
-            p.diesel for p in all_prices if p.diesel is not None and p.status == "open"
-        ]
-
-        return FuelPricesSummaryResponse(
-            total_favorites=total_favorites,
-            stations_open=stations_open,
-            lowest_e5_price=min(e5_prices) if e5_prices else None,
-            lowest_e10_price=min(e10_prices) if e10_prices else None,
-            lowest_diesel_price=min(diesel_prices) if diesel_prices else None,
-            average_e5_price=sum(e5_prices) / len(e5_prices) if e5_prices else None,
-            average_e10_price=sum(e10_prices) / len(e10_prices) if e10_prices else None,
-            average_diesel_price=sum(diesel_prices) / len(diesel_prices)
-            if diesel_prices
-            else None,
-        )
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get summary: {str(e)}")
