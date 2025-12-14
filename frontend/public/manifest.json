@@ -3,8 +3,10 @@
   "short_name": "Data Tracker",
   "description": "Track and analyze your personal data",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
+  "orientation": "portrait",
   "theme_color": "#3B82F6",
   "icons": [
     {
