@@ -2,6 +2,7 @@
 DuckDB client for car storage and sharing.
 """
 
+import logging
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -9,6 +10,8 @@ from duckdb import DuckDBPyConnection
 
 from ..models import CarAccessUser, CarResponse, CarStatistics, UserSearchResponse
 from .duckdb_resource import BackendDuckDBResource
+
+logger = logging.getLogger(__name__)
 
 
 class CarClient:
@@ -174,9 +177,8 @@ class CarClient:
 
     def get_car(self, car_id: str, user_id: str) -> CarResponse | None:
         """Get a specific car if user has access."""
-        print("Fetching car", car_id)
+
         with self._duckdb.get_connection() as con:
-            print("Checking ownership or access for user", user_id)
             # Check if user owns the car
             result = con.execute(
                 """
@@ -186,7 +188,6 @@ class CarClient:
                 """,
                 [car_id, user_id],
             ).fetchone()
-            print("Ownership/access check result:", result)
 
             if result:
                 # Get shared users for this car
@@ -335,9 +336,17 @@ class CarClient:
                     [access_id, car_id, target_user_id, granted_at, owner_user_id],
                 )
                 return True
-            except Exception as e:
+            except Exception:
                 # Handle duplicate sharing
-                print(f"Error sharing car: {e}")
+                logger.error(
+                    "Failed to share car",
+                    exc_info=True,
+                    extra={
+                        "car_id": car_id,
+                        "owner_user_id": owner_user_id,
+                        "shared_with_user_id": target_user_id,
+                    },
+                )
                 return False
 
     def revoke_car_access(
@@ -489,9 +498,17 @@ class CarClient:
                         """,
                         [access_id, car_id, user_id, granted_at, owner_user_id],
                     )
-                except Exception as e:
+                except Exception:
                     # Handle any errors (e.g., user doesn't exist)
-                    print(f"Error adding shared user {user_id}: {e}")
+                    logger.error(
+                        "Failed to add shared user to car",
+                        exc_info=True,
+                        extra={
+                            "car_id": car_id,
+                            "user_id": user_id,
+                            "owner_user_id": owner_user_id,
+                        },
+                    )
 
         return True
 

@@ -2,11 +2,14 @@
 DuckDB client for time spans storage.
 """
 
+import logging
 from datetime import datetime
 from typing import Any
 
 from .duckdb_resource import BackendDuckDBResource
 from .models import TimeSpan
+
+logger = logging.getLogger(__name__)
 
 
 class TimeSpanClient:
@@ -103,46 +106,42 @@ class TimeSpanClient:
             updated_at=current_time,
         )
 
-        try:
-            with self._duckdb.get_connection() as con:
-                con.execute(
-                    """
-                    INSERT INTO time_spans (id, user_id, start_date, end_date, label, "group", notes, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    [
-                        time_span.id,
-                        time_span.user_id,
-                        time_span.start_date,
-                        time_span.end_date,
-                        time_span.label,
-                        time_span.group,
-                        time_span.notes,
-                        time_span.created_at,
-                        time_span.updated_at,
-                    ],
-                )
+        with self._duckdb.get_connection() as con:
+            con.execute(
+                """
+                INSERT INTO time_spans (id, user_id, start_date, end_date, label, "group", notes, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                [
+                    time_span.id,
+                    time_span.user_id,
+                    time_span.start_date,
+                    time_span.end_date,
+                    time_span.label,
+                    time_span.group,
+                    time_span.notes,
+                    time_span.created_at,
+                    time_span.updated_at,
+                ],
+            )
 
-            # Calculate duration if end_date is provided
-            duration_info = {}
-            if end_date:
-                duration_info = self._calculate_duration(start_date, end_date)
+        # Calculate duration if end_date is provided
+        duration_info = {}
+        if end_date:
+            duration_info = self._calculate_duration(start_date, end_date)
 
-            return {
-                "id": span_id,
-                "user_id": user_id,
-                "start_date": start_date,
-                "end_date": end_date,
-                "label": label,
-                "group": group,
-                "notes": notes,
-                "created_at": current_time,
-                "updated_at": current_time,
-                **duration_info,
-            }
-        except Exception as e:
-            print(f"Error adding time span: {e}")
-            raise Exception("Failed to add time span")
+        return {
+            "id": span_id,
+            "user_id": user_id,
+            "start_date": start_date,
+            "end_date": end_date,
+            "label": label,
+            "group": group,
+            "notes": notes,
+            "created_at": current_time,
+            "updated_at": current_time,
+            **duration_info,
+        }
 
     def get_time_spans(
         self,
@@ -195,17 +194,12 @@ class TimeSpanClient:
 
     def delete_time_span(self, user_id: str, span_id: str) -> bool:
         """Delete a time span by ID."""
-        try:
-            with self._duckdb.get_connection() as con:
-                result = con.execute(
-                    "DELETE FROM time_spans WHERE user_id = ? AND id = ?",
-                    (user_id, span_id),
-                )
-                return result.fetchone()[0] > 0
-
-        except Exception as e:
-            print(f"Error deleting time span: {e}")
-            return False
+        with self._duckdb.get_connection() as con:
+            result = con.execute(
+                "DELETE FROM time_spans WHERE user_id = ? AND id = ?",
+                (user_id, span_id),
+            )
+            return result.fetchone()[0] > 0
 
     def update_time_span(
         self, span_id: str, user_id: str, updates: dict[str, Any]
@@ -235,13 +229,9 @@ class TimeSpanClient:
             WHERE user_id = ? AND id = ?
         """
 
-        try:
-            with self._duckdb.get_connection() as con:
-                result = con.execute(query, tuple(params))
-                return result.fetchone()[0] > 0
-        except Exception as e:
-            print(f"Error updating time span: {e}")
-            return False
+        with self._duckdb.get_connection() as con:
+            result = con.execute(query, tuple(params))
+            return result.fetchone()[0] > 0
 
     def get_existing_labels(self, user_id: str) -> list[str]:
         """Get all unique labels from existing time spans."""
@@ -305,44 +295,27 @@ class TimeSpanClient:
             WHERE user_id = ?
         """
 
-        try:
-            with self._duckdb.get_connection() as con:
-                result = con.execute(query, (user_id,)).fetchone()
+        with self._duckdb.get_connection() as con:
+            result = con.execute(query, (user_id,)).fetchone()
 
-            if result and result[0] > 0:
-                return {
-                    "total_entries": result[0],
-                    "unique_labels": result[1],
-                    "completed_entries": result[2],
-                    "ongoing_entries": result[3],
-                    "date_range": {
-                        "earliest": result[4].isoformat() if result[4] else None,
-                        "latest": result[5].isoformat() if result[5] else None,
-                    },
-                    "duration_stats": {
-                        "total_minutes": result[6],
-                        "average_minutes": result[7],
-                        "min_minutes": result[8],
-                        "max_minutes": result[9],
-                    },
-                }
-            else:
-                return {
-                    "total_entries": 0,
-                    "unique_labels": 0,
-                    "completed_entries": 0,
-                    "ongoing_entries": 0,
-                    "date_range": {"earliest": None, "latest": None},
-                    "duration_stats": {
-                        "total_minutes": None,
-                        "average_minutes": None,
-                        "min_minutes": None,
-                        "max_minutes": None,
-                    },
-                }
-
-        except Exception as e:
-            print(f"Error getting time span summary: {e}")
+        if result and result[0] > 0:
+            return {
+                "total_entries": result[0],
+                "unique_labels": result[1],
+                "completed_entries": result[2],
+                "ongoing_entries": result[3],
+                "date_range": {
+                    "earliest": result[4].isoformat() if result[4] else None,
+                    "latest": result[5].isoformat() if result[5] else None,
+                },
+                "duration_stats": {
+                    "total_minutes": result[6],
+                    "average_minutes": result[7],
+                    "min_minutes": result[8],
+                    "max_minutes": result[9],
+                },
+            }
+        else:
             return {
                 "total_entries": 0,
                 "unique_labels": 0,

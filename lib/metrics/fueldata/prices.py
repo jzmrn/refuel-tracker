@@ -1,8 +1,11 @@
+import logging
 from datetime import datetime
 
 import pandas as pd
 from dagster_duckdb import DuckDBResource
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 
 class PriceEntry(BaseModel):
@@ -50,14 +53,13 @@ class FuelPriceDataClient:
         Args:
             df: DataFrame with fuel price data in wide format
         """
-
-        print(f"Storing {len(df)} rows of fuel data")
+        logger.info(
+            "Storing fuel price data", extra={"row_count": len(df), "empty": df.empty}
+        )
 
         if not df.empty:
             with self._duckdb.get_connection() as con:
                 con.execute("INSERT INTO fuel_prices SELECT * FROM df")
-
-            print(f"Stored {len(df)} rows of fuel data into the database")
 
         return df
 
@@ -92,7 +94,6 @@ class FuelPriceDataClient:
 
         with self._duckdb.get_connection() as con:
             df = con.execute(query, params).df()
-        print(f"Read {len(df)} rows from database")
 
         return df
 
@@ -127,7 +128,6 @@ class FuelPriceDataClient:
 
         with self._duckdb.get_connection() as con:
             df = con.execute(query, params).df()
-        print(f"Read {len(df)} rows of fuel data")
 
         records = df.to_dict(orient="records")
         return [PriceEntry.model_validate(record) for record in records]

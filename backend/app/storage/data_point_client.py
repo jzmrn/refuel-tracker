@@ -2,11 +2,14 @@
 DuckDB client for data points storage.
 """
 
+import logging
 from datetime import datetime
 from typing import Any
 
 from .duckdb_resource import BackendDuckDBResource
 from .models import DataPoint
+
+logger = logging.getLogger(__name__)
 
 
 class DataPointClient:
@@ -70,26 +73,22 @@ class DataPointClient:
             notes=notes,
         )
 
-        try:
-            with self._duckdb.get_connection() as con:
-                con.execute(
-                    """
-                    INSERT INTO data_points (id, user_id, timestamp, value, label, notes)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    """,
-                    [
-                        data_point.id,
-                        data_point.user_id,
-                        data_point.timestamp,
-                        data_point.value,
-                        data_point.label,
-                        data_point.notes,
-                    ],
-                )
-            return point_id
-        except Exception as e:
-            print(f"Error adding data point: {e}")
-            raise Exception("Failed to add data point")
+        with self._duckdb.get_connection() as con:
+            con.execute(
+                """
+                INSERT INTO data_points (id, user_id, timestamp, value, label, notes)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                [
+                    data_point.id,
+                    data_point.user_id,
+                    data_point.timestamp,
+                    data_point.value,
+                    data_point.label,
+                    data_point.notes,
+                ],
+            )
+        return point_id
 
     def get_data_points(
         self,
@@ -129,17 +128,13 @@ class DataPointClient:
 
     def delete_data_point(self, user_id: str, point_id: str) -> bool:
         """Delete a data point by ID."""
-        try:
-            with self._duckdb.get_connection() as con:
-                result = con.execute(
-                    "DELETE FROM data_points WHERE user_id = ? AND id = ?",
-                    [user_id, point_id],
-                )
-                # DuckDB DELETE returns a relation, check rowcount
-                return result.fetchone()[0] > 0
-        except Exception as e:
-            print(f"Error deleting data point: {e}")
-            return False
+        with self._duckdb.get_connection() as con:
+            result = con.execute(
+                "DELETE FROM data_points WHERE user_id = ? AND id = ?",
+                [user_id, point_id],
+            )
+            # DuckDB DELETE returns a relation, check rowcount
+            return result.fetchone()[0] > 0
 
     def get_existing_labels(self, user_id: str) -> list[str]:
         """Get all unique labels from existing data points."""
@@ -170,33 +165,24 @@ class DataPointClient:
             WHERE user_id = ?
         """
 
-        try:
-            with self._duckdb.get_connection() as con:
-                result = con.execute(query, (user_id,)).fetchone()
+        with self._duckdb.get_connection() as con:
+            result = con.execute(query, (user_id,)).fetchone()
 
-            if result and result[0] > 0:
-                return {
-                    "total_entries": result[0],
-                    "unique_labels": result[1],
-                    "date_range": {
-                        "earliest": result[2].isoformat() if result[2] else None,
-                        "latest": result[3].isoformat() if result[3] else None,
-                    },
-                    "value_stats": {
-                        "min": result[4],
-                        "max": result[5],
-                        "average": result[6],
-                    },
-                }
-            else:
-                return {
-                    "total_entries": 0,
-                    "unique_labels": 0,
-                    "date_range": {"earliest": None, "latest": None},
-                    "value_stats": {"min": None, "max": None, "average": None},
-                }
-        except Exception as e:
-            print(f"Error getting data point summary: {e}")
+        if result and result[0] > 0:
+            return {
+                "total_entries": result[0],
+                "unique_labels": result[1],
+                "date_range": {
+                    "earliest": result[2].isoformat() if result[2] else None,
+                    "latest": result[3].isoformat() if result[3] else None,
+                },
+                "value_stats": {
+                    "min": result[4],
+                    "max": result[5],
+                    "average": result[6],
+                },
+            }
+        else:
             return {
                 "total_entries": 0,
                 "unique_labels": 0,

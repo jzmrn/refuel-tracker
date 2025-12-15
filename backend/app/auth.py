@@ -45,8 +45,12 @@ async def fetch_and_encode_picture(picture_url: str | None) -> str | None:
             # Return as data URI
             return f"data:{content_type};base64,{image_base64}"
 
-    except Exception as e:
-        logger.warning(f"Failed to fetch profile picture from {picture_url}: {e}")
+    except Exception:
+        logger.warning(
+            "Failed to fetch profile picture",
+            exc_info=True,
+            extra={"picture_url": picture_url},
+        )
         return None
 
 

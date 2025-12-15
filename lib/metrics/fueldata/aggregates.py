@@ -1,8 +1,11 @@
+import logging
 from datetime import date, datetime
 
 import pandas as pd
 from dagster_duckdb import DuckDBResource
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 
 class DailyAggregate(BaseModel):
@@ -58,8 +61,9 @@ class AggregatedFuelDataClient:
         Args:
             df: DataFrame with daily aggregate data
         """
-
-        print(f"Storing {len(df)} rows of daily aggregate data")
+        logger.info(
+            "Storing daily aggregates", extra={"row_count": len(df), "empty": df.empty}
+        )
 
         if not df.empty:
             with self._duckdb.get_connection() as con:
@@ -110,8 +114,6 @@ class AggregatedFuelDataClient:
 
         with self._duckdb.get_connection() as con:
             df = con.execute(query, params).df()
-
-        print(f"Read {len(df)} rows of daily aggregate data")
 
         return df
 

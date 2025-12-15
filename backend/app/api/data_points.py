@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -7,6 +8,7 @@ from ..models import DataPointCreate, DataPointResponse, DataSummaryResponse
 from ..storage.data_point_client import DataPointClient
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def get_data_point_client(request: Request) -> DataPointClient:
@@ -21,29 +23,27 @@ async def create_data_point(
     client: DataPointClient = Depends(get_data_point_client),
 ):
     """Create a new data point"""
-    try:
-        point_id = client.add_data_point(
-            data_point.timestamp,
-            data_point.value,
-            data_point.label,
-            data_point.notes,
-            user.id,
-        )
+    logger.info(
+        "Creating data point",
+        extra={"user_id": user.id, "label": data_point.label},
+    )
 
-        return DataPointResponse(
-            id=point_id,
-            user_id=user.id,
-            timestamp=data_point.timestamp,
-            value=data_point.value,
-            label=data_point.label,
-            notes=data_point.notes,
-        )
+    point_id = client.add_data_point(
+        data_point.timestamp,
+        data_point.value,
+        data_point.label,
+        data_point.notes,
+        user.id,
+    )
 
-    except Exception as e:
-        print(f"Error creating data point: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to create data point: {str(e)}"
-        )
+    return DataPointResponse(
+        id=point_id,
+        user_id=user.id,
+        timestamp=data_point.timestamp,
+        value=data_point.value,
+        label=data_point.label,
+        notes=data_point.notes,
+    )
 
 
 @router.get("/data-points", response_model=list[DataPointResponse])
@@ -56,31 +56,29 @@ async def get_data_points(
     limit: int | None = Query(None, description="Limit number of results"),
 ):
     """Get data points with optional filtering"""
+    logger.info(
+        "Getting data points",
+        extra={"user_id": user.id, "label": label, "limit": limit},
+    )
 
-    try:
-        start_dt = (
-            datetime.fromisoformat(start_date.replace("Z", "+00:00"))
-            if start_date
-            else None
-        )
-        end_dt = (
-            datetime.fromisoformat(end_date.replace("Z", "+00:00"))
-            if end_date
-            else None
-        )
+    start_dt = (
+        datetime.fromisoformat(start_date.replace("Z", "+00:00"))
+        if start_date
+        else None
+    )
+    end_dt = (
+        datetime.fromisoformat(end_date.replace("Z", "+00:00")) if end_date else None
+    )
 
-        return client.get_data_points(
-            user.id,
-            start_date=start_dt,
-            end_date=end_dt,
-            label=label,
-            limit=limit,
-        )
+    results = client.get_data_points(
+        user.id,
+        start_date=start_dt,
+        end_date=end_dt,
+        label=label,
+        limit=limit,
+    )
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to retrieve data points: {str(e)}"
-        )
+    return results
 
 
 @router.delete("/data-points/{point_id}")
@@ -90,21 +88,14 @@ async def delete_data_point(
     client: DataPointClient = Depends(get_data_point_client),
 ):
     """Delete a data point by ID"""
+    logger.info("Deleting data point", extra={"point_id": point_id, "user_id": user.id})
 
-    try:
-        success = client.delete_data_point(user.id, point_id)
+    success = client.delete_data_point(user.id, point_id)
 
-        if not success:
-            raise HTTPException(status_code=404, detail="Data point not found")
+    if not success:
+        raise HTTPException(status_code=404, detail="Data point not found")
 
-        return {"status": "success", "message": "Data point deleted"}
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to delete data point: {str(e)}"
-        )
+    return {"status": "success", "message": "Data point deleted"}
 
 
 @router.get("/data-points/labels", response_model=list[str])
@@ -113,14 +104,10 @@ async def get_existing_labels(
     client: DataPointClient = Depends(get_data_point_client),
 ):
     """Get all unique labels from existing data points"""
-    try:
-        labels = client.get_existing_labels(user.id)
-        return labels
+    logger.info("Getting existing labels", extra={"user_id": user.id})
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to retrieve labels: {str(e)}"
-        )
+    labels = client.get_existing_labels(user.id)
+    return labels
 
 
 @router.get("/data-points/summary", response_model=DataSummaryResponse)
@@ -129,12 +116,7 @@ async def get_data_summary(
     client: DataPointClient = Depends(get_data_point_client),
 ):
     """Get summary statistics for data points"""
-    try:
-        summary = client.get_summary(user.id)
+    logger.info("Getting data summary", extra={"user_id": user.id})
 
-        return DataSummaryResponse(**summary)
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to generate summary: {str(e)}"
-        )
+    summary = client.get_summary(user.id)
+    return DataSummaryResponse(**summary)

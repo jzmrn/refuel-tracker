@@ -1,6 +1,7 @@
+import logging
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from fueldata.stations import FuelStationClient, GasStationInfo
 from tankerkoenig import TankerkoenigClient
 from tankerkoenig.models import (
@@ -20,6 +21,7 @@ from ..models import (
 )
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 # Cache is valid for 5 minutes
 CACHE_DURATION_MINUTES = 5
@@ -73,79 +75,89 @@ async def search_gas_stations(
     tankerkoenig_client: TankerkoenigClient = Depends(get_tankerkoenig_client),
 ):
     """Search for gas stations near a location"""
-    try:
-        # Map string values to enums
-        fuel_type_map = {
-            "e5": FuelType.E5,
-            "e10": FuelType.E10,
-            "diesel": FuelType.DIESEL,
-            "all": FuelType.ALL,
-        }
-        sort_by_map = {"price": SortBy.PRICE, "dist": SortBy.DIST}
+    logger.info(
+        "Searching gas stations",
+        extra={
+            "user_id": user.id,
+            "lat": search_params.lat,
+            "lng": search_params.lng,
+            "radius_km": search_params.rad,
+        },
+    )
 
-        fuel_type = fuel_type_map.get(search_params.fuel_type.lower(), FuelType.ALL)
-        sort_by = sort_by_map.get(search_params.sort_by.lower(), SortBy.DIST)
+    # Map string values to enums
+    fuel_type_map = {
+        "e5": FuelType.E5,
+        "e10": FuelType.E10,
+        "diesel": FuelType.DIESEL,
+        "all": FuelType.ALL,
+    }
+    sort_by_map = {"price": SortBy.PRICE, "dist": SortBy.DIST}
 
-        # Search stations
-        stations = tankerkoenig_client.search_gas_stations(
-            lat=search_params.lat,
-            lng=search_params.lng,
-            rad=search_params.rad,
-            fuel_type=fuel_type,
-            sort_by=sort_by,
+    fuel_type = fuel_type_map.get(search_params.fuel_type.lower(), FuelType.ALL)
+    sort_by = sort_by_map.get(search_params.sort_by.lower(), SortBy.DIST)
+
+    # Search stations
+    stations = tankerkoenig_client.search_gas_stations(
+        lat=search_params.lat,
+        lng=search_params.lng,
+        rad=search_params.rad,
+        fuel_type=fuel_type,
+        sort_by=sort_by,
+    )
+
+    # Convert to response models
+    result = []
+    skipped_count = 0
+    for station in stations:
+        # Filter for open stations only if requested
+        if search_params.open_only and not station.isOpen:
+            skipped_count += 1
+            continue
+
+        # Handle both GasStationOnePrice (has 'price' field) and GasStationAllPrices (has e5/e10/diesel)
+        diesel = None
+        e5 = None
+        e10 = None
+
+        if isinstance(station, GasStationOnePrice):
+            if fuel_type == FuelType.DIESEL:
+                diesel = station.price
+            elif fuel_type == FuelType.E5:
+                e5 = station.price
+            elif fuel_type == FuelType.E10:
+                e10 = station.price
+
+        elif isinstance(station, GasStationAllPrices):
+            diesel = station.diesel
+            e5 = station.e5
+            e10 = station.e10
+
+        response = GasStationResponse(
+            id=station.id,
+            name=station.name,
+            brand=station.brand,
+            street=station.street.title(),
+            house_number=station.houseNumber,
+            post_code=station.postCode,
+            place=station.place.title(),
+            lat=station.lat,
+            lng=station.lng,
+            dist=station.dist,
+            diesel=diesel,
+            e5=e5,
+            e10=e10,
+            is_open=station.isOpen,
+        )
+        result.append(response)
+
+    if skipped_count > 0:
+        logger.debug(
+            "Skipped closed stations",
+            extra={"skipped_count": skipped_count, "open_only": True},
         )
 
-        # Convert to response models
-        result = []
-        for station in stations:
-            # Filter for open stations only if requested
-            if search_params.open_only and not station.isOpen:
-                continue
-
-            # Handle both GasStationOnePrice (has 'price' field) and GasStationAllPrices (has e5/e10/diesel)
-            diesel = None
-            e5 = None
-            e10 = None
-
-            if isinstance(station, GasStationOnePrice):
-                if fuel_type == FuelType.DIESEL:
-                    diesel = station.price
-                elif fuel_type == FuelType.E5:
-                    e5 = station.price
-                elif fuel_type == FuelType.E10:
-                    e10 = station.price
-
-            elif isinstance(station, GasStationAllPrices):
-                diesel = station.diesel
-                e5 = station.e5
-                e10 = station.e10
-
-            response = GasStationResponse(
-                id=station.id,
-                name=station.name,
-                brand=station.brand,
-                street=station.street.title(),
-                house_number=station.houseNumber,
-                post_code=station.postCode,
-                place=station.place.title(),
-                lat=station.lat,
-                lng=station.lng,
-                dist=station.dist,
-                diesel=diesel,
-                e5=e5,
-                e10=e10,
-                is_open=station.isOpen,
-            )
-            result.append(response)
-
-        return result
-
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to search stations: {str(e)}"
-        )
+    return result
 
 
 @router.post("/favorites", response_model=dict)
@@ -156,40 +168,38 @@ async def add_favorite_station(
     tankerkoenig_client: TankerkoenigClient = Depends(get_tankerkoenig_client),
 ):
     """Add a gas station to favorites and store its information"""
+    logger.info(
+        "Adding favorite station",
+        extra={"station_id": favorite_data.station_id, "user_id": user.id},
+    )
 
-    try:
-        # Get station details from Tankerkoenig API
-        station_detail = tankerkoenig_client.get_gas_station_detail(
-            favorite_data.station_id
-        )
+    # Get station details from Tankerkoenig API
+    station_detail = tankerkoenig_client.get_gas_station_detail(
+        favorite_data.station_id
+    )
 
-        # Store station info in database
-        station_info = GasStationInfo(
-            station_id=station_detail.id,
-            name=station_detail.name,
-            brand=station_detail.brand,
-            street=station_detail.street.title(),
-            place=station_detail.place.title(),
-            lat=station_detail.lat,
-            lng=station_detail.lng,
-            house_number=station_detail.houseNumber,
-            post_code=station_detail.postCode,
-        )
-        fuel_station_client.store_gas_station_info([station_info])
+    # Store station info in database
+    station_info = GasStationInfo(
+        station_id=station_detail.id,
+        name=station_detail.name,
+        brand=station_detail.brand,
+        street=station_detail.street.title(),
+        place=station_detail.place.title(),
+        lat=station_detail.lat,
+        lng=station_detail.lng,
+        house_number=station_detail.houseNumber,
+        post_code=station_detail.postCode,
+    )
+    fuel_station_client.store_gas_station_info([station_info])
 
-        # Add to favorites
-        fuel_station_client.store_favorite_station(user.id, favorite_data.station_id)
+    # Add to favorites
+    fuel_station_client.store_favorite_station(user.id, favorite_data.station_id)
 
-        return {
-            "status": "success",
-            "message": "Station added to favorites",
-            "station_id": favorite_data.station_id,
-        }
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to add favorite station: {str(e)}"
-        )
+    return {
+        "status": "success",
+        "message": "Station added to favorites",
+        "station_id": favorite_data.station_id,
+    }
 
 
 @router.get("/favorites", response_model=list[FavoriteStationResponse])
@@ -199,6 +209,7 @@ async def get_favorite_stations(
     tankerkoenig_client: TankerkoenigClient = Depends(get_tankerkoenig_client),
 ):
     """Get user's favorite stations with current prices"""
+    logger.info("Getting favorite stations with prices", extra={"user_id": user.id})
 
     # Get favorites from database
     favorites = fuel_station_client.get_favorite_stations_with_info(user.id)
@@ -207,6 +218,7 @@ async def get_favorite_stations(
     # Check cache for existing prices (valid for 5 minutes)
     stations_to_fetch: list[GasStationInfo] = []
     results = []
+    cached_count = 0
 
     for station in station_info_map.values():
         # Try to get from cache (automatically checks expiry)
@@ -216,6 +228,7 @@ async def get_favorite_stations(
             stations_to_fetch.append(station)
             continue
 
+        cached_count += 1
         results.append(
             FavoriteStationResponse(
                 user_id=user.id,
@@ -236,22 +249,28 @@ async def get_favorite_stations(
             )
         )
 
+    if cached_count > 0:
+        logger.debug(
+            "Using cached prices", extra={"cached_station_count": cached_count}
+        )
+    if len(stations_to_fetch) > 0:
+        logger.debug(
+            "Fetching fresh prices",
+            extra={"stations_to_fetch_count": len(stations_to_fetch)},
+        )
+
     # Get current prices for stations not in cache, up to 10 stations at a time
     for i in range(0, len(stations_to_fetch), 10):
         stations = stations_to_fetch[i : i + 10]
         prices_map: dict[str, GasStationPrice] = {}
 
-        try:
-            batch_ids = [station.station_id for station in stations]
-            prices = tankerkoenig_client.get_gas_station_prices(batch_ids)
-            prices_map = {price.station_id: price for price in prices}
+        batch_ids = [station.station_id for station in stations]
+        prices = tankerkoenig_client.get_gas_station_prices(batch_ids)
+        prices_map = {price.station_id: price for price in prices}
 
-            # Update cache with new prices
-            for price in prices:
-                fuel_price_cache.set(price.station_id, price)
-
-        except Exception as e:
-            print(f"Error fetching prices for batch: {e}")
+        # Update cache with new prices
+        for price in prices:
+            fuel_price_cache.set(price.station_id, price)
 
         for station in stations:
             price = prices_map.get(station.station_id)
@@ -286,17 +305,15 @@ async def delete_favorite_station(
     fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
 ):
     """Remove a station from favorites"""
+    logger.info(
+        "Deleting favorite station",
+        extra={"station_id": station_id, "user_id": user.id},
+    )
 
-    try:
-        fuel_station_client.delete_favorite_station(user.id, station_id)
-        return {
-            "status": "success",
-            "message": "Station removed from favorites",
-            "station_id": station_id,
-        }
+    fuel_station_client.delete_favorite_station(user.id, station_id)
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to remove favorite station: {str(e)}",
-        )
+    return {
+        "status": "success",
+        "message": "Station removed from favorites",
+        "station_id": station_id,
+    }

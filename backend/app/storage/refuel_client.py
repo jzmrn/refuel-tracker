@@ -2,11 +2,14 @@
 DuckDB client for refuel metrics storage.
 """
 
+import logging
 from datetime import datetime
 from typing import Any
 
 from .duckdb_resource import BackendDuckDBResource
 from .models import RefuelMetric
+
+logger = logging.getLogger(__name__)
 
 
 class RefuelDataClient:
@@ -54,32 +57,27 @@ class RefuelDataClient:
         if not metrics:
             return True
 
-        try:
-            with self._duckdb.get_connection() as con:
-                for metric in metrics:
-                    con.execute(
-                        """
-                        INSERT INTO refuel_metrics (timestamp, user_id, car_id, price, amount,
-                        kilometers_since_last_refuel, estimated_fuel_consumption, notes, station_id)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        """,
-                        [
-                            metric.timestamp,
-                            user_id,
-                            metric.car_id,
-                            metric.price,
-                            metric.amount,
-                            metric.kilometers_since_last_refuel,
-                            metric.estimated_fuel_consumption,
-                            metric.notes,
-                            metric.station_id,
-                        ],
-                    )
-            return True
-
-        except Exception as e:
-            print(f"Error adding refuel metrics: {e}")
-            return False
+        with self._duckdb.get_connection() as con:
+            for metric in metrics:
+                con.execute(
+                    """
+                    INSERT INTO refuel_metrics (timestamp, user_id, car_id, price, amount,
+                    kilometers_since_last_refuel, estimated_fuel_consumption, notes, station_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    [
+                        metric.timestamp,
+                        user_id,
+                        metric.car_id,
+                        metric.price,
+                        metric.amount,
+                        metric.kilometers_since_last_refuel,
+                        metric.estimated_fuel_consumption,
+                        metric.notes,
+                        metric.station_id,
+                    ],
+                )
+        return True
 
     def get_metrics(
         self,
@@ -118,16 +116,12 @@ class RefuelDataClient:
 
     def delete_metric(self, user_id: str, timestamp: datetime) -> bool:
         """Delete a specific metric by timestamp."""
-        try:
-            with self._duckdb.get_connection() as con:
-                result = con.execute(
-                    "DELETE FROM refuel_metrics WHERE user_id = ? AND timestamp = ?",
-                    [user_id, timestamp],
-                )
-                return result.fetchone()[0] > 0  # Returns number of deleted rows
-        except Exception as e:
-            print(f"Error deleting refuel metric: {e}")
-            return False
+        with self._duckdb.get_connection() as con:
+            result = con.execute(
+                "DELETE FROM refuel_metrics WHERE user_id = ? AND timestamp = ?",
+                [user_id, timestamp],
+            )
+            return result.fetchone()[0] > 0  # Returns number of deleted rows
 
     def get_total_cost_by_period(
         self,
@@ -163,24 +157,15 @@ class RefuelDataClient:
             query += " AND timestamp <= ?"
             params.append(end_date)
 
-        try:
-            with self._duckdb.get_connection() as con:
-                result = con.execute(query, params).fetchone()
+        with self._duckdb.get_connection() as con:
+            result = con.execute(query, params).fetchone()
 
-            return {
-                "total_cost": round(result[0], 2),
-                "total_liters": round(result[1], 2),
-                "fill_up_count": result[2],
-                "average_price_per_liter": round(result[3], 3),
-            }
-        except Exception as e:
-            print(f"Error calculating refuel statistics: {e}")
-            return {
-                "total_cost": 0.0,
-                "total_liters": 0.0,
-                "average_price_per_liter": 0.0,
-                "fill_up_count": 0,
-            }
+        return {
+            "total_cost": round(result[0], 2),
+            "total_liters": round(result[1], 2),
+            "fill_up_count": result[2],
+            "average_price_per_liter": round(result[3], 3),
+        }
 
     def get_price_trends(
         self,
@@ -216,26 +201,21 @@ class RefuelDataClient:
 
         query += " ORDER BY timestamp ASC"
 
-        try:
-            with self._duckdb.get_connection() as con:
-                results = con.execute(query, params).fetchall()
+        with self._duckdb.get_connection() as con:
+            results = con.execute(query, params).fetchall()
 
-            trends = []
-            for row in results:
-                trends.append(
-                    {
-                        "date": row[0].isoformat(),
-                        "timestamp": row[1],
-                        "price": row[2],
-                        "amount": row[3],
-                        "total_cost": round(row[4], 2),
-                    }
-                )
-            return trends
-
-        except Exception as e:
-            print(f"Error getting refuel price trends: {e}")
-            return []
+        trends = []
+        for row in results:
+            trends.append(
+                {
+                    "date": row[0].isoformat(),
+                    "timestamp": row[1],
+                    "price": row[2],
+                    "amount": row[3],
+                    "total_cost": round(row[4], 2),
+                }
+            )
+        return trends
 
     def get_monthly_summary(
         self, user_id: str, year: int, month: int
@@ -261,29 +241,18 @@ class RefuelDataClient:
             WHERE user_id = ? AND timestamp >= ? AND timestamp < ?
         """
 
-        try:
-            with self._duckdb.get_connection() as con:
-                result = con.execute(query, (user_id, start_date, end_date)).fetchone()
+        with self._duckdb.get_connection() as con:
+            result = con.execute(query, (user_id, start_date, end_date)).fetchone()
 
-            if result and result[0] is not None:
-                return {
-                    **cost_stats,
-                    "max_price": round(result[0], 3),
-                    "min_price": round(result[1], 3),
-                    "largest_fillup": round(result[2], 2),
-                    "smallest_fillup": round(result[3], 2),
-                }
-            else:
-                return {
-                    **cost_stats,
-                    "max_price": 0.0,
-                    "min_price": 0.0,
-                    "largest_fillup": 0.0,
-                    "smallest_fillup": 0.0,
-                }
-
-        except Exception as e:
-            print(f"Error getting monthly summary: {e}")
+        if result and result[0] is not None:
+            return {
+                **cost_stats,
+                "max_price": round(result[0], 3),
+                "min_price": round(result[1], 3),
+                "largest_fillup": round(result[2], 2),
+                "smallest_fillup": round(result[3], 2),
+            }
+        else:
             return {
                 **cost_stats,
                 "max_price": 0.0,
@@ -306,25 +275,20 @@ class RefuelDataClient:
         Returns:
             List of dictionaries with station_id, brand, street, house_number, and place
         """
-        try:
-            # Get favorite stations with full info using the FuelStationClient
-            stations = fuel_station_client.get_favorite_stations_with_info(user_id)
+        # Get favorite stations with full info using the FuelStationClient
+        stations = fuel_station_client.get_favorite_stations_with_info(user_id)
 
-            # Convert to simplified format for dropdown
-            dropdown_stations = []
-            for station in stations:
-                dropdown_stations.append(
-                    {
-                        "station_id": station.station_id,
-                        "brand": station.brand,
-                        "street": station.street,
-                        "house_number": station.house_number,
-                        "place": station.place,
-                    }
-                )
+        # Convert to simplified format for dropdown
+        dropdown_stations = []
+        for station in stations:
+            dropdown_stations.append(
+                {
+                    "station_id": station.station_id,
+                    "brand": station.brand,
+                    "street": station.street,
+                    "house_number": station.house_number,
+                    "place": station.place,
+                }
+            )
 
-            return dropdown_stations
-
-        except Exception as e:
-            print(f"Error getting favorite stations for dropdown: {e}")
-            return []
+        return dropdown_stations

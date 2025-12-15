@@ -1,8 +1,11 @@
+import logging
 from datetime import datetime
 
 import pandas as pd
 from dagster_duckdb import DuckDBResource
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 
 class FavoriteStation(BaseModel):
@@ -76,6 +79,11 @@ class FuelStationClient:
             station_id: The station ID to mark as favorite
         """
 
+        logger.info(
+            "Storing favorite station",
+            extra={"user_id": user_id, "station_id": station_id},
+        )
+
         timestamp = datetime.now()
         with self._duckdb.get_connection() as con:
             con.execute(
@@ -86,8 +94,6 @@ class FuelStationClient:
                 [user_id, station_id, timestamp],
             )
 
-        print(f"Stored favorite station {station_id} for user {user_id}")
-
     def delete_favorite_station(self, user_id: str, station_id: str) -> None:
         """
         Delete a favorite gas station for a user.
@@ -97,6 +103,11 @@ class FuelStationClient:
             station_id: The station ID to remove from favorites
         """
 
+        logger.info(
+            "Deleting favorite station",
+            extra={"user_id": user_id, "station_id": station_id},
+        )
+
         with self._duckdb.get_connection() as con:
             con.execute(
                 """
@@ -105,8 +116,6 @@ class FuelStationClient:
                 """,
                 [user_id, station_id],
             )
-
-        print(f"Deleted favorite station {station_id} for user {user_id}")
 
     def read_favorite_stations(self, user_id: str | None = None) -> pd.DataFrame:
         """
@@ -129,7 +138,6 @@ class FuelStationClient:
 
         with self._duckdb.get_connection() as con:
             df = con.execute(query).df()
-        print(f"Retrieved {len(df)} favorite stations")
 
         return df
 
@@ -164,9 +172,9 @@ class FuelStationClient:
             The input list of GasStationInfo objects
         """
 
-        print(f"Storing {len(stations)} gas station records")
-
         if stations:
+            logger.info("Storing gas stations", extra={"station_count": len(stations)})
+
             with self._duckdb.get_connection() as con:
                 for station in stations:
                     con.execute(
@@ -209,8 +217,6 @@ class FuelStationClient:
 
         with self._duckdb.get_connection() as con:
             df = con.execute(query).df()
-
-        print(f"Read {len(df)} gas station records")
 
         return df
 
@@ -267,8 +273,6 @@ class FuelStationClient:
         with self._duckdb.get_connection() as con:
             df = con.execute(query, [user_id]).df()
 
-        print(f"Retrieved {len(df)} favorite stations with info for user {user_id}")
-
         records = df.to_dict(orient="records")
         return [GasStationInfo.model_validate(record) for record in records]
 
@@ -288,5 +292,3 @@ class FuelStationClient:
                 """,
                 [station_id],
             )
-
-        print(f"Deleted gas station info for station {station_id}")

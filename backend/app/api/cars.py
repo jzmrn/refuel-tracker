@@ -2,6 +2,8 @@
 API endpoints for car management and sharing.
 """
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from ..auth import CurrentUser
@@ -17,6 +19,7 @@ from ..models import (
 from ..storage.car_client import CarClient
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def get_car_client(request: Request) -> CarClient:
@@ -31,27 +34,35 @@ async def create_car(
     client: CarClient = Depends(get_car_client),
 ):
     """Create a new car"""
-    try:
-        car_id = client.create_car(
-            user_id=user.id,
-            name=car_data.name,
-            year=car_data.year,
-            fuel_tank_size=car_data.fuel_tank_size,
-            notes=car_data.notes,
+    logger.info(
+        "Creating car",
+        extra={"user_id": user.id, "car_name": car_data.name, "year": car_data.year},
+    )
+
+    car_id = client.create_car(
+        user_id=user.id,
+        name=car_data.name,
+        year=car_data.year,
+        fuel_tank_size=car_data.fuel_tank_size,
+        notes=car_data.notes,
+    )
+
+    # Sync shared users if provided
+    if car_data.shared_user_ids:
+        logger.info(
+            "Syncing shared users for car",
+            extra={
+                "car_id": car_id,
+                "shared_user_count": len(car_data.shared_user_ids),
+            },
         )
+        client.sync_shared_users(car_id, user.id, car_data.shared_user_ids)
 
-        # Sync shared users if provided
-        if car_data.shared_user_ids:
-            client.sync_shared_users(car_id, user.id, car_data.shared_user_ids)
+    car = client.get_car(car_id, user.id)
+    if not car:
+        raise HTTPException(status_code=500, detail="Failed to create car")
 
-        car = client.get_car(car_id, user.id)
-        if not car:
-            raise HTTPException(status_code=500, detail="Failed to create car")
-
-        return car
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return car
 
 
 @router.get("/cars", response_model=list[CarResponse])
@@ -60,12 +71,10 @@ async def get_cars(
     client: CarClient = Depends(get_car_client),
 ):
     """Get all cars that the user owns or has access to"""
-    try:
-        cars = client.get_cars_for_user(user.id)
-        return cars
+    logger.info("Getting all cars", extra={"user_id": user.id})
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    cars = client.get_cars_for_user(user.id)
+    return cars
 
 
 @router.get("/cars/{car_id}", response_model=CarResponse)
@@ -75,6 +84,8 @@ async def get_car(
     client: CarClient = Depends(get_car_client),
 ):
     """Get a specific car"""
+    logger.info("Getting car", extra={"car_id": car_id, "user_id": user.id})
+
     car = client.get_car(car_id, user.id)
     if not car:
         raise HTTPException(
@@ -92,6 +103,8 @@ async def update_car(
     client: CarClient = Depends(get_car_client),
 ):
     """Update a car (owner only)"""
+    logger.info("Updating car", extra={"car_id": car_id, "user_id": user.id})
+
     # Verify ownership
     car = client.get_car(car_id, user.id)
     if not car:
@@ -115,6 +128,13 @@ async def update_car(
 
     # Sync shared users if provided
     if car_update.shared_user_ids is not None:
+        logger.info(
+            "Syncing shared users for car",
+            extra={
+                "car_id": car_id,
+                "shared_user_count": len(car_update.shared_user_ids),
+            },
+        )
         client.sync_shared_users(car_id, user.id, car_update.shared_user_ids)
 
     updated_car = client.get_car(car_id, user.id)
@@ -128,11 +148,10 @@ async def delete_car(
     client: CarClient = Depends(get_car_client),
 ):
     """Delete a car (owner only)"""
+    logger.info("Deleting car", extra={"car_id": car_id, "user_id": user.id})
 
     # Verify ownership
-    print("Fetching car", car_id)
     car = client.get_car(car_id, user.id)
-    print("Fetched car", car)
 
     if not car:
         raise HTTPException(status_code=404, detail="Car not found")
@@ -140,10 +159,7 @@ async def delete_car(
     if not car.is_owner:
         raise HTTPException(status_code=403, detail="Only the owner can delete the car")
 
-    print("Deleting car", car_id)
     client.delete_car(car_id, user.id)
-    print("Car deleted", car_id)
-
     return None
 
 
@@ -155,6 +171,15 @@ async def share_car(
     client: CarClient = Depends(get_car_client),
 ):
     """Share a car with another user (owner only)"""
+    logger.info(
+        "Sharing car with user",
+        extra={
+            "car_id": car_id,
+            "shared_with_user_id": share_request.user_id,
+            "owner_user_id": user.id,
+        },
+    )
+
     # Verify ownership
     car = client.get_car(car_id, user.id)
     if not car:
@@ -178,6 +203,15 @@ async def revoke_car_access(
     client: CarClient = Depends(get_car_client),
 ):
     """Revoke car access from a user (owner only)"""
+    logger.info(
+        "Revoking car access",
+        extra={
+            "car_id": car_id,
+            "revoke_from_user_id": user_id,
+            "owner_user_id": user.id,
+        },
+    )
+
     # Verify ownership
     car = client.get_car(car_id, user.id)
     if not car:
@@ -197,6 +231,10 @@ async def get_car_shared_users(
     client: CarClient = Depends(get_car_client),
 ):
     """Get list of users who have access to this car (owner only)"""
+    logger.info(
+        "Getting shared users for car", extra={"car_id": car_id, "user_id": user.id}
+    )
+
     # Verify ownership
     car = client.get_car(car_id, user.id)
     if not car:
@@ -218,6 +256,8 @@ async def search_users(
     client: CarClient = Depends(get_car_client),
 ):
     """Search for users by name or email (for sharing)"""
+    logger.info("Searching users", extra={"search_query": q, "user_id": user.id})
+
     if len(q) < 2:
         raise HTTPException(
             status_code=400, detail="Search query must be at least 2 characters"
@@ -234,6 +274,8 @@ async def get_car_statistics(
     client: CarClient = Depends(get_car_client),
 ):
     """Get statistics for a specific car"""
+    logger.info("Getting car statistics", extra={"car_id": car_id, "user_id": user.id})
+
     stats = client.get_car_statistics(car_id, user.id)
     if not stats:
         raise HTTPException(

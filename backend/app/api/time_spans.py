@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -12,6 +13,7 @@ from ..models import (
 from ..storage.time_span_client import TimeSpanClient
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def get_time_span_client(request: Request) -> TimeSpanClient:
@@ -26,22 +28,20 @@ async def create_time_span(
     client: TimeSpanClient = Depends(get_time_span_client),
 ):
     """Create a new time span"""
-    try:
-        result = client.add_time_span(
-            start_date=time_span.start_date,
-            end_date=time_span.end_date,
-            label=time_span.label,
-            group=getattr(time_span, "group", "General"),
-            notes=time_span.notes,
-            user_id=user.id,
-        )
-        return TimeSpanResponse(**result)
+    logger.info(
+        "Creating time span", extra={"user_id": user.id, "label": time_span.label}
+    )
 
-    except Exception as e:
-        print(f"Error creating time span: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to create time span: {str(e)}"
-        )
+    result = client.add_time_span(
+        start_date=time_span.start_date,
+        end_date=time_span.end_date,
+        label=time_span.label,
+        group=getattr(time_span, "group", "General"),
+        notes=time_span.notes,
+        user_id=user.id,
+    )
+
+    return TimeSpanResponse(**result)
 
 
 @router.get("/time-spans", response_model=list[TimeSpanResponse])
@@ -55,38 +55,31 @@ async def get_time_spans(
     limit: int | None = Query(None, description="Limit number of results"),
 ):
     """Get time spans with optional filtering"""
-    try:
-        # Parse dates
-        start_dt = (
-            datetime.fromisoformat(start_date.replace("Z", "+00:00"))
-            if start_date
-            else None
-        )
-        end_dt = (
-            datetime.fromisoformat(end_date.replace("Z", "+00:00"))
-            if end_date
-            else None
-        )
+    logger.info(
+        "Getting time spans",
+        extra={"user_id": user.id, "label": label, "group": group, "limit": limit},
+    )
 
-        results = client.get_time_spans(
-            user.id,
-            start_date=start_dt,
-            end_date=end_dt,
-            label=label,
-            group=group,
-            limit=limit,
-        )
+    # Parse dates
+    start_dt = (
+        datetime.fromisoformat(start_date.replace("Z", "+00:00"))
+        if start_date
+        else None
+    )
+    end_dt = (
+        datetime.fromisoformat(end_date.replace("Z", "+00:00")) if end_date else None
+    )
 
-        return [TimeSpanResponse(**r) for r in results]
+    results = client.get_time_spans(
+        user.id,
+        start_date=start_dt,
+        end_date=end_dt,
+        label=label,
+        group=group,
+        limit=limit,
+    )
 
-    except Exception as e:
-        print(f"Error retrieving time spans: {str(e)}")
-        import traceback
-
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=500, detail=f"Failed to retrieve time spans: {str(e)}"
-        )
+    return [TimeSpanResponse(**r) for r in results]
 
 
 @router.put("/time-spans/{span_id}", response_model=TimeSpanResponse)
@@ -97,40 +90,32 @@ async def update_time_span(
     client: TimeSpanClient = Depends(get_time_span_client),
 ):
     """Update an existing time span"""
-    try:
-        # Convert TimeSpanUpdate to dict for the client method
-        updates = {}
-        if time_span_update.start_date is not None:
-            updates["start_date"] = time_span_update.start_date
-        if time_span_update.end_date is not None:
-            updates["end_date"] = time_span_update.end_date
-        if time_span_update.label is not None:
-            updates["label"] = time_span_update.label
-        if time_span_update.group is not None:
-            updates["group"] = time_span_update.group
-        if time_span_update.notes is not None:
-            updates["notes"] = time_span_update.notes
+    logger.info("Updating time span", extra={"span_id": span_id, "user_id": user.id})
 
-        success = client.update_time_span(span_id, user.id, updates)
-        if not success:
-            raise HTTPException(status_code=404, detail="Time span not found")
+    # Convert TimeSpanUpdate to dict for the client method
+    updates = {}
+    if time_span_update.start_date is not None:
+        updates["start_date"] = time_span_update.start_date
+    if time_span_update.end_date is not None:
+        updates["end_date"] = time_span_update.end_date
+    if time_span_update.label is not None:
+        updates["label"] = time_span_update.label
+    if time_span_update.group is not None:
+        updates["group"] = time_span_update.group
+    if time_span_update.notes is not None:
+        updates["notes"] = time_span_update.notes
 
-        # Get the updated time span
-        time_spans = client.get_time_spans(user.id)
-        updated_span = next((ts for ts in time_spans if ts["id"] == span_id), None)
-        if not updated_span:
-            raise HTTPException(
-                status_code=404, detail="Time span not found after update"
-            )
+    success = client.update_time_span(span_id, user.id, updates)
+    if not success:
+        raise HTTPException(status_code=404, detail="Time span not found")
 
-        return TimeSpanResponse(**updated_span)
+    # Get the updated time span
+    time_spans = client.get_time_spans(user.id)
+    updated_span = next((ts for ts in time_spans if ts["id"] == span_id), None)
+    if not updated_span:
+        raise HTTPException(status_code=404, detail="Time span not found after update")
 
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to update time span: {str(e)}"
-        )
+    return TimeSpanResponse(**updated_span)
 
 
 @router.delete("/time-spans/{span_id}")
@@ -140,19 +125,13 @@ async def delete_time_span(
     client: TimeSpanClient = Depends(get_time_span_client),
 ):
     """Delete a time span by ID"""
-    try:
-        success = client.delete_time_span(user.id, span_id)
-        if not success:
-            raise HTTPException(status_code=404, detail="Time span not found")
+    logger.info("Deleting time span", extra={"span_id": span_id, "user_id": user.id})
 
-        return {"status": "success", "message": "Time span deleted"}
+    success = client.delete_time_span(user.id, span_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Time span not found")
 
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to delete time span: {str(e)}"
-        )
+    return {"status": "success", "message": "Time span deleted"}
 
 
 @router.get("/time-spans/labels", response_model=list[str])
@@ -161,14 +140,10 @@ async def get_existing_labels(
     client: TimeSpanClient = Depends(get_time_span_client),
 ):
     """Get all unique labels from existing time spans"""
-    try:
-        labels = client.get_existing_labels(user.id)
-        return labels
+    logger.info("Getting existing labels", extra={"user_id": user.id})
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to retrieve labels: {str(e)}"
-        )
+    labels = client.get_existing_labels(user.id)
+    return labels
 
 
 @router.get("/time-spans/groups", response_model=list[str])
@@ -177,14 +152,10 @@ async def get_existing_groups(
     client: TimeSpanClient = Depends(get_time_span_client),
 ):
     """Get all unique groups from existing time spans"""
-    try:
-        groups = client.get_existing_groups(user.id)
-        return groups
+    logger.info("Getting existing groups", extra={"user_id": user.id})
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to retrieve groups: {str(e)}"
-        )
+    groups = client.get_existing_groups(user.id)
+    return groups
 
 
 @router.get("/time-spans/summary", response_model=TimeSpanSummaryResponse)
@@ -193,19 +164,15 @@ async def get_time_span_summary(
     client: TimeSpanClient = Depends(get_time_span_client),
 ):
     """Get summary statistics for time spans"""
-    try:
-        summary = client.get_summary_stats(user.id)
+    logger.info("Getting time span summary", extra={"user_id": user.id})
 
-        return TimeSpanSummaryResponse(
-            total_entries=summary["total_entries"],
-            unique_labels=summary["unique_labels"],
-            completed_entries=summary["completed_entries"],
-            ongoing_entries=summary["ongoing_entries"],
-            date_range=summary["date_range"],
-            duration_stats=summary["duration_stats"],
-        )
+    summary = client.get_summary_stats(user.id)
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to generate summary: {str(e)}"
-        )
+    return TimeSpanSummaryResponse(
+        total_entries=summary["total_entries"],
+        unique_labels=summary["unique_labels"],
+        completed_entries=summary["completed_entries"],
+        ongoing_entries=summary["ongoing_entries"],
+        date_range=summary["date_range"],
+        duration_stats=summary["duration_stats"],
+    )

@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .storage.duckdb_resource import BackendDuckDBResource
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error")
 
 
 def run_migrations(db_path: Path) -> None:

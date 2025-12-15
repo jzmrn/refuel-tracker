@@ -2,6 +2,8 @@
 Tankerkoenig API client for fetching gas station prices and details.
 """
 
+import logging
+
 import requests
 
 from .models import (
@@ -15,6 +17,8 @@ from .models import (
     SearchResponseAdapter,
     SortBy,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class TankerkoenigClient:
@@ -50,19 +54,31 @@ class TankerkoenigClient:
         if len(station_ids) > 10:
             raise ValueError("Maximum 10 station IDs allowed per request")
 
-        params = {"ids": ",".join(station_ids), "apikey": self._api_key}
-        response = self._session.get(url=f"{self.BASE_URL}/prices.php", params=params)
+        logger.info(
+            "Fetching prices for stations",
+            extra={"station_count": len(station_ids), "station_ids": station_ids},
+        )
 
+        params = {"ids": ",".join(station_ids), "apikey": self._api_key}
+
+        response = self._session.get(url=f"{self.BASE_URL}/prices.php", params=params)
         response.raise_for_status()
+
         data = PriceResponseAdapter.validate_python(response.json())
 
         if data.ok is False:
+            logger.error(
+                "Tankerkoenig API error",
+                extra={"message": data.message, "station_ids": station_ids},
+            )
             raise requests.RequestException(f"API returned error: {data.message}")
 
-        return [
+        prices = [
             GasStationPrice.from_gas_station_data(station_id, price_data)
             for station_id, price_data in data.prices.items()
         ]
+
+        return prices
 
     def get_single_station_price(self, station_id: str) -> GasStationPrice:
         """
@@ -79,9 +95,14 @@ class TankerkoenigClient:
             ValueError: If station not found in response
         """
 
+        logger.info("Fetching single station price", extra={"station_id": station_id})
+
         prices = self.get_gas_station_prices(station_id)
 
         if not prices:
+            logger.warning(
+                "No price data found for station", extra={"station_id": station_id}
+            )
             raise ValueError(f"No price data found for station ID: {station_id}")
 
         return prices[0]
@@ -115,6 +136,16 @@ class TankerkoenigClient:
         if rad > 25:
             raise ValueError("Maximum search radius is 25km")
 
+        logger.info(
+            "Searching gas stations",
+            extra={
+                "lat": lat,
+                "lng": lng,
+                "radius_km": rad,
+                "fuel_type": fuel_type.value,
+            },
+        )
+
         params = {
             "lat": lat,
             "lng": lng,
@@ -127,11 +158,15 @@ class TankerkoenigClient:
             params["sort"] = sort_by.value
 
         response = self._session.get(url=f"{self.BASE_URL}/list.php", params=params)
-
         response.raise_for_status()
+
         data = SearchResponseAdapter.validate_python(response.json())
 
         if data.ok is False:
+            logger.error(
+                "Tankerkoenig search API error",
+                extra={"message": data.message, "lat": lat, "lng": lng},
+            )
             raise requests.RequestException(f"API returned error: {data.message}")
 
         return data.stations
@@ -153,13 +188,20 @@ class TankerkoenigClient:
             requests.RequestException: If the API request fails
         """
 
-        params = {"id": station_id, "apikey": self._api_key}
-        response = self._session.get(url=f"{self.BASE_URL}/detail.php", params=params)
+        logger.info("Fetching gas station details", extra={"station_id": station_id})
 
+        params = {"id": station_id, "apikey": self._api_key}
+
+        response = self._session.get(url=f"{self.BASE_URL}/detail.php", params=params)
         response.raise_for_status()
+
         data = DetailResponseAdapter.validate_python(response.json())
 
         if data.ok is False:
+            logger.error(
+                "Tankerkoenig detail API error",
+                extra={"message": data.message, "station_id": station_id},
+            )
             raise requests.RequestException(f"API returned error: {data.message}")
 
         return data.station
