@@ -238,6 +238,29 @@ class FuelStationClient:
         records = df.to_dict(orient="records")
         return [GasStationInfo.model_validate(record) for record in records]
 
+    def station_exists(self, station_id: str) -> bool:
+        """
+        Check if a gas station exists in the database.
+
+        Args:
+            station_id: The station ID to check
+
+        Returns:
+            True if the station exists, False otherwise
+        """
+
+        with self._duckdb.get_connection() as con:
+            result = con.execute(
+                """
+                SELECT COUNT(*) as count
+                FROM gas_station_info
+                WHERE station_id = ?
+                """,
+                [station_id],
+            ).fetchone()
+
+        return result[0] == 1 if result else False
+
     def get_favorite_stations_with_info(self, user_id: str) -> list[GasStationInfo]:
         """
         Get favorite gas stations for a user with complete station information.

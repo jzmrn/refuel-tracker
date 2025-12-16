@@ -68,13 +68,32 @@ def get_fuel_station_client(request: Request):
     return request.app.state.fuel_station_client
 
 
+def gas_station_info(
+    station: GasStationOnePrice | GasStationAllPrices,
+) -> GasStationInfo:
+    """Convert tankerkoenig gas station to GasStationInfo model"""
+
+    return GasStationInfo(
+        station_id=station.id,
+        name=station.name,
+        brand=station.brand,
+        street=station.street.title(),
+        place=station.place.title(),
+        lat=station.lat,
+        lng=station.lng,
+        house_number=station.houseNumber,
+        post_code=station.postCode,
+    )
+
+
 @router.post("/search", response_model=list[GasStationResponse])
 async def search_gas_stations(
     search_params: GasStationSearchRequest,
     user: CurrentUser,
     tankerkoenig_client: TankerkoenigClient = Depends(get_tankerkoenig_client),
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
 ):
-    """Search for gas stations near a location"""
+    """Search for gas stations near a location and store station details"""
     logger.info(
         "Searching gas stations",
         extra={
@@ -106,10 +125,16 @@ async def search_gas_stations(
         sort_by=sort_by,
     )
 
+    # Store station information in database for all found stations
+    stations_to_store = []
+
     # Convert to response models
     result = []
     skipped_count = 0
     for station in stations:
+        station_info = gas_station_info(station)
+        stations_to_store.append(station_info)
+
         # Filter for open stations only if requested
         if search_params.open_only and not station.isOpen:
             skipped_count += 1
@@ -134,22 +159,29 @@ async def search_gas_stations(
             e10 = station.e10
 
         response = GasStationResponse(
-            id=station.id,
-            name=station.name,
-            brand=station.brand,
-            street=station.street.title(),
-            house_number=station.houseNumber,
-            post_code=station.postCode,
-            place=station.place.title(),
-            lat=station.lat,
-            lng=station.lng,
-            dist=station.dist,
+            id=station_info.station_id,
+            name=station_info.name,
+            brand=station_info.brand,
+            street=station_info.street,
+            house_number=station_info.house_number,
+            post_code=station_info.post_code,
+            place=station_info.place,
+            lat=station_info.lat,
+            lng=station_info.lng,
             diesel=diesel,
             e5=e5,
             e10=e10,
+            dist=station.dist,
             is_open=station.isOpen,
         )
         result.append(response)
+
+    if stations_to_store:
+        fuel_station_client.store_gas_station_info(stations_to_store)
+        logger.debug(
+            "Stored station information",
+            extra={"station_count": len(stations_to_store)},
+        )
 
     if skipped_count > 0:
         logger.debug(
@@ -167,30 +199,25 @@ async def add_favorite_station(
     fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
     tankerkoenig_client: TankerkoenigClient = Depends(get_tankerkoenig_client),
 ):
-    """Add a gas station to favorites and store its information"""
+    """Add a gas station to favorites (station details should already be stored from search)"""
     logger.info(
         "Adding favorite station",
         extra={"station_id": favorite_data.station_id, "user_id": user.id},
     )
 
-    # Get station details from Tankerkoenig API
-    station_detail = tankerkoenig_client.get_gas_station_detail(
-        favorite_data.station_id
-    )
-
-    # Store station info in database
-    station_info = GasStationInfo(
-        station_id=station_detail.id,
-        name=station_detail.name,
-        brand=station_detail.brand,
-        street=station_detail.street.title(),
-        place=station_detail.place.title(),
-        lat=station_detail.lat,
-        lng=station_detail.lng,
-        house_number=station_detail.houseNumber,
-        post_code=station_detail.postCode,
-    )
-    fuel_station_client.store_gas_station_info([station_info])
+    # Check if station exists in database
+    if not fuel_station_client.station_exists(favorite_data.station_id):
+        # Station not in database yet, fetch and store it
+        # This handles edge cases where user bookmarks without searching first
+        logger.info(
+            "Station not found in database, fetching from API",
+            extra={"station_id": favorite_data.station_id},
+        )
+        station_detail = tankerkoenig_client.get_gas_station_detail(
+            favorite_data.station_id
+        )
+        station_info = gas_station_info(station_detail)
+        fuel_station_client.store_gas_station_info([station_info])
 
     # Add to favorites
     fuel_station_client.store_favorite_station(user.id, favorite_data.station_id)
