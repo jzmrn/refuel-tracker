@@ -28,6 +28,7 @@ export default function FuelPrices() {
   const [isMobileFormOpen, setIsMobileFormOpen] = useState(false);
   const [isMobileResultsOpen, setIsMobileResultsOpen] = useState(false);
   const [sortBy, setSortBy] = useState<SortByType | null>(null);
+  const [searchSortBy, setSearchSortBy] = useState<string>("e5");
   const { snackbar, showSuccess, showError, hideSnackbar } = useSnackbar();
 
   // Load sort preference from localStorage on mount
@@ -62,8 +63,16 @@ export default function FuelPrices() {
     }
   };
 
-  const handleSearch = (results: GasStationResponse[]) => {
+  const handleSearch = (
+    results: GasStationResponse[],
+    searchParams: { fuelType: string; sortBy: string },
+  ) => {
     setSearchResults(results);
+    setSearchSortBy(
+      searchParams.sortBy === "dist"
+        ? searchParams.fuelType
+        : searchParams.sortBy,
+    );
     showSuccess(
       `${t.common.success}: ${results.length} ${t.fuelPrices.searchResults}`,
     );
@@ -129,6 +138,7 @@ export default function FuelPrices() {
               onRemoveFromFavorites={() =>
                 handleRemoveFromFavorites(station.id)
               }
+              sortBy={searchSortBy as SortByType}
             />
           );
         })}
@@ -404,6 +414,7 @@ export default function FuelPrices() {
                           onRemoveFromFavorites={() =>
                             handleRemoveFromFavorites(station.id)
                           }
+                          sortBy={searchSortBy as SortByType}
                         />
                       );
                     })}

@@ -97,6 +97,7 @@ export default function FavoriteStationsList({
               isFavorite={true}
               onRemoveFromFavorites={() => onRemove(station.station_id)}
               rankIndex={index + 1}
+              sortBy={sortBy}
             />
           ))}
         </div>
@@ -115,6 +116,7 @@ export default function FavoriteStationsList({
               station={station}
               isFavorite={true}
               onRemoveFromFavorites={() => onRemove(station.station_id)}
+              sortBy={sortBy}
             />
           ))}
         </div>
@@ -133,6 +135,7 @@ export default function FavoriteStationsList({
               station={station}
               isFavorite={true}
               onRemoveFromFavorites={() => onRemove(station.station_id)}
+              sortBy={sortBy}
             />
           ))}
         </div>

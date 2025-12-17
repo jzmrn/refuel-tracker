@@ -4,7 +4,10 @@ import { GasStationSearchRequest, GasStationResponse } from "@/lib/api";
 import { StandardForm } from "@/components/common/StandardForm";
 
 interface SearchStationsFormProps {
-  onSearch: (results: GasStationResponse[]) => void;
+  onSearch: (
+    results: GasStationResponse[],
+    searchParams: { fuelType: string; sortBy: string },
+  ) => void;
   onError: (error: string) => void;
 }
 
@@ -90,7 +93,7 @@ export default function SearchStationsForm({
       };
 
       const results = await apiService.searchGasStations(searchParams);
-      onSearch(results);
+      onSearch(results, { fuelType, sortBy });
     } catch (error) {
       console.error("Search error:", error);
       onError(t.fuelPrices.failedToSearch);

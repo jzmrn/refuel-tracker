@@ -6,6 +6,7 @@ interface StationCardProps {
   isFavorite: boolean;
   onAddToFavorites?: () => void;
   onRemoveFromFavorites?: () => void;
+  sortBy: "e5" | "e10" | "diesel";
   rankIndex?: number;
 }
 
@@ -15,6 +16,7 @@ export default function StationCard({
   onAddToFavorites,
   onRemoveFromFavorites,
   rankIndex,
+  sortBy,
 }: StationCardProps) {
   const { t } = useTranslation();
 
@@ -87,6 +89,56 @@ export default function StationCard({
     );
   };
 
+  const renderPriceColumn = (
+    price: number | undefined,
+    fuelType: "e5" | "e10" | "diesel",
+    label: string,
+  ) => {
+    if (price === undefined || price === null || typeof price !== "number") {
+      return null;
+    }
+
+    const isActive = sortBy === fuelType;
+
+    return (
+      <div className="text-center w-20">
+        <div className="text-3xl font-bold text-primary">
+          {renderPrice(price, "text-lg")}
+        </div>
+        <div className="text-xs mt-1">
+          {isActive ? (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-500 text-white">
+              {label}
+            </span>
+          ) : (
+            <span className="text-secondary">{label}</span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderMobilePrice = (
+    price: number | undefined,
+    fuelType: "e5" | "e10" | "diesel",
+    label: string,
+  ) => {
+    if (sortBy !== fuelType) {
+      return null;
+    }
+
+    return (
+      <div className="text-center">
+        <div className="text-2xl font-bold text-primary">
+          {price === undefined || price === null || typeof price !== "number"
+            ? "-"
+            : renderPrice(price, "text-base")}
+        </div>
+        <div className="text-[0.6rem] text-secondary">{label}</div>
+      </div>
+    );
+  };
+
   return (
     <div className="card hover:shadow-lg transition-shadow">
       {/* Desktop Layout */}
@@ -124,42 +176,9 @@ export default function StationCard({
         {/* Right: Prices */}
         <div className="flex-shrink-0">
           <div className="flex gap-6">
-            {priceE5 !== undefined &&
-              priceE5 !== null &&
-              typeof priceE5 === "number" && (
-                <div className="text-center w-24">
-                  <div className="text-3xl font-bold text-primary">
-                    {renderPrice(priceE5, "text-lg")}
-                  </div>
-                  <div className="text-xs text-secondary mt-1">
-                    {t.fuelPrices.e5}
-                  </div>
-                </div>
-              )}
-            {priceE10 !== undefined &&
-              priceE10 !== null &&
-              typeof priceE10 === "number" && (
-                <div className="text-center w-24">
-                  <div className="text-3xl font-bold text-primary">
-                    {renderPrice(priceE10, "text-lg")}
-                  </div>
-                  <div className="text-xs text-secondary mt-1">
-                    {t.fuelPrices.e10}
-                  </div>
-                </div>
-              )}
-            {priceDiesel !== undefined &&
-              priceDiesel !== null &&
-              typeof priceDiesel === "number" && (
-                <div className="text-center w-24">
-                  <div className="text-3xl font-bold text-primary">
-                    {renderPrice(priceDiesel, "text-lg")}
-                  </div>
-                  <div className="text-xs text-secondary mt-1">
-                    {t.fuelPrices.diesel}
-                  </div>
-                </div>
-              )}
+            {renderPriceColumn(priceE5, "e5", t.fuelPrices.e5)}
+            {renderPriceColumn(priceE10, "e10", t.fuelPrices.e10)}
+            {renderPriceColumn(priceDiesel, "diesel", t.fuelPrices.diesel)}
           </div>
         </div>
 
@@ -192,6 +211,13 @@ export default function StationCard({
       {/* Mobile Layout */}
       <div className="lg:hidden">
         <div className="flex items-center justify-between gap-4">
+          {/* Left: Selected Price */}
+          <div className="flex-shrink-0 w-16">
+            {renderMobilePrice(priceE5, "e5", t.fuelPrices.e5)}
+            {renderMobilePrice(priceE10, "e10", t.fuelPrices.e10)}
+            {renderMobilePrice(priceDiesel, "diesel", t.fuelPrices.diesel)}
+          </div>
+
           {/* Station Info */}
           <div className="flex-grow min-w-0">
             <div className="flex items-center gap-2">
@@ -215,50 +241,14 @@ export default function StationCard({
                 </span>
               )}
             </div>
-            <p className="text-sm text-secondary mt-1 truncate">
-              {station.street}
-              {station.house_number && ` ${station.house_number}`},{" "}
-              {station.post_code} {station.place}
-            </p>
-
-            {/* Prices Below Address - Mobile */}
-            <div className="flex gap-4 mt-3 justify-center">
-              {priceE5 !== undefined &&
-                priceE5 !== null &&
-                typeof priceE5 === "number" && (
-                  <div className="text-center">
-                    <div className="text-xs text-secondary">
-                      {t.fuelPrices.e5}
-                    </div>
-                    <div className="text-lg font-bold text-primary">
-                      {renderPrice(priceE5, "text-sm")}
-                    </div>
-                  </div>
-                )}
-              {priceE10 !== undefined &&
-                priceE10 !== null &&
-                typeof priceE10 === "number" && (
-                  <div className="text-center">
-                    <div className="text-xs text-secondary">
-                      {t.fuelPrices.e10}
-                    </div>
-                    <div className="text-lg font-bold text-primary">
-                      {renderPrice(priceE10, "text-sm")}
-                    </div>
-                  </div>
-                )}
-              {priceDiesel !== undefined &&
-                priceDiesel !== null &&
-                typeof priceDiesel === "number" && (
-                  <div className="text-center">
-                    <div className="text-xs text-secondary">
-                      {t.fuelPrices.diesel}
-                    </div>
-                    <div className="text-lg font-bold text-primary">
-                      {renderPrice(priceDiesel, "text-sm")}
-                    </div>
-                  </div>
-                )}
+            <div className="text-sm text-secondary mt-1 flex flex-col xs:flex-row xs:gap-x-1">
+              <span className="truncate">
+                {station.street}
+                {station.house_number && ` ${station.house_number}`},
+              </span>
+              <span className="truncate">
+                {station.post_code} {station.place}
+              </span>
             </div>
           </div>
 
