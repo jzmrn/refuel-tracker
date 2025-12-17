@@ -115,8 +115,9 @@ export default function StationCard({
             )}
           </div>
           <p className="text-sm text-secondary mt-1 truncate">
-            {station.street} {station.house_number}, {station.post_code}{" "}
-            {station.place}
+            {station.street}
+            {station.house_number && ` ${station.house_number}`},{" "}
+            {station.post_code} {station.place}
           </p>
         </div>
 
@@ -215,8 +216,9 @@ export default function StationCard({
               )}
             </div>
             <p className="text-sm text-secondary mt-1 truncate">
-              {station.street} {station.house_number}, {station.post_code}{" "}
-              {station.place}
+              {station.street}
+              {station.house_number && ` ${station.house_number}`},{" "}
+              {station.post_code} {station.place}
             </p>
 
             {/* Prices Below Address - Mobile */}

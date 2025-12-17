@@ -73,15 +73,24 @@ def gas_station_info(
 ) -> GasStationInfo:
     """Convert tankerkoenig gas station to GasStationInfo model"""
 
+    # Handle missing house number by trying to extract from street
+    house_number = station.houseNumber
+    street = station.street.title()
+    if house_number is None or house_number == "":
+        street_parts = street.split(" ")
+        if len(street_parts) > 1 and street_parts[-1].isnumeric():
+            house_number = street_parts[-1]
+            street = " ".join(street_parts[:-1])
+
     return GasStationInfo(
         station_id=station.id,
         name=station.name,
         brand=station.brand,
-        street=station.street.title(),
+        street=street,
         place=station.place.title(),
         lat=station.lat,
         lng=station.lng,
-        house_number=station.houseNumber,
+        house_number=house_number,
         post_code=station.postCode,
     )
 
