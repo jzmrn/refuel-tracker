@@ -38,7 +38,7 @@ allow-direct-references = true
 packages = ["pipeline"]
 
 [tool.dagster]
-module_name = "analytics_pipeline"
+module_name = "pipeline"
 
 [tool.ruff.lint]
 select = [

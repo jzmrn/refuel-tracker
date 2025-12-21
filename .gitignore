@@ -72,3 +72,4 @@ tsconfig.tsbuildinfo
 .telemetry/
 .logs_queue/
 .nux/
+home/

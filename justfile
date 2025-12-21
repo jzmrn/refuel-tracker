@@ -88,9 +88,9 @@ dev-analytics: install-analytics
     cd analytics
     
     export DAGSTER_HOME="$(pwd)/home"
-    export DATA_PATH="$(pwd)/data"
+    export DATA_OUTPUT_PATH="$(pwd)/../data"
     
-    uv run dagster dev
+    uv run dagster dev --port 4000
 
 # Render Envoy config templates
 render-envoy-config DEPLOYMENT="app" ENV="development":
