@@ -29,6 +29,7 @@ export const de: TranslationStructure = {
     entries: "Einträge",
     signOut: "Abmelden",
     name: "Name",
+    actions: "Aktionen",
   },
 
   navigation: {
@@ -530,5 +531,15 @@ export const de: TranslationStructure = {
     currentPrice: "Aktueller Preis",
     showOpenOnly: "Nur geöffnete Tankstellen anzeigen",
     priceNotAvailable: "Preis nicht verfügbar",
+    stationDetails: "Tankstellen-Details",
+    stationId: "Tankstellen-ID",
+    unknown: "Unbekannt",
+    comingSoon: "Weitere Details folgen in Kürze...",
+    lastUpdated: "Zuletzt aktualisiert",
+    noDataAvailable: "Keine Daten verfügbar",
+    additionalInformation: "Zusätzliche Informationen",
+    priceHistory24h: "Preisverlauf (24h)",
+    copyAddress: "Adresse kopieren",
+    addressCopied: "Adresse in Zwischenablage kopiert",
   },
 };

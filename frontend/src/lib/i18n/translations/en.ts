@@ -29,6 +29,7 @@ export const en: TranslationStructure = {
     entries: "Entries",
     signOut: "Sign Out",
     name: "Name",
+    actions: "Actions",
   },
 
   navigation: {
@@ -510,5 +511,15 @@ export const en: TranslationStructure = {
     currentPrice: "Current Price",
     showOpenOnly: "Show open stations only",
     priceNotAvailable: "Price not available",
+    stationDetails: "Station Details",
+    stationId: "Station ID",
+    unknown: "Unknown",
+    comingSoon: "More details coming soon...",
+    lastUpdated: "Last Updated",
+    noDataAvailable: "No data available",
+    additionalInformation: "Additional Information",
+    priceHistory24h: "Price History (24h)",
+    copyAddress: "Copy Address",
+    addressCopied: "Address copied to clipboard",
   },
 };

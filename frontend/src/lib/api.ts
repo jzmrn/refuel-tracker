@@ -336,6 +336,31 @@ export interface FavoriteStationResponse {
   is_open?: boolean;
 }
 
+export interface PriceHistoryPoint {
+  timestamp: string;
+  price_e5?: number;
+  price_e10?: number;
+  price_diesel?: number;
+}
+
+export interface StationDetailsResponse {
+  station_id: string;
+  name?: string;
+  brand?: string;
+  street?: string;
+  house_number?: string;
+  post_code?: number;
+  place?: string;
+  lat?: number;
+  lng?: number;
+  timestamp?: string;
+  current_price_e5?: number;
+  current_price_e10?: number;
+  current_price_diesel?: number;
+  is_open?: boolean;
+  price_history_24h?: PriceHistoryPoint[];
+}
+
 class ApiService {
   private api = axios.create({
     baseURL: getApiBaseUrl(),
@@ -682,6 +707,13 @@ class ApiService {
 
   async deleteFavoriteStation(stationId: string): Promise<void> {
     await this.api.delete(`/api/fuel-prices/favorites/${stationId}`);
+  }
+
+  async getStationDetails(stationId: string): Promise<StationDetailsResponse> {
+    const response = await this.api.get(
+      `/api/fuel-prices/stations/${stationId}`
+    );
+    return response.data;
   }
 
   // Car Management endpoints

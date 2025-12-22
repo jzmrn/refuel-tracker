@@ -1,5 +1,7 @@
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { GasStationResponse, FavoriteStationResponse } from "@/lib/api";
+import { useRouter } from "next/router";
+import CircularProgress from "@mui/material/CircularProgress";
 
 interface StationCardProps {
   station: GasStationResponse | FavoriteStationResponse;
@@ -8,6 +10,7 @@ interface StationCardProps {
   onRemoveFromFavorites?: () => void;
   sortBy: "e5" | "e10" | "diesel";
   rankIndex?: number;
+  isLoading?: boolean;
 }
 
 export default function StationCard({
@@ -17,8 +20,15 @@ export default function StationCard({
   onRemoveFromFavorites,
   rankIndex,
   sortBy,
+  isLoading = false,
 }: StationCardProps) {
   const { t } = useTranslation();
+  const router = useRouter();
+
+  const handleCardClick = () => {
+    const stationId = isGasStation(station) ? station.id : station.station_id;
+    router.push(`/fuel-prices/station/${encodeURIComponent(stationId)}`);
+  };
 
   // Type guard to check if this is a GasStationResponse
   const isGasStation = (
@@ -140,7 +150,10 @@ export default function StationCard({
   };
 
   return (
-    <div className="card hover:shadow-lg transition-shadow">
+    <div
+      className="card hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={handleCardClick}
+    >
       {/* Desktop Layout */}
       <div className="hidden lg:flex items-center justify-between gap-4">
         {/* Left: Station Info */}
@@ -182,41 +195,50 @@ export default function StationCard({
           </div>
         </div>
 
-        {/* Far Right: Add/Remove Button */}
-        <div className="flex-shrink-0">
-          {isFavorite
-            ? onRemoveFromFavorites && (
-                <button
-                  onClick={onRemoveFromFavorites}
-                  className={
-                    isGasStation(station) ? "btn-sm-secondary" : "btn-sm-danger"
-                  }
-                  title={t.fuelPrices.removeFromFavorites}
-                >
-                  {isGasStation(station) ? "⭐" : "✕"}
-                </button>
-              )
-            : onAddToFavorites && (
-                <button
-                  onClick={onAddToFavorites}
-                  className="btn-sm-primary"
-                  title={t.fuelPrices.addToFavorites}
-                >
-                  ☆
-                </button>
+        {/* Far Right: Favorite Button */}
+        {(onAddToFavorites || onRemoveFromFavorites) && (
+          <div className="flex-shrink-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isLoading) return;
+                if (isFavorite && onRemoveFromFavorites) {
+                  onRemoveFromFavorites();
+                } else if (!isFavorite && onAddToFavorites) {
+                  onAddToFavorites();
+                }
+              }}
+              className={isFavorite ? "btn-sm-secondary" : "btn-sm-primary"}
+              title={
+                isFavorite
+                  ? t.fuelPrices.removeFromFavorites
+                  : t.fuelPrices.addToFavorites
+              }
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <CircularProgress size={20} sx={{ color: "white" }} />
+              ) : isFavorite ? (
+                "★"
+              ) : (
+                "☆"
               )}
-        </div>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Mobile Layout */}
       <div className="lg:hidden">
         <div className="flex items-center justify-between gap-4">
-          {/* Left: Selected Price */}
-          <div className="flex-shrink-0 w-16">
-            {renderMobilePrice(priceE5, "e5", t.fuelPrices.e5)}
-            {renderMobilePrice(priceE10, "e10", t.fuelPrices.e10)}
-            {renderMobilePrice(priceDiesel, "diesel", t.fuelPrices.diesel)}
-          </div>
+          {/* Left: Selected Price - only show if a specific fuel type is selected */}
+          {(sortBy === "e5" || sortBy === "e10" || sortBy === "diesel") && (
+            <div className="flex-shrink-0 w-16">
+              {renderMobilePrice(priceE5, "e5", t.fuelPrices.e5)}
+              {renderMobilePrice(priceE10, "e10", t.fuelPrices.e10)}
+              {renderMobilePrice(priceDiesel, "diesel", t.fuelPrices.diesel)}
+            </div>
+          )}
 
           {/* Station Info */}
           <div className="flex-grow min-w-0">
@@ -252,32 +274,37 @@ export default function StationCard({
             </div>
           </div>
 
-          {/* Add/Remove Button */}
-          <div className="flex-shrink-0">
-            {isFavorite
-              ? onRemoveFromFavorites && (
-                  <button
-                    onClick={onRemoveFromFavorites}
-                    className={
-                      isGasStation(station)
-                        ? "btn-sm-secondary"
-                        : "btn-sm-danger"
-                    }
-                    title={t.fuelPrices.removeFromFavorites}
-                  >
-                    {isGasStation(station) ? "⭐" : "✕"}
-                  </button>
-                )
-              : onAddToFavorites && (
-                  <button
-                    onClick={onAddToFavorites}
-                    className="btn-sm-primary"
-                    title={t.fuelPrices.addToFavorites}
-                  >
-                    ☆
-                  </button>
+          {/* Favorite Button */}
+          {(onAddToFavorites || onRemoveFromFavorites) && (
+            <div className="flex-shrink-0">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isLoading) return;
+                  if (isFavorite && onRemoveFromFavorites) {
+                    onRemoveFromFavorites();
+                  } else if (!isFavorite && onAddToFavorites) {
+                    onAddToFavorites();
+                  }
+                }}
+                className={isFavorite ? "btn-sm-secondary" : "btn-sm-primary"}
+                title={
+                  isFavorite
+                    ? t.fuelPrices.removeFromFavorites
+                    : t.fuelPrices.addToFavorites
+                }
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <span className="inline-block animate-spin">⟳</span>
+                ) : isFavorite ? (
+                  "★"
+                ) : (
+                  "☆"
                 )}
-          </div>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

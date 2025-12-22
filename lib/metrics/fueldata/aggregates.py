@@ -1,9 +1,10 @@
 import logging
 from datetime import date, datetime
 
+import numpy as np
 import pandas as pd
 from dagster_duckdb import DuckDBResource
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,14 @@ class DailyAggregate(BaseModel):
     price_std: float
     ts_min: datetime
     ts_max: datetime
+
+    @field_validator("price_mean", "price_min", "price_max", "price_std", mode="before")
+    @classmethod
+    def convert_nan_to_none(cls, v):
+        """Convert NaN values to None for JSON serialization."""
+        if isinstance(v, float) and np.isnan(v):
+            return None
+        return v
 
 
 class AggregatedFuelDataClient:

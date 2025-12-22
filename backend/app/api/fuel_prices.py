@@ -1,7 +1,7 @@
 import logging
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fueldata.stations import FuelStationClient, GasStationInfo
 from tankerkoenig import TankerkoenigClient
 from tankerkoenig.models import (
@@ -18,6 +18,7 @@ from ..models import (
     FavoriteStationResponse,
     GasStationResponse,
     GasStationSearchRequest,
+    StationDetailsResponse,
 )
 
 router = APIRouter()
@@ -353,3 +354,86 @@ async def delete_favorite_station(
         "message": "Station removed from favorites",
         "station_id": station_id,
     }
+
+
+@router.get("/stations/{station_id}", response_model=StationDetailsResponse)
+async def get_station_details(
+    station_id: str,
+    user: CurrentUser,
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+    tankerkoenig_client: TankerkoenigClient = Depends(get_tankerkoenig_client),
+):
+    """Get detailed information about a specific gas station with current prices"""
+
+    logger.info(
+        "Getting station details",
+        extra={"station_id": station_id, "user_id": user.id},
+    )
+
+    # Check cache first
+    price = fuel_price_cache.get(station_id)
+
+    # Get station info from database
+    station_infos = fuel_station_client.get_gas_station_info(station_id)
+    station_info = station_infos[0] if station_infos else None
+
+    # If station doesn't exist in database, raise 404 error
+    if station_info is None:
+        logger.info("Station not found", extra={"station_id": station_id})
+        raise HTTPException(status_code=404, detail="Station not found")
+
+    # Use cached price if available
+    if price is None:
+        logger.debug(
+            "Fetching fresh price for station", extra={"station_id": station_id}
+        )
+
+        # Fetch fresh prices from API
+        prices = tankerkoenig_client.get_gas_station_prices([station_id])
+        price = prices[0] if prices else None
+
+        # Update cache
+        if price:
+            fuel_price_cache.set(station_id, price)
+
+    else:
+        logger.debug("Using cached price for station", extra={"station_id": station_id})
+
+    # Get price history for the last 24 hours
+    price_history_data = fuel_station_client.get_price_history(station_id, hours=24)
+
+    # Convert from fueldata PriceHistoryPoint to API PriceHistoryPoint
+    from ..models import PriceHistoryPoint
+
+    price_history = [
+        PriceHistoryPoint(
+            timestamp=point.timestamp,
+            price_e5=point.price_e5,
+            price_e10=point.price_e10,
+            price_diesel=point.price_diesel,
+        )
+        for point in price_history_data
+    ]
+
+    logger.debug(
+        "Retrieved price history",
+        extra={"station_id": station_id, "history_count": len(price_history)},
+    )
+
+    return StationDetailsResponse(
+        station_id=station_info.station_id,
+        name=station_info.name,
+        brand=station_info.brand,
+        street=station_info.street,
+        house_number=station_info.house_number,
+        post_code=station_info.post_code,
+        place=station_info.place,
+        lat=station_info.lat,
+        lng=station_info.lng,
+        timestamp=price.timestamp if price else None,
+        current_price_e5=price.e5 if price else None,
+        current_price_e10=price.e10 if price else None,
+        current_price_diesel=price.diesel if price else None,
+        is_open=price.status == "open" if price else None,
+        price_history_24h=price_history,
+    )

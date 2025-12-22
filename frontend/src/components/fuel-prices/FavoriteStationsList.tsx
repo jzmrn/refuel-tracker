@@ -11,14 +11,12 @@ type SortByType = "e5" | "e10" | "diesel";
 
 interface FavoriteStationsListProps {
   favorites: FavoriteStationResponse[];
-  onRemove: (stationId: string) => void;
   loading: boolean;
   sortBy?: SortByType;
 }
 
 export default function FavoriteStationsList({
   favorites,
-  onRemove,
   loading,
   sortBy = "e5",
 }: FavoriteStationsListProps) {
@@ -95,7 +93,6 @@ export default function FavoriteStationsList({
               key={station.station_id}
               station={station}
               isFavorite={true}
-              onRemoveFromFavorites={() => onRemove(station.station_id)}
               rankIndex={index + 1}
               sortBy={sortBy}
             />
@@ -115,7 +112,6 @@ export default function FavoriteStationsList({
               key={station.station_id}
               station={station}
               isFavorite={true}
-              onRemoveFromFavorites={() => onRemove(station.station_id)}
               sortBy={sortBy}
             />
           ))}
@@ -134,7 +130,6 @@ export default function FavoriteStationsList({
               key={station.station_id}
               station={station}
               isFavorite={true}
-              onRemoveFromFavorites={() => onRemove(station.station_id)}
               sortBy={sortBy}
             />
           ))}

@@ -1,9 +1,10 @@
 import logging
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 from dagster_duckdb import DuckDBResource
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,31 @@ class GasStationInfo(BaseModel):
     lng: float
     house_number: str
     post_code: int
+
+    @field_validator("lat", "lng", mode="before")
+    @classmethod
+    def convert_nan_to_none(cls, v):
+        """Convert NaN values to None for JSON serialization."""
+        if isinstance(v, float) and np.isnan(v):
+            return None
+        return v
+
+
+class PriceHistoryPoint(BaseModel):
+    """Represents a price data point in history."""
+
+    timestamp: datetime
+    price_e5: float | None = None
+    price_e10: float | None = None
+    price_diesel: float | None = None
+
+    @field_validator("price_e5", "price_e10", "price_diesel", mode="before")
+    @classmethod
+    def convert_nan_to_none(cls, v):
+        """Convert NaN values to None for JSON serialization."""
+        if isinstance(v, float) and np.isnan(v):
+            return None
+        return v
 
 
 class FuelStationClient:
@@ -315,3 +341,35 @@ class FuelStationClient:
                 """,
                 [station_id],
             )
+
+    def get_price_history(
+        self, station_id: str, hours: int = 24
+    ) -> list[PriceHistoryPoint]:
+        """
+        Get price history for a station for the specified number of hours.
+
+        Args:
+            station_id: The station ID to get price history for
+            hours: Number of hours to look back (default: 24)
+
+        Returns:
+            List of PriceHistoryPoint objects sorted by timestamp in ascending order
+        """
+
+        query = f"""
+            SELECT
+                timestamp,
+                price_e5,
+                price_e10,
+                price_diesel
+            FROM fuel_prices
+            WHERE station_id = ?
+                AND timestamp >= NOW() - INTERVAL '{hours} hours'
+            ORDER BY timestamp ASC
+        """
+
+        with self._duckdb.get_connection() as con:
+            df = con.execute(query, [station_id]).df()
+
+        records = df.to_dict(orient="records")
+        return [PriceHistoryPoint.model_validate(record) for record in records]

@@ -8,10 +8,14 @@ import FloatingActionButton from "@/components/common/FloatingActionButton";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import apiService, {
-  GasStationResponse,
-  FavoriteStationResponse,
-} from "@/lib/api";
+import { useDelayedLoading } from "@/lib/hooks/useDelayedLoading";
+import {
+  useFavoriteStations,
+  useAddFavoriteStation,
+  useRemoveFavoriteStation,
+  useRefreshFavorites,
+} from "@/lib/hooks/useFuelPrices";
+import { GasStationResponse } from "@/lib/api";
 
 type TabType = "favorites" | "statistics" | "search";
 type SortByType = "e5" | "e10" | "diesel";
@@ -20,16 +24,32 @@ const SORT_BY_STORAGE_KEY = "fuelPrices.sortBy";
 
 export default function FuelPrices() {
   const { t } = useTranslation();
+
+  // React Query hooks - data persists across navigation
+  const {
+    data: favorites = [],
+    isLoading: loading,
+    error: favoritesError,
+  } = useFavoriteStations();
+  const addFavorite = useAddFavoriteStation();
+  const removeFavorite = useRemoveFavoriteStation();
+  const refreshFavorites = useRefreshFavorites();
+
   const [activeTab, setActiveTab] = useState<TabType>("favorites");
   const [searchResults, setSearchResults] = useState<GasStationResponse[]>([]);
-  const [favorites, setFavorites] = useState<FavoriteStationResponse[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isMobileFormOpen, setIsMobileFormOpen] = useState(false);
   const [isMobileResultsOpen, setIsMobileResultsOpen] = useState(false);
   const [sortBy, setSortBy] = useState<SortByType | null>(null);
   const [searchSortBy, setSearchSortBy] = useState<string>("e5");
+  const { isLoading, startLoading, stopLoading } = useDelayedLoading();
   const { snackbar, showSuccess, showError, hideSnackbar } = useSnackbar();
+
+  // Show error if favorites fetch fails
+  useEffect(() => {
+    if (favoritesError) {
+      showError(t.fuelPrices.failedToLoadFavorites);
+    }
+  }, [favoritesError, showError, t.fuelPrices.failedToLoadFavorites]);
 
   // Load sort preference from localStorage on mount
   useEffect(() => {
@@ -44,23 +64,6 @@ export default function FuelPrices() {
   const handleSortChange = (newSortBy: SortByType) => {
     setSortBy(newSortBy);
     localStorage.setItem(SORT_BY_STORAGE_KEY, newSortBy);
-  };
-
-  useEffect(() => {
-    fetchFavorites();
-  }, [refreshTrigger]);
-
-  const fetchFavorites = async () => {
-    try {
-      setLoading(true);
-      const data = await apiService.getFavoriteStations();
-      setFavorites(data);
-    } catch (error) {
-      console.error("Error fetching favorites:", error);
-      showError(t.fuelPrices.failedToLoadFavorites);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleSearch = (
@@ -86,25 +89,27 @@ export default function FuelPrices() {
   };
 
   const handleAddToFavorites = async (stationId: string) => {
+    startLoading(stationId);
     try {
-      await apiService.addFavoriteStation(stationId);
-      setRefreshTrigger((prev) => prev + 1);
-      showSuccess(t.fuelPrices.stationAdded);
+      await addFavorite.mutateAsync(stationId);
       setIsMobileFormOpen(false);
     } catch (error) {
       console.error("Error adding favorite:", error);
       showError(t.fuelPrices.failedToAddFavorite);
+    } finally {
+      stopLoading(stationId);
     }
   };
 
   const handleRemoveFromFavorites = async (stationId: string) => {
+    startLoading(stationId);
     try {
-      await apiService.deleteFavoriteStation(stationId);
-      setRefreshTrigger((prev) => prev + 1);
-      showSuccess(t.fuelPrices.stationRemoved);
+      await removeFavorite.mutateAsync(stationId);
     } catch (error) {
       console.error("Error removing favorite:", error);
       showError(t.fuelPrices.failedToRemoveFavorite);
+    } finally {
+      stopLoading(stationId);
     }
   };
 
@@ -139,6 +144,7 @@ export default function FuelPrices() {
                 handleRemoveFromFavorites(station.id)
               }
               sortBy={searchSortBy as SortByType}
+              isLoading={isLoading(station.id)}
             />
           );
         })}
@@ -173,7 +179,7 @@ export default function FuelPrices() {
                 {t.fuelPrices.myFavorites} ({favorites.length})
               </h2>
               <button
-                onClick={() => setRefreshTrigger((prev) => prev + 1)}
+                onClick={() => refreshFavorites()}
                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <RefreshIcon className="icon text-gray-600 dark:text-gray-400" />
@@ -225,7 +231,6 @@ export default function FuelPrices() {
 
             <FavoriteStationsList
               favorites={favorites}
-              onRemove={handleRemoveFromFavorites}
               loading={loading}
               sortBy={sortBy || "e5"}
             />
@@ -282,7 +287,7 @@ export default function FuelPrices() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="heading-2">{t.fuelPrices.myFavorites}</h2>
             <button
-              onClick={() => setRefreshTrigger((prev) => prev + 1)}
+              onClick={() => refreshFavorites()}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               <RefreshIcon className="icon text-gray-600 dark:text-gray-400" />
@@ -334,7 +339,6 @@ export default function FuelPrices() {
 
           <FavoriteStationsList
             favorites={favorites}
-            onRemove={handleRemoveFromFavorites}
             loading={loading}
             sortBy={sortBy || "e5"}
           />
@@ -415,6 +419,7 @@ export default function FuelPrices() {
                             handleRemoveFromFavorites(station.id)
                           }
                           sortBy={searchSortBy as SortByType}
+                          isLoading={isLoading(station.id)}
                         />
                       );
                     })}

@@ -414,6 +414,43 @@ class FavoriteStationResponse(BaseModel):
         json_encoders = {datetime: lambda v: v.isoformat()}
 
 
+class PriceHistoryPoint(BaseModel):
+    """Price history data point"""
+
+    timestamp: datetime
+    price_e5: float | None = None
+    price_e10: float | None = None
+    price_diesel: float | None = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class StationDetailsResponse(BaseModel):
+    """Response model for station details with current prices"""
+
+    station_id: str
+    name: str | None = None
+    brand: str | None = None
+    street: str | None = None
+    house_number: str | None = None
+    post_code: int | None = None
+    place: str | None = None
+    lat: float | None = None
+    lng: float | None = None
+    timestamp: datetime | None = None
+    current_price_e5: float | None = None
+    current_price_e10: float | None = None
+    current_price_diesel: float | None = None
+    is_open: bool | None = None
+    price_history_24h: list[PriceHistoryPoint] = Field(
+        default_factory=list, description="Price history for the last 24 hours"
+    )
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
 # Car Models
 class CarCreate(BaseModel):
     """Request model for creating a car"""

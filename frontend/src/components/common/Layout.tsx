@@ -91,7 +91,10 @@ export default function Layout({ children }: LayoutProps) {
         <nav className="flex-1 px-3">
           <ul className="space-y-1">
             {desktopNavigation.map((item) => {
-              const isActive = router.pathname === item.href;
+              const isActive =
+                router.pathname === item.href ||
+                (item.href === "/fuel-prices" &&
+                  router.pathname.startsWith("/fuel-prices/"));
               return (
                 <li key={item.name}>
                   <Link
@@ -149,7 +152,10 @@ export default function Layout({ children }: LayoutProps) {
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-2 py-1">
         <nav className="flex justify-around">
           {mobileNavigation.map((item) => {
-            const isActive = router.pathname === item.href;
+            const isActive =
+              router.pathname === item.href ||
+              (item.href === "/fuel-prices" &&
+                router.pathname.startsWith("/fuel-prices/"));
             return (
               <Link
                 key={item.name}

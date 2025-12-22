@@ -30,6 +30,7 @@ export interface TranslationStructure {
     entries: string;
     signOut: string;
     name: string;
+    actions: string;
   };
 
   // Navigation
@@ -500,5 +501,15 @@ export interface TranslationStructure {
     currentPrice: string;
     showOpenOnly: string;
     priceNotAvailable: string;
+    stationDetails: string;
+    stationId: string;
+    unknown: string;
+    comingSoon: string;
+    lastUpdated: string;
+    noDataAvailable: string;
+    additionalInformation: string;
+    priceHistory24h: string;
+    copyAddress: string;
+    addressCopied: string;
   };
 }
