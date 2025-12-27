@@ -2,26 +2,49 @@ import { useState } from "react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { GasStationSearchRequest, GasStationResponse } from "@/lib/api";
 import { StandardForm } from "@/components/common/StandardForm";
+import CircularProgress from "@mui/material/CircularProgress";
 
 interface SearchStationsFormProps {
   onSearch: (
     results: GasStationResponse[],
-    searchParams: { fuelType: string; sortBy: string },
+    searchParams: {
+      fuelType: string;
+      sortBy: string;
+      lat: number;
+      lng: number;
+      rad: number;
+      openOnly: boolean;
+    },
   ) => void;
   onError: (error: string) => void;
+  isSubmitting?: boolean;
+  initialValues?: {
+    lat?: number;
+    lng?: number;
+    rad?: number;
+    fuelType?: string;
+    sortBy?: string;
+    openOnly?: boolean;
+  };
 }
 
 export default function SearchStationsForm({
   onSearch,
   onError,
+  isSubmitting = false,
+  initialValues,
 }: SearchStationsFormProps) {
   const { t } = useTranslation();
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
-  const [radius, setRadius] = useState("10");
-  const [fuelType, setFuelType] = useState("all");
-  const [sortBy, setSortBy] = useState("dist");
-  const [openOnly, setOpenOnly] = useState(true);
+  const [latitude, setLatitude] = useState(
+    initialValues?.lat?.toString() || "",
+  );
+  const [longitude, setLongitude] = useState(
+    initialValues?.lng?.toString() || "",
+  );
+  const [radius, setRadius] = useState(initialValues?.rad?.toString() || "10");
+  const [fuelType, setFuelType] = useState(initialValues?.fuelType || "all");
+  const [sortBy, setSortBy] = useState(initialValues?.sortBy || "dist");
+  const [openOnly, setOpenOnly] = useState(initialValues?.openOnly ?? true);
   const [isSearching, setIsSearching] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
 
@@ -93,7 +116,7 @@ export default function SearchStationsForm({
       };
 
       const results = await apiService.searchGasStations(searchParams);
-      onSearch(results, { fuelType, sortBy });
+      onSearch(results, { fuelType, sortBy, lat, lng, rad, openOnly });
     } catch (error) {
       console.error("Search error:", error);
       onError(t.fuelPrices.failedToSearch);
@@ -102,9 +125,18 @@ export default function SearchStationsForm({
     }
   };
 
+  const isLoading = isSearching || isSubmitting;
+
   const formActions = (
-    <button type="submit" disabled={isSearching} className="btn-primary w-full">
-      {isSearching ? t.common.loading : t.fuelPrices.search}
+    <button type="submit" disabled={isLoading} className="btn-primary w-full">
+      {isLoading ? (
+        <span className="flex items-center justify-center gap-2">
+          <CircularProgress size={20} sx={{ color: "white" }} />
+          {t.common.loading}
+        </span>
+      ) : (
+        t.fuelPrices.search
+      )}
     </button>
   );
 

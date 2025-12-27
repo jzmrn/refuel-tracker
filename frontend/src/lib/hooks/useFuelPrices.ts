@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiService, {
   GasStationResponse,
   FavoriteStationResponse,
+  GasStationSearchRequest,
 } from "@/lib/api";
 
 // Query Keys - centralized for consistency
@@ -72,4 +73,25 @@ export function useRefreshFavorites() {
   return () => {
     queryClient.invalidateQueries({ queryKey: fuelPricesKeys.favorites() });
   };
+}
+
+/**
+ * Hook to search for gas stations
+ * Results are cached based on search parameters
+ * Data persists across navigation for 10 minutes
+ */
+export function useSearchStations(
+  params: GasStationSearchRequest | null,
+  enabled: boolean = true
+) {
+  return useQuery({
+    queryKey: fuelPricesKeys.search(params || {}),
+    queryFn: async () => {
+      if (!params) return [];
+      return await apiService.searchGasStations(params);
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    enabled: enabled && params !== null,
+  });
 }

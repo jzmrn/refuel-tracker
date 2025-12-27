@@ -1,6 +1,5 @@
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { GasStationResponse, FavoriteStationResponse } from "@/lib/api";
-import { useRouter } from "next/router";
 import CircularProgress from "@mui/material/CircularProgress";
 
 interface StationCardProps {
@@ -11,6 +10,7 @@ interface StationCardProps {
   sortBy: "e5" | "e10" | "diesel";
   rankIndex?: number;
   isLoading?: boolean;
+  onNavigateToDetail?: (stationId: string) => void;
 }
 
 export default function StationCard({
@@ -21,13 +21,15 @@ export default function StationCard({
   rankIndex,
   sortBy,
   isLoading = false,
+  onNavigateToDetail,
 }: StationCardProps) {
   const { t } = useTranslation();
-  const router = useRouter();
 
   const handleCardClick = () => {
     const stationId = isGasStation(station) ? station.id : station.station_id;
-    router.push(`/fuel-prices/station/${encodeURIComponent(stationId)}`);
+    if (onNavigateToDetail) {
+      onNavigateToDetail(stationId);
+    }
   };
 
   // Type guard to check if this is a GasStationResponse
@@ -37,12 +39,6 @@ export default function StationCard({
     return "id" in s;
   };
 
-  // Extract common data from both types
-  const houseNumber = isGasStation(station)
-    ? station.house_number
-    : station.house_number;
-  const postCode = station.post_code;
-  const place = station.place;
   const isOpen = station.is_open ?? false;
 
   // Extract timestamp for favorite stations

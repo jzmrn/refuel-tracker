@@ -462,6 +462,7 @@ export interface TranslationStructure {
     price: string;
     distance: string;
     searchResults: string;
+    backToResults: string;
     noResults: string;
     searchForStationsNearby: string;
     addToFavorites: string;

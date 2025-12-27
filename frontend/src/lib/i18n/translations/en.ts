@@ -471,6 +471,7 @@ export const en: TranslationStructure = {
     price: "Price",
     distance: "Distance",
     searchResults: "Search Results",
+    backToResults: "Back to Results",
     noResults: "No stations found",
     searchForStationsNearby: "Search for stations nearby to see results",
     addToFavorites: "Add to Favorites",

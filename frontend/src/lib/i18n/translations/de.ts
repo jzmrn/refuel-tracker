@@ -489,6 +489,7 @@ export const de: TranslationStructure = {
     price: "Preis",
     distance: "Entfernung",
     searchResults: "Suchergebnisse",
+    backToResults: "Zurück zu Ergebnissen",
     noResults: "Keine Tankstellen gefunden",
     searchForStationsNearby:
       "Suchen Sie nach Tankstellen in der Nähe, um Ergebnisse zu sehen",

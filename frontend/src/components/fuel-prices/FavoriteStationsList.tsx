@@ -13,12 +13,14 @@ interface FavoriteStationsListProps {
   favorites: FavoriteStationResponse[];
   loading: boolean;
   sortBy?: SortByType;
+  onNavigateToDetail?: (stationId: string) => void;
 }
 
 export default function FavoriteStationsList({
   favorites,
   loading,
   sortBy = "e5",
+  onNavigateToDetail,
 }: FavoriteStationsListProps) {
   const { t } = useTranslation();
 
@@ -95,6 +97,7 @@ export default function FavoriteStationsList({
               isFavorite={true}
               rankIndex={index + 1}
               sortBy={sortBy}
+              onNavigateToDetail={onNavigateToDetail}
             />
           ))}
         </div>
@@ -113,6 +116,7 @@ export default function FavoriteStationsList({
               station={station}
               isFavorite={true}
               sortBy={sortBy}
+              onNavigateToDetail={onNavigateToDetail}
             />
           ))}
         </div>
@@ -131,6 +135,7 @@ export default function FavoriteStationsList({
               station={station}
               isFavorite={true}
               sortBy={sortBy}
+              onNavigateToDetail={onNavigateToDetail}
             />
           ))}
         </div>
