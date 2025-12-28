@@ -100,16 +100,14 @@ export default function StationCard({
     fuelType: "e5" | "e10" | "diesel",
     label: string,
   ) => {
-    if (price === undefined || price === null || typeof price !== "number") {
-      return null;
-    }
-
     const isActive = sortBy === fuelType;
+    const isPriceAvailable =
+      price !== undefined && price !== null && typeof price === "number";
 
     return (
       <div className="text-center w-20">
         <div className="text-3xl font-bold text-primary">
-          {renderPrice(price, "text-lg")}
+          {isPriceAvailable ? renderPrice(price, "text-lg") : "-"}
         </div>
         <div className="text-xs mt-1">
           {isActive ? (
