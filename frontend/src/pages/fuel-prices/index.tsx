@@ -157,6 +157,7 @@ export default function FuelPrices() {
         loading={loading}
         sortBy={sortBy || "e5"}
         onNavigateToDetail={handleNavigateToDetail}
+        showRank={true}
       />
 
       {/* Snackbar */}

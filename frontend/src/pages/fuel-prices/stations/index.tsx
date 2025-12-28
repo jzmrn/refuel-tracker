@@ -4,7 +4,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import TuneIcon from "@mui/icons-material/Tune";
 import SearchStationsForm from "@/components/fuel-prices/SearchStationsForm";
-import SearchResultsList from "@/components/fuel-prices/SearchResultsList";
+import FavoriteStationsList from "@/components/fuel-prices/FavoriteStationsList";
 import Snackbar from "@/components/common/Snackbar";
 import PageTransition from "@/components/common/PageTransition";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -258,14 +258,16 @@ export default function SearchStations() {
           }}
         />
       ) : (
-        <SearchResultsList
-          searchResults={searchResults}
-          favoriteIds={favoriteIds}
+        <FavoriteStationsList
+          favorites={searchResults}
+          loading={false}
           sortBy={searchSortBy as SortByType}
           onAddToFavorites={handleAddToFavorites}
           onRemoveFromFavorites={handleRemoveFromFavorites}
           isLoading={isLoading}
           onNavigateToDetail={handleNavigateToDetail}
+          favoriteIds={favoriteIds}
+          showRank={true}
         />
       )}
 

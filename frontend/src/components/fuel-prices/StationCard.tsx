@@ -155,8 +155,8 @@ export default function StationCard({
         {/* Left: Station Info */}
         <div className="flex-grow min-w-0">
           <div className="flex items-center gap-2">
-            {/* Rank Badge for Open Favorite Stations */}
-            {!isGasStation(station) && isOpen && rankIndex !== undefined && (
+            {/* Rank Badge for Open Stations */}
+            {isOpen && rankIndex !== undefined && (
               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold flex-shrink-0 bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300">
                 #{rankIndex}
               </span>
@@ -183,13 +183,15 @@ export default function StationCard({
         </div>
 
         {/* Right: Prices */}
-        <div className="flex-shrink-0">
-          <div className="flex gap-6">
-            {renderPriceColumn(priceE5, "e5", t.fuelPrices.e5)}
-            {renderPriceColumn(priceE10, "e10", t.fuelPrices.e10)}
-            {renderPriceColumn(priceDiesel, "diesel", t.fuelPrices.diesel)}
+        {isOpen && (
+          <div className="flex-shrink-0">
+            <div className="flex gap-6">
+              {renderPriceColumn(priceE5, "e5", t.fuelPrices.e5)}
+              {renderPriceColumn(priceE10, "e10", t.fuelPrices.e10)}
+              {renderPriceColumn(priceDiesel, "diesel", t.fuelPrices.diesel)}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Far Right: Favorite Button */}
         {(onAddToFavorites || onRemoveFromFavorites) && (
@@ -228,19 +230,20 @@ export default function StationCard({
       <div className="lg:hidden">
         <div className="flex items-center justify-between gap-4">
           {/* Left: Selected Price - only show if a specific fuel type is selected */}
-          {(sortBy === "e5" || sortBy === "e10" || sortBy === "diesel") && (
-            <div className="flex-shrink-0 w-16">
-              {renderMobilePrice(priceE5, "e5", t.fuelPrices.e5)}
-              {renderMobilePrice(priceE10, "e10", t.fuelPrices.e10)}
-              {renderMobilePrice(priceDiesel, "diesel", t.fuelPrices.diesel)}
-            </div>
-          )}
+          {isOpen &&
+            (sortBy === "e5" || sortBy === "e10" || sortBy === "diesel") && (
+              <div className="flex-shrink-0 w-16">
+                {renderMobilePrice(priceE5, "e5", t.fuelPrices.e5)}
+                {renderMobilePrice(priceE10, "e10", t.fuelPrices.e10)}
+                {renderMobilePrice(priceDiesel, "diesel", t.fuelPrices.diesel)}
+              </div>
+            )}
 
           {/* Station Info */}
           <div className="flex-grow min-w-0">
             <div className="flex items-center gap-2">
-              {/* Rank Badge for Open Favorite Stations */}
-              {!isGasStation(station) && isOpen && rankIndex !== undefined && (
+              {/* Rank Badge for Open Stations */}
+              {isOpen && rankIndex !== undefined && (
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold flex-shrink-0 bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300">
                   #{rankIndex}
                 </span>
