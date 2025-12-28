@@ -82,31 +82,44 @@ export default function FavoriteStationsList({
     }
   });
 
+  // Helper function to get price for a station based on sortBy
+  const getPrice = (station: StationType): number | undefined => {
+    if (sortBy === "e5") {
+      return isGasStation(station) ? station.e5 : station.current_price_e5;
+    } else if (sortBy === "e10") {
+      return isGasStation(station) ? station.e10 : station.current_price_e10;
+    } else if (sortBy === "diesel") {
+      return isGasStation(station)
+        ? station.diesel
+        : station.current_price_diesel;
+    }
+    return undefined;
+  };
+
   // Helper function to sort stations by price
   const sortStationsByPrice = (stations: StationType[]) => {
-    return stations.sort((a, b) => {
-      let priceA: number | undefined;
-      let priceB: number | undefined;
+    // Separate stations with prices from those without
+    const withPrice: StationType[] = [];
+    const withoutPrice: StationType[] = [];
 
-      if (sortBy === "e5") {
-        priceA = isGasStation(a) ? a.e5 : a.current_price_e5;
-        priceB = isGasStation(b) ? b.e5 : b.current_price_e5;
-      } else if (sortBy === "e10") {
-        priceA = isGasStation(a) ? a.e10 : a.current_price_e10;
-        priceB = isGasStation(b) ? b.e10 : b.current_price_e10;
-      } else if (sortBy === "diesel") {
-        priceA = isGasStation(a) ? a.diesel : a.current_price_diesel;
-        priceB = isGasStation(b) ? b.diesel : b.current_price_diesel;
+    stations.forEach((station) => {
+      const price = getPrice(station);
+      if (price !== undefined && price !== null) {
+        withPrice.push(station);
+      } else {
+        withoutPrice.push(station);
       }
+    });
 
-      // Handle undefined prices (stations without that fuel type go to the end)
-      if (priceA === undefined && priceB === undefined) return 0;
-      if (priceA === undefined) return 1;
-      if (priceB === undefined) return -1;
-
-      // Sort by price (cheapest first)
+    // Sort stations with prices (cheapest first)
+    withPrice.sort((a, b) => {
+      const priceA = getPrice(a)!;
+      const priceB = getPrice(b)!;
       return priceA - priceB;
     });
+
+    // Return stations with prices first, then stations without prices
+    return [...withPrice, ...withoutPrice];
   };
 
   // Sort open and closed stations by price
