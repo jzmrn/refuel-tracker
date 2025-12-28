@@ -19,7 +19,7 @@ import {
 } from "@/lib/hooks/useFuelPrices";
 import { GasStationResponse, GasStationSearchRequest } from "@/lib/api";
 
-type SortByType = "e5" | "e10" | "diesel";
+type SortByType = "e5" | "e10" | "diesel" | "dist";
 
 export default function SearchStations() {
   const { t } = useTranslation();
@@ -33,7 +33,7 @@ export default function SearchStations() {
     navigateBackWithAnimation,
   } = usePathAnimation({ currentPath: "/fuel-prices/stations" });
 
-  const [searchSortBy, setSearchSortBy] = useState<string>("e5");
+  const [searchSortBy, setSearchSortBy] = useState<string>("dist");
   const [searchParams, setSearchParams] =
     useState<GasStationSearchRequest | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -58,7 +58,7 @@ export default function SearchStations() {
   useEffect(() => {
     if (!router.isReady) return;
 
-    const { lat, lng, rad, fuelType, sortBy, openOnly } = router.query;
+    const { lat, lng, rad, sortBy } = router.query;
 
     if (lat && lng && rad) {
       // Restore search params from URL - this is a back navigation
@@ -66,14 +66,12 @@ export default function SearchStations() {
         lat: parseFloat(lat as string),
         lng: parseFloat(lng as string),
         rad: parseFloat(rad as string),
-        fuel_type: (fuelType as string) || "all",
+        fuel_type: "all",
         sort_by: (sortBy as string) || "dist",
-        open_only: openOnly === "true",
+        open_only: false,
       };
       setSearchParams(params);
-      const effectiveSortBy =
-        params.sort_by === "dist" ? params.fuel_type : params.sort_by;
-      setSearchSortBy(effectiveSortBy || "e5");
+      setSearchSortBy("dist"); // Default to distance for results sorting
       setShowingResults(true);
     }
     setIsInitialized(true);
@@ -86,21 +84,19 @@ export default function SearchStations() {
   const handleSearch = (
     results: GasStationResponse[],
     searchParams: {
-      fuelType: string;
       sortBy: string;
       lat: number;
       lng: number;
       rad: number;
-      openOnly: boolean;
     },
   ) => {
     const params: GasStationSearchRequest = {
       lat: searchParams.lat,
       lng: searchParams.lng,
       rad: searchParams.rad,
-      fuel_type: searchParams.fuelType,
+      fuel_type: "all",
       sort_by: searchParams.sortBy,
-      open_only: searchParams.openOnly,
+      open_only: false,
     };
 
     // Start loading with threshold
@@ -109,11 +105,7 @@ export default function SearchStations() {
 
     setSearchParams(params);
     setShowingResults(true);
-    setSearchSortBy(
-      searchParams.sortBy === "dist"
-        ? searchParams.fuelType
-        : searchParams.sortBy,
-    );
+    setSearchSortBy("dist"); // Default to distance for results sorting
 
     // Update URL with search params to preserve state on navigation
     router.push(
@@ -123,17 +115,11 @@ export default function SearchStations() {
           lat: searchParams.lat,
           lng: searchParams.lng,
           rad: searchParams.rad,
-          fuelType: searchParams.fuelType,
           sortBy: searchParams.sortBy,
-          openOnly: searchParams.openOnly,
         },
       },
       undefined,
       { shallow: true },
-    );
-
-    showSuccess(
-      `${t.common.success}: ${results.length} ${t.fuelPrices.searchResults}`,
     );
 
     // Stop loading after minimum duration
@@ -143,6 +129,10 @@ export default function SearchStations() {
 
   const handleSearchError = (error: string) => {
     showError(error);
+  };
+
+  const handleSortChange = (newSortBy: SortByType) => {
+    setSearchSortBy(newSortBy);
   };
 
   const handleRefineSearch = () => {
@@ -252,23 +242,73 @@ export default function SearchStations() {
             rad: router.query.rad
               ? parseFloat(router.query.rad as string)
               : undefined,
-            fuelType: (router.query.fuelType as string) || undefined,
             sortBy: (router.query.sortBy as string) || undefined,
-            openOnly: router.query.openOnly === "true",
           }}
         />
       ) : (
-        <FavoriteStationsList
-          favorites={searchResults}
-          loading={false}
-          sortBy={searchSortBy as SortByType}
-          onAddToFavorites={handleAddToFavorites}
-          onRemoveFromFavorites={handleRemoveFromFavorites}
-          isLoading={isLoading}
-          onNavigateToDetail={handleNavigateToDetail}
-          favoriteIds={favoriteIds}
-          showRank={true}
-        />
+        <>
+          {/* Fuel Type Sort Control */}
+          <div className="panel p-4 mb-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t.fuelPrices.sortBy}:
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button
+                  onClick={() => handleSortChange("dist")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    searchSortBy === "dist"
+                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  {t.fuelPrices.distance}
+                </button>
+                <button
+                  onClick={() => handleSortChange("e5")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    searchSortBy === "e5"
+                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  {t.fuelPrices.e5}
+                </button>
+                <button
+                  onClick={() => handleSortChange("e10")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    searchSortBy === "e10"
+                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  {t.fuelPrices.e10}
+                </button>
+                <button
+                  onClick={() => handleSortChange("diesel")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    searchSortBy === "diesel"
+                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  {t.fuelPrices.diesel}
+                </button>
+              </div>
+            </div>
+          </div>
+          <FavoriteStationsList
+            favorites={searchResults}
+            loading={false}
+            sortBy={searchSortBy as SortByType}
+            onAddToFavorites={handleAddToFavorites}
+            onRemoveFromFavorites={handleRemoveFromFavorites}
+            isLoading={isLoading}
+            onNavigateToDetail={handleNavigateToDetail}
+            favoriteIds={favoriteIds}
+            showRank={true}
+          />
+        </>
       )}
 
       {/* Snackbar */}

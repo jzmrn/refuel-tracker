@@ -4,7 +4,7 @@ import FavoriteStationsList from "@/components/fuel-prices/FavoriteStationsList"
 import Snackbar from "@/components/common/Snackbar";
 import PageTransition from "@/components/common/PageTransition";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import AddIcon from "@mui/icons-material/Add";
+import SearchIcon from "@mui/icons-material/Search";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -103,7 +103,7 @@ export default function FuelPrices() {
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             aria-label={t.fuelPrices.searchStations}
           >
-            <AddIcon className="icon text-gray-600 dark:text-gray-400" />
+            <SearchIcon className="icon text-gray-600 dark:text-gray-400" />
           </button>
         </div>
       </div>
@@ -111,11 +111,11 @@ export default function FuelPrices() {
       {/* Sort Control Panel */}
       {sortBy && (
         <div className="panel p-4 mb-6">
-          <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
               {t.fuelPrices.sortBy}:
             </label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => handleSortChange("e5")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${

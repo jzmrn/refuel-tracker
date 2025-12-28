@@ -8,12 +8,10 @@ interface SearchStationsFormProps {
   onSearch: (
     results: GasStationResponse[],
     searchParams: {
-      fuelType: string;
       sortBy: string;
       lat: number;
       lng: number;
       rad: number;
-      openOnly: boolean;
     },
   ) => void;
   onError: (error: string) => void;
@@ -22,9 +20,7 @@ interface SearchStationsFormProps {
     lat?: number;
     lng?: number;
     rad?: number;
-    fuelType?: string;
     sortBy?: string;
-    openOnly?: boolean;
   };
 }
 
@@ -42,9 +38,6 @@ export default function SearchStationsForm({
     initialValues?.lng?.toString() || "",
   );
   const [radius, setRadius] = useState(initialValues?.rad?.toString() || "10");
-  const [fuelType, setFuelType] = useState(initialValues?.fuelType || "all");
-  const [sortBy, setSortBy] = useState(initialValues?.sortBy || "dist");
-  const [openOnly, setOpenOnly] = useState(initialValues?.openOnly ?? true);
   const [isSearching, setIsSearching] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
 
@@ -110,13 +103,13 @@ export default function SearchStationsForm({
         lat,
         lng,
         rad,
-        fuel_type: fuelType,
-        sort_by: sortBy,
-        open_only: openOnly,
+        fuel_type: "all",
+        sort_by: "dist",
+        open_only: false,
       };
 
       const results = await apiService.searchGasStations(searchParams);
-      onSearch(results, { fuelType, sortBy, lat, lng, rad, openOnly });
+      onSearch(results, { sortBy: "dist", lat, lng, rad });
     } catch (error) {
       console.error("Search error:", error);
       onError(t.fuelPrices.failedToSearch);
@@ -210,56 +203,6 @@ export default function SearchStationsForm({
             ? t.fuelPrices.gettingLocation
             : t.fuelPrices.useMyLocation}
         </button>
-      </div>
-
-      {/* Search Parameters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="field-group">
-          <label htmlFor="fuelType" className="label">
-            {t.fuelPrices.fuelType}
-          </label>
-          <select
-            id="fuelType"
-            value={fuelType}
-            onChange={(e) => setFuelType(e.target.value)}
-            className="input"
-          >
-            <option value="all">{t.fuelPrices.all}</option>
-            <option value="e5">{t.fuelPrices.e5}</option>
-            <option value="e10">{t.fuelPrices.e10}</option>
-            <option value="diesel">{t.fuelPrices.diesel}</option>
-          </select>
-        </div>
-
-        <div className="field-group">
-          <label htmlFor="sortBy" className="label">
-            {t.fuelPrices.sortBy}
-          </label>
-          <select
-            id="sortBy"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="input"
-          >
-            <option value="dist">{t.fuelPrices.distance}</option>
-            <option value="price">{t.fuelPrices.price}</option>
-          </select>
-        </div>
-
-        {/* Open Only Filter */}
-        <div className="field-group flex items-center">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={openOnly}
-              onChange={(e) => setOpenOnly(e.target.checked)}
-              className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:focus:ring-primary dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-            />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {t.fuelPrices.showOpenOnly}
-            </span>
-          </label>
-        </div>
       </div>
     </StandardForm>
   );

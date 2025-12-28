@@ -7,7 +7,7 @@ interface StationCardProps {
   isFavorite: boolean;
   onAddToFavorites?: () => void;
   onRemoveFromFavorites?: () => void;
-  sortBy: "e5" | "e10" | "diesel";
+  sortBy: "e5" | "e10" | "diesel" | "dist";
   rankIndex?: number;
   isLoading?: boolean;
   onNavigateToDetail?: (stationId: string) => void;
@@ -110,13 +110,13 @@ export default function StationCard({
           {isPriceAvailable ? renderPrice(price, "text-lg") : "-"}
         </div>
         <div className="text-xs mt-1">
-          {isActive ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-500 text-white">
-              {label}
-            </span>
-          ) : (
-            <span className="text-secondary">{label}</span>
-          )}
+          <span
+            className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium min-h-[20px] ${
+              isActive ? "bg-primary-500 text-white" : "text-secondary"
+            }`}
+          >
+            {label}
+          </span>
         </div>
       </div>
     );
@@ -168,8 +168,14 @@ export default function StationCard({
               </span>
             )}
             {distance !== undefined && (
-              <span className="text-xs text-secondary flex-shrink-0">
-                ({distance.toFixed(1)} {t.fuelPrices.kmAway})
+              <span
+                className={`text-xs flex-shrink-0 inline-flex items-center justify-center px-2 py-0.5 rounded-full font-medium min-h-[20px] ${
+                  sortBy === "dist"
+                    ? "bg-primary-500 text-white"
+                    : "text-secondary"
+                }`}
+              >
+                {distance.toFixed(1)} {t.fuelPrices.kmAway}
               </span>
             )}
           </div>
@@ -255,8 +261,14 @@ export default function StationCard({
                 </span>
               )}
               {distance !== undefined && (
-                <span className="text-xs text-secondary flex-shrink-0">
-                  ({distance.toFixed(1)} {t.fuelPrices.kmAway})
+                <span
+                  className={`text-xs flex-shrink-0 inline-flex items-center justify-center px-2 py-0.5 rounded-full font-medium min-h-[20px] ${
+                    sortBy === "dist"
+                      ? "bg-primary-500 text-white"
+                      : "text-secondary"
+                  }`}
+                >
+                  {distance.toFixed(1)} {t.fuelPrices.kmAway}
                 </span>
               )}
             </div>

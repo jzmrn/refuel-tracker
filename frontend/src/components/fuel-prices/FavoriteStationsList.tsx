@@ -7,7 +7,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
-type SortByType = "e5" | "e10" | "diesel";
+type SortByType = "e5" | "e10" | "diesel" | "dist";
 type StationType = FavoriteStationResponse | GasStationResponse;
 
 interface FavoriteStationsListProps {
@@ -25,7 +25,7 @@ interface FavoriteStationsListProps {
 export default function FavoriteStationsList({
   favorites,
   loading,
-  sortBy = "e5",
+  sortBy = "dist",
   onNavigateToDetail,
   onAddToFavorites,
   onRemoveFromFavorites,
@@ -96,35 +96,61 @@ export default function FavoriteStationsList({
     return undefined;
   };
 
-  // Helper function to sort stations by price
-  const sortStationsByPrice = (stations: StationType[]) => {
-    // Separate stations with prices from those without
-    const withPrice: StationType[] = [];
-    const withoutPrice: StationType[] = [];
-
-    stations.forEach((station) => {
-      const price = getPrice(station);
-      if (price !== undefined && price !== null) {
-        withPrice.push(station);
-      } else {
-        withoutPrice.push(station);
-      }
-    });
-
-    // Sort stations with prices (cheapest first)
-    withPrice.sort((a, b) => {
-      const priceA = getPrice(a)!;
-      const priceB = getPrice(b)!;
-      return priceA - priceB;
-    });
-
-    // Return stations with prices first, then stations without prices
-    return [...withPrice, ...withoutPrice];
+  // Helper function to get distance for a station
+  const getDistance = (station: StationType): number | undefined => {
+    return isGasStation(station) ? station.dist : undefined;
   };
 
-  // Sort open and closed stations by price
-  const sortedOpenStations = sortStationsByPrice(openStations);
-  const sortedClosedStations = sortStationsByPrice(closedStations);
+  // Helper function to sort stations by price or distance
+  const sortStations = (stations: StationType[]) => {
+    if (sortBy === "dist") {
+      // Sort by distance (closest first)
+      const withDistance: StationType[] = [];
+      const withoutDistance: StationType[] = [];
+
+      stations.forEach((station) => {
+        const distance = getDistance(station);
+        if (distance !== undefined && distance !== null) {
+          withDistance.push(station);
+        } else {
+          withoutDistance.push(station);
+        }
+      });
+
+      withDistance.sort((a, b) => {
+        const distA = getDistance(a)!;
+        const distB = getDistance(b)!;
+        return distA - distB;
+      });
+
+      return [...withDistance, ...withoutDistance];
+    } else {
+      // Sort by price (cheapest first)
+      const withPrice: StationType[] = [];
+      const withoutPrice: StationType[] = [];
+
+      stations.forEach((station) => {
+        const price = getPrice(station);
+        if (price !== undefined && price !== null) {
+          withPrice.push(station);
+        } else {
+          withoutPrice.push(station);
+        }
+      });
+
+      withPrice.sort((a, b) => {
+        const priceA = getPrice(a)!;
+        const priceB = getPrice(b)!;
+        return priceA - priceB;
+      });
+
+      return [...withPrice, ...withoutPrice];
+    }
+  };
+
+  // Sort open and closed stations
+  const sortedOpenStations = sortStations(openStations);
+  const sortedClosedStations = sortStations(closedStations);
 
   return (
     <div className="space-y-6">
