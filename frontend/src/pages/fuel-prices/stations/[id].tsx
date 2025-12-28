@@ -170,39 +170,39 @@ export default function StationDetails() {
                   )}
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:justify-center gap-2">
+                <div className="flex flex-col xs:flex-row justify-center items-center gap-1.5 sm:gap-2">
                   {stationData.current_price_e5 !== undefined &&
                     stationData.current_price_e5 !== null && (
-                      <div className="text-center p-3 rounded-lg bg-gray-50 dark:bg-gray-800 sm:w-[140px]">
-                        <div className="text-sm text-secondary mb-2">
-                          {t.fuelPrices.e5}
-                        </div>
-                        <div className="text-3xl font-bold text-primary">
+                      <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
+                        <div className="text-2xl sm:text-3xl font-bold text-primary">
                           {formatPrice(stationData.current_price_e5)}
+                        </div>
+                        <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
+                          {t.fuelPrices.e5}
                         </div>
                       </div>
                     )}
 
                   {stationData.current_price_e10 !== undefined &&
                     stationData.current_price_e10 !== null && (
-                      <div className="text-center p-3 rounded-lg bg-gray-50 dark:bg-gray-800 sm:w-[140px]">
-                        <div className="text-sm text-secondary mb-2">
-                          {t.fuelPrices.e10}
-                        </div>
-                        <div className="text-3xl font-bold text-primary">
+                      <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
+                        <div className="text-2xl sm:text-3xl font-bold text-primary">
                           {formatPrice(stationData.current_price_e10)}
+                        </div>
+                        <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
+                          {t.fuelPrices.e10}
                         </div>
                       </div>
                     )}
 
                   {stationData.current_price_diesel !== undefined &&
                     stationData.current_price_diesel !== null && (
-                      <div className="text-center p-3 rounded-lg bg-gray-50 dark:bg-gray-800 sm:w-[140px]">
-                        <div className="text-sm text-secondary mb-2">
-                          {t.fuelPrices.diesel}
-                        </div>
-                        <div className="text-3xl font-bold text-primary">
+                      <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
+                        <div className="text-2xl sm:text-3xl font-bold text-primary">
                           {formatPrice(stationData.current_price_diesel)}
+                        </div>
+                        <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
+                          {t.fuelPrices.diesel}
                         </div>
                       </div>
                     )}
