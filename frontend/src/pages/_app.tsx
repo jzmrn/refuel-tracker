@@ -54,6 +54,47 @@ export default function App(props: AppProps) {
       }),
   );
 
+  // Implement LRU cache for station details to limit memory usage
+  // Keep only the most recent 20 station details in cache
+  useEffect(() => {
+    const MAX_STATION_DETAILS_CACHE = 20;
+
+    const cleanupStationDetailsCache = () => {
+      const cache = queryClient.getQueryCache();
+      const stationDetailsQueries = cache
+        .getAll()
+        .filter((query) => {
+          const key = query.queryKey;
+          return (
+            Array.isArray(key) &&
+            key[0] === "fuelPrices" &&
+            key[1] === "stationDetails"
+          );
+        })
+        .sort((a, b) => {
+          // Sort by last update time (most recent first)
+          const timeA = a.state.dataUpdatedAt || 0;
+          const timeB = b.state.dataUpdatedAt || 0;
+          return timeB - timeA;
+        });
+
+      // Remove oldest entries if we exceed the limit
+      if (stationDetailsQueries.length > MAX_STATION_DETAILS_CACHE) {
+        const toRemove = stationDetailsQueries.slice(MAX_STATION_DETAILS_CACHE);
+        toRemove.forEach((query) => {
+          queryClient.removeQueries({ queryKey: query.queryKey });
+        });
+      }
+    };
+
+    // Run cleanup when cache changes
+    const unsubscribe = queryClient.getQueryCache().subscribe(() => {
+      cleanupStationDetailsCache();
+    });
+
+    return () => unsubscribe();
+  }, [queryClient]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>

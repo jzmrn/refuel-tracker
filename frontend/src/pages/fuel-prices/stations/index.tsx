@@ -34,10 +34,41 @@ export default function SearchStations() {
   } = usePathAnimation({ currentPath: "/fuel-prices/stations" });
 
   const [searchSortBy, setSearchSortBy] = useState<string>("dist");
+  // Initialize searchParams from URL on initial load to avoid loading flash
   const [searchParams, setSearchParams] =
-    useState<GasStationSearchRequest | null>(null);
+    useState<GasStationSearchRequest | null>(() => {
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        const lat = urlParams.get("lat");
+        const lng = urlParams.get("lng");
+        const rad = urlParams.get("rad");
+        const sortBy = urlParams.get("sortBy");
+
+        if (lat && lng && rad) {
+          return {
+            lat: parseFloat(lat),
+            lng: parseFloat(lng),
+            rad: parseFloat(rad),
+            fuel_type: "all",
+            sort_by: sortBy || "dist",
+            open_only: false,
+          };
+        }
+      }
+      return null;
+    });
   const [isInitialized, setIsInitialized] = useState(false);
-  const [showingResults, setShowingResults] = useState(false);
+  // Initialize showingResults based on whether URL has search params
+  // This prevents form flash when reloading page with results
+  const [showingResults, setShowingResults] = useState(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      return (
+        urlParams.has("lat") && urlParams.has("lng") && urlParams.has("rad")
+      );
+    }
+    return false;
+  });
   const { isLoading, startLoading, stopLoading } = useDelayedLoading();
   const { snackbar, showSuccess, showError, hideSnackbar } = useSnackbar();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,21 +92,41 @@ export default function SearchStations() {
     const { lat, lng, rad, sortBy } = router.query;
 
     if (lat && lng && rad) {
-      // Restore search params from URL - this is a back navigation
-      const params: GasStationSearchRequest = {
-        lat: parseFloat(lat as string),
-        lng: parseFloat(lng as string),
-        rad: parseFloat(rad as string),
-        fuel_type: "all",
-        sort_by: (sortBy as string) || "dist",
-        open_only: false,
-      };
-      setSearchParams(params);
-      setSearchSortBy("dist"); // Default to distance for results sorting
-      setShowingResults(true);
+      // Update searchSortBy from URL
+      setSearchSortBy((sortBy as string) || "dist");
+      // searchParams and showingResults are already initialized from URL
     }
     setIsInitialized(true);
   }, [router.isReady, router.query]);
+
+  // Switch to results view and stop loading once results are available (for new searches)
+  useEffect(() => {
+    if (searchParams && !isLoadingResults && !showingResults && isSubmitting) {
+      // Data has loaded (could be empty or with results)
+      if (searchResults.length > 0) {
+        setShowingResults(true);
+      }
+      stopLoading("search-submit");
+      setIsSubmitting(false);
+    }
+    // Stop loading if we're already showing results (page reload scenario)
+    // In this case isSubmitting might be false because we initialized from URL
+    if (
+      showingResults &&
+      !isLoadingResults &&
+      searchResults.length > 0 &&
+      isSubmitting
+    ) {
+      stopLoading("search-submit");
+      setIsSubmitting(false);
+    }
+  }, [
+    searchParams,
+    isLoadingResults,
+    searchResults.length,
+    showingResults,
+    isSubmitting,
+  ]);
 
   const handleBack = () => {
     navigateWithAnimation("/fuel-prices");
@@ -104,7 +155,7 @@ export default function SearchStations() {
     setIsSubmitting(true);
 
     setSearchParams(params);
-    setShowingResults(true);
+    // Don't switch to results view yet - wait for data to load
     setSearchSortBy("dist"); // Default to distance for results sorting
 
     // Update URL with search params to preserve state on navigation
@@ -121,10 +172,6 @@ export default function SearchStations() {
       undefined,
       { shallow: true },
     );
-
-    // Stop loading after minimum duration
-    stopLoading("search-submit");
-    setIsSubmitting(false);
   };
 
   const handleSearchError = (error: string) => {
@@ -223,7 +270,7 @@ export default function SearchStations() {
       </div>
 
       {/* Form or Results */}
-      {!isInitialized || isLoadingResults ? (
+      {!isInitialized ? (
         <div className="panel p-8 text-center">
           <p className="text-secondary">{t.common.loading}...</p>
         </div>
@@ -299,7 +346,7 @@ export default function SearchStations() {
           </div>
           <FavoriteStationsList
             favorites={searchResults}
-            loading={false}
+            loading={!searchResults || searchResults.length === 0}
             sortBy={searchSortBy as SortByType}
             onAddToFavorites={handleAddToFavorites}
             onRemoveFromFavorites={handleRemoveFromFavorites}

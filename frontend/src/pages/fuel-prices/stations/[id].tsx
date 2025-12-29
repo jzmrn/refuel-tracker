@@ -1,9 +1,8 @@
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { apiService, StationDetailsResponse } from "@/lib/api";
 import Snackbar from "@/components/common/Snackbar";
 import PageTransition from "@/components/common/PageTransition";
 import { useSnackbar } from "@/lib/useSnackbar";
@@ -11,6 +10,7 @@ import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
 import {
   useFavoriteStations,
   useRemoveFavoriteStation,
+  useStationDetailsWithMinLoadTime,
 } from "@/lib/hooks/useFuelPrices";
 import FuelPriceChart from "@/components/fuel/FuelPriceChart";
 
@@ -25,10 +25,13 @@ export default function StationDetails() {
       currentPath: `/fuel-prices/stations/${id || ""}`,
     });
 
-  const [stationData, setStationData] = useState<StationDetailsResponse | null>(
-    null,
-  );
-  const [isLoading, setIsLoading] = useState(true);
+  // Fetch station details with caching and minimum loading time
+  const {
+    data: stationData,
+    isLoading,
+    error,
+  } = useStationDetailsWithMinLoadTime(typeof id === "string" ? id : undefined);
+
   const [isRemoving, setIsRemoving] = useState(false);
   const { snackbar, showError, showSuccess, hideSnackbar } = useSnackbar();
 
@@ -39,25 +42,10 @@ export default function StationDetails() {
   const isFavorite =
     typeof id === "string" && favorites.some((f) => f.station_id === id);
 
-  useEffect(() => {
-    // Fetch station details from API
-    const fetchStationDetails = async () => {
-      if (!id || typeof id !== "string") return;
-
-      try {
-        setIsLoading(true);
-        const data = await apiService.getStationDetails(id);
-        setStationData(data);
-      } catch (error) {
-        console.error("Failed to fetch station details:", error);
-        showError(t.fuelPrices.failedToLoadFavorites);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchStationDetails();
-  }, [id, showError, t.fuelPrices.failedToLoadFavorites]);
+  // Show error if fetch failed
+  if (error && !isLoading) {
+    showError(t.fuelPrices.failedToLoadFavorites);
+  }
 
   const handleBack = () => {
     navigateBackWithAnimation();

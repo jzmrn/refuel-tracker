@@ -10,7 +10,7 @@ import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
 import {
-  useFavoriteStations,
+  useFavoriteStationsWithMinLoadTime,
   useRefreshFavorites,
 } from "@/lib/hooks/useFuelPrices";
 
@@ -31,10 +31,19 @@ export default function FuelPrices() {
     data: favorites = [],
     isLoading: loading,
     error: favoritesError,
-  } = useFavoriteStations();
+  } = useFavoriteStationsWithMinLoadTime();
   const refreshFavorites = useRefreshFavorites();
 
-  const [sortBy, setSortBy] = useState<SortByType | null>(null);
+  // Initialize sortBy with value from localStorage or default to "e5"
+  const [sortBy, setSortBy] = useState<SortByType>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(SORT_BY_STORAGE_KEY);
+      if (stored === "e5" || stored === "e10" || stored === "diesel") {
+        return stored;
+      }
+    }
+    return "e5";
+  });
   const { snackbar, showError, hideSnackbar } = useSnackbar();
 
   // Show error if favorites fetch fails
@@ -43,16 +52,6 @@ export default function FuelPrices() {
       showError(t.fuelPrices.failedToLoadFavorites);
     }
   }, [favoritesError, showError, t.fuelPrices.failedToLoadFavorites]);
-
-  // Load sort preference from localStorage on mount
-  useEffect(() => {
-    const stored = localStorage.getItem(SORT_BY_STORAGE_KEY);
-    if (stored === "e5" || stored === "e10" || stored === "diesel") {
-      setSortBy(stored);
-    } else {
-      setSortBy("e5");
-    }
-  }, []);
 
   const handleSortChange = (newSortBy: SortByType) => {
     setSortBy(newSortBy);
@@ -109,53 +108,51 @@ export default function FuelPrices() {
       </div>
 
       {/* Sort Control Panel */}
-      {sortBy && (
-        <div className="panel p-4 mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {t.fuelPrices.sortBy}:
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => handleSortChange("e5")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  sortBy === "e5"
-                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                }`}
-              >
-                {t.fuelPrices.e5}
-              </button>
-              <button
-                onClick={() => handleSortChange("e10")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  sortBy === "e10"
-                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                }`}
-              >
-                {t.fuelPrices.e10}
-              </button>
-              <button
-                onClick={() => handleSortChange("diesel")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  sortBy === "diesel"
-                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                }`}
-              >
-                {t.fuelPrices.diesel}
-              </button>
-            </div>
+      <div className="panel p-4 mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t.fuelPrices.sortBy}:
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => handleSortChange("e5")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                sortBy === "e5"
+                  ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              {t.fuelPrices.e5}
+            </button>
+            <button
+              onClick={() => handleSortChange("e10")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                sortBy === "e10"
+                  ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              {t.fuelPrices.e10}
+            </button>
+            <button
+              onClick={() => handleSortChange("diesel")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                sortBy === "diesel"
+                  ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              {t.fuelPrices.diesel}
+            </button>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Favorites List */}
       <FavoriteStationsList
         favorites={favorites}
         loading={loading}
-        sortBy={sortBy || "e5"}
+        sortBy={sortBy}
         onNavigateToDetail={handleNavigateToDetail}
         showRank={true}
       />

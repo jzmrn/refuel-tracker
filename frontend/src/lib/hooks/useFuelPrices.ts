@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import apiService, {
   GasStationResponse,
   FavoriteStationResponse,
@@ -11,6 +12,8 @@ export const fuelPricesKeys = {
   favorites: () => [...fuelPricesKeys.all, "favorites"] as const,
   search: (params: Record<string, any>) =>
     [...fuelPricesKeys.all, "search", params] as const,
+  stationDetails: (stationId: string) =>
+    [...fuelPricesKeys.all, "stationDetails", stationId] as const,
 };
 
 /**
@@ -26,6 +29,53 @@ export function useFavoriteStations() {
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+}
+
+/**
+ * Hook to fetch favorite fuel stations with minimum loading time
+ * Ensures loading state is shown for at least 500ms when data is not cached
+ * This provides better UX by avoiding flash of loading state
+ */
+export function useFavoriteStationsWithMinLoadTime() {
+  const query = useFavoriteStations();
+  const [minLoadTimeElapsed, setMinLoadTimeElapsed] = useState(false);
+  const [loadStartTime, setLoadStartTime] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Track when loading starts
+    if (query.isLoading && query.fetchStatus === "fetching" && !loadStartTime) {
+      setLoadStartTime(Date.now());
+      setMinLoadTimeElapsed(false);
+    }
+
+    // Track when minimum time has elapsed
+    if (loadStartTime && !minLoadTimeElapsed) {
+      const elapsed = Date.now() - loadStartTime;
+      const remaining = Math.max(0, 500 - elapsed);
+
+      const timer = setTimeout(() => {
+        setMinLoadTimeElapsed(true);
+        setLoadStartTime(null);
+      }, remaining);
+
+      return () => clearTimeout(timer);
+    }
+
+    // Reset when query completes without fetching (cached data)
+    if (!query.isLoading && query.fetchStatus !== "fetching") {
+      setMinLoadTimeElapsed(true);
+      setLoadStartTime(null);
+    }
+  }, [query.isLoading, query.fetchStatus, loadStartTime, minLoadTimeElapsed]);
+
+  // Show loading if query is loading OR minimum time hasn't elapsed yet
+  const isLoading =
+    query.isLoading || (loadStartTime !== null && !minLoadTimeElapsed);
+
+  return {
+    ...query,
+    isLoading,
+  };
 }
 
 /**
@@ -94,4 +144,71 @@ export function useSearchStations(
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
     enabled: enabled && params !== null,
   });
+}
+
+/**
+ * Hook to fetch station details
+ * Data is cached for 15 minutes and persists across navigation
+ * Use useStationDetailsWithMinLoadTime for user-facing loading with minimum duration
+ */
+export function useStationDetails(stationId: string | undefined | null) {
+  return useQuery({
+    queryKey: fuelPricesKeys.stationDetails(stationId || ""),
+    queryFn: async () => {
+      if (!stationId) return null;
+      return await apiService.getStationDetails(stationId);
+    },
+    enabled: !!stationId,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+  });
+}
+
+/**
+ * Hook to fetch station details with minimum loading time
+ * Ensures loading state is shown for at least 500ms when data is not cached
+ * This provides better UX by avoiding flash of loading state
+ */
+export function useStationDetailsWithMinLoadTime(
+  stationId: string | undefined | null
+) {
+  const query = useStationDetails(stationId);
+  const [minLoadTimeElapsed, setMinLoadTimeElapsed] = useState(false);
+  const [loadStartTime, setLoadStartTime] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Track when loading starts
+    if (query.isLoading && query.fetchStatus === "fetching" && !loadStartTime) {
+      setLoadStartTime(Date.now());
+      setMinLoadTimeElapsed(false);
+    }
+
+    // Track when minimum time has elapsed
+    if (loadStartTime && !minLoadTimeElapsed) {
+      const elapsed = Date.now() - loadStartTime;
+      const remaining = Math.max(0, 500 - elapsed);
+
+      const timer = setTimeout(() => {
+        setMinLoadTimeElapsed(true);
+        setLoadStartTime(null);
+      }, remaining);
+
+      return () => clearTimeout(timer);
+    }
+
+    // Reset when query completes without fetching (cached data)
+    if (!query.isLoading && query.fetchStatus !== "fetching") {
+      setMinLoadTimeElapsed(true);
+      setLoadStartTime(null);
+    }
+  }, [query.isLoading, query.fetchStatus, loadStartTime, minLoadTimeElapsed]);
+
+  // Show loading if query is loading OR minimum time hasn't elapsed yet
+  const isLoading =
+    query.isLoading || (loadStartTime !== null && !minLoadTimeElapsed);
+
+  return {
+    ...query,
+    isLoading,
+  };
 }
