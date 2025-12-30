@@ -35,7 +35,6 @@ class CarClient:
                     name VARCHAR NOT NULL,
                     year INTEGER NOT NULL,
                     fuel_tank_size DOUBLE NOT NULL,
-                    notes VARCHAR,
                     created_at TIMESTAMP NOT NULL
                 )
             """
@@ -81,7 +80,6 @@ class CarClient:
         name: str,
         year: int,
         fuel_tank_size: float,
-        notes: str | None = None,
     ) -> str:
         """Create a new car and return its ID."""
         car_id = str(uuid4())
@@ -90,8 +88,8 @@ class CarClient:
         with self._duckdb.get_connection() as con:
             con.execute(
                 """
-                INSERT INTO cars (id, owner_user_id, name, year, fuel_tank_size, notes, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO cars (id, owner_user_id, name, year, fuel_tank_size, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 [
                     car_id,
@@ -99,7 +97,6 @@ class CarClient:
                     name,
                     year,
                     fuel_tank_size,
-                    notes,
                     created_at,
                 ],
             )
@@ -113,7 +110,7 @@ class CarClient:
             # Get owned cars
             owned_result = con.execute(
                 """
-                SELECT id, owner_user_id, name, year, fuel_tank_size, notes, created_at
+                SELECT id, owner_user_id, name, year, fuel_tank_size, created_at
                 FROM cars
                 WHERE owner_user_id = ?
                 ORDER BY created_at DESC
@@ -125,7 +122,7 @@ class CarClient:
             shared_result = con.execute(
                 """
                 SELECT c.id, c.owner_user_id, c.name, c.year,
-                       c.fuel_tank_size, c.notes, c.created_at, u.name as shared_by_name
+                       c.fuel_tank_size, c.created_at, u.name as shared_by_name
                 FROM cars c
                 JOIN car_access ca ON c.id = ca.car_id
                 JOIN users u ON c.owner_user_id = u.id
@@ -148,8 +145,7 @@ class CarClient:
                     name=row[2],
                     year=row[3],
                     fuel_tank_size=row[4],
-                    notes=row[5],
-                    created_at=row[6],
+                    created_at=row[5],
                     is_owner=True,
                     shared_by=None,
                     shared_users=shared_users,
@@ -165,10 +161,9 @@ class CarClient:
                     name=row[2],
                     year=row[3],
                     fuel_tank_size=row[4],
-                    notes=row[5],
-                    created_at=row[6],
+                    created_at=row[5],
                     is_owner=False,
-                    shared_by=row[7],
+                    shared_by=row[6],
                     shared_users=[],  # Don't include shared users for shared cars
                 )
             )
@@ -182,7 +177,7 @@ class CarClient:
             # Check if user owns the car
             result = con.execute(
                 """
-                SELECT id, owner_user_id, name, year, fuel_tank_size, notes, created_at
+                SELECT id, owner_user_id, name, year, fuel_tank_size, created_at
                 FROM cars
                 WHERE id = ? AND owner_user_id = ?
                 """,
@@ -198,8 +193,7 @@ class CarClient:
                     name=result[2],
                     year=result[3],
                     fuel_tank_size=result[4],
-                    notes=result[5],
-                    created_at=result[6],
+                    created_at=result[5],
                     is_owner=True,
                     shared_by=None,
                     shared_users=shared_users,
@@ -209,7 +203,7 @@ class CarClient:
             result = con.execute(
                 """
                 SELECT c.id, c.owner_user_id, c.name, c.year,
-                       c.fuel_tank_size, c.notes, c.created_at, u.name
+                       c.fuel_tank_size, c.created_at, u.name
                 FROM cars c
                 JOIN car_access ca ON c.id = ca.car_id
                 JOIN users u ON c.owner_user_id = u.id
@@ -225,10 +219,9 @@ class CarClient:
                     name=result[2],
                     year=result[3],
                     fuel_tank_size=result[4],
-                    notes=result[5],
-                    created_at=result[6],
+                    created_at=result[5],
                     is_owner=False,
-                    shared_by=result[7],
+                    shared_by=result[6],
                     shared_users=[],  # Don't include shared users for shared cars
                 )
 
@@ -241,7 +234,6 @@ class CarClient:
         name: str | None = None,
         year: int | None = None,
         fuel_tank_size: float | None = None,
-        notes: str | None = None,
     ) -> bool:
         """Update a car (owner only)."""
         updates = []
@@ -256,9 +248,6 @@ class CarClient:
         if fuel_tank_size is not None:
             updates.append("fuel_tank_size = ?")
             params.append(fuel_tank_size)
-        if notes is not None:
-            updates.append("notes = ?")
-            params.append(notes)
 
         if not updates:
             return True  # Nothing to update

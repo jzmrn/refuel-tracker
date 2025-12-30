@@ -184,16 +184,6 @@ export default function CarDetails() {
                   {car.fuel_tank_size} L
                 </p>
               </div>
-              {car.notes && (
-                <div className="md:col-span-2">
-                  <span className="text-sm text-secondary">
-                    {t.cars.notes}:
-                  </span>
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    {car.notes}
-                  </p>
-                </div>
-              )}
             </div>
           </div>
 

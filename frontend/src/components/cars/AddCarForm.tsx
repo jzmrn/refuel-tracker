@@ -13,7 +13,6 @@ const AddCarForm: React.FC<AddCarFormProps> = ({ onCarAdded, onError }) => {
     name: "",
     year: new Date().getFullYear(),
     fuel_tank_size: 50,
-    notes: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,7 +27,6 @@ const AddCarForm: React.FC<AddCarFormProps> = ({ onCarAdded, onError }) => {
         name: "",
         year: new Date().getFullYear(),
         fuel_tank_size: 50,
-        notes: "",
       });
     } catch (error: any) {
       console.error("Error creating car:", error);
@@ -41,7 +39,6 @@ const AddCarForm: React.FC<AddCarFormProps> = ({ onCarAdded, onError }) => {
       name: "",
       year: new Date().getFullYear(),
       fuel_tank_size: 50,
-      notes: "",
     });
   };
 
@@ -107,21 +104,6 @@ const AddCarForm: React.FC<AddCarFormProps> = ({ onCarAdded, onError }) => {
               min="0.1"
               step="0.1"
               required
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {t.cars.notes}
-            </label>
-            <textarea
-              value={formData.notes}
-              onChange={(e) =>
-                setFormData({ ...formData, notes: e.target.value })
-              }
-              className="input"
-              placeholder={t.cars.notesPlaceholder}
-              rows={3}
             />
           </div>
         </div>

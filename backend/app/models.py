@@ -462,7 +462,6 @@ class CarCreate(BaseModel):
     fuel_tank_size: float = Field(
         ..., gt=0, le=200, description="Fuel tank size in liters (max 200L)"
     )
-    notes: str | None = Field(None, max_length=500, description="Optional notes")
     shared_user_ids: list[str] = Field(
         default_factory=list, description="User IDs to share the car with"
     )
@@ -478,7 +477,6 @@ class CarUpdate(BaseModel):
     fuel_tank_size: float | None = Field(
         None, gt=0, le=200, description="Fuel tank size in liters (max 200L)"
     )
-    notes: str | None = Field(None, max_length=500, description="Optional notes")
     shared_user_ids: list[str] = Field(
         default_factory=list, description="User IDs to share the car with"
     )
@@ -492,7 +490,6 @@ class CarResponse(BaseModel):
     name: str
     year: int
     fuel_tank_size: float
-    notes: str | None = None
     created_at: datetime
     is_owner: bool = True
     shared_by: str | None = None  # User name who shared this car (if not owner)

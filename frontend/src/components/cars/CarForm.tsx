@@ -31,7 +31,6 @@ const CarForm: React.FC<CarFormProps> = ({
     name: car?.name || "",
     year: car?.year || undefined,
     fuel_tank_size: car?.fuel_tank_size || undefined,
-    notes: car?.notes || "",
   });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,7 +70,6 @@ const CarForm: React.FC<CarFormProps> = ({
           name: formData.name,
           year: formData.year!,
           fuel_tank_size: formData.fuel_tank_size!,
-          notes: formData.notes,
           shared_user_ids: sharedUserIds,
         };
         await apiService.createCar(createData);
@@ -85,7 +83,6 @@ const CarForm: React.FC<CarFormProps> = ({
           name: "",
           year: undefined,
           fuel_tank_size: undefined,
-          notes: "",
         });
         setSharedUserIds([]);
         setSharedUsersDetails([]);
@@ -104,7 +101,6 @@ const CarForm: React.FC<CarFormProps> = ({
       name: "",
       year: undefined,
       fuel_tank_size: undefined,
-      notes: "",
     });
     setSharedUserIds([]);
     setSharedUsersDetails([]);
@@ -220,21 +216,6 @@ const CarForm: React.FC<CarFormProps> = ({
                 min="0.1"
                 step="0.1"
                 required
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t.cars.notes}
-              </label>
-              <textarea
-                value={formData.notes}
-                onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
-                }
-                className="input"
-                placeholder={t.cars.notesPlaceholder}
-                rows={3}
               />
             </div>
           </div>

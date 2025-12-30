@@ -7,7 +7,8 @@ from pathlib import Path
 
 from .storage.duckdb_resource import BackendDuckDBResource
 
-logger = logging.getLogger("uvicorn.error")
+# Use the app logger which is configured in main.py
+logger = logging.getLogger(__name__)
 
 
 def run_migrations(db_path: Path) -> None:
@@ -38,6 +39,7 @@ def run_migrations(db_path: Path) -> None:
         (2, add_station_id_to_refuel),
         (3, add_car_id_to_refuel),
         (4, update_cars_schema),
+        (5, remove_notes_from_cars),
     ]
 
     for version, migration_func in migrations:
@@ -47,7 +49,7 @@ def run_migrations(db_path: Path) -> None:
             mark_migration_applied(duckdb_resource, version)
             logger.info(f"Migration version {version} completed")
         else:
-            logger.debug(f"Migration version {version} already applied")
+            logger.info(f"Migration version {version} already applied, skipping")
 
 
 def is_migration_applied(duckdb_resource: BackendDuckDBResource, version: int) -> bool:
@@ -221,3 +223,63 @@ def update_cars_schema(duckdb_resource: BackendDuckDBResource) -> None:
             logger.info("Cars table schema updated successfully")
         else:
             logger.info("Cars table schema already updated")
+
+
+def remove_notes_from_cars(duckdb_resource: BackendDuckDBResource) -> None:
+    """
+    Migration #5: Remove notes column from cars table
+    The notes field is no longer used and should be removed from the schema.
+    """
+    with duckdb_resource.get_connection() as con:
+        # Check if notes column exists
+        result = con.execute(
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'cars' AND column_name = 'notes'
+            """
+        ).fetchone()
+
+        if result:
+            logger.info("Removing notes column from cars table")
+
+            # Create a new table without the notes column
+            con.execute(
+                """
+                CREATE TABLE cars_new (
+                    id VARCHAR PRIMARY KEY,
+                    owner_user_id VARCHAR NOT NULL,
+                    name VARCHAR NOT NULL,
+                    year INTEGER NOT NULL,
+                    fuel_tank_size DOUBLE NOT NULL,
+                    created_at TIMESTAMP NOT NULL
+                )
+                """
+            )
+
+            # Copy data from old table to new table (excluding notes)
+            con.execute(
+                """
+                INSERT INTO cars_new (id, owner_user_id, name, year, fuel_tank_size, created_at)
+                SELECT id, owner_user_id, name, year, fuel_tank_size, created_at
+                FROM cars
+                """
+            )
+
+            # Drop the old table
+            con.execute("DROP TABLE cars")
+
+            # Rename new table to cars
+            con.execute("ALTER TABLE cars_new RENAME TO cars")
+
+            # Recreate indexes
+            con.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_cars_owner
+                ON cars(owner_user_id)
+                """
+            )
+
+            logger.info("Notes column removed from cars table successfully")
+        else:
+            logger.info("Notes column already removed from cars table")

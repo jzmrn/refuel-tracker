@@ -135,11 +135,6 @@ const CarsTab: React.FC<CarsTabProps> = ({
                       {car.shared_users.length === 1 ? "user" : "users"}
                     </p>
                   )}
-                  {car.notes && (
-                    <p className="text-gray-600 dark:text-gray-400 mt-2 text-xs">
-                      {car.notes}
-                    </p>
-                  )}
                 </div>
               </div>
             ))}
@@ -180,11 +175,6 @@ const CarsTab: React.FC<CarsTabProps> = ({
                     <span className="font-medium">Fuel Tank:</span>{" "}
                     {car.fuel_tank_size} L
                   </p>
-                  {car.notes && (
-                    <p className="text-gray-600 dark:text-gray-400 mt-2 text-xs">
-                      {car.notes}
-                    </p>
-                  )}
                 </div>
               </div>
             ))}

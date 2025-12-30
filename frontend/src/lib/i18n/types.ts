@@ -388,7 +388,6 @@ export interface TranslationStructure {
     year: string;
     fuelTankSize: string;
     tankSize: string;
-    notes: string;
     clear: string;
     cancel: string;
     saveChanges: string;
@@ -422,7 +421,6 @@ export interface TranslationStructure {
     modelPlaceholder: string;
     yearPlaceholder: string;
     licensePlatePlaceholder: string;
-    notesPlaceholder: string;
     shareWithUsers: string;
     searchUsers: string;
     searchByEmail: string;

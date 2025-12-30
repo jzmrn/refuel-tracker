@@ -406,13 +406,13 @@ export const de: TranslationStructure = {
     year: "Jahr",
     fuelTankSize: "Tankgröße",
     tankSize: "Tankgröße",
-    notes: "Notizen",
     clear: "Löschen",
     cancel: "Abbrechen",
     saveChanges: "Änderungen speichern",
     updateCar: "Auto aktualisieren",
     carDetails: "Autodetails",
-    addFirstCar: "Fügen Sie Ihr erstes Auto hinzu, um den Kraftstoffverbrauch zu verfolgen",
+    addFirstCar:
+      "Fügen Sie Ihr erstes Auto hinzu, um den Kraftstoffverbrauch zu verfolgen",
     shareWith: "Teilen mit",
     user: "Benutzer",
     users: "Benutzer",
@@ -443,7 +443,6 @@ export const de: TranslationStructure = {
     modelPlaceholder: "z.B. Corolla",
     yearPlaceholder: "z.B. 2020",
     licensePlatePlaceholder: "z.B. ABC-123",
-    notesPlaceholder: "Zusätzliche Notizen zu diesem Auto...",
 
     // Shared Access Tab
     shareWithUsers: "Mit Benutzern teilen",

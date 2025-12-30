@@ -391,7 +391,6 @@ export const en: TranslationStructure = {
     year: "Year",
     fuelTankSize: "Fuel Tank Size",
     tankSize: "Tank Size",
-    notes: "Notes",
     clear: "Clear",
     cancel: "Cancel",
     saveChanges: "Save Changes",
@@ -428,7 +427,6 @@ export const en: TranslationStructure = {
     modelPlaceholder: "e.g., Corolla",
     yearPlaceholder: "e.g., 2020",
     licensePlatePlaceholder: "e.g., ABC-123",
-    notesPlaceholder: "Any additional notes about this car...",
 
     // Shared Access Tab
     shareWithUsers: "Share with Users",

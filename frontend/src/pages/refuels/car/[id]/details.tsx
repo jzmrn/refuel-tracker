@@ -32,12 +32,10 @@ export default function EditCarDetails() {
     name: string;
     year: number | undefined;
     fuel_tank_size: number | undefined;
-    notes: string;
   }>({
     name: "",
     year: undefined,
     fuel_tank_size: undefined,
-    notes: "",
   });
 
   const [sharedUserIds, setSharedUserIds] = useState<string[]>([]);
@@ -53,7 +51,6 @@ export default function EditCarDetails() {
         name: car.name,
         year: car.year,
         fuel_tank_size: car.fuel_tank_size,
-        notes: car.notes || "",
       });
 
       if (car.is_owner && car.shared_users) {

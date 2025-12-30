@@ -159,7 +159,6 @@ export interface Car {
   name: string;
   year: number;
   fuel_tank_size: number;
-  notes?: string;
   created_at: string;
   is_owner: boolean;
   shared_by?: string;
@@ -170,7 +169,6 @@ export interface CarCreate {
   name: string;
   year: number;
   fuel_tank_size: number;
-  notes?: string;
   shared_user_ids?: string[];
 }
 
@@ -178,7 +176,6 @@ export interface CarUpdate {
   name?: string;
   year?: number;
   fuel_tank_size?: number;
-  notes?: string;
   shared_user_ids?: string[];
 }
 
