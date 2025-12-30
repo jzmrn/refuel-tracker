@@ -107,22 +107,26 @@ class CarClient:
         """Get all cars that a user owns or has access to."""
 
         with self._duckdb.get_connection() as con:
-            # Get owned cars
+            # Get owned cars with refuel count and owner name
             owned_result = con.execute(
                 """
-                SELECT id, owner_user_id, name, year, fuel_tank_size, created_at
-                FROM cars
-                WHERE owner_user_id = ?
-                ORDER BY created_at DESC
+                SELECT c.id, c.owner_user_id, c.name, c.year, c.fuel_tank_size, c.created_at,
+                       u.name as owner_name,
+                       COALESCE((SELECT COUNT(*) FROM refuel_metrics rm WHERE rm.car_id = c.id), 0) as refuel_count
+                FROM cars c
+                LEFT JOIN users u ON c.owner_user_id = u.id
+                WHERE c.owner_user_id = ?
+                ORDER BY c.created_at DESC
                 """,
                 [user_id],
             ).fetchall()
 
-            # Get shared cars
+            # Get shared cars with refuel count and owner name
             shared_result = con.execute(
                 """
                 SELECT c.id, c.owner_user_id, c.name, c.year,
-                       c.fuel_tank_size, c.created_at, u.name as shared_by_name
+                       c.fuel_tank_size, c.created_at, u.name as shared_by_name,
+                       COALESCE((SELECT COUNT(*) FROM refuel_metrics rm WHERE rm.car_id = c.id), 0) as refuel_count
                 FROM cars c
                 JOIN car_access ca ON c.id = ca.car_id
                 JOIN users u ON c.owner_user_id = u.id
@@ -142,6 +146,7 @@ class CarClient:
                 CarResponse(
                     id=row[0],
                     owner_user_id=row[1],
+                    owner_name=row[6],
                     name=row[2],
                     year=row[3],
                     fuel_tank_size=row[4],
@@ -149,6 +154,7 @@ class CarClient:
                     is_owner=True,
                     shared_by=None,
                     shared_users=shared_users,
+                    refuel_count=row[7],
                 )
             )
 
@@ -158,6 +164,7 @@ class CarClient:
                 CarResponse(
                     id=row[0],
                     owner_user_id=row[1],
+                    owner_name=row[6],  # Owner name for shared cars
                     name=row[2],
                     year=row[3],
                     fuel_tank_size=row[4],
@@ -165,21 +172,49 @@ class CarClient:
                     is_owner=False,
                     shared_by=row[6],
                     shared_users=[],  # Don't include shared users for shared cars
+                    refuel_count=row[7],
                 )
             )
 
         return cars
 
-    def get_car(self, car_id: str, user_id: str) -> CarResponse | None:
-        """Get a specific car if user has access."""
-
+    def user_has_car_access(self, car_id: str, user_id: str) -> bool:
+        """Check if a user has access to a car (owner or shared access)."""
         with self._duckdb.get_connection() as con:
             # Check if user owns the car
             result = con.execute(
                 """
-                SELECT id, owner_user_id, name, year, fuel_tank_size, created_at
-                FROM cars
-                WHERE id = ? AND owner_user_id = ?
+                SELECT 1 FROM cars WHERE id = ? AND owner_user_id = ?
+                """,
+                [car_id, user_id],
+            ).fetchone()
+
+            if result:
+                return True
+
+            # Check if user has shared access
+            result = con.execute(
+                """
+                SELECT 1 FROM car_access WHERE car_id = ? AND user_id = ?
+                """,
+                [car_id, user_id],
+            ).fetchone()
+
+            return result is not None
+
+    def get_car(self, car_id: str, user_id: str) -> CarResponse | None:
+        """Get a specific car if user has access."""
+
+        with self._duckdb.get_connection() as con:
+            # Check if user owns the car - include owner name and refuel count
+            result = con.execute(
+                """
+                SELECT c.id, c.owner_user_id, c.name, c.year, c.fuel_tank_size, c.created_at,
+                       u.name as owner_name,
+                       COALESCE((SELECT COUNT(*) FROM refuel_metrics rm WHERE rm.car_id = c.id), 0) as refuel_count
+                FROM cars c
+                LEFT JOIN users u ON c.owner_user_id = u.id
+                WHERE c.id = ? AND c.owner_user_id = ?
                 """,
                 [car_id, user_id],
             ).fetchone()
@@ -190,6 +225,7 @@ class CarClient:
                 return CarResponse(
                     id=result[0],
                     owner_user_id=result[1],
+                    owner_name=result[6],
                     name=result[2],
                     year=result[3],
                     fuel_tank_size=result[4],
@@ -197,13 +233,15 @@ class CarClient:
                     is_owner=True,
                     shared_by=None,
                     shared_users=shared_users,
+                    refuel_count=result[7],
                 )
 
-            # Check if user has shared access
+            # Check if user has shared access - include refuel count
             result = con.execute(
                 """
                 SELECT c.id, c.owner_user_id, c.name, c.year,
-                       c.fuel_tank_size, c.created_at, u.name
+                       c.fuel_tank_size, c.created_at, u.name as owner_name,
+                       COALESCE((SELECT COUNT(*) FROM refuel_metrics rm WHERE rm.car_id = c.id), 0) as refuel_count
                 FROM cars c
                 JOIN car_access ca ON c.id = ca.car_id
                 JOIN users u ON c.owner_user_id = u.id
@@ -216,13 +254,17 @@ class CarClient:
                 return CarResponse(
                     id=result[0],
                     owner_user_id=result[1],
+                    owner_name=result[6],
                     name=result[2],
                     year=result[3],
                     fuel_tank_size=result[4],
                     created_at=result[5],
                     is_owner=False,
-                    shared_by=result[6],
+                    shared_by=result[
+                        6
+                    ],  # Owner name is also shared_by for non-owned cars
                     shared_users=[],  # Don't include shared users for shared cars
+                    refuel_count=result[7],
                 )
 
         return None

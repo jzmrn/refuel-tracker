@@ -405,6 +405,7 @@ export const de: TranslationStructure = {
     carName: "Autoname",
     year: "Jahr",
     fuelTankSize: "Tankgröße",
+    owner: "Besitzer",
     tankSize: "Tankgröße",
     clear: "Löschen",
     cancel: "Abbrechen",
@@ -421,8 +422,6 @@ export const de: TranslationStructure = {
     failedToSearchUsers: "Benutzersuche fehlgeschlagen",
     failedToLoadCar: "Auto konnte nicht geladen werden",
     sharedWithMe: "Mit mir geteilt",
-    noCarsYet:
-      'Noch keine Autos hinzugefügt. Verwenden Sie die Registerkarte "Auto hinzufügen", um Ihr erstes Auto hinzuzufügen.',
     sharedBy: "Geteilt von",
     deleteCarConfirm:
       "Sind Sie sicher, dass Sie dieses Auto löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",

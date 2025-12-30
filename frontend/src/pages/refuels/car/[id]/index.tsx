@@ -163,13 +163,18 @@ export default function CarDetails() {
               <h2 className="heading-2">{car.name}</h2>
               <button
                 onClick={handleEditCar}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                disabled={!car.is_owner}
+                className={`p-2 rounded-lg transition-colors ${
+                  car.is_owner
+                    ? "hover:bg-gray-100 dark:hover:bg-gray-700"
+                    : "opacity-50 cursor-not-allowed"
+                }`}
                 aria-label={t.cars.editCar}
               >
                 <EditIcon className="icon text-gray-600 dark:text-gray-400" />
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <span className="text-sm text-secondary">{t.cars.year}:</span>
                 <p className="font-medium text-gray-900 dark:text-white">
@@ -182,6 +187,12 @@ export default function CarDetails() {
                 </span>
                 <p className="font-medium text-gray-900 dark:text-white">
                   {car.fuel_tank_size} L
+                </p>
+              </div>
+              <div>
+                <span className="text-sm text-secondary">{t.cars.owner}:</span>
+                <p className="font-medium text-gray-900 dark:text-white">
+                  {car.owner_name}
                 </p>
               </div>
             </div>
@@ -235,15 +246,13 @@ export default function CarDetails() {
           )}
 
           {/* Filter Options */}
-          <div className="panel p-4">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t.refuels.filter}:
-              </label>
-              <div className="flex gap-2">
+          <div className="panel">
+            <div className="flex flex-wrap justify-between items-center gap-4">
+              <h2 className="heading-2">{t.refuels.filter}</h2>
+              <div className="flex gap-2 w-full sm:w-auto">
                 <button
                   onClick={() => handleFilterChange("all")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     activeFilter === "all"
                       ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
                       : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
@@ -253,7 +262,7 @@ export default function CarDetails() {
                 </button>
                 <button
                   onClick={() => handleFilterChange("month")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     activeFilter === "month"
                       ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
                       : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
@@ -263,7 +272,7 @@ export default function CarDetails() {
                 </button>
                 <button
                   onClick={() => handleFilterChange("year")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     activeFilter === "year"
                       ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
                       : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"

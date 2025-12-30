@@ -81,27 +81,41 @@ class RefuelDataClient:
 
     def get_metrics(
         self,
-        user_id: str,
+        user_id: str | None = None,
         car_id: str | None = None,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         limit: int | None = None,
     ) -> list[RefuelMetric]:
-        """Get refuel metrics with optional filters."""
-        query = "SELECT * FROM refuel_metrics WHERE user_id = ?"
-        params = [user_id]
+        """Get refuel metrics with optional filters.
 
+        If car_id is provided, returns all refuels for that car (for shared car access).
+        If only user_id is provided, returns refuels for that user.
+        """
+        conditions = []
+        params: list = []
+
+        # When car_id is provided, get all refuels for that car (regardless of user)
+        # This supports the shared car use case where all users can see all refuels
         if car_id is not None:
-            query += " AND car_id = ?"
+            conditions.append("car_id = ?")
             params.append(car_id)
+        elif user_id is not None:
+            # Fallback to user-based filtering if no car_id
+            conditions.append("user_id = ?")
+            params.append(user_id)
 
         if start_date is not None:
-            query += " AND timestamp >= ?"
+            conditions.append("timestamp >= ?")
             params.append(start_date)
 
         if end_date is not None:
-            query += " AND timestamp <= ?"
+            conditions.append("timestamp <= ?")
             params.append(end_date)
+
+        query = "SELECT * FROM refuel_metrics"
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
 
         query += " ORDER BY timestamp DESC"
 
@@ -125,13 +139,38 @@ class RefuelDataClient:
 
     def get_total_cost_by_period(
         self,
-        user_id: str,
+        user_id: str | None = None,
         car_id: str | None = None,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
     ) -> dict[str, Any]:
-        """Get aggregated cost statistics for a time period."""
-        query = """
+        """Get aggregated cost statistics for a time period.
+
+        If car_id is provided, returns stats for all refuels for that car.
+        If only user_id is provided, returns stats for that user.
+        """
+        conditions = []
+        params: list = []
+
+        # When car_id is provided, get stats for all refuels for that car
+        if car_id is not None:
+            conditions.append("car_id = ?")
+            params.append(car_id)
+        elif user_id is not None:
+            conditions.append("user_id = ?")
+            params.append(user_id)
+
+        if start_date is not None:
+            conditions.append("timestamp >= ?")
+            params.append(start_date)
+
+        if end_date is not None:
+            conditions.append("timestamp <= ?")
+            params.append(end_date)
+
+        where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
+
+        query = f"""
             SELECT
                 COALESCE(SUM(price * amount), 0) as total_cost,
                 COALESCE(SUM(amount), 0) as total_liters,
@@ -141,21 +180,8 @@ class RefuelDataClient:
                     ELSE 0
                 END as average_price_per_liter
             FROM refuel_metrics
-            WHERE user_id = ?
+            {where_clause}
         """
-        params = [user_id]
-
-        if car_id is not None:
-            query += " AND car_id = ?"
-            params.append(car_id)
-
-        if start_date is not None:
-            query += " AND timestamp >= ?"
-            params.append(start_date)
-
-        if end_date is not None:
-            query += " AND timestamp <= ?"
-            params.append(end_date)
 
         with self._duckdb.get_connection() as con:
             result = con.execute(query, params).fetchone()
@@ -169,13 +195,38 @@ class RefuelDataClient:
 
     def get_price_trends(
         self,
-        user_id: str,
+        user_id: str | None = None,
         car_id: str | None = None,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
     ) -> list[dict[str, Any]]:
-        """Get price trends over time."""
-        query = """
+        """Get price trends over time.
+
+        If car_id is provided, returns trends for all refuels for that car.
+        If only user_id is provided, returns trends for that user.
+        """
+        conditions = []
+        params: list = []
+
+        # When car_id is provided, get trends for all refuels for that car
+        if car_id is not None:
+            conditions.append("car_id = ?")
+            params.append(car_id)
+        elif user_id is not None:
+            conditions.append("user_id = ?")
+            params.append(user_id)
+
+        if start_date is not None:
+            conditions.append("timestamp >= ?")
+            params.append(start_date)
+
+        if end_date is not None:
+            conditions.append("timestamp <= ?")
+            params.append(end_date)
+
+        where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
+
+        query = f"""
             SELECT
                 CAST(timestamp AS DATE) as date,
                 timestamp,
@@ -183,23 +234,9 @@ class RefuelDataClient:
                 amount,
                 price * amount as total_cost
             FROM refuel_metrics
-            WHERE user_id = ?
+            {where_clause}
+            ORDER BY timestamp ASC
         """
-        params = [user_id]
-
-        if car_id is not None:
-            query += " AND car_id = ?"
-            params.append(car_id)
-
-        if start_date is not None:
-            query += " AND timestamp >= ?"
-            params.append(start_date)
-
-        if end_date is not None:
-            query += " AND timestamp <= ?"
-            params.append(end_date)
-
-        query += " ORDER BY timestamp ASC"
 
         with self._duckdb.get_connection() as con:
             results = con.execute(query, params).fetchall()

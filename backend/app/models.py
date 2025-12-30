@@ -487,6 +487,7 @@ class CarResponse(BaseModel):
 
     id: str
     owner_user_id: str
+    owner_name: str | None = None  # Owner's display name
     name: str
     year: int
     fuel_tank_size: float
@@ -496,6 +497,7 @@ class CarResponse(BaseModel):
     shared_users: list["CarAccessUser"] = Field(
         default_factory=list, description="Users who have access to this car"
     )
+    refuel_count: int = 0  # Number of refuel entries for this car
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}

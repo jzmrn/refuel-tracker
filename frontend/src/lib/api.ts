@@ -156,6 +156,7 @@ export interface FavoriteStationDropdown {
 export interface Car {
   id: string;
   owner_user_id: string;
+  owner_name?: string;
   name: string;
   year: number;
   fuel_tank_size: number;
@@ -163,6 +164,7 @@ export interface Car {
   is_owner: boolean;
   shared_by?: string;
   shared_users: CarAccessUser[];
+  refuel_count: number;
 }
 
 export interface CarCreate {

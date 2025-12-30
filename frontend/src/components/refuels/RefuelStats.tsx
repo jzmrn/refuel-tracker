@@ -30,7 +30,7 @@ export default function RefuelStats({
   if (loading) {
     return (
       <div className="panel">
-        <h3 className="heading-3 mb-4">{t.refuels.statistics}</h3>
+        <h2 className="heading-2 mb-4">{t.refuels.statistics}</h2>
         <LoadingSpinner text={t.refuels.loadingData} />
       </div>
     );
@@ -57,7 +57,7 @@ export default function RefuelStats({
     <div className="space-y-6">
       {/* Summary Statistics Panel */}
       <div className="panel">
-        <h3 className="heading-3 mb-4">{t.refuels.statistics}</h3>
+        <h2 className="heading-2 mb-4">{t.refuels.statistics}</h2>
         <GridLayout variant="stats">
           <SummaryCard
             title={t.refuels.totalCost}
@@ -107,7 +107,7 @@ export default function RefuelStats({
 
       {/* Charts Panel */}
       <div className="panel">
-        <h3 className="heading-3 mb-4">{t.refuels.statistics}</h3>
+        <h2 className="heading-2 mb-4">{t.refuels.statistics}</h2>
 
         {/* Price Chart */}
         <RefuelPriceChart priceData={statistics.price_trends} />

@@ -387,6 +387,7 @@ export interface TranslationStructure {
     carName: string;
     year: string;
     fuelTankSize: string;
+    owner: string;
     tankSize: string;
     clear: string;
     cancel: string;
@@ -403,7 +404,6 @@ export interface TranslationStructure {
     failedToLoadCar: string;
     myCars: string;
     sharedWithMe: string;
-    noCarsYet: string;
     sharedBy: string;
     deleteCarConfirm: string;
     carAddedSuccess: string;

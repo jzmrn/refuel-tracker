@@ -1,10 +1,8 @@
-import { useRouter } from "next/router";
 import AddIcon from "@mui/icons-material/Add";
 import CarCard from "@/components/cars/CarCard";
 import Snackbar from "@/components/common/Snackbar";
 import PageTransition from "@/components/common/PageTransition";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
-import { EmptyState } from "@/components/common";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -13,7 +11,6 @@ import { useCarsWithMinLoadTime } from "@/lib/hooks/useCars";
 
 export default function RefuelsIndex() {
   const { t } = useTranslation();
-  const router = useRouter();
 
   // Use smart path-based animations
   const { isVisible, animationDirection, navigateWithAnimation } =
@@ -21,6 +18,10 @@ export default function RefuelsIndex() {
 
   // Fetch cars with React Query (using min load time to avoid flickering)
   const { data: cars = [], isLoading } = useCarsWithMinLoadTime();
+
+  // Separate owned cars from shared cars
+  const ownedCars = cars.filter((car) => car.is_owner);
+  const sharedCars = cars.filter((car) => !car.is_owner);
 
   const { snackbar, hideSnackbar } = useSnackbar();
 
@@ -48,42 +49,70 @@ export default function RefuelsIndex() {
         </div>
       </div>
 
-      {/* Action Bar */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="heading-2">
-          {t.cars.myCars} ({cars.length})
-        </h2>
-        <button
-          onClick={handleAddCar}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          aria-label={t.cars.addCar}
-        >
-          <AddIcon className="icon text-gray-600 dark:text-gray-400" />
-        </button>
-      </div>
-
-      {/* Cars List */}
       {isLoading ? (
         <div className="panel">
           <LoadingSpinner text={t.common.loading} />
         </div>
-      ) : cars.length === 0 ? (
-        <EmptyState
-          icon={
-            <DirectionsCarIcon className="icon-xl text-gray-600 dark:text-gray-400 mx-auto mb-4" />
-          }
-          title={t.cars.noCarsYet}
-          subtitle={t.cars.addFirstCar}
-        />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {cars.map((car) => (
-            <CarCard
-              key={car.id}
-              car={car}
-              onClick={() => handleCarClick(car.id)}
-            />
-          ))}
+        <div className="space-y-8">
+          {/* My Cars Section */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="heading-2">{t.cars.myCars}</h2>
+              <button
+                onClick={handleAddCar}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label={t.cars.addCar}
+              >
+                <AddIcon className="icon text-gray-600 dark:text-gray-400" />
+              </button>
+            </div>
+
+            {ownedCars.length === 0 ? (
+              <div className="panel flex flex-col items-center justify-center py-12">
+                <DirectionsCarIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
+                <p className="text-secondary text-center">
+                  {t.cars.addFirstCar}
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4 lg:grid-cols-2">
+                {ownedCars.map((car) => (
+                  <CarCard
+                    key={car.id}
+                    car={car}
+                    onClick={() => handleCarClick(car.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Cars Shared With Me Section */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="heading-2">{t.cars.sharedWithMe}</h2>
+            </div>
+
+            {sharedCars.length === 0 ? (
+              <div className="panel flex flex-col items-center justify-center py-12">
+                <DirectionsCarIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
+                <p className="text-secondary text-center">
+                  {t.cars.noCarsSharedWithYou}
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4 lg:grid-cols-2">
+                {sharedCars.map((car) => (
+                  <CarCard
+                    key={car.id}
+                    car={car}
+                    onClick={() => handleCarClick(car.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

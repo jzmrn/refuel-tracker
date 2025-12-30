@@ -113,8 +113,8 @@ export default function AddSharedUsers() {
           shareCar.mutateAsync({ carId, userId: user.id }),
         ),
       );
-      // Navigate back to car details
-      router.push(`/refuels/car/${carId}`);
+      // Navigate back to car details with animation
+      navigateBackWithAnimation();
     } catch (error: any) {
       console.error("Error sharing car:", error);
       showError(error.response?.data?.detail || t.cars.failedToShareCar);

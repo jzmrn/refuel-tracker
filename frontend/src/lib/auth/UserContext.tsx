@@ -84,8 +84,19 @@ function clearUserCache() {
 }
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(getCachedUser);
+  // Initialize with null to avoid hydration mismatch - localStorage is only available on client
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // After hydration, load cached user to avoid flash
+  useEffect(() => {
+    setIsHydrated(true);
+    const cached = getCachedUser();
+    if (cached) {
+      setUser(cached);
+    }
+  }, []);
 
   const fetchUser = async () => {
     try {

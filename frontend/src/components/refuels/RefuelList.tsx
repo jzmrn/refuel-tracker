@@ -3,7 +3,6 @@ import { RefuelMetric } from "../../lib/api";
 import LoadingSpinner from "../common/LoadingSpinner";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
 import { EmptyState } from "../common";
-import BarChartIcon from "@mui/icons-material/BarChart";
 import CollectionsIcon from "@mui/icons-material/Collections";
 
 interface RefuelListProps {

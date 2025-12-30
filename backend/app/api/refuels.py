@@ -13,6 +13,7 @@ from ..models import (
     RefuelPriceTrend,
     RefuelStatisticsResponse,
 )
+from ..storage.car_client import CarClient
 from ..storage.refuel_client import RefuelDataClient
 
 router = APIRouter()
@@ -22,6 +23,11 @@ logger = logging.getLogger(__name__)
 def get_refuel_client(request: Request) -> RefuelDataClient:
     """Dependency to get the refuel client from app state"""
     return request.app.state.refuel_client
+
+
+def get_car_client(request: Request) -> CarClient:
+    """Dependency to get the car client from app state"""
+    return request.app.state.car_client
 
 
 def get_fuel_station_client(request: Request) -> FuelStationClient:
@@ -78,23 +84,37 @@ async def create_refuel_metric(
 async def get_refuel_metrics(
     user: CurrentUser,
     client: RefuelDataClient = Depends(get_refuel_client),
+    car_client: CarClient = Depends(get_car_client),
     car_id: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
     limit: int | None = 100,
 ):
-    """Get refuel metrics with optional filters"""
+    """Get refuel metrics with optional filters.
+
+    If car_id is provided, returns ALL refuels for that car (for shared car access).
+    The user must have access to the car (either owner or shared access).
+    """
     logger.info(
         "Getting refuel metrics",
         extra={"user_id": user.id, "car_id": car_id, "limit": limit},
     )
 
+    # If car_id is provided, verify user has access to the car
+    if car_id is not None:
+        if not car_client.user_has_car_access(car_id, user.id):
+            raise HTTPException(
+                status_code=403, detail="You don't have access to this car"
+            )
+
     # Parse dates if provided
     start_dt = datetime.fromisoformat(start_date) if start_date else None
     end_dt = datetime.fromisoformat(end_date) if end_date else None
 
+    # Get metrics - if car_id is provided, get all metrics for the car (regardless of user)
+    # This allows shared users to see all refuels for the car
     metrics = client.get_metrics(
-        user.id,
+        user_id=user.id if car_id is None else None,
         car_id=car_id,
         start_date=start_dt,
         end_date=end_dt,
@@ -107,7 +127,7 @@ async def get_refuel_metrics(
         result.append(
             RefuelMetricResponse(
                 timestamp=metric.timestamp,
-                user_id=user.id,
+                user_id=metric.user_id,
                 car_id=metric.car_id,
                 price=metric.price,
                 amount=metric.amount,
@@ -124,24 +144,43 @@ async def get_refuel_metrics(
 async def get_refuel_statistics(
     user: CurrentUser,
     client: RefuelDataClient = Depends(get_refuel_client),
+    car_client: CarClient = Depends(get_car_client),
     car_id: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
 ):
-    """Get specialized refuel statistics (cost analysis, price trends)"""
+    """Get specialized refuel statistics (cost analysis, price trends).
+
+    If car_id is provided, returns statistics for ALL refuels for that car.
+    The user must have access to the car (either owner or shared access).
+    """
     logger.info(
         "Getting refuel statistics", extra={"user_id": user.id, "car_id": car_id}
     )
+
+    # If car_id is provided, verify user has access to the car
+    if car_id is not None:
+        if not car_client.user_has_car_access(car_id, user.id):
+            raise HTTPException(
+                status_code=403, detail="You don't have access to this car"
+            )
 
     # Parse dates if provided
     start_dt = datetime.fromisoformat(start_date) if start_date else None
     end_dt = datetime.fromisoformat(end_date) if end_date else None
 
+    # Get statistics - if car_id is provided, get stats for all refuels for the car
+    user_id_for_query = user.id if car_id is None else None
+
     # Get cost statistics
-    cost_stats = client.get_total_cost_by_period(user.id, car_id, start_dt, end_dt)
+    cost_stats = client.get_total_cost_by_period(
+        user_id_for_query, car_id, start_dt, end_dt
+    )
 
     # Get price trends
-    price_trends_raw = client.get_price_trends(user.id, car_id, start_dt, end_dt)
+    price_trends_raw = client.get_price_trends(
+        user_id_for_query, car_id, start_dt, end_dt
+    )
 
     # Convert to Pydantic models
     cost_statistics = RefuelCostStatistics(**cost_stats)

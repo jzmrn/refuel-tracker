@@ -390,6 +390,7 @@ export const en: TranslationStructure = {
     carName: "Car Name",
     year: "Year",
     fuelTankSize: "Fuel Tank Size",
+    owner: "Owner",
     tankSize: "Tank Size",
     clear: "Clear",
     cancel: "Cancel",
@@ -405,8 +406,6 @@ export const en: TranslationStructure = {
     failedToSearchUsers: "Failed to search users",
     failedToLoadCar: "Failed to load car",
     sharedWithMe: "Shared With Me",
-    noCarsYet:
-      'No cars added yet. Use the "Add Car" tab to add your first car.',
     sharedBy: "Shared by",
     deleteCarConfirm:
       "Are you sure you want to delete this car? This action cannot be undone.",
