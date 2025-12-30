@@ -6,28 +6,28 @@ default:
     @just --list
 
 # Build Docker images (optimized for avoiding provenance issues)
-build:
+build PROJECT="app":
     #!/usr/bin/env bash
     export DOCKER_BUILDKIT=1
     export BUILDKIT_PROGRESS=plain
     export BUILDX_NO_DEFAULT_ATTESTATIONS=1
-    docker-compose build --parallel
+    docker-compose -f docker-compose.{{PROJECT}}.yml build --parallel
 
 # Start services with Docker Compose
-up:
-    docker-compose up -d
+up PROJECT="app":
+    docker-compose -f docker-compose.{{PROJECT}}.yml up -d
 
 # Stop services
-down:
-    docker-compose down
+down PROJECT="app":
+    docker-compose -f docker-compose.{{PROJECT}}.yml down
 
 # View logs
-logs:
-    docker-compose logs -f
+logs PROJECT="app":
+    docker-compose -f docker-compose.{{PROJECT}}.yml logs
 
 # Clean up Docker resources
-clean:
-    docker-compose down -v --rmi all --remove-orphans
+clean PROJECT="app":
+    docker-compose -f docker-compose.{{PROJECT}}.yml down -v --rmi all --remove-orphans
 
 # Check if UV is installed
 check-uv:
