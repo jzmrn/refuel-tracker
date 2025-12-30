@@ -6,7 +6,6 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { UserProfile } from "@/components/auth";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -35,12 +34,6 @@ export default function Layout({ children }: LayoutProps) {
       href: "/fuel-prices",
       shortName: t.navigation.prices,
       icon: <AttachMoneyIcon className="w-5 h-5" />,
-    },
-    {
-      name: "Cars",
-      href: "/cars",
-      shortName: "Cars",
-      icon: <DirectionsCarIcon className="w-5 h-5" />,
     },
     {
       name: t.navigation.refuel,
@@ -94,7 +87,9 @@ export default function Layout({ children }: LayoutProps) {
               const isActive =
                 router.pathname === item.href ||
                 (item.href === "/fuel-prices" &&
-                  router.pathname.startsWith("/fuel-prices/"));
+                  router.pathname.startsWith("/fuel-prices/")) ||
+                (item.href === "/refuels" &&
+                  router.pathname.startsWith("/refuels/"));
               return (
                 <li key={item.name}>
                   <Link
@@ -155,7 +150,9 @@ export default function Layout({ children }: LayoutProps) {
             const isActive =
               router.pathname === item.href ||
               (item.href === "/fuel-prices" &&
-                router.pathname.startsWith("/fuel-prices/"));
+                router.pathname.startsWith("/fuel-prices/")) ||
+              (item.href === "/refuels" &&
+                router.pathname.startsWith("/refuels/"));
             return (
               <Link
                 key={item.name}

@@ -5,6 +5,7 @@ export interface TranslationStructure {
   common: {
     loading: string;
     save: string;
+    saving: string;
     cancel: string;
     delete: string;
     edit: string;
@@ -12,6 +13,7 @@ export interface TranslationStructure {
     confirm: string;
     close: string;
     search: string;
+    searching: string;
     filter: string;
     clear: string;
     back: string;
@@ -139,6 +141,7 @@ export interface TranslationStructure {
     notes: string;
     optional: string;
     cancel: string;
+    station: string;
     gasStation: string;
     selectStation: string;
 
@@ -381,11 +384,24 @@ export interface TranslationStructure {
     statistics: string;
     addNewCar: string;
     editCar: string;
+    carName: string;
     year: string;
+    fuelTankSize: string;
+    tankSize: string;
     notes: string;
     clear: string;
     cancel: string;
+    saveChanges: string;
     updateCar: string;
+    carDetails: string;
+    addFirstCar: string;
+    shareWith: string;
+    user: string;
+    users: string;
+    searchUserPlaceholder: string;
+    fillAllRequiredFields: string;
+    failedToSearchUsers: string;
+    failedToLoadCar: string;
     myCars: string;
     sharedWithMe: string;
     noCarsYet: string;
@@ -394,7 +410,6 @@ export interface TranslationStructure {
     carAddedSuccess: string;
     carUpdatedSuccess: string;
     carDeletedSuccess: string;
-    carSharedSuccess: string;
     accessRevokedSuccess: string;
     failedToLoadCars: string;
     failedToCreateCar: string;
@@ -412,10 +427,17 @@ export interface TranslationStructure {
     searchUsers: string;
     searchByEmail: string;
     noUsersFound: string;
+    noUsersSelected: string;
+    typeAtLeastThreeChars: string;
     share: string;
     revoke: string;
     sharedWith: string;
     noSharedAccess: string;
+    addSharedUsers: string;
+    selectUsersToShare: string;
+    addSelectedUsers: string;
+    selectedUsers: string;
+    removeAccess: string;
     carsSharedWithMe: string;
     noCarsSharedWithYou: string;
     carsIShared: string;

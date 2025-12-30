@@ -14,12 +14,7 @@ interface RefuelListProps {
 export default function RefuelList({ refuels, loading }: RefuelListProps) {
   const { t } = useTranslation();
   if (loading) {
-    return (
-      <div className="panel">
-        <h3 className="heading-3 mb-4">{t.refuels.refuelEntries}</h3>
-        <LoadingSpinner text={t.refuels.loadingData} />
-      </div>
-    );
+    return <LoadingSpinner text={t.refuels.loadingData} />;
   }
 
   if (!refuels || refuels.length === 0) {
@@ -72,100 +67,91 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
   };
 
   return (
-    <div className="panel">
-      <h3 className="heading-3 mb-4">
-        {t.refuels.refuelEntries} ({refuels?.length || 0})
-      </h3>
+    <div className="overflow-x-auto">
+      <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead className="bg-gray-50 dark:bg-gray-700">
+          <tr>
+            <th className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
+              {t.refuels.dateHeader}
+            </th>
+            <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
+              €/L
+            </th>
+            <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
+              {t.refuels.litersHeader}
+            </th>
+            <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
+              {t.refuels.totalHeader}
+            </th>
+            <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden md:table-cell">
+              {t.refuels.kmHeader}
+            </th>
+            <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
+              L/100km
+            </th>
+            <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden lg:table-cell">
+              {t.refuels.notesHeader}
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+          {refuels?.map((refuel, index) => {
+            const totalCost = refuel.price * refuel.amount;
+            const refuelDate = new Date(refuel.timestamp);
+            const now = new Date();
+            const isToday = refuelDate.toDateString() === now.toDateString();
 
-      <div className="overflow-x-auto">
-        <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-700">
-            <tr>
-              <th className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                {t.refuels.dateHeader}
-              </th>
-              <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                €/L
-              </th>
-              <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                {t.refuels.litersHeader}
-              </th>
-              <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                {t.refuels.totalHeader}
-              </th>
-              <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden md:table-cell">
-                {t.refuels.kmHeader}
-              </th>
-              <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                L/100km
-              </th>
-              <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden lg:table-cell">
-                {t.refuels.notesHeader}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {refuels?.map((refuel, index) => {
-              const totalCost = refuel.price * refuel.amount;
-              const refuelDate = new Date(refuel.timestamp);
-              const now = new Date();
-              const isToday = refuelDate.toDateString() === now.toDateString();
-
-              return (
-                <tr
-                  key={index}
-                  className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                    isToday ? "bg-blue-50/30 dark:bg-blue-900/20" : ""
-                  }`}
-                >
-                  <td className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-primary">
-                    <div className="font-medium">
-                      <div className="sm:hidden">
-                        {new Date(refuel.timestamp).toLocaleDateString(
-                          "en-US",
-                          {
-                            month: "short",
-                            day: "numeric",
-                          },
-                        )}
-                      </div>
-                      <div className="hidden sm:block">
-                        {formatDate(refuel.timestamp)}
-                      </div>
+            return (
+              <tr
+                key={index}
+                className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                  isToday ? "bg-blue-50/30 dark:bg-blue-900/20" : ""
+                }`}
+              >
+                <td className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-primary">
+                  <div className="font-medium">
+                    <div className="sm:hidden">
+                      {new Date(refuel.timestamp).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </div>
-                  </td>
-                  <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
-                    {formatPricePerLiter(refuel.price)}
-                  </td>
-                  <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
-                    {formatLiters(refuel.amount)}
-                  </td>
-                  <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm font-bold text-primary">
-                    {formatCurrency(totalCost)}
-                  </td>
-                  <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary hidden md:table-cell">
-                    {refuel.kilometers_since_last_refuel.toFixed(0)}
-                  </td>
-                  <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary">
-                    <div className="font-medium">
-                      {(
-                        (refuel.amount / refuel.kilometers_since_last_refuel) *
-                        100
-                      ).toFixed(1)}
+                    <div className="hidden sm:block">
+                      {formatDate(refuel.timestamp)}
                     </div>
-                    <div className="text-xs text-secondary md:hidden">
-                      {refuel.kilometers_since_last_refuel.toFixed(0)}km
-                    </div>
-                  </td>
-                  <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-secondary max-w-xs truncate hidden lg:table-cell">
-                    {refuel.notes || "-"}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                  </div>
+                </td>
+                <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
+                  {formatPricePerLiter(refuel.price)}
+                </td>
+                <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
+                  {formatLiters(refuel.amount)}
+                </td>
+                <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm font-bold text-primary">
+                  {formatCurrency(totalCost)}
+                </td>
+                <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary hidden md:table-cell">
+                  {refuel.kilometers_since_last_refuel.toFixed(0)}
+                </td>
+                <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary">
+                  <div className="font-medium">
+                    {(
+                      (refuel.amount / refuel.kilometers_since_last_refuel) *
+                      100
+                    ).toFixed(1)}
+                  </div>
+                  <div className="text-xs text-secondary md:hidden">
+                    {refuel.kilometers_since_last_refuel.toFixed(0)}km
+                  </div>
+                </td>
+                <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-secondary max-w-xs truncate hidden lg:table-cell">
+                  {refuel.notes || "-"}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

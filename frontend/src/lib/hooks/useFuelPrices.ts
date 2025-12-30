@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
 import apiService, {
   GasStationResponse,
   FavoriteStationResponse,
   GasStationSearchRequest,
 } from "@/lib/api";
+import { useWithMinLoadTime } from "./useWithMinLoadTime";
 
 // Query Keys - centralized for consistency
 export const fuelPricesKeys = {
@@ -37,45 +37,7 @@ export function useFavoriteStations() {
  * This provides better UX by avoiding flash of loading state
  */
 export function useFavoriteStationsWithMinLoadTime() {
-  const query = useFavoriteStations();
-  const [minLoadTimeElapsed, setMinLoadTimeElapsed] = useState(false);
-  const [loadStartTime, setLoadStartTime] = useState<number | null>(null);
-
-  useEffect(() => {
-    // Track when loading starts
-    if (query.isLoading && query.fetchStatus === "fetching" && !loadStartTime) {
-      setLoadStartTime(Date.now());
-      setMinLoadTimeElapsed(false);
-    }
-
-    // Track when minimum time has elapsed
-    if (loadStartTime && !minLoadTimeElapsed) {
-      const elapsed = Date.now() - loadStartTime;
-      const remaining = Math.max(0, 500 - elapsed);
-
-      const timer = setTimeout(() => {
-        setMinLoadTimeElapsed(true);
-        setLoadStartTime(null);
-      }, remaining);
-
-      return () => clearTimeout(timer);
-    }
-
-    // Reset when query completes without fetching (cached data)
-    if (!query.isLoading && query.fetchStatus !== "fetching") {
-      setMinLoadTimeElapsed(true);
-      setLoadStartTime(null);
-    }
-  }, [query.isLoading, query.fetchStatus, loadStartTime, minLoadTimeElapsed]);
-
-  // Show loading if query is loading OR minimum time hasn't elapsed yet
-  const isLoading =
-    query.isLoading || (loadStartTime !== null && !minLoadTimeElapsed);
-
-  return {
-    ...query,
-    isLoading,
-  };
+  return useWithMinLoadTime(useFavoriteStations());
 }
 
 /**
@@ -172,43 +134,5 @@ export function useStationDetails(stationId: string | undefined | null) {
 export function useStationDetailsWithMinLoadTime(
   stationId: string | undefined | null
 ) {
-  const query = useStationDetails(stationId);
-  const [minLoadTimeElapsed, setMinLoadTimeElapsed] = useState(false);
-  const [loadStartTime, setLoadStartTime] = useState<number | null>(null);
-
-  useEffect(() => {
-    // Track when loading starts
-    if (query.isLoading && query.fetchStatus === "fetching" && !loadStartTime) {
-      setLoadStartTime(Date.now());
-      setMinLoadTimeElapsed(false);
-    }
-
-    // Track when minimum time has elapsed
-    if (loadStartTime && !minLoadTimeElapsed) {
-      const elapsed = Date.now() - loadStartTime;
-      const remaining = Math.max(0, 500 - elapsed);
-
-      const timer = setTimeout(() => {
-        setMinLoadTimeElapsed(true);
-        setLoadStartTime(null);
-      }, remaining);
-
-      return () => clearTimeout(timer);
-    }
-
-    // Reset when query completes without fetching (cached data)
-    if (!query.isLoading && query.fetchStatus !== "fetching") {
-      setMinLoadTimeElapsed(true);
-      setLoadStartTime(null);
-    }
-  }, [query.isLoading, query.fetchStatus, loadStartTime, minLoadTimeElapsed]);
-
-  // Show loading if query is loading OR minimum time hasn't elapsed yet
-  const isLoading =
-    query.isLoading || (loadStartTime !== null && !minLoadTimeElapsed);
-
-  return {
-    ...query,
-    isLoading,
-  };
+  return useWithMinLoadTime(useStationDetails(stationId));
 }
