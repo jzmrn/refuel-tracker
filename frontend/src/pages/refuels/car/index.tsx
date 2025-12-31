@@ -28,10 +28,12 @@ export default function AddCar() {
     name: string;
     year: number | undefined;
     fuel_tank_size: number | undefined;
+    fuel_type: string;
   }>({
     name: "",
     year: undefined,
     fuel_tank_size: undefined,
+    fuel_type: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +45,12 @@ export default function AddCar() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.year || !formData.fuel_tank_size) {
+    if (
+      !formData.name ||
+      !formData.year ||
+      !formData.fuel_tank_size ||
+      !formData.fuel_type
+    ) {
       showError(t.cars.fillAllRequiredFields);
       return;
     }
@@ -54,6 +61,7 @@ export default function AddCar() {
         name: formData.name,
         year: formData.year,
         fuel_tank_size: formData.fuel_tank_size,
+        fuel_type: formData.fuel_type,
       };
       await createCar.mutateAsync(createData);
 
@@ -163,6 +171,27 @@ export default function AddCar() {
               min="1"
               required
             />
+          </div>
+
+          {/* Fuel Type */}
+          <div className="field-group">
+            <label htmlFor="fuel_type" className="label">
+              {t.cars.fuelType} *
+            </label>
+            <select
+              id="fuel_type"
+              value={formData.fuel_type}
+              onChange={(e) =>
+                setFormData({ ...formData, fuel_type: e.target.value })
+              }
+              className="input"
+              required
+            >
+              <option value="">{t.cars.selectFuelType}</option>
+              <option value="e5">{t.fuelPrices.e5}</option>
+              <option value="e10">{t.fuelPrices.e10}</option>
+              <option value="diesel">{t.fuelPrices.diesel}</option>
+            </select>
           </div>
         </StandardForm>
       </div>

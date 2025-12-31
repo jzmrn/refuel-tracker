@@ -44,6 +44,7 @@ async def create_car(
         name=car_data.name,
         year=car_data.year,
         fuel_tank_size=car_data.fuel_tank_size,
+        fuel_type=car_data.fuel_type,
     )
 
     # Sync shared users if provided
@@ -119,6 +120,7 @@ async def update_car(
         name=car_update.name,
         year=car_update.year,
         fuel_tank_size=car_update.fuel_tank_size,
+        fuel_type=car_update.fuel_type,
     )
 
     if not success:

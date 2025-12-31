@@ -45,6 +45,19 @@ const CarCard: React.FC<CarCardProps> = ({ car, onClick }) => {
                   </span>
                 </div>
               )}
+              {car.fuel_type && (
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="text-xs text-secondary">
+                    {car.fuel_type === "e5"
+                      ? t.fuelPrices.e5
+                      : car.fuel_type === "e10"
+                      ? t.fuelPrices.e10
+                      : car.fuel_type === "diesel"
+                      ? t.fuelPrices.diesel
+                      : car.fuel_type}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center gap-1 shrink-0">
                 <ReceiptIcon
                   className="text-gray-400 dark:text-gray-500"

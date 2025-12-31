@@ -413,6 +413,8 @@ export const de: TranslationStructure = {
     carName: "Autoname",
     year: "Jahr",
     fuelTankSize: "Tankgröße",
+    fuelType: "Kraftstoffart",
+    selectFuelType: "Kraftstoffart wählen",
     owner: "Besitzer",
     tankSize: "Tankgröße",
     clear: "Löschen",

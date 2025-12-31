@@ -40,6 +40,7 @@ def run_migrations(db_path: Path) -> None:
         (3, add_car_id_to_refuel),
         (4, update_cars_schema),
         (5, remove_notes_from_cars),
+        (6, add_fuel_type_to_cars),
     ]
 
     for version, migration_func in migrations:
@@ -283,3 +284,34 @@ def remove_notes_from_cars(duckdb_resource: BackendDuckDBResource) -> None:
             logger.info("Notes column removed from cars table successfully")
         else:
             logger.info("Notes column already removed from cars table")
+
+
+def add_fuel_type_to_cars(duckdb_resource: BackendDuckDBResource) -> None:
+    """
+    Migration #6: Add fuel_type column to cars table
+    This allows storing the fuel type (Petrol, Diesel, Electric, Hybrid, etc.)
+    for each car. The column is optional for backward compatibility.
+    """
+    with duckdb_resource.get_connection() as con:
+        # Check if fuel_type column exists
+        result = con.execute(
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'cars' AND column_name = 'fuel_type'
+            """
+        ).fetchone()
+
+        if not result:
+            logger.info("Adding fuel_type column to cars table")
+
+            # Add the fuel_type column (nullable for backward compatibility)
+            con.execute(
+                """
+                ALTER TABLE cars ADD COLUMN fuel_type VARCHAR
+                """
+            )
+
+            logger.info("fuel_type column added to cars table successfully")
+        else:
+            logger.info("fuel_type column already exists in cars table")

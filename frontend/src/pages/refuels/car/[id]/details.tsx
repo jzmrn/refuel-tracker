@@ -32,10 +32,12 @@ export default function EditCarDetails() {
     name: string;
     year: number | undefined;
     fuel_tank_size: number | undefined;
+    fuel_type: string;
   }>({
     name: "",
     year: undefined,
     fuel_tank_size: undefined,
+    fuel_type: "",
   });
 
   const [sharedUserIds, setSharedUserIds] = useState<string[]>([]);
@@ -51,6 +53,7 @@ export default function EditCarDetails() {
         name: car.name,
         year: car.year,
         fuel_tank_size: car.fuel_tank_size,
+        fuel_type: car.fuel_type || "",
       });
 
       if (car.is_owner && car.shared_users) {
@@ -77,7 +80,8 @@ export default function EditCarDetails() {
       !carId ||
       !formData.name ||
       !formData.year ||
-      !formData.fuel_tank_size
+      !formData.fuel_tank_size ||
+      !formData.fuel_type
     ) {
       showError(t.cars.fillAllRequiredFields);
       return;
@@ -213,6 +217,27 @@ export default function EditCarDetails() {
                     required
                   />
                 </div>
+              </div>
+
+              {/* Fuel Type */}
+              <div className="field-group">
+                <label htmlFor="fuel_type" className="label">
+                  {t.cars.fuelType} *
+                </label>
+                <select
+                  id="fuel_type"
+                  value={formData.fuel_type}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fuel_type: e.target.value })
+                  }
+                  className="input"
+                  required
+                >
+                  <option value="">{t.cars.selectFuelType}</option>
+                  <option value="e5">{t.fuelPrices.e5}</option>
+                  <option value="e10">{t.fuelPrices.e10}</option>
+                  <option value="diesel">{t.fuelPrices.diesel}</option>
+                </select>
               </div>
 
               {/* Submit Button */}

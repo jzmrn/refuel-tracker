@@ -394,6 +394,8 @@ export interface TranslationStructure {
     carName: string;
     year: string;
     fuelTankSize: string;
+    fuelType: string;
+    selectFuelType: string;
     owner: string;
     tankSize: string;
     clear: string;

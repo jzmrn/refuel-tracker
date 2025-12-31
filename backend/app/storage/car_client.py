@@ -35,6 +35,7 @@ class CarClient:
                     name VARCHAR NOT NULL,
                     year INTEGER NOT NULL,
                     fuel_tank_size DOUBLE NOT NULL,
+                    fuel_type VARCHAR,
                     created_at TIMESTAMP NOT NULL
                 )
             """
@@ -80,6 +81,7 @@ class CarClient:
         name: str,
         year: int,
         fuel_tank_size: float,
+        fuel_type: str | None = None,
     ) -> str:
         """Create a new car and return its ID."""
         car_id = str(uuid4())
@@ -88,8 +90,8 @@ class CarClient:
         with self._duckdb.get_connection() as con:
             con.execute(
                 """
-                INSERT INTO cars (id, owner_user_id, name, year, fuel_tank_size, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO cars (id, owner_user_id, name, year, fuel_tank_size, fuel_type, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 [
                     car_id,
@@ -97,6 +99,7 @@ class CarClient:
                     name,
                     year,
                     fuel_tank_size,
+                    fuel_type,
                     created_at,
                 ],
             )
@@ -110,7 +113,7 @@ class CarClient:
             # Get owned cars with refuel count and owner name
             owned_result = con.execute(
                 """
-                SELECT c.id, c.owner_user_id, c.name, c.year, c.fuel_tank_size, c.created_at,
+                SELECT c.id, c.owner_user_id, c.name, c.year, c.fuel_tank_size, c.fuel_type, c.created_at,
                        u.name as owner_name,
                        COALESCE((SELECT COUNT(*) FROM refuel_metrics rm WHERE rm.car_id = c.id), 0) as refuel_count
                 FROM cars c
@@ -125,7 +128,7 @@ class CarClient:
             shared_result = con.execute(
                 """
                 SELECT c.id, c.owner_user_id, c.name, c.year,
-                       c.fuel_tank_size, c.created_at, u.name as shared_by_name,
+                       c.fuel_tank_size, c.fuel_type, c.created_at, u.name as shared_by_name,
                        COALESCE((SELECT COUNT(*) FROM refuel_metrics rm WHERE rm.car_id = c.id), 0) as refuel_count
                 FROM cars c
                 JOIN car_access ca ON c.id = ca.car_id
@@ -146,15 +149,16 @@ class CarClient:
                 CarResponse(
                     id=row[0],
                     owner_user_id=row[1],
-                    owner_name=row[6],
+                    owner_name=row[7],
                     name=row[2],
                     year=row[3],
                     fuel_tank_size=row[4],
-                    created_at=row[5],
+                    fuel_type=row[5],
+                    created_at=row[6],
                     is_owner=True,
                     shared_by=None,
                     shared_users=shared_users,
-                    refuel_count=row[7],
+                    refuel_count=row[8],
                 )
             )
 
@@ -164,15 +168,16 @@ class CarClient:
                 CarResponse(
                     id=row[0],
                     owner_user_id=row[1],
-                    owner_name=row[6],  # Owner name for shared cars
+                    owner_name=row[7],  # Owner name for shared cars
                     name=row[2],
                     year=row[3],
                     fuel_tank_size=row[4],
-                    created_at=row[5],
+                    fuel_type=row[5],
+                    created_at=row[6],
                     is_owner=False,
-                    shared_by=row[6],
+                    shared_by=row[7],
                     shared_users=[],  # Don't include shared users for shared cars
-                    refuel_count=row[7],
+                    refuel_count=row[8],
                 )
             )
 
@@ -276,6 +281,7 @@ class CarClient:
         name: str | None = None,
         year: int | None = None,
         fuel_tank_size: float | None = None,
+        fuel_type: str | None = None,
     ) -> bool:
         """Update a car (owner only)."""
         updates = []
@@ -290,6 +296,9 @@ class CarClient:
         if fuel_tank_size is not None:
             updates.append("fuel_tank_size = ?")
             params.append(fuel_tank_size)
+        if fuel_type is not None:
+            updates.append("fuel_type = ?")
+            params.append(fuel_type)
 
         if not updates:
             return True  # Nothing to update

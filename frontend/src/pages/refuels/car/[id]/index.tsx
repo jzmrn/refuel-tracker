@@ -138,7 +138,7 @@ export default function CarDetails() {
                 <EditIcon className="icon text-gray-600 dark:text-gray-400" />
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <span className="text-sm text-secondary">{t.cars.year}:</span>
                 <p className="font-medium text-gray-900 dark:text-white">
@@ -151,6 +151,20 @@ export default function CarDetails() {
                 </span>
                 <p className="font-medium text-gray-900 dark:text-white">
                   {car.fuel_tank_size} L
+                </p>
+              </div>
+              <div>
+                <span className="text-sm text-secondary">
+                  {t.cars.fuelType}:
+                </span>
+                <p className="font-medium text-gray-900 dark:text-white">
+                  {car.fuel_type === "e5"
+                    ? t.fuelPrices.e5
+                    : car.fuel_type === "e10"
+                    ? t.fuelPrices.e10
+                    : car.fuel_type === "diesel"
+                    ? t.fuelPrices.diesel
+                    : car.fuel_type || "-"}
                 </p>
               </div>
               <div>

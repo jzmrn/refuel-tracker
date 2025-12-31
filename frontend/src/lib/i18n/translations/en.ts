@@ -397,6 +397,8 @@ export const en: TranslationStructure = {
     carName: "Car Name",
     year: "Year",
     fuelTankSize: "Fuel Tank Size",
+    fuelType: "Fuel Type",
+    selectFuelType: "Select fuel type",
     owner: "Owner",
     tankSize: "Tank Size",
     clear: "Clear",
