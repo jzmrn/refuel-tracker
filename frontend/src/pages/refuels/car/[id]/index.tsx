@@ -1,26 +1,21 @@
-import { useState } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import PageTransition from "@/components/common/PageTransition";
 import Snackbar from "@/components/common/Snackbar";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
 import RefuelList from "@/components/refuels/RefuelList";
-import RefuelStats from "@/components/refuels/RefuelStats";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
 import {
   useCarWithMinLoadTime,
   useRefuelMetricsWithMinLoadTime,
-  useRefuelStatisticsWithMinLoadTime,
   useRevokeCarAccess,
 } from "@/lib/hooks/useCars";
 import CircularProgress from "@mui/material/CircularProgress";
-
-type FilterType = "all" | "month" | "year";
 
 export default function CarDetails() {
   const { t } = useTranslation();
@@ -28,12 +23,8 @@ export default function CarDetails() {
   const { id } = router.query;
   const carId = typeof id === "string" ? id : undefined;
 
-  const {
-    isVisible,
-    animationDirection,
-    navigateWithAnimation,
-    navigateBackWithAnimation,
-  } = usePathAnimation({ currentPath: `/refuels/car/${id || ""}` });
+  const { isVisible, animationDirection, navigateWithAnimation } =
+    usePathAnimation({ currentPath: `/refuels/car/${id || ""}` });
 
   // Fetch car details
   const {
@@ -42,37 +33,10 @@ export default function CarDetails() {
     error: carError,
   } = useCarWithMinLoadTime(carId);
 
-  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
-
-  // Calculate date filters
-  const getFilterDates = () => {
-    const now = new Date();
-    let startDate: string | undefined;
-
-    if (activeFilter === "month") {
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      startDate = startOfMonth.toISOString().split("T")[0];
-    } else if (activeFilter === "year") {
-      const startOfYear = new Date(now.getFullYear(), 0, 1);
-      startDate = startOfYear.toISOString().split("T")[0];
-    }
-
-    return { start_date: startDate };
-  };
-
-  // Fetch refuels with current filter
+  // Fetch recent refuels (limit 5)
   const { data: refuels = [], isLoading: refuelsLoading } =
     useRefuelMetricsWithMinLoadTime(carId, {
-      ...getFilterDates(),
-      limit: activeFilter === "all" ? 50 : 365,
-    });
-
-  // Fetch statistics (last 6 months)
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-  const { data: statistics, isLoading: statsLoading } =
-    useRefuelStatisticsWithMinLoadTime(carId, {
-      start_date: sixMonthsAgo.toISOString().split("T")[0],
+      limit: 5,
     });
 
   const revokeAccess = useRevokeCarAccess();
@@ -92,7 +56,11 @@ export default function CarDetails() {
   };
 
   const handleAddSharedUsers = () => {
-    navigateWithAnimation(`/refuels/car/${carId}/add-shared-users`);
+    navigateWithAnimation(`/refuels/car/${carId}/share`);
+  };
+
+  const handleViewStats = () => {
+    navigateWithAnimation(`/refuels/car/${carId}/stats`);
   };
 
   const handleRemoveSharedUser = async (userId: string) => {
@@ -104,10 +72,6 @@ export default function CarDetails() {
       console.error("Error revoking access:", error);
       showError(error.response?.data?.detail || t.cars.failedToRevokeAccess);
     }
-  };
-
-  const handleFilterChange = (filter: FilterType) => {
-    setActiveFilter(filter);
   };
 
   if (carError) {
@@ -198,6 +162,30 @@ export default function CarDetails() {
             </div>
           </div>
 
+          {/* Recent Refuel Events */}
+          <div className="panel">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="heading-2">{t.refuels.recentRefuels}</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleViewStats}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  aria-label={t.refuels.viewStatistics}
+                >
+                  <BarChartIcon className="icon text-gray-600 dark:text-gray-400" />
+                </button>
+                <button
+                  onClick={handleAddRefuel}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  aria-label={t.refuels.addEntry}
+                >
+                  <AddIcon className="icon text-gray-600 dark:text-gray-400" />
+                </button>
+              </div>
+            </div>
+            <RefuelList refuels={refuels} loading={refuelsLoading} />
+          </div>
+
           {/* Shared Users Section - only show if user is owner */}
           {car.is_owner && (
             <div className="panel">
@@ -244,69 +232,6 @@ export default function CarDetails() {
               )}
             </div>
           )}
-
-          {/* Filter Options */}
-          <div className="panel">
-            <div className="flex flex-wrap justify-between items-center gap-4">
-              <h2 className="heading-2">{t.refuels.filter}</h2>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <button
-                  onClick={() => handleFilterChange("all")}
-                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeFilter === "all"
-                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {t.refuels.showAll}
-                </button>
-                <button
-                  onClick={() => handleFilterChange("month")}
-                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeFilter === "month"
-                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {t.refuels.thisMonth}
-                </button>
-                <button
-                  onClick={() => handleFilterChange("year")}
-                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeFilter === "year"
-                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {t.refuels.thisYear}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Refuel Events */}
-          <div className="panel">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="heading-2">
-                {t.refuels.refuelEntries} ({refuels.length})
-              </h2>
-              <button
-                onClick={handleAddRefuel}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                aria-label={t.refuels.addEntry}
-              >
-                <AddIcon className="icon text-gray-600 dark:text-gray-400" />
-              </button>
-            </div>
-            <RefuelList refuels={refuels} loading={refuelsLoading} />
-          </div>
-
-          {/* Statistics */}
-          <RefuelStats
-            statistics={statistics || null}
-            refuelData={refuels}
-            loading={statsLoading}
-          />
         </div>
       ) : null}
 

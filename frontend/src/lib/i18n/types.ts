@@ -126,6 +126,9 @@ export interface TranslationStructure {
     showAll: string;
     thisMonth: string;
     thisYear: string;
+    lastMonth: string;
+    lastSixMonths: string;
+    lastYear: string;
     refuelAddedSuccess: string;
     errorAddingRefuel: string;
     errorLoadingData: string;
@@ -144,6 +147,8 @@ export interface TranslationStructure {
     station: string;
     gasStation: string;
     selectStation: string;
+    favoriteStationsCanBeSelected: string;
+    here: string;
 
     // Validation messages
     priceMinRequired: string;
@@ -180,6 +185,8 @@ export interface TranslationStructure {
 
     // RefuelList labels
     refuelEntries: string;
+    recentRefuels: string;
+    viewStatistics: string;
     loadingData: string;
     noRefuelEntriesYet: string;
     addFirstRefuelEntry: string;

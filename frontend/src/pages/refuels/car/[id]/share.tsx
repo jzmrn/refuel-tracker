@@ -21,7 +21,7 @@ export default function AddSharedUsers() {
 
   const { isVisible, animationDirection, navigateBackWithAnimation } =
     usePathAnimation({
-      currentPath: `/refuels/car/${id || ""}/add-shared-users`,
+      currentPath: `/refuels/car/${id || ""}/share`,
     });
 
   const {

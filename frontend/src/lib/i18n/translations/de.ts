@@ -118,7 +118,7 @@ export const de: TranslationStructure = {
     pricePerLiter: "Preis pro Liter",
     odometer: "Kilometerstand",
     date: "Datum",
-    refuelTracking: "Tankstellenverfolgung",
+    refuelTracking: "Tank-Tracking",
     manageFuelData:
       "Verwalten Sie Ihre Kraftstoffdaten und verfolgen Sie Kraftstoffkosten",
     addEntry: "Eintrag hinzufügen",
@@ -127,6 +127,9 @@ export const de: TranslationStructure = {
     showAll: "Alle anzeigen",
     thisMonth: "Diesen Monat",
     thisYear: "Dieses Jahr",
+    lastMonth: "Letzter Monat",
+    lastSixMonths: "Letzte 6 Monate",
+    lastYear: "Letztes Jahr",
     refuelAddedSuccess: "Tankeintrag erfolgreich hinzugefügt!",
     errorAddingRefuel: "Fehler beim Hinzufügen des Tankeintrags",
     errorLoadingData: "Fehler beim Laden der Tankdaten",
@@ -145,6 +148,9 @@ export const de: TranslationStructure = {
     station: "Tankstelle",
     gasStation: "Tankstelle",
     selectStation: "Tankstelle auswählen...",
+    favoriteStationsCanBeSelected:
+      "Favoritentankstellen können ausgewählt werden",
+    here: "hier",
 
     // Validation messages
     priceMinRequired: "Preis muss mindestens 0,001 €/L betragen",
@@ -183,6 +189,8 @@ export const de: TranslationStructure = {
 
     // RefuelList labels
     refuelEntries: "Tankeinträge",
+    recentRefuels: "Letzte Tankungen",
+    viewStatistics: "Statistiken anzeigen",
     loadingData: "Lade Daten...",
     noRefuelEntriesYet: "Noch keine Tankeinträge aufgezeichnet.",
     addFirstRefuelEntry: "Fügen Sie Ihren ersten Tankeintrag oben hinzu.",

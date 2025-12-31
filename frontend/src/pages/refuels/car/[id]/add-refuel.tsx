@@ -381,30 +381,38 @@ export default function AddRefuel() {
                 </div>
 
                 {/* Favorite Station (optional) */}
-                {favoriteStations.length > 0 && (
-                  <div className="form-group">
-                    <label htmlFor="station_id" className="label">
-                      {t.refuels.station} ({t.refuels.optional})
-                    </label>
-                    <select
-                      id="station_id"
-                      name="station_id"
-                      value={formData.station_id || ""}
-                      onChange={handleChange}
-                      className="input"
+                <div className="form-group">
+                  <label htmlFor="station_id" className="label">
+                    {t.refuels.station} ({t.refuels.optional})
+                  </label>
+                  <select
+                    id="station_id"
+                    name="station_id"
+                    value={formData.station_id || ""}
+                    onChange={handleChange}
+                    className="input"
+                  >
+                    <option value="">{t.refuels.selectStation}</option>
+                    {favoriteStations.map((station) => (
+                      <option
+                        key={station.station_id}
+                        value={station.station_id}
+                      >
+                        {station.brand} - {station.street}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    {t.refuels.favoriteStationsCanBeSelected}{" "}
+                    <button
+                      type="button"
+                      onClick={() => router.push("/fuel-prices")}
+                      className="text-primary-600 dark:text-blue-400 hover:underline"
                     >
-                      <option value="">{t.refuels.selectStation}</option>
-                      {favoriteStations.map((station) => (
-                        <option
-                          key={station.station_id}
-                          value={station.station_id}
-                        >
-                          {station.brand} - {station.street}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                      {t.refuels.here}
+                    </button>
+                  </p>
+                </div>
               </div>
 
               {/* Notes */}

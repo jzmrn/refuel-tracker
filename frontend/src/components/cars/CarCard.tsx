@@ -24,13 +24,10 @@ const CarCard: React.FC<CarCardProps> = ({ car, onClick }) => {
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary-50 dark:bg-blue-900/20 flex items-center justify-center">
-            <DirectionsCarIcon className="icon text-primary-600 dark:text-blue-400" />
-          </div>
           <div className="flex-1 min-w-0">
             <h3 className="heading-3 truncate">{car.name}</h3>
-            <div className="flex items-center gap-4 mt-1.5">
-              <div className="flex items-center gap-1">
+            <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-1.5">
+              <div className="flex items-center gap-1 shrink-0">
                 <CalendarMonthIcon
                   className="text-gray-400 dark:text-gray-500"
                   sx={{ fontSize: 16 }}
@@ -38,7 +35,7 @@ const CarCard: React.FC<CarCardProps> = ({ car, onClick }) => {
                 <span className="text-xs text-secondary">{car.year}</span>
               </div>
               {car.fuel_tank_size && (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   <LocalGasStationIcon
                     className="text-gray-400 dark:text-gray-500"
                     sx={{ fontSize: 16 }}
@@ -48,7 +45,7 @@ const CarCard: React.FC<CarCardProps> = ({ car, onClick }) => {
                   </span>
                 </div>
               )}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 shrink-0">
                 <ReceiptIcon
                   className="text-gray-400 dark:text-gray-500"
                   sx={{ fontSize: 16 }}
@@ -59,7 +56,7 @@ const CarCard: React.FC<CarCardProps> = ({ car, onClick }) => {
               </div>
               {/* For owned cars: show shared users count with people icon */}
               {car.is_owner ? (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   <PeopleIcon
                     className="text-gray-400 dark:text-gray-500"
                     sx={{ fontSize: 16 }}
@@ -71,12 +68,12 @@ const CarCard: React.FC<CarCardProps> = ({ car, onClick }) => {
               ) : (
                 /* For shared cars: show owner name with single person icon */
                 car.shared_by && (
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 min-w-0">
                     <PersonIcon
-                      className="text-gray-400 dark:text-gray-500"
+                      className="text-gray-400 dark:text-gray-500 shrink-0"
                       sx={{ fontSize: 16 }}
                     />
-                    <span className="text-xs text-secondary truncate max-w-[100px]">
+                    <span className="text-xs text-secondary truncate max-w-[120px] sm:max-w-[150px]">
                       {car.shared_by}
                     </span>
                   </div>
@@ -85,7 +82,6 @@ const CarCard: React.FC<CarCardProps> = ({ car, onClick }) => {
             </div>
           </div>
         </div>
-        <ChevronRightIcon className="icon text-gray-400 dark:text-gray-500 flex-shrink-0 group-hover:text-primary-600 dark:group-hover:text-blue-400 transition-colors" />
       </div>
     </button>
   );

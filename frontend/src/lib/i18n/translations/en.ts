@@ -121,6 +121,9 @@ export const en: TranslationStructure = {
     showAll: "Show All",
     thisMonth: "This Month",
     thisYear: "This Year",
+    lastMonth: "Last Month",
+    lastSixMonths: "Last 6 Months",
+    lastYear: "Last Year",
     refuelAddedSuccess: "Refuel entry added successfully!",
     errorAddingRefuel: "Error adding refuel entry.",
     errorLoadingData: "Error loading refuel data.",
@@ -139,6 +142,8 @@ export const en: TranslationStructure = {
     station: "Station",
     gasStation: "Gas Station",
     selectStation: "Select a station...",
+    favoriteStationsCanBeSelected: "Favourite stations can be selected",
+    here: "here",
 
     // Validation messages
     priceMinRequired: "Price must be at least 0.001 €/L",
@@ -177,6 +182,8 @@ export const en: TranslationStructure = {
 
     // RefuelList labels
     refuelEntries: "Refuel Entries",
+    recentRefuels: "Recent Refuels",
+    viewStatistics: "View Statistics",
     loadingData: "Loading data...",
     noRefuelEntriesYet: "No refuel entries recorded yet.",
     addFirstRefuelEntry: "Add your first refuel entry above.",
