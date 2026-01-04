@@ -3,10 +3,10 @@ import { format } from "date-fns";
 
 import { DataPointResponse } from "@/lib/api";
 import LoadingSpinner from "../common/LoadingSpinner";
+import Panel from "../common/Panel";
 import DeleteIcon from "@mui/icons-material/Delete";
-import BarChartIcon from "@mui/icons-material/BarChart";
 import CollectionsIcon from "@mui/icons-material/Collections";
-import { EmptyState } from "../common";
+import { EmptyPanel } from "../common";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 export type DataPoint = DataPointResponse;
@@ -26,16 +26,15 @@ export default function DataPointList({
 
   if (loading) {
     return (
-      <div className="panel">
-        <h3 className="heading-3 mb-4">{t.dataTracking.title}</h3>
+      <Panel title={t.dataTracking.title}>
         <LoadingSpinner text={t.dataTracking.loadingDataPoints} />
-      </div>
+      </Panel>
     );
   }
 
   if (dataPoints.length === 0) {
     return (
-      <EmptyState
+      <EmptyPanel
         icon={
           <CollectionsIcon className="icon-xl text-gray-600 dark:text-gray-400 mx-auto mb-4" />
         }

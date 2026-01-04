@@ -6,3 +6,4 @@ export * from "./useFuelPrices";
 export { useWithMinLoadTime } from "./useWithMinLoadTime";
 export { useDelayedLoading } from "./useDelayedLoading";
 export { usePathAnimation } from "./usePathAnimation";
+export { useDebounce } from "./useDebounce";

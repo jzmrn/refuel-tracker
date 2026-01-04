@@ -10,6 +10,8 @@ export { default as Snackbar } from "./Snackbar";
 export { default as LanguageSwitcher } from "./LanguageSwitcher";
 export { default as ThemeSelector } from "./ThemeSelector";
 export { default as EmptyState } from "./EmptyState";
+export { default as EmptyPanel } from "./EmptyPanel";
+export { default as Panel } from "./Panel";
 
 // Export new centralized components
 export { GridLayout } from "./GridLayout";

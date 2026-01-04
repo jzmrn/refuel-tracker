@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
 import FavoriteStationsList from "@/components/fuel-prices/FavoriteStationsList";
 import Snackbar from "@/components/common/Snackbar";
 import PageTransition from "@/components/common/PageTransition";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
-import BarChartIcon from "@mui/icons-material/BarChart";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
@@ -20,7 +18,6 @@ const SORT_BY_STORAGE_KEY = "fuelPrices.sortBy";
 
 export default function FuelPrices() {
   const { t } = useTranslation();
-  const router = useRouter();
 
   // Use smart path-based animations
   const { isVisible, animationDirection, navigateWithAnimation } =

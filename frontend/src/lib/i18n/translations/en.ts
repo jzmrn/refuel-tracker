@@ -476,6 +476,10 @@ export const en: TranslationStructure = {
     firstRefuel: "First Refuel",
     lastRefuel: "Last Refuel",
     timeline: "Timeline",
+    deleteCar: "Delete Car",
+    deleteCarTitle: "Delete Car",
+    deleteCarMessage:
+      "Are you sure you want to delete this car? All associated refuel entries will also be deleted. This action cannot be undone.",
   },
 
   fuelPrices: {

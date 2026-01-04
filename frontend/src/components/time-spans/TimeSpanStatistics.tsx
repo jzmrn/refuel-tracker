@@ -22,13 +22,14 @@ import {
 import { TimeSpanResponse } from "@/lib/api";
 import SummaryCard, { type ValueUnit } from "../common/SummaryCard";
 import LoadingSpinner from "../common/LoadingSpinner";
+import Panel from "../common/Panel";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import NumbersIcon from "@mui/icons-material/Numbers";
-import { EmptyState } from "../common";
+import { EmptyPanel } from "../common";
 import { GridLayout } from "../common/GridLayout";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
@@ -471,18 +472,15 @@ export default function TimeSpanStatistics({
   // Render conditions after all hooks
   if (loading) {
     return (
-      <div className="panel">
-        <h3 className="heading-3 mb-4">
-          {t.timeSpans.statisticsFor} {label}
-        </h3>
+      <Panel title={t.timeSpans.statisticsFor + " " + label}>
         <LoadingSpinner text={t.dataTracking.loadingStatistics} />
-      </div>
+      </Panel>
     );
   }
 
   if (!timeSpans || timeSpans.length === 0) {
     return (
-      <EmptyState
+      <EmptyPanel
         icon={
           <BarChartIcon className="icon-xl text-gray-600 dark:text-gray-400 mx-auto mb-4" />
         }
@@ -493,11 +491,7 @@ export default function TimeSpanStatistics({
   }
 
   return (
-    <div className="panel">
-      <h3 className="heading-3 mb-4">
-        {t.timeSpans.statisticsFor} "{label}"
-      </h3>
-
+    <Panel title={t.timeSpans.statisticsFor + ' "' + label + '"'}>
       {/* Group Selection */}
       <div className="mb-6">
         <label htmlFor="group-select" className="label">
@@ -700,6 +694,6 @@ export default function TimeSpanStatistics({
           </div>
         </div>
       )}
-    </div>
+    </Panel>
   );
 }

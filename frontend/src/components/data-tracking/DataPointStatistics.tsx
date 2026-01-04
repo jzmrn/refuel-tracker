@@ -13,12 +13,11 @@ import { format } from "date-fns";
 import { DataPointResponse } from "@/lib/api";
 import SummaryCard from "../common/SummaryCard";
 import LoadingSpinner from "../common/LoadingSpinner";
+import Panel from "../common/Panel";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import NumbersIcon from "@mui/icons-material/Numbers";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import TrendingDownIcon from "@mui/icons-material/TrendingDown";
-import { EmptyState } from "../common";
+import { EmptyPanel } from "../common";
 import { GridLayout } from "../common/GridLayout";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
@@ -37,18 +36,15 @@ export default function DataPointStatistics({
 
   if (loading) {
     return (
-      <div className="panel">
-        <h3 className="heading-3 mb-4">
-          {t.dataTracking.statisticsFor} {label}
-        </h3>
+      <Panel title={t.dataTracking.statisticsFor + " " + label}>
         <LoadingSpinner text={t.dataTracking.loadingStatistics} />
-      </div>
+      </Panel>
     );
   }
 
   if (!dataPoints || dataPoints.length === 0) {
     return (
-      <EmptyState
+      <EmptyPanel
         icon={
           <BarChartIcon className="icon-xl text-gray-600 dark:text-gray-400 mx-auto mb-4" />
         }
@@ -159,11 +155,7 @@ export default function DataPointStatistics({
   }
 
   return (
-    <div className="panel p-6">
-      <h3 className="heading-3 mb-4">
-        {t.dataTracking.statisticsFor} "{label}"
-      </h3>
-
+    <Panel title={t.dataTracking.statisticsFor + ' "' + label + '"'}>
       {/* Summary Statistics */}
       <GridLayout variant="stats" className="mb-6">
         <SummaryCard
@@ -327,6 +319,6 @@ export default function DataPointStatistics({
           </div>
         </div>
       </div>
-    </div>
+    </Panel>
   );
 }

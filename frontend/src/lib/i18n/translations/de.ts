@@ -496,6 +496,10 @@ export const de: TranslationStructure = {
     firstRefuel: "Erste Tankfüllung",
     lastRefuel: "Letzte Tankfüllung",
     timeline: "Zeitachse",
+    deleteCar: "Auto löschen",
+    deleteCarTitle: "Auto löschen",
+    deleteCarMessage:
+      "Sind Sie sicher, dass Sie dieses Auto löschen möchten? Alle zugehörigen Tankeinträge werden ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
   },
 
   fuelPrices: {

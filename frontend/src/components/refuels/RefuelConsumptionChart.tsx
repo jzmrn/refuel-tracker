@@ -10,6 +10,7 @@ import {
   Legend,
 } from "recharts";
 import SummaryCard from "../common/SummaryCard";
+import Panel from "../common/Panel";
 import { GridLayout } from "../common/GridLayout";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import NumbersIcon from "@mui/icons-material/Numbers";
@@ -44,17 +45,14 @@ export default function RefuelConsumptionChart({
 
   if (!refuelData || refuelData.length === 0) {
     return (
-      <div className="mt-6">
-        <h4 className="heading-4 mb-3">
-          {t.refuels.fuelConsumptionEstimatedVsActual}
-        </h4>
+      <Panel title={t.refuels.fuelConsumptionEstimatedVsActual}>
         <div className="empty-state">
           <p>{t.refuels.noConsumptionDataAvailable}</p>
           <p className="text-sm mt-1">
             {t.refuels.addMoreRefuelEntriesToSeeConsumptionTrends}
           </p>
         </div>
-      </div>
+      </Panel>
     );
   }
 
@@ -88,17 +86,14 @@ export default function RefuelConsumptionChart({
 
   if (chartData.length === 0) {
     return (
-      <div className="mt-6">
-        <h4 className="text-md font-semibold mb-3 text-gray-700">
-          {t.refuels.fuelConsumptionEstimatedVsActual}
-        </h4>
-        <div className="bg-gray-50 p-8 rounded-lg text-center text-gray-500">
+      <Panel title={t.refuels.fuelConsumptionEstimatedVsActual}>
+        <div className="empty-state">
           <p>{t.refuels.noValidConsumptionDataAvailable}</p>
           <p className="text-sm mt-1">
             {t.refuels.makeSureEntriesHaveKilometersAndFuelAmount}
           </p>
         </div>
-      </div>
+      </Panel>
     );
   }
 
@@ -189,11 +184,7 @@ export default function RefuelConsumptionChart({
   const yAxisMax = maxValue + range * 0.1;
 
   return (
-    <div className="mt-6">
-      <h4 className="heading-4 mb-3">
-        {t.refuels.fuelConsumptionEstimatedVsActual}
-      </h4>
-
+    <Panel title={t.refuels.fuelConsumptionEstimatedVsActual}>
       <div className="chart-container">
         <ResponsiveContainer width="100%" height={350}>
           <LineChart
@@ -336,6 +327,6 @@ export default function RefuelConsumptionChart({
           </p>
         </div>
       </div>
-    </div>
+    </Panel>
   );
 }

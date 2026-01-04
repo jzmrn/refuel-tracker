@@ -10,6 +10,7 @@ import {
   Legend,
 } from "recharts";
 import SummaryCard from "../common/SummaryCard";
+import Panel from "../common/Panel";
 import { GridLayout } from "../common/GridLayout";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
@@ -36,13 +37,12 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
 
   if (!priceData || priceData.length === 0) {
     return (
-      <div className="content-section">
-        <h4 className="heading-4 mb-3">{t.refuels.priceTrendsOverTime}</h4>
+      <Panel title={t.refuels.priceTrendsOverTime}>
         <div className="empty-state">
           <p>{t.refuels.noPriceTrendData}</p>
           <p className="text-sm mt-1">{t.refuels.addMoreRefuelEntries}</p>
         </div>
-      </div>
+      </Panel>
     );
   }
 
@@ -127,9 +127,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
   const yAxisMax = maxPrice + priceRange * 0.1;
 
   return (
-    <div className="content-section">
-      <h4 className="heading-4 mb-3">{t.refuels.priceTrendsOverTime}</h4>
-
+    <Panel title={t.refuels.priceTrendsOverTime}>
       <div className="chart-container">
         <ResponsiveContainer width="100%" height={300}>
           <LineChart
@@ -248,6 +246,6 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
           </GridLayout>
         )}
       </div>
-    </div>
+    </Panel>
   );
 }

@@ -11,7 +11,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CollectionsIcon from "@mui/icons-material/Collections";
-import { EmptyState } from "../common";
+import { EmptyPanel } from "../common";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 interface TimeSpanListProps {
@@ -39,7 +39,7 @@ export default function TimeSpanList({
 
   if (!timeSpans || timeSpans.length === 0) {
     return (
-      <EmptyState
+      <EmptyPanel
         icon={
           <AccessTimeIcon className="icon-xl text-gray-600 dark:text-gray-400 mx-auto mb-4" />
         }

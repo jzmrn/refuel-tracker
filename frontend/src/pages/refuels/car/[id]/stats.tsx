@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PageTransition from "@/components/common/PageTransition";
+import Panel from "@/components/common/Panel";
 import RefuelStats from "@/components/refuels/RefuelStats";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
@@ -80,11 +81,11 @@ export default function CarStats() {
         animationDirection={animationDirection}
         className="max-w-7xl mx-auto px-4 py-4 md:py-8"
       >
-        <div className="panel text-center">
+        <Panel>
           <p className="text-red-600 dark:text-red-400">
             {t.cars.failedToLoadCar}
           </p>
-        </div>
+        </Panel>
       </PageTransition>
     );
   }
@@ -117,12 +118,12 @@ export default function CarStats() {
       </div>
 
       {carLoading ? (
-        <div className="panel">
+        <Panel>
           <div className="flex flex-col items-center gap-2">
             <CircularProgress size={20} />
             <span className="text-secondary">{t.common.loading}</span>
           </div>
-        </div>
+        </Panel>
       ) : car ? (
         <div className="space-y-6">
           {/* Filter Options */}

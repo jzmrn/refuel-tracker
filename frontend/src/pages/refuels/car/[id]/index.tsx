@@ -1,4 +1,5 @@
 import { useRouter } from "next/router";
+import { useState } from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
@@ -6,6 +7,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PageTransition from "@/components/common/PageTransition";
 import Snackbar from "@/components/common/Snackbar";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
+import Panel from "@/components/common/Panel";
 import RefuelList from "@/components/refuels/RefuelList";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -14,6 +17,7 @@ import {
   useCarWithMinLoadTime,
   useRefuelMetricsWithMinLoadTime,
   useRevokeCarAccess,
+  useDeleteCar,
 } from "@/lib/hooks/useCars";
 import CircularProgress from "@mui/material/CircularProgress";
 
@@ -22,6 +26,9 @@ export default function CarDetails() {
   const router = useRouter();
   const { id } = router.query;
   const carId = typeof id === "string" ? id : undefined;
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { isVisible, animationDirection, navigateWithAnimation } =
     usePathAnimation({ currentPath: `/refuels/car/${id || ""}` });
@@ -40,6 +47,7 @@ export default function CarDetails() {
     });
 
   const revokeAccess = useRevokeCarAccess();
+  const deleteCar = useDeleteCar();
   const { snackbar, showError, showSuccess, hideSnackbar } = useSnackbar();
 
   const handleBack = () => {
@@ -74,6 +82,21 @@ export default function CarDetails() {
     }
   };
 
+  const handleDeleteCar = async () => {
+    if (!carId) return;
+    setIsDeleteDialogOpen(false);
+    setIsDeleting(true);
+    try {
+      await deleteCar.mutateAsync(carId);
+      // Navigate back immediately after successful deletion
+      navigateWithAnimation("/refuels");
+    } catch (error: any) {
+      console.error("Error deleting car:", error);
+      showError(error.response?.data?.detail || t.cars.failedToDeleteCar);
+      setIsDeleting(false);
+    }
+  };
+
   if (carError) {
     return (
       <PageTransition
@@ -81,11 +104,13 @@ export default function CarDetails() {
         animationDirection={animationDirection}
         className="max-w-7xl mx-auto px-4 py-4 md:py-8"
       >
-        <div className="panel text-center">
-          <p className="text-red-600 dark:text-red-400">
-            {t.cars.failedToLoadCar}
-          </p>
-        </div>
+        <Panel>
+          <div className="text-center">
+            <p className="text-red-600 dark:text-red-400">
+              {t.cars.failedToLoadCar}
+            </p>
+          </div>
+        </Panel>
       </PageTransition>
     );
   }
@@ -112,19 +137,19 @@ export default function CarDetails() {
         </div>
       </div>
 
-      {carLoading ? (
-        <div className="panel">
+      {carLoading && !isDeleting ? (
+        <Panel>
           <div className="flex flex-col items-center gap-2">
             <CircularProgress size={20} />
             <span className="text-secondary">{t.common.loading}</span>
           </div>
-        </div>
+        </Panel>
       ) : car ? (
         <div className="space-y-6">
           {/* Car Details */}
-          <div className="panel">
-            <div className="flex justify-between items-start mb-4">
-              <h2 className="heading-2">{car.name}</h2>
+          <Panel
+            title={car.name}
+            actions={
               <button
                 onClick={handleEditCar}
                 disabled={!car.is_owner}
@@ -137,7 +162,8 @@ export default function CarDetails() {
               >
                 <EditIcon className="icon text-gray-600 dark:text-gray-400" />
               </button>
-            </div>
+            }
+          >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <span className="text-sm text-secondary">{t.cars.year}:</span>
@@ -174,12 +200,12 @@ export default function CarDetails() {
                 </p>
               </div>
             </div>
-          </div>
+          </Panel>
 
           {/* Recent Refuel Events */}
-          <div className="panel">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="heading-2">{t.refuels.recentRefuels}</h2>
+          <Panel
+            title={t.refuels.recentRefuels}
+            actions={
               <div className="flex gap-2">
                 <button
                   onClick={handleViewStats}
@@ -196,58 +222,95 @@ export default function CarDetails() {
                   <AddIcon className="icon text-gray-600 dark:text-gray-400" />
                 </button>
               </div>
-            </div>
+            }
+          >
             <RefuelList refuels={refuels} loading={refuelsLoading} />
-          </div>
+          </Panel>
 
-          {/* Shared Users Section - only show if user is owner */}
+          {/* Shared Users & Actions - only show if user is owner */}
           {car.is_owner && (
-            <div className="panel">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="heading-2">{t.cars.sharedWith}</h2>
-                <button
-                  onClick={handleAddSharedUsers}
-                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  aria-label={t.cars.addSharedUsers}
-                >
-                  <AddIcon className="icon text-gray-600 dark:text-gray-400" />
-                </button>
-              </div>
-              {car.shared_users && car.shared_users.length > 0 ? (
-                <div className="space-y-3">
-                  {car.shared_users.map((user) => (
-                    <div
-                      key={user.user_id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700"
-                    >
-                      <div>
-                        <div className="font-medium text-gray-900 dark:text-white">
-                          {user.user_name}
-                        </div>
-                        <div className="text-sm text-secondary">
-                          {user.user_email}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveSharedUser(user.user_id)}
-                        disabled={revokeAccess.isPending}
-                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
-                        aria-label={t.cars.removeAccess}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+              {/* Shared Users Section */}
+              <Panel
+                title={t.cars.sharedWith}
+                actions={
+                  <button
+                    onClick={handleAddSharedUsers}
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    aria-label={t.cars.addSharedUsers}
+                  >
+                    <AddIcon className="icon text-gray-600 dark:text-gray-400" />
+                  </button>
+                }
+              >
+                {car.shared_users && car.shared_users.length > 0 ? (
+                  <div className="space-y-3">
+                    {car.shared_users.map((user) => (
+                      <div
+                        key={user.user_id}
+                        className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700"
                       >
-                        <DeleteIcon className="icon" />
-                      </button>
-                    </div>
-                  ))}
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white">
+                            {user.user_name}
+                          </div>
+                          <div className="text-sm text-secondary">
+                            {user.user_email}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveSharedUser(user.user_id)}
+                          disabled={revokeAccess.isPending}
+                          className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                          aria-label={t.cars.removeAccess}
+                        >
+                          <DeleteIcon className="icon" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-secondary text-sm">
+                    {t.cars.noSharedAccess}
+                  </p>
+                )}
+              </Panel>
+
+              {/* Actions Panel */}
+              <Panel title={t.common.actions}>
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    disabled={isDeleting}
+                    className="w-full btn-danger py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <CircularProgress size={20} sx={{ color: "white" }} />
+                        <span>{t.common.loading}</span>
+                      </>
+                    ) : (
+                      t.cars.deleteCar
+                    )}
+                  </button>
                 </div>
-              ) : (
-                <p className="text-secondary text-sm">
-                  {t.cars.noSharedAccess}
-                </p>
-              )}
+              </Panel>
             </div>
           )}
         </div>
       ) : null}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        title={t.cars.deleteCarTitle}
+        message={t.cars.deleteCarMessage}
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
+        onConfirm={handleDeleteCar}
+        onCancel={() => setIsDeleteDialogOpen(false)}
+        variant="danger"
+      />
 
       {/* Snackbar */}
       {snackbar.isVisible && (

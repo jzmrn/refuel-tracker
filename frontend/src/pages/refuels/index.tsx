@@ -3,6 +3,7 @@ import CarCard from "@/components/cars/CarCard";
 import Snackbar from "@/components/common/Snackbar";
 import PageTransition from "@/components/common/PageTransition";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import Panel from "@/components/common/Panel";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -50,9 +51,9 @@ export default function RefuelsIndex() {
       </div>
 
       {isLoading ? (
-        <div className="panel">
+        <Panel>
           <LoadingSpinner text={t.common.loading} />
-        </div>
+        </Panel>
       ) : (
         <div className="space-y-8">
           {/* My Cars Section */}
@@ -67,14 +68,15 @@ export default function RefuelsIndex() {
                 <AddIcon className="icon text-gray-600 dark:text-gray-400" />
               </button>
             </div>
-
             {ownedCars.length === 0 ? (
-              <div className="panel flex flex-col items-center justify-center py-12">
-                <DirectionsCarIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
-                <p className="text-secondary text-center">
-                  {t.cars.addFirstCar}
-                </p>
-              </div>
+              <Panel>
+                <div className="flex flex-col items-center justify-center py-12">
+                  <DirectionsCarIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
+                  <p className="text-secondary text-center">
+                    {t.cars.addFirstCar}
+                  </p>
+                </div>
+              </Panel>
             ) : (
               <div className="grid gap-4 lg:grid-cols-2">
                 {ownedCars.map((car) => (
@@ -93,14 +95,15 @@ export default function RefuelsIndex() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="heading-2">{t.cars.sharedWithMe}</h2>
             </div>
-
             {sharedCars.length === 0 ? (
-              <div className="panel flex flex-col items-center justify-center py-12">
-                <DirectionsCarIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
-                <p className="text-secondary text-center">
-                  {t.cars.noCarsSharedWithYou}
-                </p>
-              </div>
+              <Panel>
+                <div className="flex flex-col items-center justify-center py-12">
+                  <DirectionsCarIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
+                  <p className="text-secondary text-center">
+                    {t.cars.noCarsSharedWithYou}
+                  </p>
+                </div>
+              </Panel>
             ) : (
               <div className="grid gap-4 lg:grid-cols-2">
                 {sharedCars.map((car) => (

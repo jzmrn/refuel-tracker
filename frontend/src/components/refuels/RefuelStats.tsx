@@ -11,9 +11,10 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ScienceIcon from "@mui/icons-material/Science";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import NumbersIcon from "@mui/icons-material/Numbers";
-import { EmptyState } from "../common";
+import { EmptyPanel } from "../common";
 import { GridLayout } from "../common/GridLayout";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
+import Panel from "../common/Panel";
 
 interface RefuelStatsProps {
   statistics: RefuelStatistics | null;
@@ -29,16 +30,15 @@ export default function RefuelStats({
   const { t } = useTranslation();
   if (loading) {
     return (
-      <div className="panel">
-        <h2 className="heading-2 mb-4">{t.refuels.statistics}</h2>
+      <Panel title={t.refuels.statistics}>
         <LoadingSpinner text={t.refuels.loadingData} />
-      </div>
+      </Panel>
     );
   }
 
   if (!statistics) {
     return (
-      <EmptyState
+      <EmptyPanel
         icon={
           <BarChartIcon className="icon-xl text-gray-600 dark:text-gray-400 mx-auto mb-4" />
         }
@@ -56,8 +56,7 @@ export default function RefuelStats({
   return (
     <div className="space-y-6">
       {/* Summary Statistics Panel */}
-      <div className="panel">
-        <h2 className="heading-2 mb-4">{t.refuels.statistics}</h2>
+      <Panel title={t.refuels.statistics}>
         <GridLayout variant="stats">
           <SummaryCard
             title={t.refuels.totalCost}
@@ -103,18 +102,12 @@ export default function RefuelStats({
             iconBgColor="purple"
           />
         </GridLayout>
-      </div>
+      </Panel>
 
-      {/* Charts Panel */}
-      <div className="panel">
-        <h2 className="heading-2 mb-4">{t.refuels.statistics}</h2>
+      <RefuelPriceChart priceData={statistics.price_trends} />
 
-        {/* Price Chart */}
-        <RefuelPriceChart priceData={statistics.price_trends} />
-
-        {/* Consumption Chart */}
-        {refuelData && <RefuelConsumptionChart refuelData={refuelData} />}
-      </div>
+      {/* Consumption Chart Panel */}
+      {refuelData && <RefuelConsumptionChart refuelData={refuelData} />}
     </div>
   );
 }

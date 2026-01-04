@@ -467,6 +467,9 @@ export interface TranslationStructure {
     firstRefuel: string;
     lastRefuel: string;
     timeline: string;
+    deleteCar: string;
+    deleteCarTitle: string;
+    deleteCarMessage: string;
   };
 
   // Fuel Prices

@@ -1,9 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import apiService, {
-  GasStationResponse,
-  FavoriteStationResponse,
-  GasStationSearchRequest,
-} from "@/lib/api";
+import apiService, { GasStationSearchRequest } from "@/lib/api";
 import { useWithMinLoadTime } from "./useWithMinLoadTime";
 
 // Query Keys - centralized for consistency

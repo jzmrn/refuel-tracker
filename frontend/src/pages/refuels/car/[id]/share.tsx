@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
+import { useQuery } from "@tanstack/react-query";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckIcon from "@mui/icons-material/Check";
 import AddIcon from "@mui/icons-material/Add";
 import PageTransition from "@/components/common/PageTransition";
+import Panel from "@/components/common/Panel";
 import Snackbar from "@/components/common/Snackbar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -12,6 +14,7 @@ import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
 import { useCarWithMinLoadTime, useShareCar } from "@/lib/hooks/useCars";
 import { UserSearchResult, apiService } from "@/lib/api";
 import CircularProgress from "@mui/material/CircularProgress";
+import { useDebounce } from "@/lib/hooks/useDebounce";
 
 export default function AddSharedUsers() {
   const { t } = useTranslation();
@@ -34,67 +37,57 @@ export default function AddSharedUsers() {
   const { snackbar, showError, hideSnackbar } = useSnackbar();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<UserSearchResult[]>([]);
-  const [searching, setSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Debounce search query to avoid too many API calls
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const shouldSearch = debouncedSearchQuery.trim().length >= 3;
+  const isTyping = searchQuery !== debouncedSearchQuery;
+
+  // Use React Query for search results with 1-minute cache
+  const {
+    data: searchResults = [],
+    isFetching: searching,
+    error: searchError,
+  } = useQuery({
+    queryKey: ["searchUsers", debouncedSearchQuery],
+    queryFn: () => apiService.searchUsers(debouncedSearchQuery),
+    enabled: shouldSearch,
+    staleTime: 60000, // Cache valid for 1 minute
+  });
+
+  // Determine if we should show loading state
+  const isSearching = shouldSearch && (searching || isTyping);
+
+  // Filter out already shared users and already selected users
+  const filteredSearchResults = useMemo(() => {
+    // Don't show old results while typing a new query
+    if (!shouldSearch || isTyping) return [];
+    const existingUserIds = car?.shared_users?.map((u) => u.user_id) || [];
+    const selectedUserIds = selectedUsers.map((u) => u.id);
+    return searchResults.filter(
+      (user) =>
+        !existingUserIds.includes(user.id) &&
+        !selectedUserIds.includes(user.id),
+    );
+  }, [searchResults, car?.shared_users, selectedUsers, shouldSearch, isTyping]);
+
+  // Handle search errors
+  useEffect(() => {
+    if (searchError) {
+      console.error("Error searching users:", searchError);
+      showError(t.cars.failedToSearchUsers);
+    }
+  }, [searchError, showError, t.cars.failedToSearchUsers]);
 
   const handleBack = () => {
     navigateBackWithAnimation();
   };
 
-  const performSearch = useCallback(
-    async (query: string) => {
-      if (query.trim().length < 3) {
-        setSearchResults([]);
-        return;
-      }
-
-      try {
-        setSearching(true);
-        const results = await apiService.searchUsers(query);
-        // Filter out already shared users and already selected users
-        const existingUserIds = car?.shared_users?.map((u) => u.user_id) || [];
-        const selectedUserIds = selectedUsers.map((u) => u.id);
-        const filteredResults = results.filter(
-          (user) =>
-            !existingUserIds.includes(user.id) &&
-            !selectedUserIds.includes(user.id),
-        );
-        setSearchResults(filteredResults);
-      } catch (error) {
-        console.error("Error searching users:", error);
-        showError(t.cars.failedToSearchUsers);
-      } finally {
-        setSearching(false);
-      }
-    },
-    [car?.shared_users, selectedUsers, showError, t.cars.failedToSearchUsers],
-  );
-
-  // Auto-search with debounce when query has 3+ characters
-  useEffect(() => {
-    if (searchQuery.trim().length < 3) {
-      setSearchResults([]);
-      setSearching(false);
-      return;
-    }
-
-    // Show loading immediately when typing 3+ chars
-    setSearching(true);
-
-    const timeoutId = setTimeout(() => {
-      performSearch(searchQuery);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, performSearch]);
-
   const handleSelectUser = (user: UserSearchResult) => {
     if (!selectedUsers.find((u) => u.id === user.id)) {
       setSelectedUsers([...selectedUsers, user]);
-      // Remove from search results
-      setSearchResults(searchResults.filter((u) => u.id !== user.id));
     }
   };
 
@@ -130,11 +123,11 @@ export default function AddSharedUsers() {
         animationDirection={animationDirection}
         className="max-w-7xl mx-auto px-4 py-4 md:py-8"
       >
-        <div className="panel text-center">
+        <Panel>
           <p className="text-red-600 dark:text-red-400">
             {t.cars.failedToLoadCar}
           </p>
-        </div>
+        </Panel>
       </PageTransition>
     );
   }
@@ -167,17 +160,16 @@ export default function AddSharedUsers() {
       </div>
 
       {carLoading ? (
-        <div className="panel">
+        <Panel>
           <div className="flex flex-col items-center gap-2">
             <CircularProgress size={20} />
             <span className="text-secondary">{t.common.loading}</span>
           </div>
-        </div>
+        </Panel>
       ) : car ? (
         <div className="max-w-2xl mx-auto space-y-6">
           {/* Search Section */}
-          <div className="panel">
-            <h2 className="heading-2 mb-6">{t.cars.searchUsers}</h2>
+          <Panel title={t.cars.searchUsers}>
             <p className="text-secondary text-sm mb-4">
               {t.cars.selectUsersToShare}
             </p>
@@ -193,25 +185,23 @@ export default function AddSharedUsers() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={t.cars.searchUserPlaceholder}
-                    className={`input w-full ${searching ? "pr-10" : ""}`}
+                    className={`input w-full ${isSearching ? "pr-10" : ""}`}
                   />
-                  {searching && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <CircularProgress size={16} />
+                  {isSearching && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-600 dark:text-primary-400">
+                      <CircularProgress size={16} color="inherit" />
                     </div>
                   )}
                 </div>
-                {searchQuery.length > 0 && searchQuery.length < 3 && (
-                  <p className="text-secondary text-xs mt-1">
-                    {t.cars.typeAtLeastThreeChars}
-                  </p>
-                )}
+                <p className="text-secondary text-xs mt-1">
+                  {t.cars.typeAtLeastThreeChars}
+                </p>
               </div>
 
               {/* Search Results */}
-              {searchResults.length > 0 && (
+              {filteredSearchResults.length > 0 && (
                 <div className="space-y-2">
-                  {searchResults.map((user) => (
+                  {filteredSearchResults.map((user) => (
                     <div
                       key={user.id}
                       className="flex items-center justify-between p-3 rounded-lg border border-gray-300 dark:border-gray-600"
@@ -237,21 +227,29 @@ export default function AddSharedUsers() {
                 </div>
               )}
 
-              {searchQuery.length >= 3 &&
-                searchResults.length === 0 &&
-                !searching && (
+              {/* Loading state - show when searching to avoid flickering */}
+              {shouldSearch &&
+                isSearching &&
+                filteredSearchResults.length === 0 && (
+                  <p className="text-secondary text-sm">{t.common.loading}</p>
+                )}
+
+              {/* No results - only show when not searching */}
+              {shouldSearch &&
+                !isSearching &&
+                filteredSearchResults.length === 0 && (
                   <p className="text-secondary text-sm">
                     {t.cars.noUsersFound}
                   </p>
                 )}
             </div>
-          </div>
+          </Panel>
 
           {/* Selected Users Section - Always visible */}
-          <div className="panel">
-            <h2 className="heading-2 mb-4">
-              {t.cars.selectedUsers} ({selectedUsers.length})
-            </h2>
+          <Panel
+            title={t.cars.selectedUsers}
+            actions={<span className="heading-2">{selectedUsers.length}</span>}
+          >
             {selectedUsers.length > 0 ? (
               <div className="space-y-3">
                 {selectedUsers.map((user) => (
@@ -301,7 +299,7 @@ export default function AddSharedUsers() {
                 </>
               )}
             </button>
-          </div>
+          </Panel>
         </div>
       ) : null}
 

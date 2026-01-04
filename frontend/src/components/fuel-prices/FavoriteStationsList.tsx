@@ -1,6 +1,6 @@
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { FavoriteStationResponse, GasStationResponse } from "@/lib/api";
-import EmptyState from "@/components/common/EmptyState";
+import EmptyPanel from "@/components/common/EmptyPanel";
 import StationCard from "./StationCard";
 import { LoadingSpinner } from "../common";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -56,7 +56,7 @@ export default function FavoriteStationsList({
 
   if (favorites.length === 0) {
     return (
-      <EmptyState
+      <EmptyPanel
         icon="⭐"
         title={t.fuelPrices.noFavorites}
         subtitle={t.fuelPrices.addStationsToFavorites}
