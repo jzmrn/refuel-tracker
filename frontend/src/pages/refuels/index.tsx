@@ -1,21 +1,17 @@
+import { useRouter } from "next/router";
 import AddIcon from "@mui/icons-material/Add";
 import CarCard from "@/components/cars/CarCard";
 import Snackbar from "@/components/common/Snackbar";
-import PageTransition from "@/components/common/PageTransition";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import Panel from "@/components/common/Panel";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
 import { useCarsWithMinLoadTime } from "@/lib/hooks/useCars";
 
 export default function RefuelsIndex() {
   const { t } = useTranslation();
-
-  // Use smart path-based animations
-  const { isVisible, animationDirection, navigateWithAnimation } =
-    usePathAnimation({ currentPath: "/refuels" });
+  const router = useRouter();
 
   // Fetch cars with React Query (using min load time to avoid flickering)
   const { data: cars = [], isLoading } = useCarsWithMinLoadTime();
@@ -27,19 +23,15 @@ export default function RefuelsIndex() {
   const { snackbar, hideSnackbar } = useSnackbar();
 
   const handleAddCar = () => {
-    navigateWithAnimation("/refuels/car");
+    router.push("/refuels/car");
   };
 
   const handleCarClick = (carId: string) => {
-    navigateWithAnimation(`/refuels/car/${carId}`);
+    router.push(`/refuels/car/${carId}`);
   };
 
   return (
-    <PageTransition
-      isVisible={isVisible}
-      animationDirection={animationDirection}
-      className="max-w-7xl mx-auto px-4 py-4 md:py-8"
-    >
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       {/* Header */}
       <div className="mb-6 md:mb-8 flex justify-between items-start">
         <div>
@@ -128,6 +120,6 @@ export default function RefuelsIndex() {
           isVisible={true}
         />
       )}
-    </PageTransition>
+    </div>
   );
 }

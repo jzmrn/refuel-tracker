@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import PageTransition from "@/components/common/PageTransition";
 import Panel from "@/components/common/Panel";
 import RefuelStats from "@/components/refuels/RefuelStats";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
 import {
   useCarWithMinLoadTime,
   useRefuelMetricsWithMinLoadTime,
@@ -20,9 +18,6 @@ export default function CarStats() {
   const router = useRouter();
   const { id } = router.query;
   const carId = typeof id === "string" ? id : undefined;
-
-  const { isVisible, animationDirection, navigateBackWithAnimation } =
-    usePathAnimation({ currentPath: `/refuels/car/${id || ""}/stats` });
 
   // Fetch car details
   const {
@@ -67,7 +62,7 @@ export default function CarStats() {
     useRefuelStatisticsWithMinLoadTime(carId, getFilterDates());
 
   const handleBack = () => {
-    navigateBackWithAnimation();
+    router.back();
   };
 
   const handleFilterChange = (filter: FilterType) => {
@@ -76,26 +71,18 @@ export default function CarStats() {
 
   if (carError) {
     return (
-      <PageTransition
-        isVisible={isVisible}
-        animationDirection={animationDirection}
-        className="max-w-7xl mx-auto px-4 py-4 md:py-8"
-      >
+      <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
         <Panel>
           <p className="text-red-600 dark:text-red-400">
             {t.cars.failedToLoadCar}
           </p>
         </Panel>
-      </PageTransition>
+      </div>
     );
   }
 
   return (
-    <PageTransition
-      isVisible={isVisible}
-      animationDirection={animationDirection}
-      className="max-w-7xl mx-auto px-4 py-4 md:py-8"
-    >
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -173,6 +160,6 @@ export default function CarStats() {
           />
         </div>
       ) : null}
-    </PageTransition>
+    </div>
   );
 }

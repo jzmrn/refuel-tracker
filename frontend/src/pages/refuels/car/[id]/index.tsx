@@ -5,14 +5,12 @@ import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import BarChartIcon from "@mui/icons-material/BarChart";
-import PageTransition from "@/components/common/PageTransition";
 import Snackbar from "@/components/common/Snackbar";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import Panel from "@/components/common/Panel";
 import RefuelList from "@/components/refuels/RefuelList";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
 import {
   useCarWithMinLoadTime,
   useRefuelMetricsWithMinLoadTime,
@@ -29,9 +27,6 @@ export default function CarDetails() {
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const { isVisible, animationDirection, navigateWithAnimation } =
-    usePathAnimation({ currentPath: `/refuels/car/${id || ""}` });
 
   // Fetch car details
   const {
@@ -52,23 +47,23 @@ export default function CarDetails() {
 
   const handleBack = () => {
     // Navigate explicitly to cars list to avoid history stack issues
-    navigateWithAnimation("/refuels");
+    router.push("/refuels");
   };
 
   const handleEditCar = () => {
-    navigateWithAnimation(`/refuels/car/${carId}/details`);
+    router.push(`/refuels/car/${carId}/details`);
   };
 
   const handleAddRefuel = () => {
-    navigateWithAnimation(`/refuels/car/${carId}/add-refuel`);
+    router.push(`/refuels/car/${carId}/add-refuel`);
   };
 
   const handleAddSharedUsers = () => {
-    navigateWithAnimation(`/refuels/car/${carId}/share`);
+    router.push(`/refuels/car/${carId}/share`);
   };
 
   const handleViewStats = () => {
-    navigateWithAnimation(`/refuels/car/${carId}/stats`);
+    router.push(`/refuels/car/${carId}/stats`);
   };
 
   const handleRemoveSharedUser = async (userId: string) => {
@@ -89,7 +84,7 @@ export default function CarDetails() {
     try {
       await deleteCar.mutateAsync(carId);
       // Navigate back immediately after successful deletion
-      navigateWithAnimation("/refuels");
+      router.push("/refuels");
     } catch (error: any) {
       console.error("Error deleting car:", error);
       showError(error.response?.data?.detail || t.cars.failedToDeleteCar);
@@ -99,11 +94,7 @@ export default function CarDetails() {
 
   if (carError) {
     return (
-      <PageTransition
-        isVisible={isVisible}
-        animationDirection={animationDirection}
-        className="max-w-7xl mx-auto px-4 py-4 md:py-8"
-      >
+      <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
         <Panel>
           <div className="text-center">
             <p className="text-red-600 dark:text-red-400">
@@ -111,16 +102,12 @@ export default function CarDetails() {
             </p>
           </div>
         </Panel>
-      </PageTransition>
+      </div>
     );
   }
 
   return (
-    <PageTransition
-      isVisible={isVisible}
-      animationDirection={animationDirection}
-      className="max-w-7xl mx-auto px-4 py-4 md:py-8"
-    >
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -321,6 +308,6 @@ export default function CarDetails() {
           isVisible={true}
         />
       )}
-    </PageTransition>
+    </div>
   );
 }

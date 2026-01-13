@@ -5,12 +5,10 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckIcon from "@mui/icons-material/Check";
 import AddIcon from "@mui/icons-material/Add";
-import PageTransition from "@/components/common/PageTransition";
 import Panel from "@/components/common/Panel";
 import Snackbar from "@/components/common/Snackbar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
 import { useCarWithMinLoadTime, useShareCar } from "@/lib/hooks/useCars";
 import { UserSearchResult, apiService } from "@/lib/api";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -21,11 +19,6 @@ export default function AddSharedUsers() {
   const router = useRouter();
   const { id } = router.query;
   const carId = typeof id === "string" ? id : undefined;
-
-  const { isVisible, animationDirection, navigateBackWithAnimation } =
-    usePathAnimation({
-      currentPath: `/refuels/car/${id || ""}/share`,
-    });
 
   const {
     data: car,
@@ -82,7 +75,7 @@ export default function AddSharedUsers() {
   }, [searchError, showError, t.cars.failedToSearchUsers]);
 
   const handleBack = () => {
-    navigateBackWithAnimation();
+    router.back();
   };
 
   const handleSelectUser = (user: UserSearchResult) => {
@@ -106,8 +99,8 @@ export default function AddSharedUsers() {
           shareCar.mutateAsync({ carId, userId: user.id }),
         ),
       );
-      // Navigate back to car details with animation
-      navigateBackWithAnimation();
+      // Navigate back to car details
+      router.back();
     } catch (error: any) {
       console.error("Error sharing car:", error);
       showError(error.response?.data?.detail || t.cars.failedToShareCar);
@@ -118,26 +111,18 @@ export default function AddSharedUsers() {
 
   if (carError) {
     return (
-      <PageTransition
-        isVisible={isVisible}
-        animationDirection={animationDirection}
-        className="max-w-7xl mx-auto px-4 py-4 md:py-8"
-      >
+      <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
         <Panel>
           <p className="text-red-600 dark:text-red-400">
             {t.cars.failedToLoadCar}
           </p>
         </Panel>
-      </PageTransition>
+      </div>
     );
   }
 
   return (
-    <PageTransition
-      isVisible={isVisible}
-      animationDirection={animationDirection}
-      className="max-w-7xl mx-auto px-4 py-4 md:py-8"
-    >
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -312,6 +297,6 @@ export default function AddSharedUsers() {
           isVisible={true}
         />
       )}
-    </PageTransition>
+    </div>
   );
 }

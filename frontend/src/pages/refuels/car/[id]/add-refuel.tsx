@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import PageTransition from "@/components/common/PageTransition";
 import Panel from "@/components/common/Panel";
 import Snackbar from "@/components/common/Snackbar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
 import {
   useCreateRefuelMetric,
   useCarWithMinLoadTime,
@@ -23,13 +21,6 @@ export default function AddRefuel() {
   const router = useRouter();
   const { id } = router.query;
   const carId = typeof id === "string" ? id : undefined;
-
-  const {
-    isVisible,
-    animationDirection,
-    navigateBackWithAnimation,
-    navigateWithAnimation,
-  } = usePathAnimation({ currentPath: `/refuels/car/${id || ""}/add-refuel` });
 
   const { data: car, isLoading: carLoading } = useCarWithMinLoadTime(carId);
   const createRefuel = useCreateRefuelMetric();
@@ -78,7 +69,7 @@ export default function AddRefuel() {
   }, []);
 
   const handleBack = () => {
-    navigateBackWithAnimation();
+    router.back();
   };
 
   const handleChange = (
@@ -180,8 +171,8 @@ export default function AddRefuel() {
       };
       await createRefuel.mutateAsync(submissionData);
 
-      // Navigate back with animation
-      navigateWithAnimation(`/refuels/car/${carId}`);
+      // Navigate back
+      router.push(`/refuels/car/${carId}`);
     } catch (error: any) {
       console.error("Error creating refuel:", error);
       showError(error.response?.data?.detail || t.refuels.errorAddingRefuel);
@@ -193,11 +184,7 @@ export default function AddRefuel() {
   const totalCost = formData.price * formData.amount;
 
   return (
-    <PageTransition
-      isVisible={isVisible}
-      animationDirection={animationDirection}
-      className="max-w-7xl mx-auto px-4 py-4 md:py-8"
-    >
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -472,6 +459,6 @@ export default function AddRefuel() {
           isVisible={true}
         />
       )}
-    </PageTransition>
+    </div>
   );
 }

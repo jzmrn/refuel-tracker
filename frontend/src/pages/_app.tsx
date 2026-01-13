@@ -1,8 +1,8 @@
 import type { AppProps } from "next/app";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Layout from "@/components/common/Layout";
+import PageTransitionWrapper from "@/components/common/PageTransitionWrapper";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { UserProvider } from "@/lib/auth/UserContext";
 import {
@@ -21,8 +21,6 @@ if (typeof window !== "undefined") {
 }
 
 function AppContent({ Component, pageProps }: AppProps) {
-  const router = useRouter();
-
   useEffect(() => {
     // Re-apply theme on mount
     const theme = getInitialTheme();
@@ -32,7 +30,9 @@ function AppContent({ Component, pageProps }: AppProps) {
 
   return (
     <Layout>
-      <Component {...pageProps} />
+      <PageTransitionWrapper>
+        <Component {...pageProps} />
+      </PageTransitionWrapper>
     </Layout>
   );
 }

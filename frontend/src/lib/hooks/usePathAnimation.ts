@@ -5,9 +5,10 @@ export type AnimationDirection = "left" | "right" | null;
 
 interface PathAnimationOptions {
   /**
-   * The current path of the page
+   * Optional override for the current path. If not provided, router.asPath is used.
+   * This is mainly useful for testing or special cases.
    */
-  currentPath: string;
+  currentPath?: string;
   /**
    * Whether to disable animations entirely
    */
@@ -16,7 +17,7 @@ interface PathAnimationOptions {
 
 /**
  * Hook to manage smart path-based page animations.
- * 
+ *
  * Animation rules:
  * - Going from higher level to lower level (e.g., /fuel-prices to /fuel-prices/search):
  *   Animates out to the left, new content fades in from the right
@@ -26,14 +27,25 @@ interface PathAnimationOptions {
  * - Switching to unrelated paths (no common base): no animation
  */
 export function usePathAnimation({
-  currentPath,
+  currentPath: currentPathOverride,
   disableAnimations = false,
-}: PathAnimationOptions) {
+}: PathAnimationOptions = {}) {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(true);
   const [animationDirection, setAnimationDirection] =
     useState<AnimationDirection>(null);
   const previousPathRef = useRef<string | null>(null);
+
+  // Use router.asPath as the source of truth, with optional override
+  // Normalize the path by removing query params and trailing slashes
+  const normalizePath = (path: string) => {
+    return path.split("?")[0].replace(/\/$/, "") || "/";
+  };
+
+  // Get the actual current path from the router once it's ready
+  const actualCurrentPath = router.isReady
+    ? normalizePath(currentPathOverride || router.asPath)
+    : null;
 
   // Calculate animation direction based on path hierarchy
   const calculateAnimationDirection = (
@@ -100,7 +112,8 @@ export function usePathAnimation({
 
   // Set up animation on mount and route changes
   useEffect(() => {
-    if (!router.isReady) return;
+    // Wait until router is ready and we have a valid path
+    if (!router.isReady || !actualCurrentPath) return;
 
     // Get the previous path from storage
     const storedPrevPath =
@@ -108,9 +121,12 @@ export function usePathAnimation({
         ? sessionStorage.getItem("pathAnimation.previousPath")
         : null;
 
-    if (storedPrevPath && storedPrevPath !== currentPath) {
+    if (storedPrevPath && storedPrevPath !== actualCurrentPath) {
       // Calculate direction for entrance animation
-      const direction = calculateAnimationDirection(storedPrevPath, currentPath);
+      const direction = calculateAnimationDirection(
+        storedPrevPath,
+        actualCurrentPath
+      );
       setAnimationDirection(direction);
     } else {
       // First visit or same page - no animation
@@ -121,29 +137,32 @@ export function usePathAnimation({
     setIsVisible(true);
 
     // Store current path for next navigation
-    previousPathRef.current = currentPath;
+    previousPathRef.current = actualCurrentPath;
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("pathAnimation.previousPath", currentPath);
+      sessionStorage.setItem("pathAnimation.previousPath", actualCurrentPath);
     }
-  }, [router.asPath, router.isReady, currentPath, disableAnimations]); // Watch for route changes
+  }, [router.asPath, router.isReady, actualCurrentPath, disableAnimations]); // Watch for route changes
 
   /**
    * Navigate to a new path with animation
    */
   const navigateWithAnimation = (targetPath: string) => {
-    if (disableAnimations) {
+    if (disableAnimations || !actualCurrentPath) {
       router.push(targetPath);
       return;
     }
 
-    // Calculate exit animation direction
-    const direction = calculateAnimationDirection(currentPath, targetPath);
+    // Calculate exit animation direction using the actual current path
+    const direction = calculateAnimationDirection(
+      actualCurrentPath,
+      targetPath
+    );
     setAnimationDirection(direction);
     setIsVisible(false);
 
     // Store paths for the next page
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("pathAnimation.previousPath", currentPath);
+      sessionStorage.setItem("pathAnimation.previousPath", actualCurrentPath);
     }
 
     // Wait for exit animation, then navigate
@@ -156,7 +175,7 @@ export function usePathAnimation({
    * Navigate back with animation
    */
   const navigateBackWithAnimation = () => {
-    if (disableAnimations) {
+    if (disableAnimations || !actualCurrentPath) {
       router.back();
       return;
     }
@@ -164,7 +183,7 @@ export function usePathAnimation({
     // Since we're going back, we're likely going to a higher level (shallower path)
     // We'll let the browser's back button handle the navigation,
     // but we set up the exit animation
-    
+
     // Guess the direction based on current path depth
     // Going back usually means going to a shallower path
     setAnimationDirection("right");
@@ -172,7 +191,7 @@ export function usePathAnimation({
 
     // Store current path so the previous page knows where we came from
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("pathAnimation.previousPath", currentPath);
+      sessionStorage.setItem("pathAnimation.previousPath", actualCurrentPath);
     }
 
     setTimeout(() => {

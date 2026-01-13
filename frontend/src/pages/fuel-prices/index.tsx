@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import FavoriteStationsList from "@/components/fuel-prices/FavoriteStationsList";
 import Snackbar from "@/components/common/Snackbar";
-import PageTransition from "@/components/common/PageTransition";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
 import {
   useFavoriteStationsWithMinLoadTime,
   useRefreshFavorites,
@@ -18,10 +17,7 @@ const SORT_BY_STORAGE_KEY = "fuelPrices.sortBy";
 
 export default function FuelPrices() {
   const { t } = useTranslation();
-
-  // Use smart path-based animations
-  const { isVisible, animationDirection, navigateWithAnimation } =
-    usePathAnimation({ currentPath: "/fuel-prices" });
+  const router = useRouter();
 
   // React Query hooks - data persists across navigation
   const {
@@ -56,21 +52,15 @@ export default function FuelPrices() {
   };
 
   const handleSearchClick = () => {
-    navigateWithAnimation("/fuel-prices/stations");
+    router.push("/fuel-prices/stations");
   };
 
   const handleNavigateToDetail = (stationId: string) => {
-    navigateWithAnimation(
-      `/fuel-prices/stations/${encodeURIComponent(stationId)}`,
-    );
+    router.push(`/fuel-prices/stations/${encodeURIComponent(stationId)}`);
   };
 
   return (
-    <PageTransition
-      isVisible={isVisible}
-      animationDirection={animationDirection}
-      className="max-w-7xl mx-auto px-4 py-4 md:py-8"
-    >
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       {/* Header */}
       <div className="mb-6 md:mb-8 flex justify-between items-start">
         <div>
@@ -161,6 +151,6 @@ export default function FuelPrices() {
         isVisible={snackbar.isVisible}
         onClose={hideSnackbar}
       />
-    </PageTransition>
+    </div>
   );
 }

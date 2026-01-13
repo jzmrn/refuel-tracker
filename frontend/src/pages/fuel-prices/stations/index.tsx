@@ -6,11 +6,9 @@ import TuneIcon from "@mui/icons-material/Tune";
 import SearchStationsForm from "@/components/fuel-prices/SearchStationsForm";
 import FavoriteStationsList from "@/components/fuel-prices/FavoriteStationsList";
 import Snackbar from "@/components/common/Snackbar";
-import PageTransition from "@/components/common/PageTransition";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useDelayedLoading } from "@/lib/hooks/useDelayedLoading";
-import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
 import {
   useFavoriteStations,
   useAddFavoriteStation,
@@ -24,14 +22,6 @@ type SortByType = "e5" | "e10" | "diesel" | "dist";
 export default function SearchStations() {
   const { t } = useTranslation();
   const router = useRouter();
-
-  // Use smart path-based animations
-  const {
-    isVisible,
-    animationDirection,
-    navigateWithAnimation,
-    navigateBackWithAnimation,
-  } = usePathAnimation({ currentPath: "/fuel-prices/stations" });
 
   const [searchSortBy, setSearchSortBy] = useState<string>("dist");
   // Initialize searchParams from URL on initial load to avoid loading flash
@@ -129,7 +119,7 @@ export default function SearchStations() {
   ]);
 
   const handleBack = () => {
-    navigateWithAnimation("/fuel-prices");
+    router.push("/fuel-prices");
   };
 
   const handleSearch = (
@@ -217,19 +207,13 @@ export default function SearchStations() {
   };
 
   const handleNavigateToDetail = (stationId: string) => {
-    navigateWithAnimation(
-      `/fuel-prices/stations/${encodeURIComponent(stationId)}`,
-    );
+    router.push(`/fuel-prices/stations/${encodeURIComponent(stationId)}`);
   };
 
   const favoriteIds = new Set(favorites.map((f) => f.station_id));
 
   return (
-    <PageTransition
-      isVisible={isVisible}
-      animationDirection={animationDirection}
-      className="max-w-7xl mx-auto px-4 py-4 md:py-8"
-    >
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -365,6 +349,6 @@ export default function SearchStations() {
         isVisible={snackbar.isVisible}
         onClose={hideSnackbar}
       />
-    </PageTransition>
+    </div>
   );
 }

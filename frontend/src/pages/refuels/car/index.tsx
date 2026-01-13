@@ -1,26 +1,16 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import PageTransition from "@/components/common/PageTransition";
 import { StandardForm } from "@/components/common/StandardForm";
 import Snackbar from "@/components/common/Snackbar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
 import { useCreateCar } from "@/lib/hooks/useCars";
 import { CarCreate } from "@/lib/api";
 
 export default function AddCar() {
   const { t } = useTranslation();
   const router = useRouter();
-
-  const {
-    isVisible,
-    animationDirection,
-    navigateBackWithAnimation,
-    navigateWithAnimation,
-  } = usePathAnimation({ currentPath: "/refuels/car" });
-
   const createCar = useCreateCar();
   const { snackbar, showError, hideSnackbar } = useSnackbar();
 
@@ -39,7 +29,7 @@ export default function AddCar() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleBack = () => {
-    navigateBackWithAnimation();
+    router.back();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,8 +55,8 @@ export default function AddCar() {
       };
       await createCar.mutateAsync(createData);
 
-      // Navigate back to cars list with animation
-      navigateWithAnimation("/refuels");
+      // Navigate back to cars list
+      router.push("/refuels");
     } catch (error: any) {
       console.error("Error creating car:", error);
       showError(error.response?.data?.detail || t.cars.failedToCreateCar);
@@ -76,11 +66,7 @@ export default function AddCar() {
   };
 
   return (
-    <PageTransition
-      isVisible={isVisible}
-      animationDirection={animationDirection}
-      className="max-w-7xl mx-auto px-4 py-4 md:py-8"
-    >
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -205,6 +191,6 @@ export default function AddCar() {
           isVisible={true}
         />
       )}
-    </PageTransition>
+    </div>
   );
 }

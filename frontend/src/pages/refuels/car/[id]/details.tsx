@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import PageTransition from "@/components/common/PageTransition";
 import Snackbar from "@/components/common/Snackbar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
 import { useCarWithMinLoadTime, useUpdateCar } from "@/lib/hooks/useCars";
 import { CarUpdate } from "@/lib/api";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -15,9 +13,6 @@ export default function EditCarDetails() {
   const router = useRouter();
   const { id } = router.query;
   const carId = typeof id === "string" ? id : undefined;
-
-  const { isVisible, animationDirection, navigateBackWithAnimation } =
-    usePathAnimation({ currentPath: `/refuels/car/${id || ""}/details` });
 
   const {
     data: car,
@@ -70,7 +65,7 @@ export default function EditCarDetails() {
   }, [car]);
 
   const handleBack = () => {
-    navigateBackWithAnimation();
+    router.back();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,8 +90,8 @@ export default function EditCarDetails() {
       };
       await updateCar.mutateAsync({ carId, update: updateData });
 
-      // Navigate back to car details with backward animation
-      navigateBackWithAnimation();
+      // Navigate back to car details
+      router.back();
     } catch (error: any) {
       console.error("Error updating car:", error);
       showError(error.response?.data?.detail || t.cars.failedToUpdateCar);
@@ -107,26 +102,18 @@ export default function EditCarDetails() {
 
   if (carError) {
     return (
-      <PageTransition
-        isVisible={isVisible}
-        animationDirection={animationDirection}
-        className="max-w-7xl mx-auto px-4 py-4 md:py-8"
-      >
+      <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
         <div className="panel text-center">
           <p className="text-red-600 dark:text-red-400">
             {t.cars.failedToLoadCar}
           </p>
         </div>
-      </PageTransition>
+      </div>
     );
   }
 
   return (
-    <PageTransition
-      isVisible={isVisible}
-      animationDirection={animationDirection}
-      className="max-w-7xl mx-auto px-4 py-4 md:py-8"
-    >
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -271,6 +258,6 @@ export default function EditCarDetails() {
           isVisible={true}
         />
       )}
-    </PageTransition>
+    </div>
   );
 }

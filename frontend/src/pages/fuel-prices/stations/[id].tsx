@@ -1,12 +1,10 @@
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Snackbar from "@/components/common/Snackbar";
-import PageTransition from "@/components/common/PageTransition";
 import { useSnackbar } from "@/lib/useSnackbar";
-import { usePathAnimation } from "@/lib/hooks/usePathAnimation";
 import {
   useFavoriteStations,
   useRemoveFavoriteStation,
@@ -19,18 +17,19 @@ export default function StationDetails() {
   const { t } = useTranslation();
   const { id } = router.query;
 
-  // Use smart path-based animations
-  const { isVisible, animationDirection, navigateBackWithAnimation } =
-    usePathAnimation({
-      currentPath: `/fuel-prices/stations/${id || ""}`,
-    });
+  // Keep track of the last valid ID to prevent flashing during navigation
+  const lastValidIdRef = useRef<string | undefined>(undefined);
+  if (typeof id === "string") {
+    lastValidIdRef.current = id;
+  }
+  const stableId = typeof id === "string" ? id : lastValidIdRef.current;
 
   // Fetch station details with caching and minimum loading time
   const {
     data: stationData,
     isLoading,
     error,
-  } = useStationDetailsWithMinLoadTime(typeof id === "string" ? id : undefined);
+  } = useStationDetailsWithMinLoadTime(stableId);
 
   const [isRemoving, setIsRemoving] = useState(false);
   const { snackbar, showError, showSuccess, hideSnackbar } = useSnackbar();
@@ -40,7 +39,8 @@ export default function StationDetails() {
   const removeFavorite = useRemoveFavoriteStation();
 
   const isFavorite =
-    typeof id === "string" && favorites.some((f) => f.station_id === id);
+    typeof stableId === "string" &&
+    favorites.some((f) => f.station_id === stableId);
 
   // Show error if fetch failed
   if (error && !isLoading) {
@@ -48,7 +48,7 @@ export default function StationDetails() {
   }
 
   const handleBack = () => {
-    navigateBackWithAnimation();
+    router.back();
   };
 
   const formatPrice = (price?: number) => {
@@ -77,11 +77,7 @@ export default function StationDetails() {
   };
 
   return (
-    <PageTransition
-      isVisible={isVisible}
-      animationDirection={animationDirection}
-      className="max-w-7xl mx-auto px-4 py-4 md:py-8"
-    >
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -306,7 +302,7 @@ export default function StationDetails() {
                       onClick={async () => {
                         try {
                           setIsRemoving(true);
-                          await removeFavorite.mutateAsync(id as string);
+                          await removeFavorite.mutateAsync(stableId as string);
                           // Navigate back after successful removal
                           setTimeout(() => {
                             handleBack();
@@ -339,7 +335,7 @@ export default function StationDetails() {
             <div className="text-sm uppercase tracking-wide text-secondary mb-2">
               {t.fuelPrices.stationId}
             </div>
-            <div className="heading-1">{id || t.fuelPrices.unknown}</div>
+            <div className="heading-1">{stableId || t.fuelPrices.unknown}</div>
             <div className="text-sm text-secondary mt-2">
               {t.fuelPrices.noDataAvailable}
             </div>
@@ -354,6 +350,6 @@ export default function StationDetails() {
         isVisible={snackbar.isVisible}
         onClose={hideSnackbar}
       />
-    </PageTransition>
+    </div>
   );
 }
