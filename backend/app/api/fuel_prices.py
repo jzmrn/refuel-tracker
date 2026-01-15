@@ -299,16 +299,28 @@ async def get_favorite_stations(
     # Get current prices for stations not in cache, up to 10 stations at a time
     for i in range(0, len(stations_to_fetch), 10):
         stations = stations_to_fetch[i : i + 10]
-        prices_map: dict[str, GasStationPrice] = {}
+        prices = []
 
-        batch_ids = [station.station_id for station in stations]
-        prices = tankerkoenig_client.get_gas_station_prices(batch_ids)
-        prices_map = {price.station_id: price for price in prices}
+        try:
+            batch_ids = [station.station_id for station in stations]
+            prices = tankerkoenig_client.get_gas_station_prices(batch_ids)
+
+        except Exception as e:
+            logger.error(
+                "Error fetching prices for favorite stations",
+                extra={
+                    "station_ids": batch_ids,
+                    "error": str(e),
+                },
+            )
 
         # Update cache with new prices
         for price in prices:
             fuel_price_cache.set(price.station_id, price)
 
+        prices_map: dict[str, GasStationPrice] = {
+            price.station_id: price for price in prices
+        }
         for station in stations:
             price = prices_map.get(station.station_id)
 
@@ -389,8 +401,15 @@ async def get_station_details(
         )
 
         # Fetch fresh prices from API
-        prices = tankerkoenig_client.get_gas_station_prices([station_id])
-        price = prices[0] if prices else None
+        try:
+            prices = tankerkoenig_client.get_gas_station_prices([station_id])
+            price = prices[0] if prices else None
+
+        except Exception as e:
+            logger.error(
+                "Failed to fetch fuel prices",
+                extra={"station_id": station_id, "error": str(e)},
+            )
 
         # Update cache
         if price:
