@@ -228,7 +228,7 @@ export default function AddRefuelForm({
   const formActions = (
     <>
       <button type="submit" className="btn-primary flex-1">
-        {t.refuels.addEntry}
+        {t.navigation.addEntry}
       </button>
       {onCancel && (
         <button
@@ -236,7 +236,7 @@ export default function AddRefuelForm({
           onClick={onCancel}
           className="btn-secondary flex-1"
         >
-          {t.refuels.cancel}
+          {t.common.cancel}
         </button>
       )}
     </>
@@ -244,7 +244,7 @@ export default function AddRefuelForm({
 
   return (
     <StandardForm
-      title={t.refuels.addEntry}
+      title={t.navigation.addEntry}
       onSubmit={handleSubmit}
       actions={formActions}
       containerClass="panel"
@@ -279,7 +279,7 @@ export default function AddRefuelForm({
             }}
             className="btn-sm-secondary whitespace-nowrap flex-shrink-0"
           >
-            {t.refuels.now}
+            {t.forms.now}
           </button>
         </div>
         {errors.timestamp && <p className="error-text">{errors.timestamp}</p>}
@@ -481,7 +481,7 @@ export default function AddRefuelForm({
 
       <div className="form-group">
         <label htmlFor="notes" className="label">
-          {t.refuels.notes} ({t.refuels.optional})
+          {t.dataTracking.notes} ({t.refuels.optional})
         </label>
         <textarea
           id="notes"

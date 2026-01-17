@@ -13,7 +13,7 @@ interface RefuelListProps {
 export default function RefuelList({ refuels, loading }: RefuelListProps) {
   const { t } = useTranslation();
   if (loading) {
-    return <LoadingSpinner text={t.refuels.loadingData} />;
+    return <LoadingSpinner text={t.common.loading} />;
   }
 
   if (!refuels || refuels.length === 0) {

@@ -282,7 +282,7 @@ export default function EditTimeSpanForm({
               }}
               className="btn-sm-secondary whitespace-nowrap"
             >
-              {t.timeSpans.now}
+              {t.forms.now}
             </button>
           </div>
           {errors.start_date && (
@@ -311,7 +311,7 @@ export default function EditTimeSpanForm({
               onClick={setEndDateToNow}
               className="btn-sm-secondary whitespace-nowrap"
             >
-              {t.timeSpans.now}
+              {t.forms.now}
             </button>
           </div>
           {errors.end_date && <p className="error-text">{errors.end_date}</p>}
@@ -403,7 +403,7 @@ export default function EditTimeSpanForm({
 
       <div className="form-group">
         <label htmlFor="notes" className="label">
-          {t.timeSpans.notesOptional}
+          {t.forms.notesOptional}
         </label>
         <textarea
           id="notes"

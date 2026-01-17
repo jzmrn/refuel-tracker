@@ -232,7 +232,7 @@ export default function CarDetails() {
                 <button
                   onClick={handleAddRefuel}
                   className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  aria-label={t.refuels.addEntry}
+                  aria-label={t.navigation.addEntry}
                 >
                   <AddIcon className="icon text-gray-600 dark:text-gray-400" />
                 </button>
@@ -257,7 +257,7 @@ export default function CarDetails() {
                 <button
                   onClick={handleAddKilometer}
                   className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  aria-label={t.kilometers.addEntry}
+                  aria-label={t.navigation.addEntry}
                 >
                   <AddIcon className="icon text-gray-600 dark:text-gray-400" />
                 </button>

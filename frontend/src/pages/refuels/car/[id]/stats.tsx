@@ -94,7 +94,7 @@ export default function CarStats() {
             <ArrowBackIcon className="icon text-gray-600 dark:text-gray-400" />
           </button>
           <div className="flex-1">
-            <h1 className="heading-1">{t.refuels.statistics}</h1>
+            <h1 className="heading-1">{t.dataTracking.statistics}</h1>
             {car && (
               <p className="text-sm text-secondary mt-1">
                 {car.name} ({car.year})
@@ -109,7 +109,7 @@ export default function CarStats() {
           {/* Filter Options */}
           <div className="panel">
             <div className="flex flex-wrap justify-between items-center gap-4">
-              <h2 className="heading-2">{t.refuels.filter}</h2>
+              <h2 className="heading-2">{t.common.filter}</h2>
               <div className="flex gap-2 w-full sm:w-auto">
                 <button
                   onClick={() => handleFilterChange("month")}
@@ -119,7 +119,7 @@ export default function CarStats() {
                       : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
                 >
-                  {t.refuels.lastMonth}
+                  {t.navigation.lastMonth}
                 </button>
                 <button
                   onClick={() => handleFilterChange("6months")}
@@ -129,7 +129,7 @@ export default function CarStats() {
                       : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
                 >
-                  {t.refuels.lastSixMonths}
+                  {t.navigation.lastSixMonths}
                 </button>
                 <button
                   onClick={() => handleFilterChange("year")}
@@ -139,7 +139,7 @@ export default function CarStats() {
                       : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
                 >
-                  {t.refuels.lastYear}
+                  {t.navigation.lastYear}
                 </button>
               </div>
             </div>

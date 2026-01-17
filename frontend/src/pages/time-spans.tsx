@@ -211,7 +211,11 @@ export default function TimeSpans() {
 
   const tabs = [
     { id: "add" as TabType, label: t.timeSpans.addTimeSpan, icon: "+" },
-    { id: "statistics" as TabType, label: t.timeSpans.statistics, icon: "📊" },
+    {
+      id: "statistics" as TabType,
+      label: t.dataTracking.statistics,
+      icon: "📊",
+    },
     { id: "values" as TabType, label: t.timeSpans.allValues, icon: "📋" },
   ];
 

@@ -194,7 +194,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
       {sortedData.length > 0 && (
         <GridLayout variant="stats" className="mt-4 text-sm">
           <SummaryCard
-            title={t.refuels.currentPrice}
+            title={t.fuelPrices.currentPrice}
             value={{
               value: formatPricePerLiter(
                 sortedData[sortedData.length - 1].price,

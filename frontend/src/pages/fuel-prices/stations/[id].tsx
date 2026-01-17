@@ -156,7 +156,7 @@ export default function StationDetails() {
             {availableFuelTypes.length > 0 && (
               <div className="panel mb-6">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                  <h2 className="heading-2">{t.fuelPrices.statistics}</h2>
+                  <h2 className="heading-2">{t.dataTracking.statistics}</h2>
                   <FuelTypeSelector
                     selectedFuelType={effectiveFuelType}
                     onFuelTypeChange={handleFuelTypeChange}

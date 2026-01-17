@@ -33,6 +33,7 @@ export interface TranslationStructure {
     signOut: string;
     name: string;
     actions: string;
+    all: string;
   };
 
   // Navigation
@@ -48,6 +49,13 @@ export interface TranslationStructure {
     data: string;
     time: string;
     prices: string;
+    addEntry: string;
+    showAll: string;
+    thisMonth: string;
+    thisYear: string;
+    lastMonth: string;
+    lastSixMonths: string;
+    lastYear: string;
   };
 
   // Layout
@@ -111,8 +119,6 @@ export interface TranslationStructure {
     title: string;
     addRefuel: string;
     consumption: string;
-    price: string;
-    statistics: string;
     amount: string;
     totalCost: string;
     pricePerLiter: string;
@@ -120,29 +126,17 @@ export interface TranslationStructure {
     date: string;
     refuelTracking: string;
     manageFuelData: string;
-    addEntry: string;
-    allEntries: string;
-    filter: string;
-    showAll: string;
-    thisMonth: string;
-    thisYear: string;
-    lastMonth: string;
-    lastSixMonths: string;
-    lastYear: string;
     refuelAddedSuccess: string;
     errorAddingRefuel: string;
     errorLoadingData: string;
     errorFiltering: string;
 
     // Form labels and validation
-    now: string;
     pricePerLiterForm: string;
     amountLiters: string;
     kilometersSinceLastRefuel: string;
     estimatedFuelConsumption: string;
-    notes: string;
     optional: string;
-    cancel: string;
     station: string;
     gasStation: string;
     selectStation: string;
@@ -169,7 +163,6 @@ export interface TranslationStructure {
     addMoreRefuelEntries: string;
     priceLabel: string;
     pricePerLiterChart: string;
-    currentPrice: string;
     lowestPrice: string;
     highestPrice: string;
     priceRange: string;
@@ -186,7 +179,6 @@ export interface TranslationStructure {
     refuelEntries: string;
     recentRefuels: string;
     viewStatistics: string;
-    loadingData: string;
     noRefuelEntriesYet: string;
     addFirstRefuelEntry: string;
     today: string;
@@ -236,19 +228,14 @@ export interface TranslationStructure {
     errorDeletingEntry: string;
     errorLoadingData: string;
     viewChart: string;
-    now: string;
-    cancel: string;
-    addEntry: string;
     totalKilometersForm: string;
     kilometersRequired: string;
     kilometersPositive: string;
     invalidDateFormat: string;
     dateCannotBeFuture: string;
     dateTimeRequired: string;
-    filter: string;
     lastMonth: string;
     lastSixMonths: string;
-    all: string;
   };
 
   // Time spans
@@ -257,7 +244,6 @@ export interface TranslationStructure {
     addTimeSpan: string;
     editTimeSpan: string;
     updateTimeSpan: string;
-    statistics: string;
     startDate: string;
     endDate: string;
     duration: string;
@@ -279,10 +265,8 @@ export interface TranslationStructure {
     allValues: string;
     startDateTime: string;
     endDateTime: string;
-    now: string;
     labelActivity: string;
     group: string;
-    notesOptional: string;
     ongoingActivity: string;
     labelRequired: string;
     labelTooLong: string;
@@ -412,7 +396,6 @@ export interface TranslationStructure {
     description: string;
     addCar: string;
     sharedAccess: string;
-    statistics: string;
     addNewCar: string;
     editCar: string;
     carName: string;
@@ -422,15 +405,11 @@ export interface TranslationStructure {
     selectFuelType: string;
     owner: string;
     tankSize: string;
-    clear: string;
-    cancel: string;
     saveChanges: string;
     updateCar: string;
     carDetails: string;
     addFirstCar: string;
     shareWith: string;
-    user: string;
-    users: string;
     searchUserPlaceholder: string;
     fillAllRequiredFields: string;
     failedToSearchUsers: string;
@@ -501,7 +480,6 @@ export interface TranslationStructure {
     title: string;
     searchStations: string;
     favorites: string;
-    statistics: string;
     searchForStations: string;
     searchDescription: string;
     latitude: string;
@@ -514,7 +492,6 @@ export interface TranslationStructure {
     e5: string;
     e10: string;
     diesel: string;
-    all: string;
     price: string;
     distance: string;
     searchResults: string;

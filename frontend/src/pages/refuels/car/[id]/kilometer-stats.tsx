@@ -165,7 +165,7 @@ export default function KilometerStats() {
           {/* Filter Options */}
           <div className="panel">
             <div className="flex flex-wrap justify-between items-center gap-4">
-              <h2 className="heading-2">{t.kilometers.filter}</h2>
+              <h2 className="heading-2">{t.common.filter}</h2>
               <div className="flex gap-2 w-full sm:w-auto">
                 <button
                   onClick={() => handleFilterChange("month")}
@@ -195,7 +195,7 @@ export default function KilometerStats() {
                       : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
                 >
-                  {t.kilometers.all}
+                  {t.common.all}
                 </button>
               </div>
             </div>

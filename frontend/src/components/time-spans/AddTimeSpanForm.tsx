@@ -257,7 +257,7 @@ export default function AddTimeSpanForm({
               }}
               className="btn-sm-secondary whitespace-nowrap flex-shrink-0"
             >
-              {t.timeSpans.now}
+              {t.forms.now}
             </button>
           </div>
           {errors.start_date && (
@@ -286,7 +286,7 @@ export default function AddTimeSpanForm({
               onClick={setEndDateToNow}
               className="btn-sm-secondary whitespace-nowrap flex-shrink-0"
             >
-              {t.timeSpans.now}
+              {t.forms.now}
             </button>
           </div>
           {errors.end_date && <p className="error-text">{errors.end_date}</p>}
@@ -388,7 +388,7 @@ export default function AddTimeSpanForm({
 
       <div className="form-group">
         <label htmlFor="notes" className="label">
-          {t.timeSpans.notesOptional}
+          {t.forms.notesOptional}
         </label>
         <textarea
           id="notes"

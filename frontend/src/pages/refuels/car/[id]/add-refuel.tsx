@@ -200,7 +200,7 @@ export default function AddRefuel() {
             <ArrowBackIcon className="icon text-gray-600 dark:text-gray-400" />
           </button>
           <div className="flex-1">
-            <h1 className="heading-1">{t.refuels.addEntry}</h1>
+            <h1 className="heading-1">{t.navigation.addEntry}</h1>
             {car && (
               <p className="text-secondary mt-1 text-sm">
                 {car.name} ({car.year})
@@ -428,7 +428,7 @@ export default function AddRefuel() {
                 {/* Notes */}
                 <div className="form-group">
                   <label htmlFor="notes" className="label">
-                    {t.refuels.notes} ({t.refuels.optional})
+                    {t.dataTracking.notes} ({t.refuels.optional})
                   </label>
                   <textarea
                     id="notes"
@@ -453,7 +453,7 @@ export default function AddRefuel() {
                     disabled={isSubmitting}
                     className="btn-primary w-full"
                   >
-                    {isSubmitting ? t.common.saving : t.refuels.addEntry}
+                    {isSubmitting ? t.common.saving : t.navigation.addEntry}
                   </button>
                 </div>
               </div>

@@ -30,8 +30,8 @@ export default function RefuelStats({
   const { t } = useTranslation();
   if (loading) {
     return (
-      <Panel title={t.refuels.statistics}>
-        <LoadingSpinner text={t.refuels.loadingData} />
+      <Panel title={t.dataTracking.statistics}>
+        <LoadingSpinner text={t.common.loading} />
       </Panel>
     );
   }
@@ -56,7 +56,7 @@ export default function RefuelStats({
   return (
     <div className="space-y-6">
       {/* Summary Statistics Panel */}
-      <Panel title={t.refuels.statistics}>
+      <Panel title={t.dataTracking.statistics}>
         <GridLayout variant="stats">
           <SummaryCard
             title={t.refuels.totalCost}

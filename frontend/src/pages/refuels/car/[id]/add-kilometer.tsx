@@ -209,7 +209,7 @@ export default function AddKilometer() {
                     className="btn-secondary w-full sm:w-auto"
                     disabled={isSubmitting}
                   >
-                    {t.kilometers.cancel}
+                    {t.common.cancel}
                   </button>
                   <button
                     type="submit"
@@ -222,7 +222,7 @@ export default function AddKilometer() {
                         {t.common.saving}
                       </div>
                     ) : (
-                      t.kilometers.addEntry
+                      t.navigation.addEntry
                     )}
                   </button>
                 </div>
