@@ -50,13 +50,11 @@ export default function StationPriceChartContainer({
     );
   }
 
-  if (!priceHistory || priceHistory.price_history.length === 0) {
-    return (
-      <div className="panel text-center py-8">
-        <span className="text-secondary">{t.fuelPrices.noDataAvailable}</span>
-      </div>
-    );
-  }
+  // Check if there's any valid price data (not just empty array, but also no null/undefined prices)
+  const hasValidPriceData =
+    priceHistory &&
+    priceHistory.price_history.length > 0 &&
+    priceHistory.price_history.some((point) => point.price != null);
 
   return (
     <div
@@ -68,12 +66,18 @@ export default function StationPriceChartContainer({
         </h3>
         {isFetching && <CircularProgress size={18} />}
       </div>
-      <FuelPriceChart
-        data={priceHistory.price_history}
-        fuelType={fuelType}
-        color={FUEL_TYPE_COLORS[fuelType]}
-        label={fuelTypeLabels[fuelType]}
-      />
+      {hasValidPriceData ? (
+        <FuelPriceChart
+          data={priceHistory.price_history}
+          fuelType={fuelType}
+          color={FUEL_TYPE_COLORS[fuelType]}
+          label={fuelTypeLabels[fuelType]}
+        />
+      ) : (
+        <div className="text-center py-8">
+          <span className="text-secondary">{t.fuelPrices.noDataAvailable}</span>
+        </div>
+      )}
     </div>
   );
 }

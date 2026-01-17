@@ -121,30 +121,34 @@ export default function StationMetaInfo({
 
   if (isLoading) {
     return (
-      <Panel>
-        <div className="text-center py-4">
-          <div className="flex flex-col items-center gap-2">
-            <CircularProgress size={20} />
-            <span className="text-secondary">{t.common.loading}</span>
+      <div className="mb-6">
+        <Panel>
+          <div className="text-center py-4">
+            <div className="flex flex-col items-center gap-2">
+              <CircularProgress size={20} />
+              <span className="text-secondary">{t.common.loading}</span>
+            </div>
           </div>
-        </div>
-      </Panel>
+        </Panel>
+      </div>
     );
   }
 
   if (!stationData) {
     return (
-      <Panel>
-        <div className="text-center">
-          <div className="text-sm uppercase tracking-wide text-secondary mb-2">
-            {t.fuelPrices.stationId}
+      <div className="mb-6">
+        <Panel>
+          <div className="text-center">
+            <div className="text-sm uppercase tracking-wide text-secondary mb-2">
+              {t.fuelPrices.stationId}
+            </div>
+            <div className="heading-1">{stationId || t.fuelPrices.unknown}</div>
+            <div className="text-sm text-secondary mt-2">
+              {t.fuelPrices.noDataAvailable}
+            </div>
           </div>
-          <div className="heading-1">{stationId || t.fuelPrices.unknown}</div>
-          <div className="text-sm text-secondary mt-2">
-            {t.fuelPrices.noDataAvailable}
-          </div>
-        </div>
-      </Panel>
+        </Panel>
+      </div>
     );
   }
 
@@ -166,61 +170,47 @@ export default function StationMetaInfo({
       </Panel>
 
       {/* Current Prices */}
-      {(stationData.current_price_e5 ||
-        stationData.current_price_e10 ||
-        stationData.current_price_diesel) && (
-        <div className="mt-6 mb-6">
-          <Panel
-            title={t.fuelPrices.currentPrices}
-            subtitle={
-              stationData.timestamp && (
-                <span className="text-xs text-secondary">
-                  {t.fuelPrices.lastUpdated}:{" "}
-                  {formatTime(stationData.timestamp)}
-                </span>
-              )
-            }
-          >
-            <div className="flex flex-col xxs:flex-row justify-center items-center gap-1.5 sm:gap-2">
-              {stationData.current_price_e5 !== undefined &&
-                stationData.current_price_e5 !== null && (
-                  <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
-                    <div className="text-2xl sm:text-3xl font-bold text-primary">
-                      {formatPrice(stationData.current_price_e5)}
-                    </div>
-                    <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
-                      {t.fuelPrices.e5}
-                    </div>
-                  </div>
-                )}
-
-              {stationData.current_price_e10 !== undefined &&
-                stationData.current_price_e10 !== null && (
-                  <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
-                    <div className="text-2xl sm:text-3xl font-bold text-primary">
-                      {formatPrice(stationData.current_price_e10)}
-                    </div>
-                    <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
-                      {t.fuelPrices.e10}
-                    </div>
-                  </div>
-                )}
-
-              {stationData.current_price_diesel !== undefined &&
-                stationData.current_price_diesel !== null && (
-                  <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
-                    <div className="text-2xl sm:text-3xl font-bold text-primary">
-                      {formatPrice(stationData.current_price_diesel)}
-                    </div>
-                    <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
-                      {t.fuelPrices.diesel}
-                    </div>
-                  </div>
-                )}
+      <div className="mt-6 mb-6">
+        <Panel
+          title={t.fuelPrices.currentPrices}
+          subtitle={
+            stationData.timestamp && (
+              <span className="text-xs text-secondary">
+                {t.fuelPrices.lastUpdated}: {formatTime(stationData.timestamp)}
+              </span>
+            )
+          }
+        >
+          <div className="flex flex-col xxs:flex-row justify-center items-center gap-1.5 sm:gap-2">
+            <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
+              <div className="text-2xl sm:text-3xl font-bold text-primary">
+                {formatPrice(stationData.current_price_e5)}
+              </div>
+              <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
+                {t.fuelPrices.e5}
+              </div>
             </div>
-          </Panel>
-        </div>
-      )}
+
+            <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
+              <div className="text-2xl sm:text-3xl font-bold text-primary">
+                {formatPrice(stationData.current_price_e10)}
+              </div>
+              <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
+                {t.fuelPrices.e10}
+              </div>
+            </div>
+
+            <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
+              <div className="text-2xl sm:text-3xl font-bold text-primary">
+                {formatPrice(stationData.current_price_diesel)}
+              </div>
+              <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
+                {t.fuelPrices.diesel}
+              </div>
+            </div>
+          </div>
+        </Panel>
+      </div>
     </>
   );
 }

@@ -13,6 +13,7 @@ import { FuelType } from "@/lib/api";
 import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
 import StationMetaInfo from "@/components/fuel/StationMetaInfo";
 import StationPriceChart from "@/components/fuel/StationPriceChart";
+import { LoadingSpinner } from "@/components/common";
 
 const FUEL_TYPE_STORAGE_KEY = "stationDetails.fuelType";
 
@@ -92,35 +93,8 @@ export default function StationDetails() {
     showSuccess(t.fuelPrices.addressCopied);
   };
 
-  // Determine which fuel types are available for this station
-  const availableFuelTypes: FuelType[] = [];
-  if (stationMeta) {
-    if (
-      stationMeta.current_price_e5 !== undefined &&
-      stationMeta.current_price_e5 !== null
-    ) {
-      availableFuelTypes.push("e5");
-    }
-    if (
-      stationMeta.current_price_e10 !== undefined &&
-      stationMeta.current_price_e10 !== null
-    ) {
-      availableFuelTypes.push("e10");
-    }
-    if (
-      stationMeta.current_price_diesel !== undefined &&
-      stationMeta.current_price_diesel !== null
-    ) {
-      availableFuelTypes.push("diesel");
-    }
-  }
-
-  // If the selected fuel type is not available, switch to the first available one
-  const effectiveFuelType =
-    availableFuelTypes.length > 0 &&
-    !availableFuelTypes.includes(selectedFuelType)
-      ? availableFuelTypes[0]
-      : selectedFuelType;
+  // Always show all fuel types
+  const allFuelTypes: FuelType[] = ["e5", "e10", "diesel"];
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
@@ -141,7 +115,9 @@ export default function StationDetails() {
       </div>
 
       <div className="max-w-3xl mx-auto">
-        {stableId ? (
+        {!router.isReady ? (
+          <LoadingSpinner />
+        ) : stableId ? (
           <>
             {/* Station Meta Info */}
             <StationMetaInfo
@@ -153,26 +129,22 @@ export default function StationDetails() {
             />
 
             {/* Fuel Type Selector */}
-            {availableFuelTypes.length > 0 && (
-              <div className="panel mb-6">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                  <h2 className="heading-2">{t.dataTracking.statistics}</h2>
-                  <FuelTypeSelector
-                    selectedFuelType={effectiveFuelType}
-                    onFuelTypeChange={handleFuelTypeChange}
-                    availableFuelTypes={availableFuelTypes}
-                  />
-                </div>
+            <div className="panel mb-6">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                <h2 className="heading-2">{t.dataTracking.statistics}</h2>
+                <FuelTypeSelector
+                  selectedFuelType={selectedFuelType}
+                  onFuelTypeChange={handleFuelTypeChange}
+                  availableFuelTypes={allFuelTypes}
+                />
               </div>
-            )}
+            </div>
 
             {/* Price Chart */}
-            {availableFuelTypes.length > 0 && (
-              <StationPriceChart
-                stationId={stableId}
-                fuelType={effectiveFuelType}
-              />
-            )}
+            <StationPriceChart
+              stationId={stableId}
+              fuelType={selectedFuelType}
+            />
           </>
         ) : (
           <div className="panel text-center">
