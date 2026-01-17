@@ -110,6 +110,7 @@ export const en: TranslationStructure = {
     statistics: "Statistics",
     amount: "Amount",
     totalCost: "Total Cost",
+    actualConsumption: "Actual Consumption",
     pricePerLiter: "Price per Liter",
     odometer: "Odometer",
     date: "Date",
@@ -134,7 +135,7 @@ export const en: TranslationStructure = {
     now: "Now",
     pricePerLiterForm: "Price per Liter (€)",
     amountLiters: "Amount (Liters)",
-    kilometersSinceLastRefuel: "Kilometers Since Last Refuel",
+    kilometersSinceLastRefuel: "Kilometers Since Last Refuel (km)",
     estimatedFuelConsumption: "Estimated Fuel Consumption (L/100km)",
     notes: "Notes",
     optional: "optional",
@@ -172,7 +173,6 @@ export const en: TranslationStructure = {
     highestPrice: "Highest Price",
     priceRange: "Price Range",
     totalCostCalc: "Total Cost",
-    actualConsumption: "Actual Consumption",
     vsEstimated: "vs estimated",
 
     // Tooltip labels
@@ -185,7 +185,7 @@ export const en: TranslationStructure = {
     recentRefuels: "Recent Refuels",
     viewStatistics: "View Statistics",
     loadingData: "Loading data...",
-    noRefuelEntriesYet: "No refuel entries recorded yet.",
+    noRefuelEntriesYet: "No refuel entries recorded yet",
     addFirstRefuelEntry: "Add your first refuel entry above.",
     today: "Today",
     dateHeader: "Date",
@@ -214,12 +214,6 @@ export const en: TranslationStructure = {
     avgEstimated: "Avg Estimated",
     avgDifference: "Avg Difference",
     accuracy: "Accuracy",
-    accuracyDescription:
-      "Accuracy shows percentage of entries within ±0.5 L/100km of estimate",
-    greenLineSolid: "Green line (solid)",
-    blueLineDashed: "Blue line (dashed)",
-    actualConsumptionDescription: "Actual consumption",
-    yourEstimates: "Your estimates",
 
     // Placeholders
     placeholders: {

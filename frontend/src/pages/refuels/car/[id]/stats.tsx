@@ -104,14 +104,7 @@ export default function CarStats() {
         </div>
       </div>
 
-      {carLoading ? (
-        <Panel>
-          <div className="flex flex-col items-center gap-2">
-            <CircularProgress size={20} />
-            <span className="text-secondary">{t.common.loading}</span>
-          </div>
-        </Panel>
-      ) : car ? (
+      {car ? (
         <div className="space-y-6">
           {/* Filter Options */}
           <div className="panel">
@@ -152,12 +145,20 @@ export default function CarStats() {
             </div>
           </div>
 
-          {/* Statistics */}
-          <RefuelStats
-            statistics={statistics || null}
-            refuelData={refuels}
-            loading={statsLoading || refuelsLoading}
-          />
+          {/* Loading State */}
+          {carLoading || statsLoading || refuelsLoading ? (
+            <div className="flex items-center justify-center gap-3 py-12">
+              <CircularProgress size={24} />
+              <span className="text-secondary">{t.common.loading}</span>
+            </div>
+          ) : (
+            /* Statistics */
+            <RefuelStats
+              statistics={statistics || null}
+              refuelData={refuels}
+              loading={false}
+            />
+          )}
         </div>
       ) : null}
     </div>

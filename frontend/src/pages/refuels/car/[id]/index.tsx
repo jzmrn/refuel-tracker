@@ -4,6 +4,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import CloseIcon from "@mui/icons-material/Close";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import Snackbar from "@/components/common/Snackbar";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
@@ -18,6 +19,7 @@ import {
   useDeleteCar,
 } from "@/lib/hooks/useCars";
 import CircularProgress from "@mui/material/CircularProgress";
+import { LoadingSpinner } from "@/components/common";
 
 export default function CarDetails() {
   const { t } = useTranslation();
@@ -125,42 +127,51 @@ export default function CarDetails() {
       </div>
 
       {carLoading && !isDeleting ? (
-        <Panel>
-          <div className="flex flex-col items-center gap-2">
-            <CircularProgress size={20} />
-            <span className="text-secondary">{t.common.loading}</span>
-          </div>
-        </Panel>
+        <LoadingSpinner />
       ) : car ? (
         <div className="space-y-6">
           {/* Car Details */}
           <Panel
             title={car.name}
             actions={
-              <button
-                onClick={handleEditCar}
-                disabled={!car.is_owner}
-                className={`p-2 rounded-lg transition-colors ${
-                  car.is_owner
-                    ? "hover:bg-gray-100 dark:hover:bg-gray-700"
-                    : "opacity-50 cursor-not-allowed"
-                }`}
-                aria-label={t.cars.editCar}
-              >
-                <EditIcon className="icon text-gray-600 dark:text-gray-400" />
-              </button>
+              <div className="flex gap-1">
+                <button
+                  onClick={handleEditCar}
+                  disabled={!car.is_owner}
+                  className={`p-2 rounded-lg transition-colors ${
+                    car.is_owner
+                      ? "hover:bg-gray-100 dark:hover:bg-gray-700"
+                      : "opacity-50 cursor-not-allowed"
+                  }`}
+                  aria-label={t.cars.editCar}
+                >
+                  <EditIcon className="icon text-gray-600 dark:text-gray-400" />
+                </button>
+                <button
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  disabled={!car.is_owner || isDeleting}
+                  className={`p-2 rounded-lg transition-colors ${
+                    car.is_owner
+                      ? "hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+                      : "opacity-50 cursor-not-allowed"
+                  }`}
+                  aria-label={t.cars.deleteCar}
+                >
+                  <CloseIcon className="icon text-gray-600 dark:text-gray-400" />
+                </button>
+              </div>
             }
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 xxs:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <span className="text-sm text-secondary">{t.cars.year}:</span>
+                <span className="text-sm text-secondary">{t.cars.year}</span>
                 <p className="font-medium text-gray-900 dark:text-white">
                   {car.year}
                 </p>
               </div>
               <div>
                 <span className="text-sm text-secondary">
-                  {t.cars.fuelTankSize}:
+                  {t.cars.fuelTankSize}
                 </span>
                 <p className="font-medium text-gray-900 dark:text-white">
                   {car.fuel_tank_size} L
@@ -168,7 +179,7 @@ export default function CarDetails() {
               </div>
               <div>
                 <span className="text-sm text-secondary">
-                  {t.cars.fuelType}:
+                  {t.cars.fuelType}
                 </span>
                 <p className="font-medium text-gray-900 dark:text-white">
                   {car.fuel_type === "e5"
@@ -181,7 +192,7 @@ export default function CarDetails() {
                 </p>
               </div>
               <div>
-                <span className="text-sm text-secondary">{t.cars.owner}:</span>
+                <span className="text-sm text-secondary">{t.cars.owner}</span>
                 <p className="font-medium text-gray-900 dark:text-white">
                   {car.owner_name}
                 </p>
@@ -214,75 +225,52 @@ export default function CarDetails() {
             <RefuelList refuels={refuels} loading={refuelsLoading} />
           </Panel>
 
-          {/* Shared Users & Actions - only show if user is owner */}
+          {/* Shared Users - only show if user is owner */}
           {car.is_owner && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-              {/* Shared Users Section */}
-              <Panel
-                title={t.cars.sharedWith}
-                actions={
-                  <button
-                    onClick={handleAddSharedUsers}
-                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    aria-label={t.cars.addSharedUsers}
-                  >
-                    <AddIcon className="icon text-gray-600 dark:text-gray-400" />
-                  </button>
-                }
-              >
-                {car.shared_users && car.shared_users.length > 0 ? (
-                  <div className="space-y-3">
-                    {car.shared_users.map((user) => (
-                      <div
-                        key={user.user_id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700"
-                      >
-                        <div>
-                          <div className="font-medium text-gray-900 dark:text-white">
-                            {user.user_name}
-                          </div>
-                          <div className="text-sm text-secondary">
-                            {user.user_email}
-                          </div>
+            <Panel
+              title={t.cars.sharedWith}
+              actions={
+                <button
+                  onClick={handleAddSharedUsers}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  aria-label={t.cars.addSharedUsers}
+                >
+                  <AddIcon className="icon text-gray-600 dark:text-gray-400" />
+                </button>
+              }
+            >
+              {car.shared_users && car.shared_users.length > 0 ? (
+                <div className="space-y-3">
+                  {car.shared_users.map((user) => (
+                    <div
+                      key={user.user_id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700"
+                    >
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-white">
+                          {user.user_name}
                         </div>
-                        <button
-                          onClick={() => handleRemoveSharedUser(user.user_id)}
-                          disabled={revokeAccess.isPending}
-                          className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
-                          aria-label={t.cars.removeAccess}
-                        >
-                          <DeleteIcon className="icon" />
-                        </button>
+                        <div className="text-sm text-secondary">
+                          {user.user_email}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-secondary text-sm">
-                    {t.cars.noSharedAccess}
-                  </p>
-                )}
-              </Panel>
-
-              {/* Actions Panel */}
-              <Panel title={t.common.actions}>
-                <div className="flex flex-col gap-3">
-                  <button
-                    onClick={() => setIsDeleteDialogOpen(true)}
-                    disabled={isDeleting}
-                    className="w-full btn-danger py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {isDeleting ? (
-                      <>
-                        <CircularProgress size={20} sx={{ color: "white" }} />
-                        <span>{t.common.loading}</span>
-                      </>
-                    ) : (
-                      t.cars.deleteCar
-                    )}
-                  </button>
+                      <button
+                        onClick={() => handleRemoveSharedUser(user.user_id)}
+                        disabled={revokeAccess.isPending}
+                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                        aria-label={t.cars.removeAccess}
+                      >
+                        <DeleteIcon className="icon" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              </Panel>
-            </div>
+              ) : (
+                <p className="text-secondary text-sm">
+                  {t.cars.noSharedAccess}
+                </p>
+              )}
+            </Panel>
           )}
         </div>
       ) : null}

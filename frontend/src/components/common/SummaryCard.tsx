@@ -29,7 +29,7 @@ export default function SummaryCard({
   loading = false,
 }: SummaryCardProps) {
   return (
-    <div className="card relative">
+    <div className="card relative border-0">
       <div
         className={`icon-xl rounded-lg flex-center justify-center ml-4 mr-3 flex-shrink-0 icon-bg-${iconBgColor}`}
         style={{

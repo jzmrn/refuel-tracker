@@ -115,6 +115,7 @@ export const de: TranslationStructure = {
     statistics: "Statistiken",
     amount: "Menge",
     totalCost: "Gesamtkosten",
+    actualConsumption: "Tatsächlicher Verbrauch",
     pricePerLiter: "Preis pro Liter",
     odometer: "Kilometerstand",
     date: "Datum",
@@ -140,7 +141,7 @@ export const de: TranslationStructure = {
     now: "Jetzt",
     pricePerLiterForm: "Preis pro Liter (€)",
     amountLiters: "Menge (Liter)",
-    kilometersSinceLastRefuel: "Kilometer seit letzter Tankung",
+    kilometersSinceLastRefuel: "Kilometer seit dem letzten Tanken (km)",
     estimatedFuelConsumption: "Geschätzter Kraftstoffverbrauch (L/100km)",
     notes: "Notizen",
     optional: "optional",
@@ -179,7 +180,6 @@ export const de: TranslationStructure = {
     highestPrice: "Höchster Preis",
     priceRange: "Preisspanne",
     totalCostCalc: "Gesamtkosten",
-    actualConsumption: "Tatsächlicher Verbrauch",
     vsEstimated: "vs geschätzt",
 
     // Tooltip labels
@@ -192,7 +192,7 @@ export const de: TranslationStructure = {
     recentRefuels: "Letzte Tankungen",
     viewStatistics: "Statistiken anzeigen",
     loadingData: "Lade Daten...",
-    noRefuelEntriesYet: "Noch keine Tankeinträge aufgezeichnet.",
+    noRefuelEntriesYet: "Noch keine Tankeinträge aufgezeichnet",
     addFirstRefuelEntry: "Fügen Sie Ihren ersten Tankeintrag oben hinzu.",
     today: "Heute",
     dateHeader: "Datum",
@@ -222,12 +222,6 @@ export const de: TranslationStructure = {
     avgEstimated: "Ø Geschätzt",
     avgDifference: "Ø Unterschied",
     accuracy: "Genauigkeit",
-    accuracyDescription:
-      "Genauigkeit zeigt den Prozentsatz der Einträge innerhalb von ±0,5 L/100km der Schätzung",
-    greenLineSolid: "Grüne Linie (durchgezogen)",
-    blueLineDashed: "Blaue Linie (gestrichelt)",
-    actualConsumptionDescription: "Tatsächlicher Verbrauch",
-    yourEstimates: "Ihre Schätzungen",
 
     // Placeholders
     placeholders: {

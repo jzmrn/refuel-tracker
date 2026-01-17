@@ -14,7 +14,7 @@ export const GridLayout: React.FC<GridLayoutProps> = ({
   const getGridClasses = (variant: string) => {
     switch (variant) {
       case "stats":
-        return "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4";
+        return "grid grid-cols-1 xs:grid-cols-2 xl:grid-cols-4 gap-4";
       case "cards":
         return "grid grid-cols-1 md:grid-cols-2 gap-6";
       case "list":

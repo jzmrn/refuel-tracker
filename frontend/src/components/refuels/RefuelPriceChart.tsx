@@ -128,124 +128,122 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
 
   return (
     <Panel title={t.refuels.priceTrendsOverTime}>
-      <div className="chart-container">
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart
-            data={sortedData}
-            margin={{
-              top: 20,
-              right: 30,
-              left: 20,
-              bottom: 20,
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart
+          data={sortedData}
+          margin={{
+            top: 20,
+            right: 30,
+            left: 20,
+            bottom: 20,
+          }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} />
+          <XAxis
+            type="number"
+            dataKey="timestampMs"
+            scale="time"
+            domain={["dataMin", "dataMax"]}
+            stroke={chartTheme.axis}
+            fontSize={12}
+            tickMargin={10}
+            tickFormatter={(value) => {
+              const date = new Date(value);
+              return date.toLocaleDateString("en-GB", {
+                month: "short",
+                day: "numeric",
+                year: "2-digit",
+              });
             }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} />
-            <XAxis
-              type="number"
-              dataKey="timestampMs"
-              scale="time"
-              domain={["dataMin", "dataMax"]}
-              stroke={chartTheme.axis}
-              fontSize={12}
-              tickMargin={10}
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                return date.toLocaleDateString("en-GB", {
-                  month: "short",
-                  day: "numeric",
-                  year: "2-digit",
-                });
-              }}
-            />
-            <YAxis
-              domain={[yAxisMin, yAxisMax]}
-              stroke={chartTheme.axis}
-              fontSize={12}
-              tickFormatter={(value) => `${value.toFixed(2)}`}
-              label={{
-                value: t.refuels.priceLabel,
-                angle: -90,
-                position: "insideLeft",
-                style: { textAnchor: "middle" },
-              }}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="priceFormatted"
-              stroke={chartTheme.primaryLine}
-              strokeWidth={3}
-              dot={{
-                fill: chartTheme.primaryDot,
-                strokeWidth: 2,
-                r: 4,
-              }}
-              activeDot={{
-                r: 6,
-                fill: chartTheme.primaryDot,
-                strokeWidth: 2,
-                stroke: chartTheme.activeDotStroke,
-              }}
-              name={t.refuels.pricePerLiterChart}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+          />
+          <YAxis
+            domain={[yAxisMin, yAxisMax]}
+            stroke={chartTheme.axis}
+            fontSize={12}
+            tickFormatter={(value) => `${value.toFixed(2)}`}
+            label={{
+              value: t.refuels.priceLabel,
+              angle: -90,
+              position: "insideLeft",
+              style: { textAnchor: "middle" },
+            }}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend />
+          <Line
+            type="monotone"
+            dataKey="priceFormatted"
+            stroke={chartTheme.primaryLine}
+            strokeWidth={3}
+            dot={{
+              fill: chartTheme.primaryDot,
+              strokeWidth: 2,
+              r: 4,
+            }}
+            activeDot={{
+              r: 6,
+              fill: chartTheme.primaryDot,
+              strokeWidth: 2,
+              stroke: chartTheme.activeDotStroke,
+            }}
+            name={t.refuels.pricePerLiterChart}
+          />
+        </LineChart>
+      </ResponsiveContainer>
 
-        {sortedData.length > 0 && (
-          <GridLayout variant="stats" className="mt-4 text-sm">
-            <SummaryCard
-              title={t.refuels.currentPrice}
-              value={{
-                value: formatPricePerLiter(
-                  sortedData[sortedData.length - 1].price,
-                ),
-                unit: "€/L",
-              }}
-              icon={
-                <AttachMoneyIcon className="icon-lg text-blue-600 dark:text-blue-400" />
-              }
-              iconBgColor="blue"
-            />
+      {sortedData.length > 0 && (
+        <GridLayout variant="stats" className="mt-4 text-sm">
+          <SummaryCard
+            title={t.refuels.currentPrice}
+            value={{
+              value: formatPricePerLiter(
+                sortedData[sortedData.length - 1].price,
+              ),
+              unit: "€/L",
+            }}
+            icon={
+              <AttachMoneyIcon className="icon-lg text-blue-600 dark:text-blue-400" />
+            }
+            iconBgColor="blue"
+          />
 
-            <SummaryCard
-              title={t.refuels.lowestPrice}
-              value={{
-                value: formatPricePerLiter(minPrice),
-                unit: "€/L",
-              }}
-              icon={
-                <TrendingDownIcon className="icon-lg text-green-600 dark:text-green-400" />
-              }
-              iconBgColor="green"
-            />
+          <SummaryCard
+            title={t.refuels.lowestPrice}
+            value={{
+              value: formatPricePerLiter(minPrice),
+              unit: "€/L",
+            }}
+            icon={
+              <TrendingDownIcon className="icon-lg text-green-600 dark:text-green-400" />
+            }
+            iconBgColor="green"
+          />
 
-            <SummaryCard
-              title={t.refuels.highestPrice}
-              value={{
-                value: formatPricePerLiter(maxPrice),
-                unit: "€/L",
-              }}
-              icon={
-                <TrendingUpIcon className="icon-lg text-red-600 dark:text-red-400" />
-              }
-              iconBgColor="red"
-            />
+          <SummaryCard
+            title={t.refuels.highestPrice}
+            value={{
+              value: formatPricePerLiter(maxPrice),
+              unit: "€/L",
+            }}
+            icon={
+              <TrendingUpIcon className="icon-lg text-red-600 dark:text-red-400" />
+            }
+            iconBgColor="red"
+          />
 
-            <SummaryCard
-              title={t.refuels.priceRange}
-              value={{
-                value: formatPricePerLiter(priceRange),
-                unit: "€/L",
-              }}
-              icon={
-                <BarChartIcon className="icon-lg text-gray-600 dark:text-gray-400" />
-              }
-              iconBgColor="gray"
-            />
-          </GridLayout>
-        )}
-      </div>
+          <SummaryCard
+            title={t.refuels.priceRange}
+            value={{
+              value: formatPricePerLiter(priceRange),
+              unit: "€/L",
+            }}
+            icon={
+              <BarChartIcon className="icon-lg text-gray-600 dark:text-gray-400" />
+            }
+            iconBgColor="gray"
+          />
+        </GridLayout>
+      )}
     </Panel>
   );
 }

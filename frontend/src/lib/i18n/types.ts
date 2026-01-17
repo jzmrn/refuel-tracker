@@ -215,11 +215,6 @@ export interface TranslationStructure {
     avgEstimated: string;
     avgDifference: string;
     accuracy: string;
-    accuracyDescription: string;
-    greenLineSolid: string;
-    blueLineDashed: string;
-    actualConsumptionDescription: string;
-    yourEstimates: string;
 
     // Placeholders
     placeholders: {

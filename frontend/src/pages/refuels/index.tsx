@@ -1,8 +1,8 @@
 import { useRouter } from "next/router";
 import AddIcon from "@mui/icons-material/Add";
+import CircularProgress from "@mui/material/CircularProgress";
 import CarCard from "@/components/cars/CarCard";
 import Snackbar from "@/components/common/Snackbar";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
 import Panel from "@/components/common/Panel";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import { useSnackbar } from "@/lib/useSnackbar";
@@ -15,10 +15,6 @@ export default function RefuelsIndex() {
 
   // Fetch cars with React Query (using min load time to avoid flickering)
   const { data: cars = [], isLoading } = useCarsWithMinLoadTime();
-
-  // Separate owned cars from shared cars
-  const ownedCars = cars.filter((car) => car.is_owner);
-  const sharedCars = cars.filter((car) => !car.is_owner);
 
   const { snackbar, hideSnackbar } = useSnackbar();
 
@@ -42,74 +38,41 @@ export default function RefuelsIndex() {
         </div>
       </div>
 
-      {isLoading ? (
-        <Panel>
-          <LoadingSpinner text={t.common.loading} />
-        </Panel>
-      ) : (
-        <div className="space-y-8">
-          {/* My Cars Section */}
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="heading-2">{t.cars.myCars}</h2>
-              <button
-                onClick={handleAddCar}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                aria-label={t.cars.addCar}
-              >
-                <AddIcon className="icon text-gray-600 dark:text-gray-400" />
-              </button>
-            </div>
-            {ownedCars.length === 0 ? (
-              <Panel>
-                <div className="flex flex-col items-center justify-center py-12">
-                  <DirectionsCarIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
-                  <p className="text-secondary text-center">
-                    {t.cars.addFirstCar}
-                  </p>
-                </div>
-              </Panel>
-            ) : (
-              <div className="grid gap-4 lg:grid-cols-2">
-                {ownedCars.map((car) => (
-                  <CarCard
-                    key={car.id}
-                    car={car}
-                    onClick={() => handleCarClick(car.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Cars Shared With Me Section */}
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="heading-2">{t.cars.sharedWithMe}</h2>
-            </div>
-            {sharedCars.length === 0 ? (
-              <Panel>
-                <div className="flex flex-col items-center justify-center py-12">
-                  <DirectionsCarIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
-                  <p className="text-secondary text-center">
-                    {t.cars.noCarsSharedWithYou}
-                  </p>
-                </div>
-              </Panel>
-            ) : (
-              <div className="grid gap-4 lg:grid-cols-2">
-                {sharedCars.map((car) => (
-                  <CarCard
-                    key={car.id}
-                    car={car}
-                    onClick={() => handleCarClick(car.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="heading-2">{t.cars.myCars}</h2>
+          <button
+            onClick={handleAddCar}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            aria-label={t.cars.addCar}
+          >
+            <AddIcon className="icon text-gray-600 dark:text-gray-400" />
+          </button>
         </div>
-      )}
+        {isLoading ? (
+          <div className="flex items-center justify-center gap-3 py-12">
+            <CircularProgress size={24} />
+            <span className="text-secondary">{t.common.loading}</span>
+          </div>
+        ) : cars.length === 0 ? (
+          <Panel>
+            <div className="flex flex-col items-center justify-center py-12">
+              <DirectionsCarIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
+              <p className="text-secondary text-center">{t.cars.addFirstCar}</p>
+            </div>
+          </Panel>
+        ) : (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {cars.map((car) => (
+              <CarCard
+                key={car.id}
+                car={car}
+                onClick={() => handleCarClick(car.id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Snackbar */}
       {snackbar.isVisible && (

@@ -182,6 +182,10 @@ export default function AddRefuel() {
   };
 
   const totalCost = formData.price * formData.amount;
+  const actualConsumption =
+    formData.amount > 0 && formData.kilometers_since_last_refuel > 0
+      ? (formData.amount / formData.kilometers_since_last_refuel) * 100
+      : null;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
@@ -274,20 +278,6 @@ export default function AddRefuel() {
                   </div>
                 </div>
 
-                {/* Total Cost (calculated) */}
-                {totalCost > 0 && (
-                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {t.refuels.totalCost}:
-                      </span>
-                      <span className="text-lg font-bold text-primary-600 dark:text-blue-400">
-                        {totalCost.toFixed(2)} €
-                      </span>
-                    </div>
-                  </div>
-                )}
-
                 {/* Kilometers and Fuel Consumption - 2 columns on desktop */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Kilometers Since Last Refuel */}
@@ -326,7 +316,7 @@ export default function AddRefuel() {
                       htmlFor="estimated_fuel_consumption"
                       className="label"
                     >
-                      {t.refuels.estimatedFuelConsumption} (L/100km) *
+                      {t.refuels.estimatedFuelConsumption} *
                     </label>
                     <input
                       type="number"
@@ -349,6 +339,28 @@ export default function AddRefuel() {
                         {errors.estimated_fuel_consumption}
                       </p>
                     )}
+                  </div>
+                </div>
+
+                {/* Total Cost and Actual Consumption (calculated) */}
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t.refuels.totalCost}:
+                    </span>
+                    <span className="text-lg font-bold text-primary-600 dark:text-blue-400">
+                      {totalCost > 0 ? `${totalCost.toFixed(2)} €` : "—"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t.refuels.actualConsumption}:
+                    </span>
+                    <span className="text-lg font-bold text-primary-600 dark:text-blue-400">
+                      {actualConsumption !== null
+                        ? `${actualConsumption.toFixed(2)} L/100km`
+                        : "—"}
+                    </span>
                   </div>
                 </div>
 

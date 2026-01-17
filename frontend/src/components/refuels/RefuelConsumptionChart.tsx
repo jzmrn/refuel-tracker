@@ -185,148 +185,128 @@ export default function RefuelConsumptionChart({
 
   return (
     <Panel title={t.refuels.fuelConsumptionEstimatedVsActual}>
-      <div className="chart-container">
-        <ResponsiveContainer width="100%" height={350}>
-          <LineChart
-            data={chartData}
-            margin={{
-              top: 20,
-              right: 30,
-              left: 20,
-              bottom: 20,
+      <ResponsiveContainer width="100%" height={350}>
+        <LineChart
+          data={chartData}
+          margin={{
+            top: 20,
+            right: 30,
+            left: 20,
+            bottom: 20,
+          }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} />
+          <XAxis
+            type="number"
+            dataKey="timestampMs"
+            scale="time"
+            domain={["dataMin", "dataMax"]}
+            stroke={chartTheme.axis}
+            fontSize={12}
+            tickMargin={10}
+            tickFormatter={(value) => {
+              const date = new Date(value);
+              return formatDate(date, {
+                month: "short",
+                day: "numeric",
+                year: "2-digit",
+              });
             }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} />
-            <XAxis
-              type="number"
-              dataKey="timestampMs"
-              scale="time"
-              domain={["dataMin", "dataMax"]}
-              stroke={chartTheme.axis}
-              fontSize={12}
-              tickMargin={10}
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                return formatDate(date, {
-                  month: "short",
-                  day: "numeric",
-                  year: "2-digit",
-                });
-              }}
-            />
-            <YAxis
-              domain={[yAxisMin, yAxisMax]}
-              stroke={chartTheme.axis}
-              fontSize={12}
-              tickFormatter={(value) => `${value.toFixed(1)}`}
-              label={{
-                value: t.refuels.consumptionLabelWithUnit,
-                angle: -90,
-                position: "insideLeft",
-                style: { textAnchor: "middle" },
-              }}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="estimatedConsumption"
-              stroke={chartTheme.primaryLine}
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              dot={{
-                fill: chartTheme.primaryDot,
-                strokeWidth: 2,
-                r: 3,
-              }}
-              name={t.refuels.estimatedConsumption}
-            />
-            <Line
-              type="monotone"
-              dataKey="actualConsumption"
-              stroke={chartTheme.secondaryLine}
-              strokeWidth={3}
-              dot={{
-                fill: chartTheme.secondaryDot,
-                strokeWidth: 2,
-                r: 4,
-              }}
-              activeDot={{
-                r: 6,
-                fill: chartTheme.secondaryActiveDot,
-                strokeWidth: 2,
-                stroke: chartTheme.activeDotStroke,
-              }}
-              name={t.refuels.actualConsumptionChart}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-
-        <GridLayout variant="stats" className="mt-4 text-sm">
-          <SummaryCard
-            title={t.refuels.avgActual}
-            value={{ value: formatConsumption(avgActual), unit: "L/100km" }}
-            icon={
-              <BarChartIcon className="icon-lg text-green-600 dark:text-green-400" />
-            }
-            iconBgColor="green"
           />
-
-          <SummaryCard
-            title={t.refuels.avgEstimated}
-            value={{ value: formatConsumption(avgEstimated), unit: "L/100km" }}
-            icon={
-              <NumbersIcon className="icon-lg text-blue-600 dark:text-blue-400" />
-            }
-            iconBgColor="blue"
-          />
-
-          <SummaryCard
-            title={t.refuels.avgDifference}
-            value={{
-              value: `${avgDifference > 0 ? "+" : ""}${formatConsumption(
-                Math.abs(avgDifference),
-              )}`,
-              unit: "L/100km",
+          <YAxis
+            domain={[yAxisMin, yAxisMax]}
+            stroke={chartTheme.axis}
+            fontSize={12}
+            tickFormatter={(value) => `${value.toFixed(1)}`}
+            label={{
+              value: t.refuels.consumptionLabelWithUnit,
+              angle: -90,
+              position: "insideLeft",
+              style: { textAnchor: "middle" },
             }}
-            icon={
-              avgDifference > 0 ? (
-                <TrendingUpIcon className="icon-lg text-red-600 dark:text-red-400" />
-              ) : (
-                <TrendingDownIcon className="icon-lg text-green-600 dark:text-green-400" />
-              )
-            }
-            iconBgColor={avgDifference > 0 ? "red" : "green"}
           />
-
-          <SummaryCard
-            title={t.refuels.accuracy}
-            value={{ value: `${accuracyPercentage.toFixed(0)}`, unit: "%" }}
-            icon={
-              <CheckCircleOutlineIcon className="icon-lg text-purple-600 dark:text-purple-400" />
-            }
-            iconBgColor="purple"
+          <Tooltip content={<CustomTooltip />} />
+          <Legend />
+          <Line
+            type="monotone"
+            dataKey="estimatedConsumption"
+            stroke={chartTheme.primaryLine}
+            strokeWidth={2}
+            strokeDasharray="5 5"
+            dot={{
+              fill: chartTheme.primaryDot,
+              strokeWidth: 2,
+              r: 3,
+            }}
+            name={t.refuels.estimatedConsumption}
           />
-        </GridLayout>
+          <Line
+            type="monotone"
+            dataKey="actualConsumption"
+            stroke={chartTheme.secondaryLine}
+            strokeWidth={3}
+            dot={{
+              fill: chartTheme.secondaryDot,
+              strokeWidth: 2,
+              r: 4,
+            }}
+            activeDot={{
+              r: 6,
+              fill: chartTheme.secondaryActiveDot,
+              strokeWidth: 2,
+              stroke: chartTheme.activeDotStroke,
+            }}
+            name={t.refuels.actualConsumptionChart}
+          />
+        </LineChart>
+      </ResponsiveContainer>
 
-        <div className="mt-3 text-xs text-secondary">
-          <p>
-            • <span className="font-medium">{t.refuels.accuracy}</span>{" "}
-            {t.refuels.accuracyDescription}
-          </p>
-          <p>
-            •{" "}
-            <span className="text-green-600 font-medium">
-              {t.refuels.greenLineSolid}
-            </span>
-            : {t.refuels.actualConsumptionDescription} |
-            <span className="text-blue-600 font-medium ml-1">
-              {t.refuels.blueLineDashed}
-            </span>
-            : {t.refuels.yourEstimates}
-          </p>
-        </div>
-      </div>
+      <GridLayout variant="stats" className="mt-4 text-sm">
+        <SummaryCard
+          title={t.refuels.avgActual}
+          value={{ value: formatConsumption(avgActual), unit: "L/100km" }}
+          icon={
+            <BarChartIcon className="icon-lg text-green-600 dark:text-green-400" />
+          }
+          iconBgColor="green"
+        />
+
+        <SummaryCard
+          title={t.refuels.avgEstimated}
+          value={{ value: formatConsumption(avgEstimated), unit: "L/100km" }}
+          icon={
+            <NumbersIcon className="icon-lg text-blue-600 dark:text-blue-400" />
+          }
+          iconBgColor="blue"
+        />
+
+        <SummaryCard
+          title={t.refuels.avgDifference}
+          value={{
+            value: `${avgDifference > 0 ? "+" : ""}${formatConsumption(
+              Math.abs(avgDifference),
+            )}`,
+            unit: "L/100km",
+          }}
+          icon={
+            avgDifference > 0 ? (
+              <TrendingUpIcon className="icon-lg text-red-600 dark:text-red-400" />
+            ) : (
+              <TrendingDownIcon className="icon-lg text-green-600 dark:text-green-400" />
+            )
+          }
+          iconBgColor={avgDifference > 0 ? "red" : "green"}
+        />
+
+        <SummaryCard
+          title={t.refuels.accuracy}
+          value={{ value: `${accuracyPercentage.toFixed(0)}`, unit: "%" }}
+          icon={
+            <CheckCircleOutlineIcon className="icon-lg text-purple-600 dark:text-purple-400" />
+          }
+          iconBgColor="purple"
+        />
+      </GridLayout>
     </Panel>
   );
 }
