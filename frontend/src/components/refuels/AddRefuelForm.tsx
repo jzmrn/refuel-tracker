@@ -251,7 +251,7 @@ export default function AddRefuelForm({
     >
       <div className="form-group">
         <label htmlFor="timestamp" className="label">
-          {t.refuels.dateTime} *
+          {t.forms.dateTime} *
         </label>
         <div className="flex gap-2 min-w-0">
           <input

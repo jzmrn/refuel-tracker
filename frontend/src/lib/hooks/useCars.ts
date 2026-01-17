@@ -6,6 +6,8 @@ import apiService, {
   RefuelMetric,
   RefuelStatistics,
   RefuelMetricCreate,
+  KilometerEntry,
+  KilometerEntryCreate,
 } from "@/lib/api";
 import { useWithMinLoadTime } from "./useWithMinLoadTime";
 
@@ -20,6 +22,8 @@ export const carsKeys = {
   refuels: (carId: string) => [...carsKeys.detail(carId), "refuels"] as const,
   refuelStatistics: (carId: string) =>
     [...carsKeys.detail(carId), "statistics"] as const,
+  kilometers: (carId: string) =>
+    [...carsKeys.detail(carId), "kilometers"] as const,
 };
 
 /**
@@ -304,6 +308,97 @@ export function useRevokeCarAccess() {
       });
       // Invalidate cars list
       queryClient.invalidateQueries({ queryKey: carsKeys.lists() });
+    },
+  });
+}
+
+/**
+ * Hook to fetch kilometer entries for a car
+ * Data is cached for 2 minutes
+ */
+export function useKilometerEntries(
+  carId: string | undefined,
+  params?: {
+    start_date?: string;
+    end_date?: string;
+    limit?: number;
+  }
+) {
+  return useQuery({
+    queryKey: carId
+      ? [...carsKeys.kilometers(carId), params]
+      : ["kilometers", "none"],
+    queryFn: async () => {
+      if (!carId) throw new Error("Car ID is required");
+      const data = await apiService.getKilometerEntries({
+        car_id: carId,
+        ...params,
+      });
+      return data;
+    },
+    enabled: !!carId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+}
+
+/**
+ * Hook to fetch kilometer entries with minimum loading time
+ * Ensures loading state is shown for at least 500ms when data is not cached
+ * This provides better UX by avoiding flash of loading state
+ */
+export function useKilometerEntriesWithMinLoadTime(
+  carId: string | undefined,
+  params?: {
+    start_date?: string;
+    end_date?: string;
+    limit?: number;
+  }
+) {
+  return useWithMinLoadTime(useKilometerEntries(carId, params));
+}
+
+/**
+ * Hook to create a kilometer entry
+ * Automatically invalidates kilometer entries
+ */
+export function useCreateKilometerEntry() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (entry: KilometerEntryCreate) => {
+      return await apiService.createKilometerEntry(entry);
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate kilometer entries for this car
+      queryClient.invalidateQueries({
+        queryKey: carsKeys.kilometers(variables.car_id),
+      });
+    },
+  });
+}
+
+/**
+ * Hook to delete a kilometer entry
+ * Automatically invalidates kilometer entries
+ */
+export function useDeleteKilometerEntry() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      entryId,
+      carId,
+    }: {
+      entryId: string;
+      carId: string;
+    }) => {
+      return await apiService.deleteKilometerEntry(entryId, carId);
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate kilometer entries for this car
+      queryClient.invalidateQueries({
+        queryKey: carsKeys.kilometers(variables.carId),
+      });
     },
   });
 }

@@ -210,6 +210,22 @@ export interface CarStatistics {
   last_refuel?: string;
 }
 
+// Kilometer Entry interfaces
+export interface KilometerEntry {
+  id: string;
+  car_id: string;
+  total_kilometers: number;
+  timestamp: string;
+  created_at: string;
+  created_by: string;
+}
+
+export interface KilometerEntryCreate {
+  car_id: string;
+  total_kilometers: number;
+  timestamp?: string;
+}
+
 export interface DataPointCreate {
   timestamp: string;
   value: number;
@@ -813,6 +829,30 @@ class ApiService {
   async getCarStatistics(carId: string): Promise<CarStatistics> {
     const response = await this.api.get(`/api/cars/${carId}/statistics`);
     return response.data;
+  }
+
+  // Kilometer Entries endpoints
+  async createKilometerEntry(
+    entry: KilometerEntryCreate
+  ): Promise<KilometerEntry> {
+    const response = await this.api.post("/api/kilometers", entry);
+    return response.data;
+  }
+
+  async getKilometerEntries(params: {
+    car_id: string;
+    start_date?: string;
+    end_date?: string;
+    limit?: number;
+  }): Promise<KilometerEntry[]> {
+    const response = await this.api.get("/api/kilometers", { params });
+    return response.data;
+  }
+
+  async deleteKilometerEntry(entryId: string, carId: string): Promise<void> {
+    await this.api.delete(`/api/kilometers/${entryId}`, {
+      params: { car_id: carId },
+    });
   }
 }
 

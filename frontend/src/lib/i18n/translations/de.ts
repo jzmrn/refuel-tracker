@@ -137,7 +137,6 @@ export const de: TranslationStructure = {
     errorFiltering: "Fehler beim Filtern der Daten",
 
     // Form labels and validation
-    dateTime: "Datum & Zeit",
     now: "Jetzt",
     pricePerLiterForm: "Preis pro Liter (€)",
     amountLiters: "Menge (Liter)",
@@ -227,6 +226,36 @@ export const de: TranslationStructure = {
     placeholders: {
       notes: "z.B. Shell Tankstelle, A1 Raststätte...",
     },
+  },
+
+  kilometers: {
+    title: "Kilometerstand",
+    addKilometer: "Kilometerstand hinzufügen",
+    totalKilometers: "Gesamtkilometer",
+    recentEntries: "Letzte Kilometereinträge",
+    kilometerHistory: "Kilometerverlauf",
+    noEntriesYet: "Noch keine Kilometereinträge aufgezeichnet",
+    addFirstEntry:
+      "Füge deinen ersten Kilometereintrag hinzu, um die Verfolgung zu starten",
+    entryAdded: "Kilometereintrag erfolgreich hinzugefügt!",
+    entryDeleted: "Kilometereintrag erfolgreich gelöscht!",
+    errorAddingEntry: "Fehler beim Hinzufügen des Kilometereintrags",
+    errorDeletingEntry: "Fehler beim Löschen des Kilometereintrags",
+    errorLoadingData: "Fehler beim Laden der Kilometerdaten",
+    viewChart: "Diagramm anzeigen",
+    now: "Jetzt",
+    cancel: "Abbrechen",
+    addEntry: "Eintrag hinzufügen",
+    totalKilometersForm: "Gesamtkilometer (km)",
+    kilometersRequired: "Kilometer sind erforderlich",
+    kilometersPositive: "Kilometer müssen größer als 0 sein",
+    invalidDateFormat: "Ungültiges Datumsformat",
+    dateCannotBeFuture: "Datum darf nicht in der Zukunft liegen",
+    dateTimeRequired: "Datum und Zeit sind erforderlich",
+    filter: "Filter",
+    lastMonth: "Letzter Monat",
+    lastSixMonths: "Letzte 6 Monate",
+    all: "Alle",
   },
 
   timeSpans: {

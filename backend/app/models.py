@@ -603,3 +603,49 @@ class CarStatistics(BaseModel):
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+# Kilometer Entry Models
+class KilometerEntryCreate(BaseModel):
+    """Request model for creating a kilometer entry"""
+
+    car_id: str = Field(..., description="ID of the car")
+    total_kilometers: float = Field(
+        ..., gt=0, description="Total kilometers on the odometer"
+    )
+    timestamp: datetime | None = Field(
+        None, description="Optional timestamp for historical entries"
+    )
+
+    @field_validator("timestamp")
+    @classmethod
+    def validate_timestamp(cls, v):
+        if v is not None:
+            # Get current time - handle both timezone-aware and naive datetimes
+            now = datetime.now()
+
+            # If the input datetime has timezone info, compare with timezone-aware current time
+            if v.tzinfo is not None:
+                # Convert current time to UTC for comparison
+                now = datetime.now(UTC)
+                # If v is not in UTC, convert it
+                if v.tzinfo != UTC:
+                    v = v.astimezone(UTC)
+
+            if v > now:
+                raise ValueError("Timestamp cannot be in the future")
+        return v
+
+
+class KilometerEntryResponse(BaseModel):
+    """Response model for kilometer entries"""
+
+    id: str
+    car_id: str = Field(..., description="ID of the car")
+    total_kilometers: float
+    timestamp: datetime
+    created_at: datetime
+    created_by: str = Field(..., description="User ID who created this entry")
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}

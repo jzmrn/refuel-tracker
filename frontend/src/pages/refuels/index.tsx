@@ -8,6 +8,7 @@ import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useCarsWithMinLoadTime } from "@/lib/hooks/useCars";
+import { EmptyPanel } from "@/components/common";
 
 export default function RefuelsIndex() {
   const { t } = useTranslation();
@@ -55,12 +56,12 @@ export default function RefuelsIndex() {
             <span className="text-secondary">{t.common.loading}</span>
           </div>
         ) : cars.length === 0 ? (
-          <Panel>
-            <div className="flex flex-col items-center justify-center py-12">
+          <EmptyPanel
+            icon={
               <DirectionsCarIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
-              <p className="text-secondary text-center">{t.cars.addFirstCar}</p>
-            </div>
-          </Panel>
+            }
+            title={t.cars.addFirstCar}
+          />
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
             {cars.map((car) => (

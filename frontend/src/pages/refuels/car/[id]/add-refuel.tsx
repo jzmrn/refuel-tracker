@@ -369,7 +369,7 @@ export default function AddRefuel() {
                   {/* Timestamp */}
                   <div className="form-group">
                     <label htmlFor="timestamp" className="label">
-                      {t.refuels.dateTime} *
+                      {t.forms.dateTime} *
                     </label>
                     <input
                       type="datetime-local"

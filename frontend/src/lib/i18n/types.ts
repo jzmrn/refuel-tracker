@@ -135,7 +135,6 @@ export interface TranslationStructure {
     errorFiltering: string;
 
     // Form labels and validation
-    dateTime: string;
     now: string;
     pricePerLiterForm: string;
     amountLiters: string;
@@ -220,6 +219,36 @@ export interface TranslationStructure {
     placeholders: {
       notes: string;
     };
+  };
+
+  // Kilometers
+  kilometers: {
+    title: string;
+    addKilometer: string;
+    totalKilometers: string;
+    recentEntries: string;
+    kilometerHistory: string;
+    noEntriesYet: string;
+    addFirstEntry: string;
+    entryAdded: string;
+    entryDeleted: string;
+    errorAddingEntry: string;
+    errorDeletingEntry: string;
+    errorLoadingData: string;
+    viewChart: string;
+    now: string;
+    cancel: string;
+    addEntry: string;
+    totalKilometersForm: string;
+    kilometersRequired: string;
+    kilometersPositive: string;
+    invalidDateFormat: string;
+    dateCannotBeFuture: string;
+    dateTimeRequired: string;
+    filter: string;
+    lastMonth: string;
+    lastSixMonths: string;
+    all: string;
   };
 
   // Time spans

@@ -6,15 +6,18 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import SpeedIcon from "@mui/icons-material/Speed";
 import Snackbar from "@/components/common/Snackbar";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import Panel from "@/components/common/Panel";
 import RefuelList from "@/components/refuels/RefuelList";
+import KilometerList from "@/components/refuels/KilometerList";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import {
   useCarWithMinLoadTime,
   useRefuelMetricsWithMinLoadTime,
+  useKilometerEntriesWithMinLoadTime,
   useRevokeCarAccess,
   useDeleteCar,
 } from "@/lib/hooks/useCars";
@@ -43,6 +46,12 @@ export default function CarDetails() {
       limit: 5,
     });
 
+  // Fetch recent kilometer entries (limit 5)
+  const { data: kilometerEntries = [], isLoading: kilometersLoading } =
+    useKilometerEntriesWithMinLoadTime(carId, {
+      limit: 5,
+    });
+
   const revokeAccess = useRevokeCarAccess();
   const deleteCar = useDeleteCar();
   const { snackbar, showError, showSuccess, hideSnackbar } = useSnackbar();
@@ -66,6 +75,14 @@ export default function CarDetails() {
 
   const handleViewStats = () => {
     router.push(`/refuels/car/${carId}/stats`);
+  };
+
+  const handleAddKilometer = () => {
+    router.push(`/refuels/car/${carId}/add-kilometer`);
+  };
+
+  const handleViewKilometerChart = () => {
+    router.push(`/refuels/car/${carId}/kilometer-stats`);
   };
 
   const handleRemoveSharedUser = async (userId: string) => {
@@ -223,6 +240,34 @@ export default function CarDetails() {
             }
           >
             <RefuelList refuels={refuels} loading={refuelsLoading} />
+          </Panel>
+
+          {/* Recent Kilometer Entries */}
+          <Panel
+            title={t.kilometers.recentEntries}
+            actions={
+              <div className="flex gap-2">
+                <button
+                  onClick={handleViewKilometerChart}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  aria-label={t.kilometers.viewChart}
+                >
+                  <BarChartIcon className="icon text-gray-600 dark:text-gray-400" />
+                </button>
+                <button
+                  onClick={handleAddKilometer}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  aria-label={t.kilometers.addEntry}
+                >
+                  <AddIcon className="icon text-gray-600 dark:text-gray-400" />
+                </button>
+              </div>
+            }
+          >
+            <KilometerList
+              entries={kilometerEntries}
+              loading={kilometersLoading}
+            />
           </Panel>
 
           {/* Shared Users - only show if user is owner */}

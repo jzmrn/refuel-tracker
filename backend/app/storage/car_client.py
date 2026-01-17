@@ -327,6 +327,14 @@ class CarClient:
                 [car_id],
             )
 
+            # Delete kilometer entries associated with this car
+            con.execute(
+                """
+                DELETE FROM kilometer_entries WHERE car_id = ?
+                """,
+                [car_id],
+            )
+
             # Delete car access entries
             con.execute(
                 """
