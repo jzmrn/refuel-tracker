@@ -10,8 +10,9 @@ interface PageTransitionWrapperProps {
  * Global page transition wrapper using Framer Motion.
  * Wrap your page content in _app.tsx to enable smooth transitions.
  *
- * Uses a simple fade transition that works reliably without
- * complex directional logic.
+ * Uses mode="popLayout" to keep both old and new pages in DOM during
+ * transition, preventing scroll position jumps. The old page fades out
+ * while the new page fades in simultaneously.
  */
 export default function PageTransitionWrapper({
   children,
@@ -23,7 +24,7 @@ export default function PageTransitionWrapper({
   const pageKey = router.asPath.split("?")[0];
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
+    <AnimatePresence mode="popLayout" initial={false}>
       <motion.div
         key={pageKey}
         initial={{ opacity: 0 }}

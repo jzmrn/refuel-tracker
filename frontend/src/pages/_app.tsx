@@ -2,7 +2,6 @@ import type { AppProps } from "next/app";
 import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Layout from "@/components/common/Layout";
-import PageTransitionWrapper from "@/components/common/PageTransitionWrapper";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { UserProvider } from "@/lib/auth/UserContext";
 import {
@@ -30,9 +29,7 @@ function AppContent({ Component, pageProps }: AppProps) {
 
   return (
     <Layout>
-      <PageTransitionWrapper>
-        <Component {...pageProps} />
-      </PageTransitionWrapper>
+      <Component {...pageProps} />
     </Layout>
   );
 }
