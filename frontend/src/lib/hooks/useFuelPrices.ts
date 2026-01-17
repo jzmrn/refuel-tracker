@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import apiService, { GasStationSearchRequest } from "@/lib/api";
+import apiService, { GasStationSearchRequest, FuelType } from "@/lib/api";
 import { useWithMinLoadTime } from "./useWithMinLoadTime";
 
 // Query Keys - centralized for consistency
@@ -10,6 +10,15 @@ export const fuelPricesKeys = {
     [...fuelPricesKeys.all, "search", params] as const,
   stationDetails: (stationId: string) =>
     [...fuelPricesKeys.all, "stationDetails", stationId] as const,
+  stationMeta: (stationId: string) =>
+    [...fuelPricesKeys.all, "stationMeta", stationId] as const,
+  stationPriceHistory: (stationId: string, fuelType: FuelType) =>
+    [
+      ...fuelPricesKeys.all,
+      "stationPriceHistory",
+      stationId,
+      fuelType,
+    ] as const,
 };
 
 /**
@@ -131,4 +140,61 @@ export function useStationDetailsWithMinLoadTime(
   stationId: string | undefined | null
 ) {
   return useWithMinLoadTime(useStationDetails(stationId));
+}
+
+/**
+ * Hook to fetch station meta information (without price history)
+ * Data is cached for 15 minutes and persists across navigation
+ */
+export function useStationMeta(stationId: string | undefined | null) {
+  return useQuery({
+    queryKey: fuelPricesKeys.stationMeta(stationId || ""),
+    queryFn: async () => {
+      if (!stationId) return null;
+      return await apiService.getStationMeta(stationId);
+    },
+    enabled: !!stationId,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+  });
+}
+
+/**
+ * Hook to fetch station meta with minimum loading time
+ * Ensures loading state is shown for at least 500ms when data is not cached
+ */
+export function useStationMetaWithMinLoadTime(
+  stationId: string | undefined | null
+) {
+  return useWithMinLoadTime(useStationMeta(stationId));
+}
+
+/**
+ * Hook to fetch station price history for a specific fuel type
+ * Data is cached for 10 minutes and persists across navigation
+ */
+export function useStationPriceHistory(
+  stationId: string | undefined | null,
+  fuelType: FuelType
+) {
+  return useQuery({
+    queryKey: fuelPricesKeys.stationPriceHistory(stationId || "", fuelType),
+    queryFn: async () => {
+      if (!stationId) return null;
+      return await apiService.getStationPriceHistory(stationId, fuelType);
+    },
+    enabled: !!stationId,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+  });
+}
+
+/**
+ * Hook to fetch station price history with minimum loading time
+ */
+export function useStationPriceHistoryWithMinLoadTime(
+  stationId: string | undefined | null,
+  fuelType: FuelType
+) {
+  return useWithMinLoadTime(useStationPriceHistory(stationId, fuelType));
 }

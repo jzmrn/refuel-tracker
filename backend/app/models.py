@@ -426,8 +426,53 @@ class PriceHistoryPoint(BaseModel):
         json_encoders = {datetime: lambda v: v.isoformat()}
 
 
+class SingleFuelPriceHistoryPoint(BaseModel):
+    """Price history data point for a single fuel type"""
+
+    timestamp: datetime
+    price: float | None = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class StationMetaResponse(BaseModel):
+    """Response model for station meta information (without price history)"""
+
+    station_id: str
+    name: str | None = None
+    brand: str | None = None
+    street: str | None = None
+    house_number: str | None = None
+    post_code: int | None = None
+    place: str | None = None
+    lat: float | None = None
+    lng: float | None = None
+    timestamp: datetime | None = None
+    current_price_e5: float | None = None
+    current_price_e10: float | None = None
+    current_price_diesel: float | None = None
+    is_open: bool | None = None
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class StationPriceHistoryResponse(BaseModel):
+    """Response model for station price history for a specific fuel type"""
+
+    station_id: str
+    fuel_type: str
+    price_history: list[SingleFuelPriceHistoryPoint] = Field(
+        default_factory=list, description="Price history for the last 24 hours"
+    )
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
 class StationDetailsResponse(BaseModel):
-    """Response model for station details with current prices"""
+    """Response model for station details with current prices (deprecated - use StationMetaResponse)"""
 
     station_id: str
     name: str | None = None

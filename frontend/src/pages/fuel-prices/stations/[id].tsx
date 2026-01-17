@@ -1,16 +1,20 @@
 import { useRouter } from "next/router";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CircularProgress from "@mui/material/CircularProgress";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Snackbar from "@/components/common/Snackbar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import {
   useFavoriteStations,
   useRemoveFavoriteStation,
-  useStationDetailsWithMinLoadTime,
+  useStationMeta,
 } from "@/lib/hooks/useFuelPrices";
-import FuelPriceChart from "@/components/fuel/FuelPriceChart";
+import { FuelType } from "@/lib/api";
+import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
+import StationMetaInfo from "@/components/fuel/StationMetaInfo";
+import StationPriceChart from "@/components/fuel/StationPriceChart";
+
+const FUEL_TYPE_STORAGE_KEY = "stationDetails.fuelType";
 
 export default function StationDetails() {
   const router = useRouter();
@@ -24,12 +28,21 @@ export default function StationDetails() {
   }
   const stableId = typeof id === "string" ? id : lastValidIdRef.current;
 
-  // Fetch station details with caching and minimum loading time
-  const {
-    data: stationData,
-    isLoading,
-    error,
-  } = useStationDetailsWithMinLoadTime(stableId);
+  // Fuel type selection - persist in localStorage
+  const [selectedFuelType, setSelectedFuelType] = useState<FuelType>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(FUEL_TYPE_STORAGE_KEY);
+      if (stored === "e5" || stored === "e10" || stored === "diesel") {
+        return stored;
+      }
+    }
+    return "e5";
+  });
+
+  const handleFuelTypeChange = (fuelType: FuelType) => {
+    setSelectedFuelType(fuelType);
+    localStorage.setItem(FUEL_TYPE_STORAGE_KEY, fuelType);
+  };
 
   const [isRemoving, setIsRemoving] = useState(false);
   const { snackbar, showError, showSuccess, hideSnackbar } = useSnackbar();
@@ -38,43 +51,76 @@ export default function StationDetails() {
   const { data: favorites = [] } = useFavoriteStations();
   const removeFavorite = useRemoveFavoriteStation();
 
+  // Get station meta to determine available fuel types
+  const { data: stationMeta } = useStationMeta(stableId);
+
   const isFavorite =
     typeof stableId === "string" &&
     favorites.some((f) => f.station_id === stableId);
-
-  // Show error if fetch failed
-  if (error && !isLoading) {
-    showError(t.fuelPrices.failedToLoadFavorites);
-  }
 
   const handleBack = () => {
     router.back();
   };
 
-  const formatPrice = (price?: number) => {
-    if (price === undefined || price === null) return "-";
-    const priceStr = price.toFixed(3);
-    const mainPart = priceStr.slice(0, -1);
-    const superscript = priceStr.slice(-1);
-    return (
-      <>
-        {mainPart}
-        <sup className="text-[0.6em] align-baseline">{superscript}</sup>
-      </>
-    );
+  const handleRemoveFavorite = async () => {
+    if (!stableId) return;
+    try {
+      setIsRemoving(true);
+      await removeFavorite.mutateAsync(stableId);
+      // Navigate back after successful removal
+      setTimeout(() => {
+        handleBack();
+      }, 500);
+    } catch (error) {
+      console.error("Error removing favorite:", error);
+      showError(t.fuelPrices.failedToRemoveFavorite);
+      setIsRemoving(false);
+    }
   };
 
-  const formatTime = (timestamp?: string) => {
-    if (!timestamp) return null;
-    const date = new Date(timestamp);
-    return date.toLocaleString("de-DE", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const handleCopyAddress = () => {
+    if (!stationMeta) return;
+    const addressParts = [
+      stationMeta.street,
+      stationMeta.house_number,
+      stationMeta.post_code,
+      stationMeta.place,
+    ]
+      .filter(Boolean)
+      .join(" ");
+    navigator.clipboard.writeText(addressParts);
+    showSuccess(t.fuelPrices.addressCopied);
   };
+
+  // Determine which fuel types are available for this station
+  const availableFuelTypes: FuelType[] = [];
+  if (stationMeta) {
+    if (
+      stationMeta.current_price_e5 !== undefined &&
+      stationMeta.current_price_e5 !== null
+    ) {
+      availableFuelTypes.push("e5");
+    }
+    if (
+      stationMeta.current_price_e10 !== undefined &&
+      stationMeta.current_price_e10 !== null
+    ) {
+      availableFuelTypes.push("e10");
+    }
+    if (
+      stationMeta.current_price_diesel !== undefined &&
+      stationMeta.current_price_diesel !== null
+    ) {
+      availableFuelTypes.push("diesel");
+    }
+  }
+
+  // If the selected fuel type is not available, switch to the first available one
+  const effectiveFuelType =
+    availableFuelTypes.length > 0 &&
+    !availableFuelTypes.includes(selectedFuelType)
+      ? availableFuelTypes[0]
+      : selectedFuelType;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
@@ -95,239 +141,37 @@ export default function StationDetails() {
       </div>
 
       <div className="max-w-3xl mx-auto">
-        {isLoading ? (
-          <div className="panel text-center">
-            <div className="flex flex-col items-center gap-2">
-              <CircularProgress size={20} />
-              <span className="text-secondary">{t.common.loading}</span>
-            </div>
-          </div>
-        ) : stationData ? (
+        {stableId ? (
           <>
-            {/* Station Header */}
-            <div className="panel mb-6">
-              <div className="text-center mb-4">
-                <h2 className="heading-1">
-                  {stationData.brand ||
-                    stationData.name ||
-                    t.fuelPrices.unknown}
-                </h2>
-                {stationData.brand &&
-                  stationData.name &&
-                  stationData.brand !== stationData.name && (
-                    <p className="text-sm text-secondary mt-1">
-                      {stationData.name}
-                    </p>
-                  )}
-              </div>
+            {/* Station Meta Info */}
+            <StationMetaInfo
+              stationId={stableId}
+              isFavorite={isFavorite}
+              isRemoving={isRemoving}
+              onRemoveFavorite={handleRemoveFavorite}
+              onCopyAddress={handleCopyAddress}
+            />
 
-              {/* Status Badge */}
-              {stationData.is_open !== undefined && (
-                <div className="flex justify-center">
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                      stationData.is_open
-                        ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
-                        : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300"
-                    }`}
-                  >
-                    {stationData.is_open
-                      ? t.fuelPrices.open
-                      : t.fuelPrices.closed}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Current Prices */}
-            {(stationData.current_price_e5 ||
-              stationData.current_price_e10 ||
-              stationData.current_price_diesel) && (
+            {/* Fuel Type Selector */}
+            {availableFuelTypes.length > 0 && (
               <div className="panel mb-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3 gap-1">
-                  <h3 className="heading-3">{t.fuelPrices.currentPrices}</h3>
-                  {stationData.timestamp && (
-                    <span className="text-xs text-secondary">
-                      {t.fuelPrices.lastUpdated}:{" "}
-                      {formatTime(stationData.timestamp)}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex flex-col xs:flex-row justify-center items-center gap-1.5 sm:gap-2">
-                  {stationData.current_price_e5 !== undefined &&
-                    stationData.current_price_e5 !== null && (
-                      <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
-                        <div className="text-2xl sm:text-3xl font-bold text-primary">
-                          {formatPrice(stationData.current_price_e5)}
-                        </div>
-                        <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
-                          {t.fuelPrices.e5}
-                        </div>
-                      </div>
-                    )}
-
-                  {stationData.current_price_e10 !== undefined &&
-                    stationData.current_price_e10 !== null && (
-                      <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
-                        <div className="text-2xl sm:text-3xl font-bold text-primary">
-                          {formatPrice(stationData.current_price_e10)}
-                        </div>
-                        <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
-                          {t.fuelPrices.e10}
-                        </div>
-                      </div>
-                    )}
-
-                  {stationData.current_price_diesel !== undefined &&
-                    stationData.current_price_diesel !== null && (
-                      <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
-                        <div className="text-2xl sm:text-3xl font-bold text-primary">
-                          {formatPrice(stationData.current_price_diesel)}
-                        </div>
-                        <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
-                          {t.fuelPrices.diesel}
-                        </div>
-                      </div>
-                    )}
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                  <h2 className="heading-2">{t.fuelPrices.statistics}</h2>
+                  <FuelTypeSelector
+                    selectedFuelType={effectiveFuelType}
+                    onFuelTypeChange={handleFuelTypeChange}
+                    availableFuelTypes={availableFuelTypes}
+                  />
                 </div>
               </div>
             )}
 
-            {/* Price History Charts */}
-            {stationData.price_history_24h &&
-              stationData.price_history_24h.length > 0 && (
-                <>
-                  {/* E5 Chart */}
-                  {stationData.current_price_e5 !== undefined &&
-                    stationData.current_price_e5 !== null && (
-                      <div className="panel mb-6">
-                        <h3 className="heading-3 mb-4">
-                          {t.fuelPrices.e5} - {t.fuelPrices.priceHistory24h}
-                        </h3>
-                        <FuelPriceChart
-                          data={stationData.price_history_24h}
-                          fuelType="e5"
-                          color="#ef4444"
-                          label={t.fuelPrices.e5}
-                        />
-                      </div>
-                    )}
-
-                  {/* E10 Chart */}
-                  {stationData.current_price_e10 !== undefined &&
-                    stationData.current_price_e10 !== null && (
-                      <div className="panel mb-6">
-                        <h3 className="heading-3 mb-4">
-                          {t.fuelPrices.e10} - {t.fuelPrices.priceHistory24h}
-                        </h3>
-                        <FuelPriceChart
-                          data={stationData.price_history_24h}
-                          fuelType="e10"
-                          color="#f59e0b"
-                          label={t.fuelPrices.e10}
-                        />
-                      </div>
-                    )}
-
-                  {/* Diesel Chart */}
-                  {stationData.current_price_diesel !== undefined &&
-                    stationData.current_price_diesel !== null && (
-                      <div className="panel mb-6">
-                        <h3 className="heading-3 mb-4">
-                          {t.fuelPrices.diesel} - {t.fuelPrices.priceHistory24h}
-                        </h3>
-                        <FuelPriceChart
-                          data={stationData.price_history_24h}
-                          fuelType="diesel"
-                          color="#3b82f6"
-                          label={t.fuelPrices.diesel}
-                        />
-                      </div>
-                    )}
-                </>
-              )}
-
-            {/* Address */}
-            {(stationData.street || stationData.place) && (
-              <div className="panel mb-6 text-center">
-                <h3 className="heading-3 mb-3">{t.fuelPrices.address}</h3>
-                <div className="text-base">
-                  {stationData.street && (
-                    <div>
-                      {stationData.street}
-                      {stationData.house_number &&
-                        ` ${stationData.house_number}`}
-                    </div>
-                  )}
-                  {(stationData.post_code || stationData.place) && (
-                    <div>
-                      {stationData.post_code && `${stationData.post_code} `}
-                      {stationData.place}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Actions Panel */}
-            {(stationData.street ||
-              stationData.place ||
-              isFavorite ||
-              isRemoving) && (
-              <div className="panel">
-                <h3 className="heading-3 mb-4">{t.common.actions}</h3>
-                <div className="flex flex-col gap-3">
-                  {(stationData.street || stationData.place) && (
-                    <button
-                      onClick={() => {
-                        const addressParts = [
-                          stationData.street,
-                          stationData.house_number,
-                          stationData.post_code,
-                          stationData.place,
-                        ]
-                          .filter(Boolean)
-                          .join(" ");
-                        navigator.clipboard.writeText(addressParts);
-                        showSuccess(t.fuelPrices.addressCopied);
-                      }}
-                      className="w-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white py-3 rounded-lg transition-colors font-medium text-sm"
-                    >
-                      {t.fuelPrices.copyAddress}
-                    </button>
-                  )}
-                  {(isFavorite || isRemoving) && (
-                    <button
-                      onClick={async () => {
-                        try {
-                          setIsRemoving(true);
-                          await removeFavorite.mutateAsync(stableId as string);
-                          // Navigate back after successful removal
-                          setTimeout(() => {
-                            handleBack();
-                          }, 500);
-                        } catch (error) {
-                          console.error("Error removing favorite:", error);
-                          showError(t.fuelPrices.failedToRemoveFavorite);
-                          setIsRemoving(false);
-                        }
-                      }}
-                      disabled={isRemoving}
-                      className="w-full btn-danger py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                      {isRemoving ? (
-                        <>
-                          <CircularProgress size={20} sx={{ color: "white" }} />
-                          <span>{t.common.loading}</span>
-                        </>
-                      ) : (
-                        t.fuelPrices.removeFromFavorites
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
+            {/* Price Chart */}
+            {availableFuelTypes.length > 0 && (
+              <StationPriceChart
+                stationId={stableId}
+                fuelType={effectiveFuelType}
+              />
             )}
           </>
         ) : (
@@ -335,7 +179,7 @@ export default function StationDetails() {
             <div className="text-sm uppercase tracking-wide text-secondary mb-2">
               {t.fuelPrices.stationId}
             </div>
-            <div className="heading-1">{stableId || t.fuelPrices.unknown}</div>
+            <div className="heading-1">{t.fuelPrices.unknown}</div>
             <div className="text-sm text-secondary mt-2">
               {t.fuelPrices.noDataAvailable}
             </div>

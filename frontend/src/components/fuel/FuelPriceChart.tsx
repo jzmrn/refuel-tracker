@@ -15,11 +15,25 @@ interface PriceHistoryPoint {
   price_diesel?: number;
 }
 
+interface SingleFuelPriceHistoryPoint {
+  timestamp: string;
+  price?: number;
+}
+
 interface FuelPriceChartProps {
-  data: PriceHistoryPoint[];
+  data: PriceHistoryPoint[] | SingleFuelPriceHistoryPoint[];
   fuelType: "e5" | "e10" | "diesel";
   color: string;
   label: string;
+}
+
+// Type guard to check if data is multi-fuel format
+function isMultiFuelData(
+  data: PriceHistoryPoint[] | SingleFuelPriceHistoryPoint[],
+): data is PriceHistoryPoint[] {
+  if (data.length === 0) return false;
+  const first = data[0];
+  return "price_e5" in first || "price_e10" in first || "price_diesel" in first;
 }
 
 export default function FuelPriceChart({
@@ -28,10 +42,16 @@ export default function FuelPriceChart({
   color,
   label,
 }: FuelPriceChartProps) {
-  const chartData = data.map((point) => ({
-    timestamp: new Date(point.timestamp).getTime(),
-    price: point[`price_${fuelType}`],
-  }));
+  // Convert data to chart format based on data type
+  const chartData = isMultiFuelData(data)
+    ? data.map((point) => ({
+        timestamp: new Date(point.timestamp).getTime(),
+        price: point[`price_${fuelType}`],
+      }))
+    : data.map((point) => ({
+        timestamp: new Date(point.timestamp).getTime(),
+        price: point.price,
+      }));
 
   // Split data into segments (break on null values)
   const segments: Array<Array<{ timestamp: number; price?: number }>> = [];
@@ -53,9 +73,11 @@ export default function FuelPriceChart({
   }
 
   // Calculate ticks for Y-axis
-  const prices = data
-    .map((p) => p[`price_${fuelType}`])
-    .filter((v): v is number => v != null);
+  const prices = isMultiFuelData(data)
+    ? data
+        .map((p) => p[`price_${fuelType}`])
+        .filter((v): v is number => v != null)
+    : data.map((p) => p.price).filter((v): v is number => v != null);
 
   let ticks: number[] | undefined = undefined;
   if (prices.length > 0) {

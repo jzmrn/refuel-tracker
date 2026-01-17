@@ -18,7 +18,9 @@ from ..models import (
     FavoriteStationResponse,
     GasStationResponse,
     GasStationSearchRequest,
-    StationDetailsResponse,
+    SingleFuelPriceHistoryPoint,
+    StationMetaResponse,
+    StationPriceHistoryResponse,
 )
 
 router = APIRouter()
@@ -340,7 +342,7 @@ async def get_favorite_stations(
                     current_price_e5=price.e5 if price else None,
                     current_price_e10=price.e10 if price else None,
                     current_price_diesel=price.diesel if price else None,
-                    is_open=price.status == "open" if price else None,
+                    is_open=price.status == "open" if price and price.status else None,
                 )
             )
 
@@ -368,17 +370,17 @@ async def delete_favorite_station(
     }
 
 
-@router.get("/stations/{station_id}", response_model=StationDetailsResponse)
-async def get_station_details(
+@router.get("/stations/{station_id}", response_model=StationMetaResponse)
+async def get_station_meta(
     station_id: str,
     user: CurrentUser,
     fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
     tankerkoenig_client: TankerkoenigClient = Depends(get_tankerkoenig_client),
 ):
-    """Get detailed information about a specific gas station with current prices"""
+    """Get meta information about a specific gas station with current prices (without price history)"""
 
     logger.info(
-        "Getting station details",
+        "Getting station meta",
         extra={"station_id": station_id, "user_id": user.id},
     )
 
@@ -411,35 +413,13 @@ async def get_station_details(
                 extra={"station_id": station_id, "error": str(e)},
             )
 
-        # Update cache
         if price:
             fuel_price_cache.set(station_id, price)
 
     else:
         logger.debug("Using cached price for station", extra={"station_id": station_id})
 
-    # Get price history for the last 24 hours
-    price_history_data = fuel_station_client.get_price_history(station_id, hours=24)
-
-    # Convert from fueldata PriceHistoryPoint to API PriceHistoryPoint
-    from ..models import PriceHistoryPoint
-
-    price_history = [
-        PriceHistoryPoint(
-            timestamp=point.timestamp,
-            price_e5=point.price_e5,
-            price_e10=point.price_e10,
-            price_diesel=point.price_diesel,
-        )
-        for point in price_history_data
-    ]
-
-    logger.debug(
-        "Retrieved price history",
-        extra={"station_id": station_id, "history_count": len(price_history)},
-    )
-
-    return StationDetailsResponse(
+    return StationMetaResponse(
         station_id=station_info.station_id,
         name=station_info.name,
         brand=station_info.brand,
@@ -454,5 +434,65 @@ async def get_station_details(
         current_price_e10=price.e10 if price else None,
         current_price_diesel=price.diesel if price else None,
         is_open=price.status == "open" if price else None,
-        price_history_24h=price_history,
+    )
+
+
+@router.get(
+    "/stations/{station_id}/price-history/{fuel_type}",
+    response_model=StationPriceHistoryResponse,
+)
+async def get_station_price_history(
+    station_id: str,
+    fuel_type: str,
+    user: CurrentUser,
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+):
+    """Get price history for a specific gas station and fuel type"""
+
+    # Validate fuel type
+    valid_fuel_types = ["e5", "e10", "diesel"]
+    if fuel_type not in valid_fuel_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid fuel type. Must be one of: {', '.join(valid_fuel_types)}",
+        )
+
+    logger.info(
+        "Getting station price history",
+        extra={"station_id": station_id, "fuel_type": fuel_type, "user_id": user.id},
+    )
+
+    # Verify station exists
+    station_infos = fuel_station_client.get_gas_station_info(station_id)
+    if not station_infos:
+        logger.info("Station not found", extra={"station_id": station_id})
+        raise HTTPException(status_code=404, detail="Station not found")
+
+    # Get price history for the last 24 hours
+    price_history_data = fuel_station_client.get_price_history(station_id, hours=24)
+
+    # Map fuel type to the correct attribute
+    fuel_type_attr = f"price_{fuel_type}"
+
+    price_history = [
+        SingleFuelPriceHistoryPoint(
+            timestamp=point.timestamp,
+            price=getattr(point, fuel_type_attr, None),
+        )
+        for point in price_history_data
+    ]
+
+    logger.debug(
+        "Retrieved price history",
+        extra={
+            "station_id": station_id,
+            "fuel_type": fuel_type,
+            "history_count": len(price_history),
+        },
+    )
+
+    return StationPriceHistoryResponse(
+        station_id=station_id,
+        fuel_type=fuel_type,
+        price_history=price_history,
     )

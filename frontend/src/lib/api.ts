@@ -345,6 +345,36 @@ export interface PriceHistoryPoint {
   price_diesel?: number;
 }
 
+export interface SingleFuelPriceHistoryPoint {
+  timestamp: string;
+  price?: number;
+}
+
+export interface StationMetaResponse {
+  station_id: string;
+  name?: string;
+  brand?: string;
+  street?: string;
+  house_number?: string;
+  post_code?: number;
+  place?: string;
+  lat?: number;
+  lng?: number;
+  timestamp?: string;
+  current_price_e5?: number;
+  current_price_e10?: number;
+  current_price_diesel?: number;
+  is_open?: boolean;
+}
+
+export interface StationPriceHistoryResponse {
+  station_id: string;
+  fuel_type: string;
+  price_history: SingleFuelPriceHistoryPoint[];
+}
+
+export type FuelType = "e5" | "e10" | "diesel";
+
 export interface StationDetailsResponse {
   station_id: string;
   name?: string;
@@ -714,6 +744,23 @@ class ApiService {
   async getStationDetails(stationId: string): Promise<StationDetailsResponse> {
     const response = await this.api.get(
       `/api/fuel-prices/stations/${stationId}`
+    );
+    return response.data;
+  }
+
+  async getStationMeta(stationId: string): Promise<StationMetaResponse> {
+    const response = await this.api.get(
+      `/api/fuel-prices/stations/${stationId}`
+    );
+    return response.data;
+  }
+
+  async getStationPriceHistory(
+    stationId: string,
+    fuelType: FuelType
+  ): Promise<StationPriceHistoryResponse> {
+    const response = await this.api.get(
+      `/api/fuel-prices/stations/${stationId}/price-history/${fuelType}`
     );
     return response.data;
   }
