@@ -8,7 +8,11 @@ from dagster import (
     ResourceDependency,
 )
 from dagster_duckdb import DuckDBResource
-from fueldata import AggregatedFuelDataClient, FuelPriceDataClient
+from fueldata import (
+    AggregatedFuelDataClient,
+    CompressedFuelDataClient,
+    FuelPriceDataClient,
+)
 
 
 class RawFuelPriceDataIOManager(ConfigurableIOManager):
@@ -116,3 +120,58 @@ class DailyFuelPriceAggregatesIOManager(ConfigurableIOManager):
 
         client = AggregatedFuelDataClient(self.duckdb)
         return client.read_daily_aggregates(start_time, end_time)
+
+
+class CompressedFuelPriceDataIOManager(ConfigurableIOManager):
+    """IO manager for compressed fuel price data stored in DuckDB."""
+
+    duckdb: ResourceDependency[DuckDBResource]
+
+    def handle_output(self, context: OutputContext, obj: pd.DataFrame) -> None:
+        """
+        Store compressed fuel data to DuckDB table.
+
+        Args:
+            context: Dagster output context
+            obj: DataFrame with compressed fuel price data
+        """
+
+        client = CompressedFuelDataClient(self.duckdb)
+        client.store_compressed_data(obj)
+
+        context.log.info(f"Stored {len(obj)} rows to compressed_fuel_prices table")
+
+        context.add_output_metadata(
+            {
+                "num_rows": len(obj),
+                "num_columns": len(obj.columns),
+                "columns": ", ".join(obj.columns),
+                "partition_key": context.partition_key
+                if context.has_partition_key
+                else None,
+            }
+        )
+
+    def load_input(self, context: InputContext) -> pd.DataFrame:
+        """
+        Load compressed fuel data from DuckDB filtered by partition time window.
+
+        Args:
+            context: Dagster input context with partition information
+
+        Returns:
+            DataFrame filtered to the partition's time window
+        """
+
+        if context.has_partition_key:
+            context.log.info(f"Loading data for partition {context.partition_key}")
+            start_time = pd.to_datetime(context.partition_key)
+            end_time = start_time + pd.Timedelta(days=1)
+
+        else:
+            context.log.info("No partition key found; loading all data")
+            start_time = None
+            end_time = None
+
+        client = CompressedFuelDataClient(self.duckdb)
+        return client.read_compressed_data(start_time, end_time)
