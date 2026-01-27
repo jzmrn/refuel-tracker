@@ -26,6 +26,7 @@ interface FuelPriceChartProps {
   fuelType: "e5" | "e10" | "diesel";
   color: string;
   label: string;
+  timeRangeHours?: number;
 }
 
 // Type guard to check if data is multi-fuel format
@@ -42,6 +43,7 @@ export default function FuelPriceChart({
   fuelType,
   color,
   label,
+  timeRangeHours = 24,
 }: FuelPriceChartProps) {
   // Convert data to chart format based on data type
   const chartData = isMultiFuelData(data)
@@ -109,9 +111,17 @@ export default function FuelPriceChart({
             dataKey="timestamp"
             type="number"
             scale="time"
-            domain={[() => Date.now() - 24 * 60 * 60 * 1000, () => Date.now()]}
+            domain={[
+              () => Date.now() - timeRangeHours * 60 * 60 * 1000,
+              () => Date.now(),
+            ]}
+            allowDataOverflow={true}
             tickFormatter={(timestamp) =>
               new Date(timestamp).toLocaleString("de-DE", {
+                ...(timeRangeHours > 24 && {
+                  day: "2-digit",
+                  month: "2-digit",
+                }),
                 hour: "2-digit",
                 minute: "2-digit",
               })
@@ -126,6 +136,7 @@ export default function FuelPriceChart({
             className="text-xs fill-gray-600 dark:fill-gray-400"
             width={50}
             domain={["auto", "auto"]}
+            allowDataOverflow={true}
             tick={(props: any) => {
               const { x, y, payload } = props;
               const priceStr = payload.value.toFixed(3);

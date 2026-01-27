@@ -15,11 +15,7 @@ interface StationDailyStatsChartProps {
   fuelType: FuelType;
 }
 
-const FUEL_TYPE_COLORS: Record<FuelType, string> = {
-  e5: "#ef4444",
-  e10: "#f59e0b",
-  diesel: "#3b82f6",
-};
+const CHART_COLOR = "#3b82f6";
 
 export default function StationDailyStatsChartContainer({
   stationId,
@@ -100,7 +96,7 @@ export default function StationDailyStatsChartContainer({
         <DailyStatsChart
           data={dailyStats.daily_stats}
           fuelType={fuelType}
-          color={FUEL_TYPE_COLORS[fuelType]}
+          color={CHART_COLOR}
           label={fuelTypeLabels[fuelType]}
         />
       ) : (

@@ -15,11 +15,7 @@ interface StationPriceChartProps {
   fuelType: FuelType;
 }
 
-const FUEL_TYPE_COLORS: Record<FuelType, string> = {
-  e5: "#ef4444",
-  e10: "#f59e0b",
-  diesel: "#3b82f6",
-};
+const CHART_COLOR = "#3b82f6";
 
 export default function StationPriceChartContainer({
   stationId,
@@ -105,8 +101,9 @@ export default function StationPriceChartContainer({
         <FuelPriceChart
           data={priceHistory.price_history}
           fuelType={fuelType}
-          color={FUEL_TYPE_COLORS[fuelType]}
+          color={CHART_COLOR}
           label={fuelTypeLabels[fuelType]}
+          timeRangeHours={hours}
         />
       ) : (
         <div className="text-center py-8">

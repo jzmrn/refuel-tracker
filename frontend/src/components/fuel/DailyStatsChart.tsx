@@ -218,11 +218,11 @@ export default function DailyStatsChart({
           <Line
             type="linear"
             dataKey="price_mean"
-            stroke={color}
+            stroke="#ffffff"
             strokeWidth={2.5}
-            dot={{ r: 4, fill: color, strokeWidth: 0 }}
-            activeDot={{ r: 6, fill: color, strokeWidth: 2, stroke: "#fff" }}
-            name={label}
+            dot={{ r: 4, fill: "#ffffff", strokeWidth: 0 }}
+            activeDot={{ r: 6, fill: "#ffffff", strokeWidth: 2, stroke: color }}
+            name="Ø"
             connectNulls={false}
           />
         </ComposedChart>
