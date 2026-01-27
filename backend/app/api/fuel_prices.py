@@ -2,6 +2,7 @@ import logging
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fueldata.aggregates import AggregatedFuelDataClient
 from fueldata.stations import FuelStationClient, GasStationInfo
 from tankerkoenig import TankerkoenigClient
 from tankerkoenig.models import (
@@ -14,11 +15,13 @@ from tankerkoenig.models import (
 
 from ..auth import CurrentUser
 from ..models import (
+    DailyStatsPoint,
     FavoriteStationCreate,
     FavoriteStationResponse,
     GasStationResponse,
     GasStationSearchRequest,
     SingleFuelPriceHistoryPoint,
+    StationDailyStatsResponse,
     StationMetaResponse,
     StationPriceHistoryResponse,
 )
@@ -69,6 +72,11 @@ def get_tankerkoenig_client(request: Request):
 def get_fuel_station_client(request: Request):
     """Dependency to get the fuel station client from app state"""
     return request.app.state.fuel_station_client
+
+
+def get_aggregated_fuel_data_client(request: Request):
+    """Dependency to get the aggregated fuel data client from app state"""
+    return request.app.state.aggregated_fuel_data_client
 
 
 def gas_station_info(
@@ -508,4 +516,90 @@ async def get_station_price_history(
         station_id=station_id,
         fuel_type=fuel_type,
         price_history=price_history,
+    )
+
+
+@router.get(
+    "/stations/{station_id}/daily-stats/{fuel_type}",
+    response_model=StationDailyStatsResponse,
+)
+async def get_station_daily_stats(
+    station_id: str,
+    fuel_type: str,
+    user: CurrentUser,
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+    aggregated_fuel_data_client: AggregatedFuelDataClient = Depends(
+        get_aggregated_fuel_data_client
+    ),
+    days: int = 7,
+):
+    """Get daily statistics for a specific gas station and fuel type"""
+
+    # Validate fuel type
+    valid_fuel_types = ["e5", "e10", "diesel"]
+    if fuel_type not in valid_fuel_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid fuel type. Must be one of: {', '.join(valid_fuel_types)}",
+        )
+
+    # Validate days parameter (min 1, max 90 days)
+    max_days = 90
+    if days < 1:
+        days = 7
+    elif days > max_days:
+        days = max_days
+
+    logger.info(
+        "Getting station daily stats",
+        extra={
+            "station_id": station_id,
+            "fuel_type": fuel_type,
+            "user_id": user.id,
+            "days": days,
+        },
+    )
+
+    # Verify station exists
+    station_infos = fuel_station_client.get_gas_station_info(station_id)
+    if not station_infos:
+        logger.info("Station not found", extra={"station_id": station_id})
+        raise HTTPException(status_code=404, detail="Station not found")
+
+    # Calculate date range
+    end_date = datetime.now(UTC)
+    start_date = end_date - timedelta(days=days)
+
+    # Get daily aggregates filtered by station_id and fuel_type at SQL level
+    daily_aggregates = aggregated_fuel_data_client.get_daily_aggregates(
+        start_date=start_date,
+        end_date=end_date,
+        station_id=station_id,
+        fuel_type=fuel_type,
+    )
+
+    daily_stats = [
+        DailyStatsPoint(
+            date=agg.date,
+            n_samples=agg.n_samples,
+            price_mean=agg.price_mean,
+            price_min=agg.price_min,
+            price_max=agg.price_max,
+        )
+        for agg in daily_aggregates
+    ]
+
+    logger.debug(
+        "Retrieved daily stats",
+        extra={
+            "station_id": station_id,
+            "fuel_type": fuel_type,
+            "stats_count": len(daily_stats),
+        },
+    )
+
+    return StationDailyStatsResponse(
+        station_id=station_id,
+        fuel_type=fuel_type,
+        daily_stats=daily_stats,
     )

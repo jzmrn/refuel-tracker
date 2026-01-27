@@ -3,7 +3,9 @@ import apiService, {
   GasStationSearchRequest,
   FuelType,
   PriceHistoryTimeRange,
+  DailyStatsTimeRange,
   getTimeRangeHours,
+  getDailyStatsRangeDays,
 } from "@/lib/api";
 import { useWithMinLoadTime } from "./useWithMinLoadTime";
 
@@ -25,6 +27,18 @@ export const fuelPricesKeys = {
     [
       ...fuelPricesKeys.all,
       "stationPriceHistory",
+      stationId,
+      fuelType,
+      timeRange,
+    ] as const,
+  stationDailyStats: (
+    stationId: string,
+    fuelType: FuelType,
+    timeRange: DailyStatsTimeRange = DailyStatsTimeRange.OneWeek
+  ) =>
+    [
+      ...fuelPricesKeys.all,
+      "stationDailyStats",
       stationId,
       fuelType,
       timeRange,
@@ -219,5 +233,44 @@ export function useStationPriceHistoryWithMinLoadTime(
 ) {
   return useWithMinLoadTime(
     useStationPriceHistory(stationId, fuelType, timeRange)
+  );
+}
+
+/**
+ * Hook to fetch station daily statistics for a specific fuel type
+ * Data is cached for 30 minutes and persists across navigation
+ */
+export function useStationDailyStats(
+  stationId: string | undefined | null,
+  fuelType: FuelType,
+  timeRange: DailyStatsTimeRange = DailyStatsTimeRange.OneWeek
+) {
+  const days = getDailyStatsRangeDays(timeRange);
+  return useQuery({
+    queryKey: fuelPricesKeys.stationDailyStats(
+      stationId || "",
+      fuelType,
+      timeRange
+    ),
+    queryFn: async () => {
+      if (!stationId) return null;
+      return await apiService.getStationDailyStats(stationId, fuelType, days);
+    },
+    enabled: !!stationId,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour
+  });
+}
+
+/**
+ * Hook to fetch station daily stats with minimum loading time
+ */
+export function useStationDailyStatsWithMinLoadTime(
+  stationId: string | undefined | null,
+  fuelType: FuelType,
+  timeRange: DailyStatsTimeRange = DailyStatsTimeRange.OneWeek
+) {
+  return useWithMinLoadTime(
+    useStationDailyStats(stationId, fuelType, timeRange)
   );
 }

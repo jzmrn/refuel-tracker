@@ -471,6 +471,32 @@ class StationPriceHistoryResponse(BaseModel):
         json_encoders = {datetime: lambda v: v.isoformat()}
 
 
+class DailyStatsPoint(BaseModel):
+    """Response model for a single daily stats data point"""
+
+    date: datetime
+    n_samples: int
+    price_mean: float
+    price_min: float
+    price_max: float
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class StationDailyStatsResponse(BaseModel):
+    """Response model for station daily statistics"""
+
+    station_id: str
+    fuel_type: str
+    daily_stats: list[DailyStatsPoint] = Field(
+        default_factory=list, description="Daily statistics for the requested period"
+    )
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
 class StationDetailsResponse(BaseModel):
     """Response model for station details with current prices (deprecated - use StationMetaResponse)"""
 

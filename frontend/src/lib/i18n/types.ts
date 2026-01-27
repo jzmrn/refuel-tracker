@@ -543,8 +543,10 @@ export interface TranslationStructure {
     noDataAvailable: string;
     additionalInformation: string;
     priceHistory: string;
+    dailyStats: string;
     timeRange1Day: string;
     timeRange1Week: string;
+    timeRange1Month: string;
     copyAddress: string;
     addressCopied: string;
   };

@@ -10,6 +10,7 @@ from dagster_duckdb import DuckDBResource
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fueldata.aggregates import AggregatedFuelDataClient
 from fueldata.stations import FuelStationClient
 from tankerkoenig.client import TankerkoenigClient
 
@@ -177,6 +178,7 @@ async def lifespan(app: FastAPI):
 
     fuel_duckdb_resource = DuckDBResource(database=str(fuel_db_path))
     fuel_station_client = FuelStationClient(fuel_duckdb_resource)
+    aggregated_fuel_data_client = AggregatedFuelDataClient(fuel_duckdb_resource)
 
     logger.info(f"Fuel station client initialized at: {fuel_db_path}")
     logger.info(f"DuckDB initialized at: {db_path}")
@@ -192,6 +194,7 @@ async def lifespan(app: FastAPI):
     app.state.kilometer_client = kilometer_client
     app.state.tankerkoenig_client = tankerkoenig_client
     app.state.fuel_station_client = fuel_station_client
+    app.state.aggregated_fuel_data_client = aggregated_fuel_data_client
 
     yield
 

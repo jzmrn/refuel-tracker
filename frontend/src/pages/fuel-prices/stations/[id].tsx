@@ -13,6 +13,7 @@ import { FuelType } from "@/lib/api";
 import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
 import StationMetaInfo from "@/components/fuel/StationMetaInfo";
 import StationPriceChart from "@/components/fuel/StationPriceChart";
+import StationDailyStatsChart from "@/components/fuel/StationDailyStatsChart";
 import { LoadingSpinner } from "@/components/common";
 
 const FUEL_TYPE_STORAGE_KEY = "stationDetails.fuelType";
@@ -145,6 +146,14 @@ export default function StationDetails() {
               stationId={stableId}
               fuelType={selectedFuelType}
             />
+
+            {/* Daily Stats Chart */}
+            <div className="mt-6">
+              <StationDailyStatsChart
+                stationId={stableId}
+                fuelType={selectedFuelType}
+              />
+            </div>
           </>
         ) : (
           <div className="panel text-center">

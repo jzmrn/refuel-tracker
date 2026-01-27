@@ -19,7 +19,7 @@ class DailyAggregate(BaseModel):
     price_mean: float
     price_min: float
     price_max: float
-    price_std: float
+    price_std: float | None
     ts_min: datetime
     ts_max: datetime
 
@@ -63,6 +63,10 @@ class AggregatedFuelDataClient:
             """
             )
 
+    def _ensure_table_exists(self) -> None:
+        """Ensure the daily_aggregates table exists (no-op since created in __init__)."""
+        pass
+
     def store_daily_aggregates(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Store daily aggregate data into the database.
@@ -92,6 +96,8 @@ class AggregatedFuelDataClient:
         self,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
+        station_id: str | None = None,
+        fuel_type: str | None = None,
     ) -> pd.DataFrame:
         """
         Read daily aggregate data from the database.
@@ -99,6 +105,8 @@ class AggregatedFuelDataClient:
         Args:
             start_date: Optional start date for filtering (inclusive)
             end_date: Optional end date for filtering (inclusive)
+            station_id: Optional station ID to filter by
+            fuel_type: Optional fuel type to filter by (e5, e10, diesel)
 
         Returns:
             DataFrame with daily aggregate data
@@ -118,8 +126,18 @@ class AggregatedFuelDataClient:
             conditions.append("date <= ?")
             params.append(end_date.date())
 
+        if station_id is not None:
+            conditions.append("station_id = ?")
+            params.append(station_id)
+
+        if fuel_type is not None:
+            conditions.append("type = ?")
+            params.append(fuel_type)
+
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
+
+        query += " ORDER BY date DESC"
 
         with self._duckdb.get_connection() as con:
             df = con.execute(query, params).df()
@@ -130,6 +148,8 @@ class AggregatedFuelDataClient:
         self,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
+        station_id: str | None = None,
+        fuel_type: str | None = None,
     ) -> list[DailyAggregate]:
         """
         Get daily aggregate data from the database within the specified date range.
@@ -137,11 +157,46 @@ class AggregatedFuelDataClient:
         Args:
             start_date: Optional start date for filtering (inclusive)
             end_date: Optional end date for filtering (inclusive)
+            station_id: Optional station ID to filter by
+            fuel_type: Optional fuel type to filter by (e5, e10, diesel)
 
         Returns:
             List of DailyAggregate objects
         """
 
-        df = self.read_daily_aggregates(start_date, end_date)
+        df = self.read_daily_aggregates(start_date, end_date, station_id, fuel_type)
+        records = df.to_dict(orient="records")
+        return [DailyAggregate.model_validate(record) for record in records]
+
+    def get_station_daily_aggregates(
+        self,
+        station_id: str,
+        fuel_type: str,
+        days: int = 7,
+    ) -> list[DailyAggregate]:
+        """
+        Get daily aggregate data for a specific station and fuel type.
+
+        Args:
+            station_id: The station ID to filter by
+            fuel_type: The fuel type to filter by (e5, e10, diesel)
+            days: Number of days to look back (default 7)
+
+        Returns:
+            List of DailyAggregate objects sorted by date descending
+        """
+        self._ensure_table_exists()
+
+        query = """
+            SELECT * FROM daily_aggregates
+            WHERE station_id = ?
+              AND type = ?
+              AND date >= CURRENT_DATE - INTERVAL ? DAY
+            ORDER BY date DESC
+        """
+
+        with self._duckdb.get_connection() as con:
+            df = con.execute(query, [station_id, fuel_type, days]).df()
+
         records = df.to_dict(orient="records")
         return [DailyAggregate.model_validate(record) for record in records]

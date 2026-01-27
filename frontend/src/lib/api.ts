@@ -389,6 +389,20 @@ export interface StationPriceHistoryResponse {
   price_history: SingleFuelPriceHistoryPoint[];
 }
 
+export interface DailyStatsPoint {
+  date: string;
+  n_samples: number;
+  price_mean: number;
+  price_min: number;
+  price_max: number;
+}
+
+export interface StationDailyStatsResponse {
+  station_id: string;
+  fuel_type: string;
+  daily_stats: DailyStatsPoint[];
+}
+
 export type FuelType = "e5" | "e10" | "diesel";
 
 /**
@@ -410,6 +424,28 @@ export function getTimeRangeHours(timeRange: PriceHistoryTimeRange): number {
       return 168; // 7 * 24
     default:
       return 24;
+  }
+}
+
+/**
+ * Time range options for daily stats
+ */
+export enum DailyStatsTimeRange {
+  OneWeek = "1w",
+  OneMonth = "1m",
+}
+
+/**
+ * Get the number of days for a given daily stats time range
+ */
+export function getDailyStatsRangeDays(timeRange: DailyStatsTimeRange): number {
+  switch (timeRange) {
+    case DailyStatsTimeRange.OneWeek:
+      return 7;
+    case DailyStatsTimeRange.OneMonth:
+      return 30;
+    default:
+      return 7;
   }
 }
 
@@ -801,6 +837,18 @@ class ApiService {
     const response = await this.api.get(
       `/api/fuel-prices/stations/${stationId}/price-history/${fuelType}`,
       { params: { hours } }
+    );
+    return response.data;
+  }
+
+  async getStationDailyStats(
+    stationId: string,
+    fuelType: FuelType,
+    days: number = 7
+  ): Promise<StationDailyStatsResponse> {
+    const response = await this.api.get(
+      `/api/fuel-prices/stations/${stationId}/daily-stats/${fuelType}`,
+      { params: { days } }
     );
     return response.data;
   }
