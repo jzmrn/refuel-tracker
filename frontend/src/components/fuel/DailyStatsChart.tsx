@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
+  Legend,
 } from "recharts";
 import { DailyStatsPoint } from "@/lib/api";
 
@@ -174,6 +175,14 @@ export default function DailyStatsChart({
               return null;
             }}
           />
+          <Legend
+            wrapperStyle={{ paddingTop: "10px" }}
+            formatter={(value) => (
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {value}
+              </span>
+            )}
+          />
           {/* Area showing the range between min and max */}
           <Area
             type="linear"
@@ -181,6 +190,7 @@ export default function DailyStatsChart({
             fill={areaColor}
             stroke="none"
             connectNulls={false}
+            legendType="none"
           />
           {/* Line for minimum price */}
           <Line

@@ -6,6 +6,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 
 interface PriceHistoryPoint {
@@ -168,6 +169,14 @@ export default function FuelPriceChart({
                 minute: "2-digit",
               })
             }
+          />
+          <Legend
+            wrapperStyle={{ paddingTop: "10px" }}
+            formatter={(value) => (
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {value}
+              </span>
+            )}
           />
           {segments.map((segment, index) => (
             <Line
