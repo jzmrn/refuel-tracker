@@ -1,7 +1,12 @@
+import { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import apiService, { FuelType } from "@/lib/api";
+import apiService, {
+  FuelType,
+  PriceHistoryTimeRange,
+  getTimeRangeHours,
+} from "@/lib/api";
 import { fuelPricesKeys } from "@/lib/hooks/useFuelPrices";
 import FuelPriceChart from "./FuelPriceChart";
 
@@ -21,14 +26,24 @@ export default function StationPriceChartContainer({
   fuelType,
 }: StationPriceChartProps) {
   const { t } = useTranslation();
+  const [timeRange, setTimeRange] = useState<PriceHistoryTimeRange>(
+    PriceHistoryTimeRange.OneDay,
+  );
+
+  const hours = getTimeRangeHours(timeRange);
 
   const {
     data: priceHistory,
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: fuelPricesKeys.stationPriceHistory(stationId, fuelType),
-    queryFn: () => apiService.getStationPriceHistory(stationId, fuelType),
+    queryKey: fuelPricesKeys.stationPriceHistory(
+      stationId,
+      fuelType,
+      timeRange,
+    ),
+    queryFn: () =>
+      apiService.getStationPriceHistory(stationId, fuelType, hours),
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
     placeholderData: keepPreviousData, // Keep previous chart visible while loading new data
@@ -38,6 +53,11 @@ export default function StationPriceChartContainer({
     e5: t.fuelPrices.e5,
     e10: t.fuelPrices.e10,
     diesel: t.fuelPrices.diesel,
+  };
+
+  const timeRangeLabels: Record<PriceHistoryTimeRange, string> = {
+    [PriceHistoryTimeRange.OneDay]: t.fuelPrices.timeRange1Day,
+    [PriceHistoryTimeRange.OneWeek]: t.fuelPrices.timeRange1Week,
   };
 
   // Only show loading on initial load, not when switching fuel types
@@ -60,11 +80,26 @@ export default function StationPriceChartContainer({
     <div
       className={`panel ${isFetching ? "opacity-80" : ""} transition-opacity`}
     >
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="heading-3">
-          {fuelTypeLabels[fuelType]} - {t.fuelPrices.priceHistory24h}
-        </h3>
-        {isFetching && <CircularProgress size={18} />}
+      <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <h3 className="heading-2">{t.fuelPrices.priceHistory}</h3>
+          {isFetching && <CircularProgress size={18} />}
+        </div>
+        <div className="flex gap-2">
+          {Object.values(PriceHistoryTimeRange).map((range) => (
+            <button
+              key={range}
+              onClick={() => setTimeRange(range)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                timeRange === range
+                  ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              {timeRangeLabels[range]}
+            </button>
+          ))}
+        </div>
       </div>
       {hasValidPriceData ? (
         <FuelPriceChart

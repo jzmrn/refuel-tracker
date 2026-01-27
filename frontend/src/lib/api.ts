@@ -391,6 +391,28 @@ export interface StationPriceHistoryResponse {
 
 export type FuelType = "e5" | "e10" | "diesel";
 
+/**
+ * Time range options for price history
+ */
+export enum PriceHistoryTimeRange {
+  OneDay = "1d",
+  OneWeek = "1w",
+}
+
+/**
+ * Get the number of hours for a given time range
+ */
+export function getTimeRangeHours(timeRange: PriceHistoryTimeRange): number {
+  switch (timeRange) {
+    case PriceHistoryTimeRange.OneDay:
+      return 24;
+    case PriceHistoryTimeRange.OneWeek:
+      return 168; // 7 * 24
+    default:
+      return 24;
+  }
+}
+
 export interface StationDetailsResponse {
   station_id: string;
   name?: string;
@@ -773,10 +795,12 @@ class ApiService {
 
   async getStationPriceHistory(
     stationId: string,
-    fuelType: FuelType
+    fuelType: FuelType,
+    hours: number = 24
   ): Promise<StationPriceHistoryResponse> {
     const response = await this.api.get(
-      `/api/fuel-prices/stations/${stationId}/price-history/${fuelType}`
+      `/api/fuel-prices/stations/${stationId}/price-history/${fuelType}`,
+      { params: { hours } }
     );
     return response.data;
   }

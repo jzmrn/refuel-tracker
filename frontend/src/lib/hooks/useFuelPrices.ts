@@ -1,5 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import apiService, { GasStationSearchRequest, FuelType } from "@/lib/api";
+import apiService, {
+  GasStationSearchRequest,
+  FuelType,
+  PriceHistoryTimeRange,
+  getTimeRangeHours,
+} from "@/lib/api";
 import { useWithMinLoadTime } from "./useWithMinLoadTime";
 
 // Query Keys - centralized for consistency
@@ -12,12 +17,17 @@ export const fuelPricesKeys = {
     [...fuelPricesKeys.all, "stationDetails", stationId] as const,
   stationMeta: (stationId: string) =>
     [...fuelPricesKeys.all, "stationMeta", stationId] as const,
-  stationPriceHistory: (stationId: string, fuelType: FuelType) =>
+  stationPriceHistory: (
+    stationId: string,
+    fuelType: FuelType,
+    timeRange: PriceHistoryTimeRange = PriceHistoryTimeRange.OneDay
+  ) =>
     [
       ...fuelPricesKeys.all,
       "stationPriceHistory",
       stationId,
       fuelType,
+      timeRange,
     ] as const,
 };
 
@@ -175,13 +185,23 @@ export function useStationMetaWithMinLoadTime(
  */
 export function useStationPriceHistory(
   stationId: string | undefined | null,
-  fuelType: FuelType
+  fuelType: FuelType,
+  timeRange: PriceHistoryTimeRange = PriceHistoryTimeRange.OneDay
 ) {
+  const hours = getTimeRangeHours(timeRange);
   return useQuery({
-    queryKey: fuelPricesKeys.stationPriceHistory(stationId || "", fuelType),
+    queryKey: fuelPricesKeys.stationPriceHistory(
+      stationId || "",
+      fuelType,
+      timeRange
+    ),
     queryFn: async () => {
       if (!stationId) return null;
-      return await apiService.getStationPriceHistory(stationId, fuelType);
+      return await apiService.getStationPriceHistory(
+        stationId,
+        fuelType,
+        hours
+      );
     },
     enabled: !!stationId,
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -194,7 +214,10 @@ export function useStationPriceHistory(
  */
 export function useStationPriceHistoryWithMinLoadTime(
   stationId: string | undefined | null,
-  fuelType: FuelType
+  fuelType: FuelType,
+  timeRange: PriceHistoryTimeRange = PriceHistoryTimeRange.OneDay
 ) {
-  return useWithMinLoadTime(useStationPriceHistory(stationId, fuelType));
+  return useWithMinLoadTime(
+    useStationPriceHistory(stationId, fuelType, timeRange)
+  );
 }

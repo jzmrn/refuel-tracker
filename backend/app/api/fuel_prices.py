@@ -446,6 +446,7 @@ async def get_station_price_history(
     fuel_type: str,
     user: CurrentUser,
     fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+    hours: int = 24,
 ):
     """Get price history for a specific gas station and fuel type"""
 
@@ -457,9 +458,21 @@ async def get_station_price_history(
             detail=f"Invalid fuel type. Must be one of: {', '.join(valid_fuel_types)}",
         )
 
+    # Validate hours parameter (max 1 week = 168 hours)
+    max_hours = 168
+    if hours < 1:
+        hours = 24
+    elif hours > max_hours:
+        hours = max_hours
+
     logger.info(
         "Getting station price history",
-        extra={"station_id": station_id, "fuel_type": fuel_type, "user_id": user.id},
+        extra={
+            "station_id": station_id,
+            "fuel_type": fuel_type,
+            "user_id": user.id,
+            "hours": hours,
+        },
     )
 
     # Verify station exists
@@ -468,8 +481,8 @@ async def get_station_price_history(
         logger.info("Station not found", extra={"station_id": station_id})
         raise HTTPException(status_code=404, detail="Station not found")
 
-    # Get price history for the last 24 hours
-    price_history_data = fuel_station_client.get_price_history(station_id, hours=24)
+    # Get price history for the specified number of hours
+    price_history_data = fuel_station_client.get_price_history(station_id, hours=hours)
 
     # Map fuel type to the correct attribute
     fuel_type_attr = f"price_{fuel_type}"

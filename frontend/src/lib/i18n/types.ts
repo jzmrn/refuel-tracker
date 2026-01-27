@@ -542,7 +542,9 @@ export interface TranslationStructure {
     lastUpdated: string;
     noDataAvailable: string;
     additionalInformation: string;
-    priceHistory24h: string;
+    priceHistory: string;
+    timeRange1Day: string;
+    timeRange1Week: string;
     copyAddress: string;
     addressCopied: string;
   };
