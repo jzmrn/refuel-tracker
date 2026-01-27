@@ -182,6 +182,7 @@ def daily_aggregates(
 
     aggregates = grouped.agg(
         n_samples=("price", "count"),
+        n_unique_prices=("price", "nunique"),
         price_mean=("price", "mean"),
         price_min=("price", "min"),
         price_max=("price", "max"),

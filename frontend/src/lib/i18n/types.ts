@@ -544,6 +544,9 @@ export interface TranslationStructure {
     additionalInformation: string;
     priceHistory: string;
     dailyStats: string;
+    priceActivity: string;
+    priceChanges: string;
+    uniquePrices: string;
     timeRange1Day: string;
     timeRange1Week: string;
     timeRange1Month: string;

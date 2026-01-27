@@ -14,6 +14,7 @@ import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
 import StationMetaInfo from "@/components/fuel/StationMetaInfo";
 import StationPriceChart from "@/components/fuel/StationPriceChart";
 import StationDailyStatsChart from "@/components/fuel/StationDailyStatsChart";
+import StationPriceChangesChart from "@/components/fuel/StationPriceChangesChart";
 import { LoadingSpinner } from "@/components/common";
 
 const FUEL_TYPE_STORAGE_KEY = "stationDetails.fuelType";
@@ -150,6 +151,14 @@ export default function StationDetails() {
             {/* Daily Stats Chart */}
             <div className="mt-6">
               <StationDailyStatsChart
+                stationId={stableId}
+                fuelType={selectedFuelType}
+              />
+            </div>
+
+            {/* Price Changes Chart */}
+            <div className="mt-6">
+              <StationPriceChangesChart
                 stationId={stableId}
                 fuelType={selectedFuelType}
               />

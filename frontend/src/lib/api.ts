@@ -392,6 +392,8 @@ export interface StationPriceHistoryResponse {
 export interface DailyStatsPoint {
   date: string;
   n_samples: number;
+  n_price_changes: number;
+  n_unique_prices: number;
   price_mean: number;
   price_min: number;
   price_max: number;

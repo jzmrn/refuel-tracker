@@ -582,6 +582,8 @@ async def get_station_daily_stats(
         DailyStatsPoint(
             date=agg.date,
             n_samples=agg.n_samples,
+            n_price_changes=max(0, agg.n_samples - 1),
+            n_unique_prices=agg.n_unique_prices,
             price_mean=agg.price_mean,
             price_min=agg.price_min,
             price_max=agg.price_max,

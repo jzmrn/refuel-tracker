@@ -476,6 +476,8 @@ class DailyStatsPoint(BaseModel):
 
     date: datetime
     n_samples: int
+    n_price_changes: int
+    n_unique_prices: int
     price_mean: float
     price_min: float
     price_max: float

@@ -16,6 +16,7 @@ class DailyAggregate(BaseModel):
     station_id: str
     type: str
     n_samples: int
+    n_unique_prices: int
     price_mean: float
     price_min: float
     price_max: float
@@ -52,6 +53,7 @@ class AggregatedFuelDataClient:
                     station_id VARCHAR NOT NULL,
                     type VARCHAR NOT NULL,
                     n_samples INTEGER NOT NULL,
+                    n_unique_prices INTEGER NOT NULL DEFAULT 0,
                     price_mean DOUBLE NOT NULL,
                     price_min DOUBLE NOT NULL,
                     price_max DOUBLE NOT NULL,
@@ -62,6 +64,38 @@ class AggregatedFuelDataClient:
                 )
             """
             )
+        self._run_migrations()
+
+    def _run_migrations(self) -> None:
+        """Run any pending migrations for the daily_aggregates table."""
+        self._migrate_add_n_unique_prices()
+
+    def _migrate_add_n_unique_prices(self) -> None:
+        """Add n_unique_prices column if it doesn't exist."""
+        with self._duckdb.get_connection() as con:
+            result = con.execute(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = 'daily_aggregates' AND column_name = 'n_unique_prices'
+                """
+            ).fetchone()
+
+            if not result:
+                logger.info("Adding n_unique_prices column to daily_aggregates table")
+                con.execute(
+                    """
+                    ALTER TABLE daily_aggregates
+                    ADD COLUMN n_unique_prices INTEGER
+                    """
+                )
+                # Set default value for existing rows
+                con.execute(
+                    """
+                    UPDATE daily_aggregates SET n_unique_prices = 0 WHERE n_unique_prices IS NULL
+                    """
+                )
+                logger.info("n_unique_prices column added successfully")
 
     def _ensure_table_exists(self) -> None:
         """Ensure the daily_aggregates table exists (no-op since created in __init__)."""
@@ -83,9 +117,12 @@ class AggregatedFuelDataClient:
                 con.execute(
                     """
                     INSERT OR REPLACE INTO daily_aggregates
-                    SELECT date, station_id, type, n_samples,
-                           price_mean, price_min, price_max, price_std,
-                       ts_min, ts_max
+                        (date, station_id, type, n_samples, n_unique_prices,
+                         price_mean, price_min, price_max, price_std,
+                         ts_min, ts_max)
+                    SELECT df.date, df.station_id, df.type, df.n_samples, df.n_unique_prices,
+                           df.price_mean, df.price_min, df.price_max, df.price_std,
+                           df.ts_min, df.ts_max
                     FROM df
                 """
                 )
