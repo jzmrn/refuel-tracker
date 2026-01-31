@@ -18,6 +18,7 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
 import { useChartTheme } from "../../lib/theme";
+import { formatFuelPrice } from "../../lib/formatPrice";
 
 interface PriceTrend {
   date: string;
@@ -73,7 +74,8 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
     }).format(value);
   };
 
-  const formatPricePerLiter = (value: number) => value.toFixed(3);
+  const formatPricePerLiter = (value: number) =>
+    formatFuelPrice(value, { superscriptClass: "text-xs" });
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -196,9 +198,8 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
           <SummaryCard
             title={t.fuelPrices.currentPrice}
             value={{
-              value: formatPricePerLiter(
-                sortedData[sortedData.length - 1].price,
-              ),
+              value: sortedData[sortedData.length - 1].price,
+              formatter: formatPricePerLiter,
               unit: "€/L",
             }}
             icon={
@@ -210,7 +211,8 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
           <SummaryCard
             title={t.refuels.lowestPrice}
             value={{
-              value: formatPricePerLiter(minPrice),
+              value: minPrice,
+              formatter: formatPricePerLiter,
               unit: "€/L",
             }}
             icon={
@@ -222,7 +224,8 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
           <SummaryCard
             title={t.refuels.highestPrice}
             value={{
-              value: formatPricePerLiter(maxPrice),
+              value: maxPrice,
+              formatter: (value) => formatPricePerLiter(value),
               unit: "€/L",
             }}
             icon={
@@ -234,7 +237,8 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
           <SummaryCard
             title={t.refuels.priceRange}
             value={{
-              value: formatPricePerLiter(priceRange),
+              value: priceRange,
+              formatter: formatPricePerLiter,
               unit: "€/L",
             }}
             icon={

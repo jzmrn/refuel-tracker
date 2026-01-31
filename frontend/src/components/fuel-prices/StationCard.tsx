@@ -1,6 +1,7 @@
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { GasStationResponse, FavoriteStationResponse } from "@/lib/api";
 import CircularProgress from "@mui/material/CircularProgress";
+import { formatFuelPrice, getFuelPriceParts } from "@/lib/formatPrice";
 
 interface StationCardProps {
   station: GasStationResponse | FavoriteStationResponse;
@@ -71,28 +72,13 @@ export default function StationCard({
     priceDiesel = station.current_price_diesel;
   }
 
-  const formatPrice = (price?: number) => {
-    if (price === undefined || price === null) return null;
-    const priceStr = price.toFixed(3);
-    const mainPart = priceStr.slice(0, -1); // e.g., "1.56"
-    const superscript = priceStr.slice(-1); // e.g., "9"
-    return { mainPart, superscript };
-  };
-
   const renderPrice = (
     price?: number,
     supClassName: string = "text-[0.6em]",
   ) => {
-    const formatted = formatPrice(price);
+    const formatted = getFuelPriceParts(price);
     if (!formatted) return null;
-    return (
-      <>
-        {formatted.mainPart}
-        <sup className={`${supClassName} align-baseline`}>
-          {formatted.superscript}
-        </sup>
-      </>
-    );
+    return formatFuelPrice(price, { superscriptClass: supClassName });
   };
 
   const renderPriceColumn = (

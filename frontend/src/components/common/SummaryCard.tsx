@@ -1,8 +1,9 @@
 import React from "react";
 
 export interface ValueUnit {
-  value: string | number;
+  value: number | null;
   unit?: string;
+  formatter?: (value: number) => React.ReactNode;
 }
 
 interface SummaryCardProps {
@@ -50,7 +51,11 @@ export default function SummaryCard({
             <span className="flex flex-wrap gap-1">
               {(Array.isArray(value) ? value : [value]).map((item, index) => (
                 <span key={index} className="flex items-baseline mr-2">
-                  <span>{item.value}</span>
+                  {item.value !== null
+                    ? item.formatter
+                      ? item.formatter(item.value)
+                      : item.value
+                    : "-"}
                   {item.unit && (
                     <span className="text-sm font-medium text-secondary ml-1">
                       {item.unit}

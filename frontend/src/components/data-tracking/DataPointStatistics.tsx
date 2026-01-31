@@ -160,7 +160,7 @@ export default function DataPointStatistics({
       <GridLayout variant="stats" className="mb-6">
         <SummaryCard
           title={t.dataTracking.average}
-          value={{ value: formatValue(average) }}
+          value={{ value: average, formatter: formatValue }}
           icon={
             <BarChartIcon className="icon-md text-blue-600 dark:text-blue-400" />
           }
@@ -169,7 +169,7 @@ export default function DataPointStatistics({
 
         <SummaryCard
           title={t.dataTracking.median}
-          value={{ value: formatValue(median) }}
+          value={{ value: median, formatter: formatValue }}
           icon={
             <BarChartIcon className="icon-md text-green-600 dark:text-green-400" />
           }
@@ -178,7 +178,7 @@ export default function DataPointStatistics({
 
         <SummaryCard
           title={t.dataTracking.range}
-          value={{ value: formatValue(range) }}
+          value={{ value: range, formatter: formatValue }}
           icon={
             <LocalOfferIcon className="icon-md text-yellow-600 dark:text-yellow-400" />
           }
@@ -187,7 +187,7 @@ export default function DataPointStatistics({
 
         <SummaryCard
           title={t.common.entries}
-          value={{ value: count.toString() }}
+          value={{ value: count }}
           icon={
             <NumbersIcon className="icon-md text-purple-600 dark:text-purple-400" />
           }

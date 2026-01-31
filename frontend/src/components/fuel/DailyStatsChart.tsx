@@ -11,6 +11,7 @@ import {
   Legend,
 } from "recharts";
 import { DailyStatsPoint } from "@/lib/api";
+import { renderSvgFuelPrice, formatFuelPrice } from "@/lib/formatPrice";
 
 interface DailyStatsChartProps {
   data: DailyStatsPoint[];
@@ -101,9 +102,6 @@ export default function DailyStatsChart({
             domain={["auto", "auto"]}
             tick={(props: any) => {
               const { x, y, payload } = props;
-              const priceStr = payload.value.toFixed(3);
-              const mainPart = priceStr.slice(0, -1);
-              const superscript = priceStr.slice(-1);
               return (
                 <g transform={`translate(${x},${y})`}>
                   <text
@@ -113,11 +111,7 @@ export default function DailyStatsChart({
                     textAnchor="end"
                     className="text-xs fill-gray-600 dark:fill-gray-400"
                   >
-                    <tspan>{mainPart}</tspan>
-                    <tspan fontSize="0.8em" dy={-3}>
-                      {superscript}
-                    </tspan>
-                    <tspan dy={3}>€</tspan>
+                    {renderSvgFuelPrice(payload.value)}
                   </text>
                 </g>
               );
@@ -157,16 +151,25 @@ export default function DailyStatsChart({
                       <p className="text-white">
                         <span className="text-gray-400">Ø </span>
                         <span className="font-semibold">
-                          {dataPoint.price_mean?.toFixed(3)}€
+                          {formatFuelPrice(dataPoint.price_mean, {
+                            showCurrency: true,
+                            superscriptClass: "text-xs",
+                          })}
                         </span>
                       </p>
                       <p className="text-green-400">
                         <span className="text-gray-400">Min: </span>
-                        {dataPoint.price_min?.toFixed(3)}€
+                        {formatFuelPrice(dataPoint.price_min, {
+                          showCurrency: true,
+                          superscriptClass: "text-xs",
+                        })}
                       </p>
                       <p className="text-red-400">
                         <span className="text-gray-400">Max: </span>
-                        {dataPoint.price_max?.toFixed(3)}€
+                        {formatFuelPrice(dataPoint.price_max, {
+                          showCurrency: true,
+                          superscriptClass: "text-xs",
+                        })}
                       </p>
                     </div>
                   </div>

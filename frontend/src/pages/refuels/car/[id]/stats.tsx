@@ -153,11 +153,7 @@ export default function CarStats() {
             </div>
           ) : (
             /* Statistics */
-            <RefuelStats
-              statistics={statistics || null}
-              refuelData={refuels}
-              loading={false}
-            />
+            <RefuelStats statistics={statistics || null} refuelData={refuels} />
           )}
         </div>
       ) : null}

@@ -4,6 +4,7 @@ import LoadingSpinner from "../common/LoadingSpinner";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
 import { EmptyState } from "../common";
 import CollectionsIcon from "@mui/icons-material/Collections";
+import { formatFuelPrice } from "../../lib/formatPrice";
 
 interface RefuelListProps {
   refuels: RefuelMetric[];
@@ -54,10 +55,6 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
 
   const formatLiters = (liters: number) => {
     return `${liters.toFixed(2)} L`;
-  };
-
-  const formatPricePerLiter = (price: number) => {
-    return `${price.toFixed(3)} €/L`;
   };
 
   return (
@@ -113,7 +110,10 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
                   </div>
                 </td>
                 <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
-                  {formatPricePerLiter(refuel.price)}
+                  {formatFuelPrice(refuel.price, {
+                    superscriptClass: "text-xs",
+                    suffix: " €/L",
+                  })}
                 </td>
                 <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
                   {formatLiters(refuel.amount)}

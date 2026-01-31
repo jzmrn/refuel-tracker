@@ -6,6 +6,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import apiService, { StationMetaResponse } from "@/lib/api";
 import { fuelPricesKeys } from "@/lib/hooks/useFuelPrices";
 import Panel from "@/components/common/Panel";
+import { formatFuelPrice } from "@/lib/formatPrice";
 
 interface StationMetaInfoProps {
   stationId: string;
@@ -30,19 +31,6 @@ export default function StationMetaInfo({
     staleTime: 15 * 60 * 1000, // 15 minutes
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
-
-  const formatPrice = (price?: number) => {
-    if (price === undefined || price === null) return "-";
-    const priceStr = price.toFixed(3);
-    const mainPart = priceStr.slice(0, -1);
-    const superscript = priceStr.slice(-1);
-    return (
-      <>
-        {mainPart}
-        <sup className="text-[0.6em] align-baseline">{superscript}</sup>
-      </>
-    );
-  };
 
   const formatTime = (timestamp?: string) => {
     if (!timestamp) return null;
@@ -184,7 +172,9 @@ export default function StationMetaInfo({
           <div className="flex flex-col xxs:flex-row justify-center items-center gap-1.5 sm:gap-2">
             <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
               <div className="text-2xl sm:text-3xl font-bold text-primary">
-                {formatPrice(stationData.current_price_e5)}
+                {formatFuelPrice(stationData.current_price_e5, {
+                  superscriptClass: "text-lg sm:text-xl",
+                })}
               </div>
               <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
                 {t.fuelPrices.e5}
@@ -193,7 +183,9 @@ export default function StationMetaInfo({
 
             <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
               <div className="text-2xl sm:text-3xl font-bold text-primary">
-                {formatPrice(stationData.current_price_e10)}
+                {formatFuelPrice(stationData.current_price_e10, {
+                  superscriptClass: "text-lg sm:text-xl",
+                })}
               </div>
               <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
                 {t.fuelPrices.e10}
@@ -202,7 +194,9 @@ export default function StationMetaInfo({
 
             <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
               <div className="text-2xl sm:text-3xl font-bold text-primary">
-                {formatPrice(stationData.current_price_diesel)}
+                {formatFuelPrice(stationData.current_price_diesel, {
+                  superscriptClass: "text-lg sm:text-xl",
+                })}
               </div>
               <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
                 {t.fuelPrices.diesel}

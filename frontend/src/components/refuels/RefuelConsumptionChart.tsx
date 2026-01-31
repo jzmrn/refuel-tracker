@@ -264,7 +264,11 @@ export default function RefuelConsumptionChart({
       <GridLayout variant="stats" className="mt-4 text-sm">
         <SummaryCard
           title={t.refuels.avgActual}
-          value={{ value: formatConsumption(avgActual), unit: "L/100km" }}
+          value={{
+            value: avgActual,
+            formatter: (value) => formatConsumption(value),
+            unit: "L/100km",
+          }}
           icon={
             <BarChartIcon className="icon-lg text-green-600 dark:text-green-400" />
           }
@@ -273,7 +277,11 @@ export default function RefuelConsumptionChart({
 
         <SummaryCard
           title={t.refuels.avgEstimated}
-          value={{ value: formatConsumption(avgEstimated), unit: "L/100km" }}
+          value={{
+            value: avgEstimated,
+            formatter: (value) => formatConsumption(value),
+            unit: "L/100km",
+          }}
           icon={
             <NumbersIcon className="icon-lg text-blue-600 dark:text-blue-400" />
           }
@@ -283,9 +291,9 @@ export default function RefuelConsumptionChart({
         <SummaryCard
           title={t.refuels.avgDifference}
           value={{
-            value: `${avgDifference > 0 ? "+" : ""}${formatConsumption(
-              Math.abs(avgDifference),
-            )}`,
+            value: avgDifference,
+            formatter: (value) =>
+              `${value > 0 ? "+" : ""}${formatConsumption(Math.abs(value))}`,
             unit: "L/100km",
           }}
           icon={
@@ -300,7 +308,11 @@ export default function RefuelConsumptionChart({
 
         <SummaryCard
           title={t.refuels.accuracy}
-          value={{ value: `${accuracyPercentage.toFixed(0)}`, unit: "%" }}
+          value={{
+            value: accuracyPercentage,
+            formatter: (value) => `${value.toFixed(0)}`,
+            unit: "%",
+          }}
           icon={
             <CheckCircleOutlineIcon className="icon-lg text-purple-600 dark:text-purple-400" />
           }

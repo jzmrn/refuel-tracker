@@ -15,26 +15,18 @@ import { EmptyPanel } from "../common";
 import { GridLayout } from "../common/GridLayout";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
 import Panel from "../common/Panel";
+import { formatFuelPrice } from "../../lib/formatPrice";
 
 interface RefuelStatsProps {
   statistics: RefuelStatistics | null;
   refuelData?: RefuelMetric[];
-  loading?: boolean;
 }
 
 export default function RefuelStats({
   statistics,
   refuelData,
-  loading,
 }: RefuelStatsProps) {
   const { t } = useTranslation();
-  if (loading) {
-    return (
-      <Panel title={t.dataTracking.statistics}>
-        <LoadingSpinner text={t.common.loading} />
-      </Panel>
-    );
-  }
 
   if (!statistics) {
     return (
@@ -51,7 +43,6 @@ export default function RefuelStats({
   const { cost_statistics } = statistics;
 
   const formatLiters = (liters: number) => liters.toFixed(2);
-  const formatPricePerLiter = (price: number) => price.toFixed(3);
 
   return (
     <div className="space-y-6">
@@ -70,7 +61,8 @@ export default function RefuelStats({
           <SummaryCard
             title={t.refuels.amount}
             value={{
-              value: formatLiters(cost_statistics.total_liters),
+              value: cost_statistics.total_liters,
+              formatter: formatLiters,
               unit: "L",
             }}
             icon={
@@ -82,9 +74,9 @@ export default function RefuelStats({
           <SummaryCard
             title={t.refuels.pricePerLiter}
             value={{
-              value: formatPricePerLiter(
-                cost_statistics.average_price_per_liter,
-              ),
+              value: cost_statistics.average_price_per_liter,
+              formatter: (value) =>
+                formatFuelPrice(value, { superscriptClass: "text-xs" }),
               unit: "€/L",
             }}
             icon={
@@ -95,7 +87,7 @@ export default function RefuelStats({
 
           <SummaryCard
             title={t.refuels.refuelEntries}
-            value={{ value: cost_statistics.fill_up_count.toString() }}
+            value={{ value: cost_statistics.fill_up_count }}
             icon={
               <NumbersIcon className="icon-lg text-purple-600 dark:text-purple-400" />
             }

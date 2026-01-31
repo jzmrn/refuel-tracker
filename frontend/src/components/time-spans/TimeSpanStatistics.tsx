@@ -154,7 +154,7 @@ export default function TimeSpanStatistics({
 
   const formatDuration = (minutes: number | null): ValueUnit[] | ValueUnit => {
     if (minutes === null) {
-      return { value: "-", unit: "" };
+      return { value: null, unit: "" };
     }
     const days = Math.floor(minutes / (24 * 60));
     const hours = Math.floor((minutes % (24 * 60)) / 60);
@@ -164,11 +164,11 @@ export default function TimeSpanStatistics({
     if (days > 0) values.push({ value: days, unit: "d" });
     if (hours > 0) values.push({ value: hours, unit: "h" });
     if (mins > 0) values.push({ value: mins, unit: "m" });
-    return values.length > 0 ? values : { value: "-", unit: "" };
+    return values.length > 0 ? values : { value: null, unit: "" };
   };
 
   const formatDurationString = (values: ValueUnit[] | ValueUnit) => {
-    if (!Array.isArray(values)) return values.value.toString();
+    if (!Array.isArray(values)) return values.value;
     return values.map((item) => `${item.value}${item.unit}`).join(" ");
   };
 
@@ -553,7 +553,7 @@ export default function TimeSpanStatistics({
 
         <SummaryCard
           title={t.timeSpans.completed}
-          value={{ value: count.toString(), unit: "" }}
+          value={{ value: count, unit: "" }}
           icon={
             <CheckCircleOutlineIcon className="icon-lg text-purple-600 dark:text-purple-400" />
           }
@@ -583,7 +583,7 @@ export default function TimeSpanStatistics({
 
         <SummaryCard
           title={t.timeSpans.ongoing}
-          value={{ value: ongoingCount.toString(), unit: "" }}
+          value={{ value: ongoingCount, unit: "" }}
           icon={
             <AccessTimeIcon className="icon-lg text-orange-600 dark:text-orange-400" />
           }
@@ -592,7 +592,7 @@ export default function TimeSpanStatistics({
 
         <SummaryCard
           title={t.timeSpans.totalSpansCount}
-          value={{ value: (count + ongoingCount).toString(), unit: "" }}
+          value={{ value: count + ongoingCount, unit: "" }}
           icon={
             <NumbersIcon className="icon-lg text-gray-600 dark:text-gray-400" />
           }

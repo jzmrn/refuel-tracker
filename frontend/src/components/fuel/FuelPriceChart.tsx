@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { renderSvgFuelPrice, formatFuelPrice } from "@/lib/formatPrice";
 
 interface PriceHistoryPoint {
   timestamp: string;
@@ -139,9 +140,6 @@ export default function FuelPriceChart({
             allowDataOverflow={true}
             tick={(props: any) => {
               const { x, y, payload } = props;
-              const priceStr = payload.value.toFixed(3);
-              const mainPart = priceStr.slice(0, -1);
-              const superscript = priceStr.slice(-1);
               return (
                 <g transform={`translate(${x},${y})`}>
                   <text
@@ -151,11 +149,7 @@ export default function FuelPriceChart({
                     textAnchor="end"
                     className="text-xs fill-gray-600 dark:fill-gray-400"
                   >
-                    <tspan>{mainPart}</tspan>
-                    <tspan fontSize="0.8em" dy={-3}>
-                      {superscript}
-                    </tspan>
-                    <tspan dy={3}>€</tspan>
+                    {renderSvgFuelPrice(payload.value)}
                   </text>
                 </g>
               );
@@ -163,23 +157,40 @@ export default function FuelPriceChart({
             ticks={ticks}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: "#1f2937",
-              borderColor: "#4b5563",
-              borderRadius: "8px",
-              color: "#f9fafb",
-              boxShadow:
-                "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+            content={({ active, payload, label: timestamp }) => {
+              if (active && payload && payload.length > 0) {
+                const price = payload[0].value as number;
+                return (
+                  <div
+                    className="p-3 rounded-lg shadow-lg"
+                    style={{
+                      backgroundColor: "#1f2937",
+                      borderColor: "#4b5563",
+                      border: "1px solid #4b5563",
+                    }}
+                  >
+                    <p className="text-gray-300 text-sm mb-2">
+                      {new Date(timestamp).toLocaleString("de-DE", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                    <p className="text-white font-semibold">
+                      {formatFuelPrice(price, {
+                        showCurrency: true,
+                        superscriptClass: "text-xs",
+                      })}
+                      <span className="text-gray-400 font-normal ml-2">
+                        {label}
+                      </span>
+                    </p>
+                  </div>
+                );
+              }
+              return null;
             }}
-            formatter={(value: number) => [`${value?.toFixed(3)}€`, label]}
-            labelFormatter={(timestamp) =>
-              new Date(timestamp).toLocaleString("de-DE", {
-                day: "2-digit",
-                month: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            }
           />
           <Legend
             wrapperStyle={{ paddingTop: "10px" }}
