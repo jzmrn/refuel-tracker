@@ -58,7 +58,7 @@ daily_aggregates_job = define_asset_job(
 
 
 @schedule(
-    cron_schedule="0 6 * * *",
+    cron_schedule="0 7 * * *",
     job=daily_aggregates_job,
     name="daily_aggregates",
     description="Compute daily aggregates at 6:00 AM every day for the previous day.",
@@ -74,7 +74,7 @@ def schedule_daily_aggregates(context):
 
 schedule_cleanup_raw_fuel_data = ScheduleDefinition(
     job=cleanup_raw_fuel_data_job,
-    cron_schedule="0 7 * * *",
+    cron_schedule="0 8 * * *",
     name="cleanup_raw_fuel_data",
     description="Delete raw fuel data older than 7 days (after compression verified).",
 )
