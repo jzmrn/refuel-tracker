@@ -19,7 +19,7 @@ import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import NumbersIcon from "@mui/icons-material/Numbers";
 import { EmptyPanel } from "../common";
 import { GridLayout } from "../common/GridLayout";
-import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useTranslation, useLocalization } from "@/lib/i18n/LanguageContext";
 
 interface DataPointStatisticsProps {
   dataPoints: DataPointResponse[];
@@ -33,6 +33,7 @@ export default function DataPointStatistics({
   loading,
 }: DataPointStatisticsProps) {
   const { t } = useTranslation();
+  const { formatDate } = useLocalization();
 
   if (loading) {
     return (
@@ -97,13 +98,13 @@ export default function DataPointStatistics({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const date = new Date(label);
-      const formattedDate = date.toLocaleDateString("en-GB", {
+      const formattedDate = formatDate(date, {
         weekday: "short",
         month: "short",
         day: "numeric",
         year: "numeric",
       });
-      const formattedTime = date.toLocaleTimeString("en-GB", {
+      const formattedTime = formatDate(date, {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
@@ -273,7 +274,7 @@ export default function DataPointStatistics({
                 tickMargin={10}
                 tickFormatter={(value) => {
                   const date = new Date(value);
-                  return date.toLocaleDateString("en-GB", {
+                  return formatDate(date, {
                     month: "short",
                     day: "numeric",
                     year: "2-digit",

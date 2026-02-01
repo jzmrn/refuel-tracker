@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Panel from "@/components/common/Panel";
-import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useTranslation, useLocalization } from "@/lib/i18n/LanguageContext";
 import {
   useCarWithMinLoadTime,
   useKilometerEntriesWithMinLoadTime,
@@ -17,14 +17,15 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useChartTheme } from "@/lib/theme";
+import { axisConfig, useGridConfig } from "@/lib/chartConfig";
 
 type FilterType = "month" | "6months" | "all";
 
 export default function KilometerStats() {
   const { t } = useTranslation();
+  const { formatDate } = useLocalization();
   const router = useRouter();
-  const chartTheme = useChartTheme();
+  const gridConfig = useGridConfig();
   const { id } = router.query;
   const carId = typeof id === "string" ? id : undefined;
 
@@ -80,7 +81,7 @@ export default function KilometerStats() {
     .map((entry) => ({
       timestamp: new Date(entry.timestamp).getTime(),
       total_kilometers: entry.total_kilometers,
-      displayDate: new Date(entry.timestamp).toLocaleDateString("en-GB", {
+      displayDate: formatDate(new Date(entry.timestamp), {
         month: "short",
         day: "numeric",
         year: "2-digit",
@@ -94,13 +95,13 @@ export default function KilometerStats() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const date = new Date(label);
-      const formattedDate = date.toLocaleDateString("en-GB", {
+      const formattedDate = formatDate(date, {
         weekday: "short",
         month: "short",
         day: "numeric",
         year: "numeric",
       });
-      const formattedTime = date.toLocaleTimeString("en-GB", {
+      const formattedTime = formatDate(date, {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
@@ -111,14 +112,12 @@ export default function KilometerStats() {
             <p className="font-medium text-primary">{formattedDate}</p>
             <p className="text-sm text-secondary">{formattedTime}</p>
           </div>
-          <div className="space-y-1 text-sm">
-            <p className="text-blue-600 dark:text-blue-400">
-              <span className="font-medium">
-                {t.kilometers.totalKilometers}:{" "}
-              </span>
+          <p className="space-y-1 text-sm">
+            {`${t.kilometers.totalKilometers}: `}
+            <span className="text-blue-600 dark:text-blue-400 font-semibold">
               {formatKilometers(payload[0].value)}
-            </p>
-          </div>
+            </span>
+          </p>
         </div>
       );
     }
@@ -228,10 +227,7 @@ export default function KilometerStats() {
                       bottom: 10,
                     }}
                   >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke={chartTheme.gridLine}
-                    />
+                    <CartesianGrid {...gridConfig} />
                     <XAxis
                       dataKey="timestamp"
                       type="number"
@@ -239,24 +235,18 @@ export default function KilometerStats() {
                       scale="time"
                       tickFormatter={(timestamp) => {
                         const date = new Date(timestamp);
-                        return date.toLocaleDateString("en-GB", {
+                        return formatDate(date, {
                           month: "short",
                           day: "numeric",
                         });
                       }}
-                      stroke={chartTheme.text}
-                      tick={{ fill: chartTheme.text, fontSize: 12 }}
-                      tickLine={{ stroke: chartTheme.text }}
-                      axisLine={{ stroke: chartTheme.gridLine }}
+                      {...axisConfig.xAxis}
                     />
                     <YAxis
                       tickFormatter={(value) =>
-                        new Intl.NumberFormat("de-DE").format(value)
+                        `${new Intl.NumberFormat("de-DE").format(value)} km`
                       }
-                      stroke={chartTheme.text}
-                      tick={{ fill: chartTheme.text, fontSize: 12 }}
-                      tickLine={{ stroke: chartTheme.text }}
-                      axisLine={{ stroke: chartTheme.gridLine }}
+                      {...axisConfig.yAxis}
                       width={80}
                     />
                     <Tooltip content={<CustomTooltip />} />

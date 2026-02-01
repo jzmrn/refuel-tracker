@@ -115,39 +115,34 @@ export function formatFuelPriceString(
 }
 
 /**
- * Creates an SVG tspan-based fuel price formatter for use in chart axis ticks.
- * The superscript is rendered smaller and raised using SVG tspan elements.
+ * Formats a fuel price as a plain string for SVG/chart axis ticks.
+ * Uses Unicode superscript digits for the last decimal place.
  *
  * @param price - The price to format
- * @param options - Options for dy offset and font size ratio
- * @returns SVG tspan elements or null if price is undefined
+ * @param options - Options for currency display
+ * @returns A formatted string like "1.56⁹€" or "1.56⁹"
  */
 export function renderSvgFuelPrice(
-  price: number,
+  price: number | undefined | null,
   options: {
-    superscriptDy?: number;
-    superscriptFontSize?: string;
     showCurrency?: boolean;
   } = {},
-): React.ReactNode {
-  const {
-    superscriptDy = -3,
-    superscriptFontSize = "0.8em",
-    showCurrency = true,
-  } = options;
+): string {
+  const { showCurrency = true } = options;
+
+  if (price === undefined || price === null) {
+    return "-";
+  }
 
   const parts = getFuelPriceParts(price);
   if (!parts) {
-    return null;
+    return "-";
   }
 
-  return (
-    <>
-      <tspan>{parts.mainPart}</tspan>
-      <tspan fontSize={superscriptFontSize} dy={superscriptDy}>
-        {parts.superscript}
-      </tspan>
-      {showCurrency && <tspan dy={-superscriptDy}>€</tspan>}
-    </>
-  );
+  // Unicode superscript digits: ⁰¹²³⁴⁵⁶⁷⁸⁹
+  const superscriptDigits = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"];
+  const superscript =
+    superscriptDigits[parseInt(parts.superscript, 10)] || parts.superscript;
+
+  return `${parts.mainPart}${superscript}${showCurrency ? " €" : ""}`;
 }

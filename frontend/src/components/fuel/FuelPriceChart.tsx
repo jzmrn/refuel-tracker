@@ -8,7 +8,17 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { renderSvgFuelPrice, formatFuelPrice } from "@/lib/formatPrice";
+import { renderSvgFuelPrice } from "@/lib/formatPrice";
+import { useLocalization } from "@/lib/i18n/LanguageContext";
+import {
+  axisConfig,
+  useGridConfig,
+  useAxisColor,
+  createYAxisTick,
+  customTooltipContainerStyle,
+  renderLegendText,
+  tooltipStyle,
+} from "@/lib/chartConfig";
 
 interface PriceHistoryPoint {
   timestamp: string;
@@ -46,6 +56,10 @@ export default function FuelPriceChart({
   label,
   timeRangeHours = 24,
 }: FuelPriceChartProps) {
+  const { formatDate } = useLocalization();
+  const gridConfig = useGridConfig();
+  const axisColor = useAxisColor();
+
   // Convert data to chart format based on data type
   const chartData = isMultiFuelData(data)
     ? data.map((point) => ({
@@ -104,10 +118,7 @@ export default function FuelPriceChart({
           data={chartData}
           margin={{ top: 5, right: 10, left: 5, bottom: 5 }}
         >
-          <CartesianGrid
-            strokeDasharray="3 3"
-            className="stroke-gray-300 dark:stroke-gray-700"
-          />
+          <CartesianGrid {...gridConfig} />
           <XAxis
             dataKey="timestamp"
             type="number"
@@ -118,7 +129,7 @@ export default function FuelPriceChart({
             ]}
             allowDataOverflow={true}
             tickFormatter={(timestamp) =>
-              new Date(timestamp).toLocaleString("de-DE", {
+              formatDate(new Date(timestamp), {
                 ...(timeRangeHours > 24 && {
                   day: "2-digit",
                   month: "2-digit",
@@ -127,64 +138,37 @@ export default function FuelPriceChart({
                 minute: "2-digit",
               })
             }
-            className="text-xs fill-gray-600 dark:fill-gray-400"
-            angle={-45}
-            textAnchor="end"
-            height={70}
-            tick={{ fontSize: 10 }}
+            {...axisConfig.xAxis}
           />
           <YAxis
-            className="text-xs fill-gray-600 dark:fill-gray-400"
+            {...axisConfig.yAxis}
             width={50}
             domain={["auto", "auto"]}
             allowDataOverflow={true}
-            tick={(props: any) => {
-              const { x, y, payload } = props;
-              return (
-                <g transform={`translate(${x},${y})`}>
-                  <text
-                    x={0}
-                    y={0}
-                    dy={4}
-                    textAnchor="end"
-                    className="text-xs fill-gray-600 dark:fill-gray-400"
-                  >
-                    {renderSvgFuelPrice(payload.value)}
-                  </text>
-                </g>
-              );
-            }}
+            tick={createYAxisTick(axisColor, renderSvgFuelPrice)}
             ticks={ticks}
           />
           <Tooltip
+            contentStyle={tooltipStyle.contentStyle}
             content={({ active, payload, label: timestamp }) => {
               if (active && payload && payload.length > 0) {
                 const price = payload[0].value as number;
                 return (
                   <div
                     className="p-3 rounded-lg shadow-lg"
-                    style={{
-                      backgroundColor: "#1f2937",
-                      borderColor: "#4b5563",
-                      border: "1px solid #4b5563",
-                    }}
+                    style={customTooltipContainerStyle}
                   >
                     <p className="text-gray-300 text-sm mb-2">
-                      {new Date(timestamp).toLocaleString("de-DE", {
+                      {formatDate(new Date(timestamp), {
                         day: "2-digit",
                         month: "2-digit",
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
                     </p>
-                    <p className="text-white font-semibold">
-                      {formatFuelPrice(price, {
-                        showCurrency: true,
-                        superscriptClass: "text-xs",
-                      })}
-                      <span className="text-gray-400 font-normal ml-2">
-                        {label}
-                      </span>
+                    <p className="text-sm text-white font-semibold flex justify-between gap-4">
+                      <span className="text-gray-400 font-normal">{label}</span>
+                      <span>{renderSvgFuelPrice(price)}</span>
                     </p>
                   </div>
                 );
@@ -194,11 +178,7 @@ export default function FuelPriceChart({
           />
           <Legend
             wrapperStyle={{ paddingTop: "10px" }}
-            formatter={(value) => (
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {value}
-              </span>
-            )}
+            formatter={renderLegendText}
           />
           {segments.map((segment, index) => (
             <Line

@@ -7,11 +7,20 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  ReferenceLine,
   Legend,
 } from "recharts";
 import { DailyStatsPoint } from "@/lib/api";
-import { renderSvgFuelPrice, formatFuelPrice } from "@/lib/formatPrice";
+import { renderSvgFuelPrice } from "@/lib/formatPrice";
+import { useLocalization } from "@/lib/i18n/LanguageContext";
+import {
+  axisConfig,
+  useGridConfig,
+  useAxisColor,
+  createYAxisTick,
+  customTooltipContainerStyle,
+  tooltipStyle,
+  renderLegendText,
+} from "@/lib/chartConfig";
 
 interface DailyStatsChartProps {
   data: DailyStatsPoint[];
@@ -26,6 +35,10 @@ export default function DailyStatsChart({
   color,
   label,
 }: DailyStatsChartProps) {
+  const { formatDate } = useLocalization();
+  const gridConfig = useGridConfig();
+  const axisColor = useAxisColor();
+
   // Convert data to chart format and sort by date ascending
   const chartData = [...data]
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -62,9 +75,6 @@ export default function DailyStatsChart({
   const minDate = dates.length > 0 ? Math.min(...dates) : Date.now();
   const maxDate = dates.length > 0 ? Math.max(...dates) : Date.now();
 
-  // Add some padding to the domain
-  const padding = (maxDate - minDate) * 0.05;
-
   // Light color for the range area
   const areaColor = `${color}30`; // 30 is hex for ~19% opacity
 
@@ -75,72 +85,39 @@ export default function DailyStatsChart({
           data={chartData}
           margin={{ top: 5, right: 10, left: 5, bottom: 5 }}
         >
-          <CartesianGrid
-            strokeDasharray="3 3"
-            className="stroke-gray-300 dark:stroke-gray-700"
-          />
+          <CartesianGrid {...gridConfig} />
           <XAxis
             dataKey="date"
             type="number"
             scale="time"
-            domain={[minDate - padding, maxDate + padding]}
+            domain={[minDate, maxDate]}
             tickFormatter={(timestamp) =>
-              new Date(timestamp).toLocaleDateString("de-DE", {
+              formatDate(new Date(timestamp), {
                 day: "2-digit",
                 month: "2-digit",
               })
             }
-            className="text-xs fill-gray-600 dark:fill-gray-400"
-            angle={-45}
-            textAnchor="end"
-            height={70}
-            tick={{ fontSize: 10 }}
+            {...axisConfig.xAxis}
           />
           <YAxis
-            className="text-xs fill-gray-600 dark:fill-gray-400"
+            {...axisConfig.yAxis}
             width={50}
             domain={["auto", "auto"]}
-            tick={(props: any) => {
-              const { x, y, payload } = props;
-              return (
-                <g transform={`translate(${x},${y})`}>
-                  <text
-                    x={0}
-                    y={0}
-                    dy={4}
-                    textAnchor="end"
-                    className="text-xs fill-gray-600 dark:fill-gray-400"
-                  >
-                    {renderSvgFuelPrice(payload.value)}
-                  </text>
-                </g>
-              );
-            }}
+            tick={createYAxisTick(axisColor, renderSvgFuelPrice)}
             ticks={ticks}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: "#1f2937",
-              borderColor: "#4b5563",
-              borderRadius: "8px",
-              color: "#f9fafb",
-              boxShadow:
-                "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-            }}
+            contentStyle={tooltipStyle.contentStyle}
             content={({ active, payload, label: tooltipLabel }) => {
               if (active && payload && payload.length > 0) {
                 const dataPoint = payload[0].payload;
                 return (
                   <div
                     className="p-3 rounded-lg shadow-lg"
-                    style={{
-                      backgroundColor: "#1f2937",
-                      borderColor: "#4b5563",
-                      border: "1px solid #4b5563",
-                    }}
+                    style={customTooltipContainerStyle}
                   >
                     <p className="text-gray-300 text-sm mb-2">
-                      {new Date(tooltipLabel).toLocaleDateString("de-DE", {
+                      {formatDate(new Date(tooltipLabel), {
                         weekday: "short",
                         day: "2-digit",
                         month: "2-digit",
@@ -148,28 +125,23 @@ export default function DailyStatsChart({
                       })}
                     </p>
                     <div className="space-y-1 text-sm">
-                      <p className="text-white">
-                        <span className="text-gray-400">Ø </span>
+                      <p className="text-white flex justify-between gap-4">
+                        <span className="text-gray-400">Ø</span>
                         <span className="font-semibold">
-                          {formatFuelPrice(dataPoint.price_mean, {
-                            showCurrency: true,
-                            superscriptClass: "text-xs",
-                          })}
+                          {renderSvgFuelPrice(dataPoint.price_mean)}
                         </span>
                       </p>
-                      <p className="text-green-400">
-                        <span className="text-gray-400">Min: </span>
-                        {formatFuelPrice(dataPoint.price_min, {
-                          showCurrency: true,
-                          superscriptClass: "text-xs",
-                        })}
+                      <p className="text-green-400 flex justify-between gap-4">
+                        <span className="text-gray-400">Min</span>
+                        <span className="font-semibold">
+                          {renderSvgFuelPrice(dataPoint.price_min)}
+                        </span>
                       </p>
-                      <p className="text-red-400">
-                        <span className="text-gray-400">Max: </span>
-                        {formatFuelPrice(dataPoint.price_max, {
-                          showCurrency: true,
-                          superscriptClass: "text-xs",
-                        })}
+                      <p className="text-red-400 flex justify-between gap-4">
+                        <span className="text-gray-400">Max</span>
+                        <span className="font-semibold">
+                          {renderSvgFuelPrice(dataPoint.price_max)}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -178,14 +150,7 @@ export default function DailyStatsChart({
               return null;
             }}
           />
-          <Legend
-            wrapperStyle={{ paddingTop: "10px" }}
-            formatter={(value) => (
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {value}
-              </span>
-            )}
-          />
+          <Legend formatter={renderLegendText} />
           {/* Area showing the range between min and max */}
           <Area
             type="linear"
@@ -221,10 +186,10 @@ export default function DailyStatsChart({
           <Line
             type="linear"
             dataKey="price_mean"
-            stroke="#ffffff"
+            stroke={color}
             strokeWidth={2.5}
-            dot={{ r: 4, fill: "#ffffff", strokeWidth: 0 }}
-            activeDot={{ r: 6, fill: "#ffffff", strokeWidth: 2, stroke: color }}
+            dot={{ r: 4, fill: color, strokeWidth: 0 }}
+            activeDot={{ r: 6, fill: color, strokeWidth: 2, stroke: "#ffffff" }}
             name="Ø"
             connectNulls={false}
           />

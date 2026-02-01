@@ -1,7 +1,7 @@
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { GasStationResponse, FavoriteStationResponse } from "@/lib/api";
 import CircularProgress from "@mui/material/CircularProgress";
-import { formatFuelPrice, getFuelPriceParts } from "@/lib/formatPrice";
+import { renderSvgFuelPrice } from "@/lib/formatPrice";
 
 interface StationCardProps {
   station: GasStationResponse | FavoriteStationResponse;
@@ -72,28 +72,17 @@ export default function StationCard({
     priceDiesel = station.current_price_diesel;
   }
 
-  const renderPrice = (
-    price?: number,
-    supClassName: string = "text-[0.6em]",
-  ) => {
-    const formatted = getFuelPriceParts(price);
-    if (!formatted) return null;
-    return formatFuelPrice(price, { superscriptClass: supClassName });
-  };
-
   const renderPriceColumn = (
     price: number | undefined,
     fuelType: "e5" | "e10" | "diesel",
     label: string,
   ) => {
     const isActive = sortBy === fuelType;
-    const isPriceAvailable =
-      price !== undefined && price !== null && typeof price === "number";
 
     return (
       <div className="text-center w-20">
         <div className="text-3xl font-bold text-primary">
-          {isPriceAvailable ? renderPrice(price, "text-lg") : "-"}
+          {renderSvgFuelPrice(price)}
         </div>
         <div className="text-xs mt-1">
           <span
@@ -120,9 +109,7 @@ export default function StationCard({
     return (
       <div className="text-center">
         <div className="text-2xl font-bold text-primary">
-          {price === undefined || price === null || typeof price !== "number"
-            ? "-"
-            : renderPrice(price, "text-base")}
+          {renderSvgFuelPrice(price, { showCurrency: false })}
         </div>
         <div className="text-[0.6rem] text-secondary">{label}</div>
       </div>

@@ -1,7 +1,10 @@
 import React from "react";
 import { KilometerEntry } from "../../lib/api";
 import LoadingSpinner from "../common/LoadingSpinner";
-import { useTranslation } from "../../lib/i18n/LanguageContext";
+import {
+  useTranslation,
+  useLocalization,
+} from "../../lib/i18n/LanguageContext";
 
 interface KilometerListProps {
   entries: KilometerEntry[];
@@ -13,6 +16,7 @@ export default function KilometerList({
   loading,
 }: KilometerListProps) {
   const { t } = useTranslation();
+  const { formatDate: formatDateLocalized } = useLocalization();
 
   if (loading) {
     return <LoadingSpinner text={t.common.loading} />;
@@ -31,14 +35,14 @@ export default function KilometerList({
 
     if (isToday) {
       return (
-        date.toLocaleTimeString("en-US", {
+        formatDateLocalized(date, {
           hour: "2-digit",
           minute: "2-digit",
         }) + ` (${t.refuels.today})`
       );
     }
 
-    return date.toLocaleDateString("en-US", {
+    return formatDateLocalized(date, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -80,7 +84,7 @@ export default function KilometerList({
                 <td className="px-3 sm:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-primary">
                   <div className="font-medium">
                     <div className="sm:hidden">
-                      {new Date(entry.timestamp).toLocaleDateString("en-US", {
+                      {formatDateLocalized(new Date(entry.timestamp), {
                         month: "short",
                         day: "numeric",
                       })}

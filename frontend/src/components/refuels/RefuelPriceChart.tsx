@@ -16,9 +16,12 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import BarChartIcon from "@mui/icons-material/BarChart";
-import { useTranslation } from "../../lib/i18n/LanguageContext";
+import {
+  useTranslation,
+  useLocalization,
+} from "../../lib/i18n/LanguageContext";
 import { useChartTheme } from "../../lib/theme";
-import { formatFuelPrice } from "../../lib/formatPrice";
+import { renderSvgFuelPrice } from "../../lib/formatPrice";
 
 interface PriceTrend {
   date: string;
@@ -34,6 +37,7 @@ interface RefuelPriceChartProps {
 
 export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
   const { t } = useTranslation();
+  const { formatDate } = useLocalization();
   const chartTheme = useChartTheme();
 
   if (!priceData || priceData.length === 0) {
@@ -56,7 +60,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
     .map((item) => ({
       ...item,
       timestampMs: new Date(item.timestamp).getTime(),
-      displayDate: new Date(item.timestamp).toLocaleDateString("en-GB", {
+      displayDate: formatDate(new Date(item.timestamp), {
         month: "short",
         day: "numeric",
         year: "2-digit",
@@ -74,20 +78,17 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
     }).format(value);
   };
 
-  const formatPricePerLiter = (value: number) =>
-    formatFuelPrice(value, { superscriptClass: "text-xs" });
-
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const date = new Date(label);
-      const formattedDate = date.toLocaleDateString("en-GB", {
+      const formattedDate = formatDate(date, {
         weekday: "short",
         month: "short",
         day: "numeric",
         year: "numeric",
       });
-      const formattedTime = date.toLocaleTimeString("en-GB", {
+      const formattedTime = formatDate(date, {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
@@ -99,19 +100,27 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             <p className="text-sm text-secondary">{formattedTime}</p>
           </div>
           <div className="space-y-1 text-sm">
-            <p className="text-blue-600 dark:text-blue-400">
-              <span className="font-medium">
+            <p className="flex justify-between gap-4">
+              <span className="text-gray-400">
                 {t.refuels.pricePerLiterTooltip}
-              </span>{" "}
-              {formatPricePerLiter(data.price)}
+              </span>
+              <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                {renderSvgFuelPrice(data.price)}
+              </span>
             </p>
-            <p className="text-green-600 dark:text-green-400">
-              <span className="font-medium">{t.refuels.amountTooltip}</span>{" "}
-              {data.amount.toFixed(2)} L
+            <p className="flex justify-between gap-4">
+              <span className="text-gray-400">{t.refuels.amountTooltip}</span>
+              <span className="text-green-600 dark:text-green-400 font-semibold">
+                {data.amount.toFixed(2)} L
+              </span>
             </p>
-            <p className="text-purple-600 dark:text-purple-400">
-              <span className="font-medium">{t.refuels.totalCostTooltip}</span>{" "}
-              {formatCurrency(data.total_cost)}
+            <p className="flex justify-between gap-4">
+              <span className="text-gray-400">
+                {t.refuels.totalCostTooltip}
+              </span>
+              <span className="text-purple-600 dark:text-purple-400 font-semibold">
+                {formatCurrency(data.total_cost)}
+              </span>
             </p>
           </div>
         </div>
@@ -127,6 +136,20 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
   const priceRange = maxPrice - minPrice;
   const yAxisMin = Math.max(0, minPrice - priceRange * 0.1);
   const yAxisMax = maxPrice + priceRange * 0.1;
+
+  let ticks: number[] | undefined = undefined;
+  if (prices.length > 0) {
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    const start = Math.floor(min * 1000) / 1000;
+    const startCents = Math.round(start * 1000) % 10;
+    let current = start - (startCents - 9) / 1000;
+    ticks = [];
+    while (current <= max) {
+      ticks.push(Math.round(current * 1000) / 1000);
+      current += 0.01;
+    }
+  }
 
   return (
     <Panel title={t.refuels.priceTrendsOverTime}>
@@ -149,9 +172,10 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             stroke={chartTheme.axis}
             fontSize={12}
             tickMargin={10}
+            height={40}
             tickFormatter={(value) => {
               const date = new Date(value);
-              return date.toLocaleDateString("en-GB", {
+              return formatDate(date, {
                 month: "short",
                 day: "numeric",
                 year: "2-digit",
@@ -163,11 +187,22 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             stroke={chartTheme.axis}
             fontSize={12}
             tickFormatter={(value) => `${value.toFixed(2)}`}
-            label={{
-              value: t.refuels.priceLabel,
-              angle: -90,
-              position: "insideLeft",
-              style: { textAnchor: "middle" },
+            ticks={ticks}
+            tick={(props: any) => {
+              const { x, y, payload } = props;
+              return (
+                <g transform={`translate(${x},${y})`}>
+                  <text
+                    x={0}
+                    y={0}
+                    dy={4}
+                    textAnchor="end"
+                    className="text-xs fill-gray-600 dark:fill-gray-400"
+                  >
+                    {renderSvgFuelPrice(payload.value)}
+                  </text>
+                </g>
+              );
             }}
           />
           <Tooltip content={<CustomTooltip />} />
@@ -199,7 +234,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             title={t.fuelPrices.currentPrice}
             value={{
               value: sortedData[sortedData.length - 1].price,
-              formatter: formatPricePerLiter,
+              formatter: renderSvgFuelPrice,
               unit: "€/L",
             }}
             icon={
@@ -212,7 +247,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             title={t.refuels.lowestPrice}
             value={{
               value: minPrice,
-              formatter: formatPricePerLiter,
+              formatter: renderSvgFuelPrice,
               unit: "€/L",
             }}
             icon={
@@ -225,7 +260,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             title={t.refuels.highestPrice}
             value={{
               value: maxPrice,
-              formatter: (value) => formatPricePerLiter(value),
+              formatter: renderSvgFuelPrice,
               unit: "€/L",
             }}
             icon={
@@ -238,7 +273,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             title={t.refuels.priceRange}
             value={{
               value: priceRange,
-              formatter: formatPricePerLiter,
+              formatter: renderSvgFuelPrice,
               unit: "€/L",
             }}
             icon={

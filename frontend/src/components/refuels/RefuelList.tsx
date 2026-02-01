@@ -1,10 +1,11 @@
 import React from "react";
 import { RefuelMetric } from "../../lib/api";
 import LoadingSpinner from "../common/LoadingSpinner";
-import { useTranslation } from "../../lib/i18n/LanguageContext";
-import { EmptyState } from "../common";
-import CollectionsIcon from "@mui/icons-material/Collections";
-import { formatFuelPrice } from "../../lib/formatPrice";
+import {
+  useTranslation,
+  useLocalization,
+} from "../../lib/i18n/LanguageContext";
+import { renderSvgFuelPrice } from "../../lib/formatPrice";
 
 interface RefuelListProps {
   refuels: RefuelMetric[];
@@ -13,6 +14,7 @@ interface RefuelListProps {
 
 export default function RefuelList({ refuels, loading }: RefuelListProps) {
   const { t } = useTranslation();
+  const { formatDate: formatDateLocalized } = useLocalization();
   if (loading) {
     return <LoadingSpinner text={t.common.loading} />;
   }
@@ -22,29 +24,6 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
       <p className="text-secondary text-sm">{t.refuels.noRefuelEntriesYet}</p>
     );
   }
-
-  const formatDate = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const isToday = date.toDateString() === now.toDateString();
-
-    if (isToday) {
-      return (
-        date.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }) + ` (${t.refuels.today})`
-      );
-    }
-
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("de-DE", {
@@ -98,22 +77,14 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
               >
                 <td className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-primary">
                   <div className="font-medium">
-                    <div className="sm:hidden">
-                      {new Date(refuel.timestamp).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </div>
-                    <div className="hidden sm:block">
-                      {formatDate(refuel.timestamp)}
-                    </div>
+                    {formatDateLocalized(new Date(refuel.timestamp), {
+                      month: "short",
+                      day: "numeric",
+                    })}
                   </div>
                 </td>
                 <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
-                  {formatFuelPrice(refuel.price, {
-                    superscriptClass: "text-xs",
-                    suffix: " €/L",
-                  })}
+                  {renderSvgFuelPrice(refuel.price)} €/L
                 </td>
                 <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
                   {formatLiters(refuel.amount)}

@@ -22,6 +22,7 @@ import {
   useLocalization,
 } from "../../lib/i18n/LanguageContext";
 import { useChartTheme } from "../../lib/theme";
+import { axisConfig, useGridConfig } from "../../lib/chartConfig";
 
 interface RefuelDataForChart {
   timestamp: string;
@@ -42,6 +43,7 @@ export default function RefuelConsumptionChart({
   const { t } = useTranslation();
   const { formatDate, formatNumber } = useLocalization();
   const chartTheme = useChartTheme();
+  const gridConfig = useGridConfig();
 
   if (!refuelData || refuelData.length === 0) {
     return (
@@ -121,35 +123,47 @@ export default function RefuelConsumptionChart({
             <p className="text-sm text-secondary">{formattedTime}</p>
           </div>
           <div className="space-y-1 text-sm">
-            <p className="text-blue-600">
-              <span className="font-medium">{t.refuels.estimated}:</span>{" "}
-              {formatConsumption(data.estimatedConsumption)}
+            <p className="flex justify-between gap-4">
+              <span className="text-gray-400">{t.refuels.estimated}:</span>
+              <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                {formatConsumption(data.estimatedConsumption)} L
+              </span>
             </p>
-            <p className="text-green-600">
-              <span className="font-medium">{t.refuels.actual}:</span>{" "}
-              {formatConsumption(data.actualConsumption)}
+            <p className="flex justify-between gap-4">
+              <span className="text-gray-400">{t.refuels.actual}:</span>
+              <span className="text-green-600 dark:text-green-400 font-semibold">
+                {formatConsumption(data.actualConsumption)} L
+              </span>
             </p>
-            <p
-              className={`${
-                data.difference > 0 ? "text-red-600" : "text-green-600"
-              }`}
-            >
-              <span className="font-medium">{t.refuels.difference}:</span>{" "}
-              {data.difference > 0 ? "+" : ""}
-              {formatConsumption(Math.abs(data.difference))}
+            <p className="flex justify-between gap-4">
+              <span className="text-gray-400">{t.refuels.difference}:</span>
+              <span
+                className={`font-semibold ${
+                  data.difference > 0
+                    ? "text-red-600 dark:text-red-400"
+                    : "text-green-600 dark:text-green-400"
+                }`}
+              >
+                {data.difference > 0 ? "+" : "-"}
+                {formatConsumption(Math.abs(data.difference))} L
+              </span>
             </p>
-            <div className="border-t pt-2 mt-2">
-              <p className="text-secondary">
-                <span className="font-medium">{t.refuels.distance}:</span>{" "}
-                {data.kilometers_since_last_refuel} km
+            <div className="border-t pt-2 mt-2 space-y-1">
+              <p className="flex justify-between gap-4">
+                <span className="text-gray-400">{t.refuels.distance}:</span>
+                <span className="text-secondary font-semibold">
+                  {data.kilometers_since_last_refuel} km
+                </span>
               </p>
-              <p className="text-secondary">
-                <span className="font-medium">{t.refuels.fuel}:</span>{" "}
-                {formatNumber(data.amount, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}{" "}
-                L
+              <p className="flex justify-between gap-4">
+                <span className="text-gray-400">{t.refuels.fuel}:</span>
+                <span className="text-secondary font-semibold">
+                  {formatNumber(data.amount, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{" "}
+                  L
+                </span>
               </p>
             </div>
           </div>
@@ -195,15 +209,13 @@ export default function RefuelConsumptionChart({
             bottom: 20,
           }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} />
+          <CartesianGrid {...gridConfig} />
           <XAxis
             type="number"
             dataKey="timestampMs"
             scale="time"
             domain={["dataMin", "dataMax"]}
             stroke={chartTheme.axis}
-            fontSize={12}
-            tickMargin={10}
             tickFormatter={(value) => {
               const date = new Date(value);
               return formatDate(date, {
@@ -212,18 +224,13 @@ export default function RefuelConsumptionChart({
                 year: "2-digit",
               });
             }}
+            {...axisConfig.xAxis}
           />
           <YAxis
             domain={[yAxisMin, yAxisMax]}
             stroke={chartTheme.axis}
-            fontSize={12}
             tickFormatter={(value) => `${value.toFixed(1)}`}
-            label={{
-              value: t.refuels.consumptionLabelWithUnit,
-              angle: -90,
-              position: "insideLeft",
-              style: { textAnchor: "middle" },
-            }}
+            {...axisConfig.yAxis}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend />

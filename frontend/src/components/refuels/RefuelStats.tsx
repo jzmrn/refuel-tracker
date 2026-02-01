@@ -15,7 +15,7 @@ import { EmptyPanel } from "../common";
 import { GridLayout } from "../common/GridLayout";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
 import Panel from "../common/Panel";
-import { formatFuelPrice } from "../../lib/formatPrice";
+import { renderSvgFuelPrice } from "../../lib/formatPrice";
 
 interface RefuelStatsProps {
   statistics: RefuelStatistics | null;
@@ -75,8 +75,7 @@ export default function RefuelStats({
             title={t.refuels.pricePerLiter}
             value={{
               value: cost_statistics.average_price_per_liter,
-              formatter: (value) =>
-                formatFuelPrice(value, { superscriptClass: "text-xs" }),
+              formatter: renderSvgFuelPrice,
               unit: "€/L",
             }}
             icon={

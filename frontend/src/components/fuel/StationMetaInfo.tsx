@@ -2,11 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import CircularProgress from "@mui/material/CircularProgress";
 import CloseIcon from "@mui/icons-material/Close";
 import LinkIcon from "@mui/icons-material/Link";
-import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useTranslation, useLocalization } from "@/lib/i18n/LanguageContext";
 import apiService, { StationMetaResponse } from "@/lib/api";
 import { fuelPricesKeys } from "@/lib/hooks/useFuelPrices";
 import Panel from "@/components/common/Panel";
-import { formatFuelPrice } from "@/lib/formatPrice";
+import { renderSvgFuelPrice } from "@/lib/formatPrice";
 
 interface StationMetaInfoProps {
   stationId: string;
@@ -24,6 +24,7 @@ export default function StationMetaInfo({
   onCopyAddress,
 }: StationMetaInfoProps) {
   const { t } = useTranslation();
+  const { formatDate } = useLocalization();
 
   const { data: stationData, isLoading } = useQuery({
     queryKey: fuelPricesKeys.stationMeta(stationId),
@@ -35,7 +36,7 @@ export default function StationMetaInfo({
   const formatTime = (timestamp?: string) => {
     if (!timestamp) return null;
     const date = new Date(timestamp);
-    return date.toLocaleString("de-DE", {
+    return formatDate(date, {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -172,9 +173,7 @@ export default function StationMetaInfo({
           <div className="flex flex-col xxs:flex-row justify-center items-center gap-1.5 sm:gap-2">
             <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
               <div className="text-2xl sm:text-3xl font-bold text-primary">
-                {formatFuelPrice(stationData.current_price_e5, {
-                  superscriptClass: "text-lg sm:text-xl",
-                })}
+                {renderSvgFuelPrice(stationData.current_price_e5)}
               </div>
               <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
                 {t.fuelPrices.e5}
@@ -183,9 +182,7 @@ export default function StationMetaInfo({
 
             <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
               <div className="text-2xl sm:text-3xl font-bold text-primary">
-                {formatFuelPrice(stationData.current_price_e10, {
-                  superscriptClass: "text-lg sm:text-xl",
-                })}
+                {renderSvgFuelPrice(stationData.current_price_e10)}
               </div>
               <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
                 {t.fuelPrices.e10}
@@ -194,9 +191,7 @@ export default function StationMetaInfo({
 
             <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
               <div className="text-2xl sm:text-3xl font-bold text-primary">
-                {formatFuelPrice(stationData.current_price_diesel, {
-                  superscriptClass: "text-lg sm:text-xl",
-                })}
+                {renderSvgFuelPrice(stationData.current_price_diesel)}
               </div>
               <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
                 {t.fuelPrices.diesel}
