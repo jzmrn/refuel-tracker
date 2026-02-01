@@ -15,7 +15,7 @@ from tankerkoenig.models import GasStationPrice
 from .resources import TankerkoenigResource
 
 # Shared partition definition for daily assets
-daily_partitions = DailyPartitionsDefinition(start_date="2025-11-01", end_offset=1)
+daily_partitions = DailyPartitionsDefinition(start_date="2025-11-24", end_offset=1)
 
 
 @asset(
