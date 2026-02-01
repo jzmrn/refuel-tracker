@@ -57,7 +57,7 @@ class AggregatedFuelDataClient:
                     price_mean DOUBLE NOT NULL,
                     price_min DOUBLE NOT NULL,
                     price_max DOUBLE NOT NULL,
-                    price_std DOUBLE NOT NULL,
+                    price_std DOUBLE,
                     ts_min TIMESTAMP NOT NULL,
                     ts_max TIMESTAMP NOT NULL,
                     PRIMARY KEY (date, station_id, type)
@@ -69,6 +69,7 @@ class AggregatedFuelDataClient:
     def _run_migrations(self) -> None:
         """Run any pending migrations for the daily_aggregates table."""
         self._migrate_add_n_unique_prices()
+        self._migrate_price_std_nullable()
 
     def _migrate_add_n_unique_prices(self) -> None:
         """Add n_unique_prices column if it doesn't exist."""
@@ -96,6 +97,30 @@ class AggregatedFuelDataClient:
                     """
                 )
                 logger.info("n_unique_prices column added successfully")
+
+    def _migrate_price_std_nullable(self) -> None:
+        """Make price_std column nullable to handle single-sample aggregates."""
+        with self._duckdb.get_connection() as con:
+            # Check if the column is currently NOT NULL
+            result = con.execute(
+                """
+                SELECT is_nullable
+                FROM information_schema.columns
+                WHERE table_name = 'daily_aggregates' AND column_name = 'price_std'
+                """
+            ).fetchone()
+
+            if result and result[0] == "NO":
+                logger.info(
+                    "Making price_std column nullable in daily_aggregates table"
+                )
+                # DuckDB doesn't support ALTER COLUMN directly, need to recreate
+                con.execute(
+                    """
+                    ALTER TABLE daily_aggregates ALTER COLUMN price_std DROP NOT NULL
+                    """
+                )
+                logger.info("price_std column is now nullable")
 
     def _ensure_table_exists(self) -> None:
         """Ensure the daily_aggregates table exists (no-op since created in __init__)."""
