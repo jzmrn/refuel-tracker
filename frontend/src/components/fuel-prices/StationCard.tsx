@@ -82,7 +82,7 @@ export default function StationCard({
     return (
       <div className="text-center w-20">
         <div className="text-3xl font-bold text-primary">
-          {renderSvgFuelPrice(price)}
+          {renderSvgFuelPrice(price, { showCurrency: false })}
         </div>
         <div className="text-xs mt-1">
           <span

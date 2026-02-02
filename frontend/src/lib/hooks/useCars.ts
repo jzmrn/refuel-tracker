@@ -1,12 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiService, {
-  Car,
   CarCreate,
   CarUpdate,
-  RefuelMetric,
-  RefuelStatistics,
   RefuelMetricCreate,
-  KilometerEntry,
   KilometerEntryCreate,
 } from "@/lib/api";
 import { useWithMinLoadTime } from "./useWithMinLoadTime";
@@ -154,7 +150,7 @@ export function useRefuelMetrics(
     start_date?: string;
     end_date?: string;
     limit?: number;
-  }
+  },
 ) {
   return useQuery({
     queryKey: carId
@@ -184,7 +180,7 @@ export function useRefuelMetricsWithMinLoadTime(
     start_date?: string;
     end_date?: string;
     limit?: number;
-  }
+  },
 ) {
   return useWithMinLoadTime(useRefuelMetrics(carId, params));
 }
@@ -198,7 +194,7 @@ export function useRefuelStatistics(
   params?: {
     start_date?: string;
     end_date?: string;
-  }
+  },
 ) {
   return useQuery({
     queryKey: carId
@@ -227,7 +223,7 @@ export function useRefuelStatisticsWithMinLoadTime(
   params?: {
     start_date?: string;
     end_date?: string;
-  }
+  },
 ) {
   return useWithMinLoadTime(useRefuelStatistics(carId, params));
 }
@@ -322,7 +318,7 @@ export function useKilometerEntries(
     start_date?: string;
     end_date?: string;
     limit?: number;
-  }
+  },
 ) {
   return useQuery({
     queryKey: carId
@@ -352,7 +348,7 @@ export function useKilometerEntriesWithMinLoadTime(
     start_date?: string;
     end_date?: string;
     limit?: number;
-  }
+  },
 ) {
   return useWithMinLoadTime(useKilometerEntries(carId, params));
 }

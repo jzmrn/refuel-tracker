@@ -1,21 +1,17 @@
 import { useRouter } from "next/router";
 import AddIcon from "@mui/icons-material/Add";
-import CircularProgress from "@mui/material/CircularProgress";
-import CarCard from "@/components/cars/CarCard";
+import CarList from "@/components/cars/CarList";
 import Snackbar from "@/components/common/Snackbar";
-import Panel from "@/components/common/Panel";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useCarsWithMinLoadTime } from "@/lib/hooks/useCars";
-import { EmptyPanel } from "@/components/common";
 
 export default function RefuelsIndex() {
   const { t } = useTranslation();
   const router = useRouter();
 
   // Fetch cars with React Query (using min load time to avoid flickering)
-  const { data: cars = [], isLoading } = useCarsWithMinLoadTime();
+  const { data: cars = [], isLoading, isError } = useCarsWithMinLoadTime();
 
   const { snackbar, hideSnackbar } = useSnackbar();
 
@@ -50,29 +46,13 @@ export default function RefuelsIndex() {
             <AddIcon className="icon text-gray-600 dark:text-gray-400" />
           </button>
         </div>
-        {isLoading ? (
-          <div className="flex items-center justify-center gap-3 py-12">
-            <CircularProgress size={24} />
-            <span className="text-secondary">{t.common.loading}</span>
-          </div>
-        ) : cars.length === 0 ? (
-          <EmptyPanel
-            icon={
-              <DirectionsCarIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
-            }
-            title={t.cars.addFirstCar}
-          />
-        ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
-            {cars.map((car) => (
-              <CarCard
-                key={car.id}
-                car={car}
-                onClick={() => handleCarClick(car.id)}
-              />
-            ))}
-          </div>
-        )}
+
+        <CarList
+          cars={cars}
+          isLoading={isLoading}
+          isError={isError}
+          onCarClick={handleCarClick}
+        />
       </div>
 
       {/* Snackbar */}

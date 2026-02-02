@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, ReactNode } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import Panel from "@/components/common/Panel";
 import RefuelStats from "@/components/refuels/RefuelStats";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import {
@@ -9,9 +8,44 @@ import {
   useRefuelMetricsWithMinLoadTime,
   useRefuelStatisticsWithMinLoadTime,
 } from "@/lib/hooks/useCars";
-import CircularProgress from "@mui/material/CircularProgress";
+import { EmptyPanel, LoadingSpinner } from "@/components/common";
+import CloseIcon from "@mui/icons-material/Close";
+import { RefuelMetric, RefuelStatistics } from "@/lib/api";
 
 type FilterType = "month" | "6months" | "year";
+
+interface StatsContentWrapperProps {
+  isLoading: boolean;
+  error: Error | null;
+  statistics: RefuelStatistics | null;
+  refuelData: RefuelMetric[];
+  t: ReturnType<typeof useTranslation>["t"];
+}
+
+function StatsContentWrapper({
+  isLoading,
+  error,
+  statistics,
+  refuelData,
+  t,
+}: StatsContentWrapperProps): ReactNode {
+  if (error) {
+    return (
+      <EmptyPanel
+        icon={
+          <CloseIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
+        }
+        title={t.common.errorLoadingData}
+      />
+    );
+  }
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  return <RefuelStats statistics={statistics} refuelData={refuelData} />;
+}
 
 export default function CarStats() {
   const { t } = useTranslation();
@@ -50,16 +84,22 @@ export default function CarStats() {
     return { start_date: startDate };
   };
 
-  // Fetch refuels with current filter
-  const { data: refuels = [], isLoading: refuelsLoading } =
-    useRefuelMetricsWithMinLoadTime(carId, {
-      ...getFilterDates(),
-      limit: 365,
-    });
-
   // Fetch statistics with current filter
-  const { data: statistics, isLoading: statsLoading } =
-    useRefuelStatisticsWithMinLoadTime(carId, getFilterDates());
+  const {
+    data: statistics,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useRefuelStatisticsWithMinLoadTime(carId, getFilterDates());
+
+  // Fetch refuels with current filter
+  const {
+    data: refuels = [],
+    isLoading: refuelsLoading,
+    error: refuelsError,
+  } = useRefuelMetricsWithMinLoadTime(carId, {
+    ...getFilterDates(),
+    limit: 365,
+  });
 
   const handleBack = () => {
     router.back();
@@ -69,17 +109,8 @@ export default function CarStats() {
     setActiveFilter(filter);
   };
 
-  if (carError) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-        <Panel>
-          <p className="text-red-600 dark:text-red-400">
-            {t.cars.failedToLoadCar}
-          </p>
-        </Panel>
-      </div>
-    );
-  }
+  const isLoading = carLoading || statsLoading || refuelsLoading;
+  const contentError = carError || statsError || refuelsError;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
@@ -104,59 +135,55 @@ export default function CarStats() {
         </div>
       </div>
 
-      {car ? (
-        <div className="space-y-6">
-          {/* Filter Options */}
-          <div className="panel">
-            <div className="flex flex-wrap justify-between items-center gap-4">
-              <h2 className="heading-2">{t.common.filter}</h2>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <button
-                  onClick={() => handleFilterChange("month")}
-                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeFilter === "month"
-                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {t.navigation.lastMonth}
-                </button>
-                <button
-                  onClick={() => handleFilterChange("6months")}
-                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeFilter === "6months"
-                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {t.navigation.lastSixMonths}
-                </button>
-                <button
-                  onClick={() => handleFilterChange("year")}
-                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeFilter === "year"
-                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {t.navigation.lastYear}
-                </button>
-              </div>
+      <div className="space-y-6">
+        {/* Filter Options */}
+        <div className="panel">
+          <div className="flex flex-wrap justify-between items-center gap-4">
+            <h2 className="heading-2">{t.common.filter}</h2>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => handleFilterChange("month")}
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeFilter === "month"
+                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
+              >
+                {t.navigation.lastMonth}
+              </button>
+              <button
+                onClick={() => handleFilterChange("6months")}
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeFilter === "6months"
+                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
+              >
+                {t.navigation.lastSixMonths}
+              </button>
+              <button
+                onClick={() => handleFilterChange("year")}
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeFilter === "year"
+                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
+              >
+                {t.navigation.lastYear}
+              </button>
             </div>
           </div>
-
-          {/* Loading State */}
-          {carLoading || statsLoading || refuelsLoading ? (
-            <div className="flex items-center justify-center gap-3 py-12">
-              <CircularProgress size={24} />
-              <span className="text-secondary">{t.common.loading}</span>
-            </div>
-          ) : (
-            /* Statistics */
-            <RefuelStats statistics={statistics || null} refuelData={refuels} />
-          )}
         </div>
-      ) : null}
+
+        {/* Statistics */}
+        <StatsContentWrapper
+          isLoading={isLoading}
+          error={contentError}
+          statistics={statistics || null}
+          refuelData={refuels}
+          t={t}
+        />
+      </div>
     </div>
   );
 }

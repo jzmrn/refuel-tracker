@@ -7,17 +7,7 @@ import {
   useCarWithMinLoadTime,
   useKilometerEntriesWithMinLoadTime,
 } from "@/lib/hooks/useCars";
-import CircularProgress from "@mui/material/CircularProgress";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { axisConfig, useGridConfig } from "@/lib/chartConfig";
+import KilometerStatsContent from "@/components/cars/KilometerStatsContent";
 
 type FilterType = "month" | "6months" | "all";
 
@@ -25,7 +15,6 @@ export default function KilometerStats() {
   const { t } = useTranslation();
   const { formatDate } = useLocalization();
   const router = useRouter();
-  const gridConfig = useGridConfig();
   const { id } = router.query;
   const carId = typeof id === "string" ? id : undefined;
 
@@ -33,7 +22,7 @@ export default function KilometerStats() {
   const {
     data: car,
     isLoading: carLoading,
-    error: carError,
+    isError,
   } = useCarWithMinLoadTime(carId);
 
   const [activeFilter, setActiveFilter] = useState<FilterType>("month");
@@ -88,54 +77,6 @@ export default function KilometerStats() {
       }),
     }));
 
-  const formatKilometers = (value: number) => {
-    return new Intl.NumberFormat("de-DE").format(Math.round(value)) + " km";
-  };
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const date = new Date(label);
-      const formattedDate = formatDate(date, {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-      const formattedTime = formatDate(date, {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
-      return (
-        <div className="panel">
-          <div className="mb-2">
-            <p className="font-medium text-primary">{formattedDate}</p>
-            <p className="text-sm text-secondary">{formattedTime}</p>
-          </div>
-          <p className="space-y-1 text-sm">
-            {`${t.kilometers.totalKilometers}: `}
-            <span className="text-blue-600 dark:text-blue-400 font-semibold">
-              {formatKilometers(payload[0].value)}
-            </span>
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  if (carError) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-        <Panel>
-          <p className="text-red-600 dark:text-red-400">
-            {t.cars.failedToLoadCar}
-          </p>
-        </Panel>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       {/* Header */}
@@ -159,123 +100,52 @@ export default function KilometerStats() {
         </div>
       </div>
 
-      {car ? (
-        <div className="space-y-6">
-          {/* Filter Options */}
-          <div className="panel">
-            <div className="flex flex-wrap justify-between items-center gap-4">
-              <h2 className="heading-2">{t.common.filter}</h2>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <button
-                  onClick={() => handleFilterChange("month")}
-                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeFilter === "month"
-                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {t.kilometers.lastMonth}
-                </button>
-                <button
-                  onClick={() => handleFilterChange("6months")}
-                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeFilter === "6months"
-                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {t.kilometers.lastSixMonths}
-                </button>
-                <button
-                  onClick={() => handleFilterChange("all")}
-                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeFilter === "all"
-                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {t.common.all}
-                </button>
-              </div>
+      <div className="space-y-6">
+        {/* Filter Options */}
+        <div className="panel">
+          <div className="flex flex-wrap justify-between items-center gap-4">
+            <h2 className="heading-2">{t.common.filter}</h2>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => handleFilterChange("month")}
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeFilter === "month"
+                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
+              >
+                {t.kilometers.lastMonth}
+              </button>
+              <button
+                onClick={() => handleFilterChange("6months")}
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeFilter === "6months"
+                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
+              >
+                {t.kilometers.lastSixMonths}
+              </button>
+              <button
+                onClick={() => handleFilterChange("all")}
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeFilter === "all"
+                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
+              >
+                {t.common.all}
+              </button>
             </div>
           </div>
-
-          {/* Loading State */}
-          {carLoading || kilometersLoading ? (
-            <div className="flex items-center justify-center gap-3 py-12">
-              <CircularProgress size={24} />
-              <span className="text-secondary">{t.common.loading}</span>
-            </div>
-          ) : chartData.length === 0 ? (
-            <Panel title={t.kilometers.kilometerHistory}>
-              <div className="empty-state">
-                <p>{t.kilometers.noEntriesYet}</p>
-                <p className="text-sm mt-1">{t.kilometers.addFirstEntry}</p>
-              </div>
-            </Panel>
-          ) : (
-            /* Chart */
-            <Panel title={t.kilometers.kilometerHistory}>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={chartData}
-                    margin={{
-                      top: 10,
-                      right: 10,
-                      left: 10,
-                      bottom: 10,
-                    }}
-                  >
-                    <CartesianGrid {...gridConfig} />
-                    <XAxis
-                      dataKey="timestamp"
-                      type="number"
-                      domain={["dataMin", "dataMax"]}
-                      scale="time"
-                      tickFormatter={(timestamp) => {
-                        const date = new Date(timestamp);
-                        return formatDate(date, {
-                          month: "short",
-                          day: "numeric",
-                        });
-                      }}
-                      {...axisConfig.xAxis}
-                    />
-                    <YAxis
-                      tickFormatter={(value) =>
-                        `${new Intl.NumberFormat("de-DE").format(value)} km`
-                      }
-                      {...axisConfig.yAxis}
-                      width={80}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Line
-                      type="monotone"
-                      dataKey="total_kilometers"
-                      stroke="#3b82f6"
-                      strokeWidth={2}
-                      dot={{
-                        fill: "#3b82f6",
-                        stroke: "#3b82f6",
-                        strokeWidth: 2,
-                        r: 4,
-                      }}
-                      activeDot={{
-                        r: 6,
-                        stroke: "#3b82f6",
-                        strokeWidth: 2,
-                        fill: "#fff",
-                      }}
-                      name={t.kilometers.totalKilometers}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </Panel>
-          )}
         </div>
-      ) : null}
+
+        <KilometerStatsContent
+          chartData={chartData}
+          isLoading={carLoading || kilometersLoading}
+          isError={isError}
+        />
+      </div>
     </div>
   );
 }

@@ -1,10 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
 import FavoriteStationsList from "@/components/fuel-prices/FavoriteStationsList";
-import Snackbar from "@/components/common/Snackbar";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
-import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import {
   useFavoriteStationsWithMinLoadTime,
@@ -22,8 +20,8 @@ export default function FuelPrices() {
   // React Query hooks - data persists across navigation
   const {
     data: favorites = [],
-    isLoading: loading,
-    error: favoritesError,
+    isLoading,
+    isError,
   } = useFavoriteStationsWithMinLoadTime();
   const refreshFavorites = useRefreshFavorites();
 
@@ -37,14 +35,6 @@ export default function FuelPrices() {
     }
     return "e5";
   });
-  const { snackbar, showError, hideSnackbar } = useSnackbar();
-
-  // Show error if favorites fetch fails
-  useEffect(() => {
-    if (favoritesError) {
-      showError(t.fuelPrices.failedToLoadFavorites);
-    }
-  }, [favoritesError, showError, t.fuelPrices.failedToLoadFavorites]);
 
   const handleSortChange = (newSortBy: SortByType) => {
     setSortBy(newSortBy);
@@ -138,18 +128,11 @@ export default function FuelPrices() {
       {/* Favorites List */}
       <FavoriteStationsList
         favorites={favorites}
-        loading={loading}
+        loading={isLoading}
         sortBy={sortBy}
         onNavigateToDetail={handleNavigateToDetail}
         showRank={true}
-      />
-
-      {/* Snackbar */}
-      <Snackbar
-        message={snackbar.message}
-        type={snackbar.type}
-        isVisible={snackbar.isVisible}
-        onClose={hideSnackbar}
+        isError={isError}
       />
     </div>
   );

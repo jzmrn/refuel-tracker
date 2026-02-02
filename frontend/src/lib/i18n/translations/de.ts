@@ -33,6 +33,7 @@ export const de: TranslationStructure = {
     name: "Name",
     actions: "Aktionen",
     all: "Alle",
+    errorLoadingData: "Fehler beim Laden der Daten",
   },
 
   navigation: {
@@ -432,7 +433,6 @@ export const de: TranslationStructure = {
     searchUserPlaceholder: "Nach E-Mail suchen...",
     fillAllRequiredFields: "Bitte füllen Sie alle erforderlichen Felder aus",
     failedToSearchUsers: "Benutzersuche fehlgeschlagen",
-    failedToLoadCar: "Auto konnte nicht geladen werden",
     sharedWithMe: "Mit mir geteilt",
     sharedBy: "Geteilt von",
     deleteCarConfirm:

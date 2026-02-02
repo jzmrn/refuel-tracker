@@ -6,6 +6,7 @@ import { LoadingSpinner } from "../common";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import CloseIcon from "@mui/icons-material/Close";
 
 type SortByType = "e5" | "e10" | "diesel" | "dist";
 type StationType = FavoriteStationResponse | GasStationResponse;
@@ -13,6 +14,7 @@ type StationType = FavoriteStationResponse | GasStationResponse;
 interface FavoriteStationsListProps {
   favorites: StationType[];
   loading: boolean;
+  isError?: boolean;
   sortBy?: SortByType;
   onNavigateToDetail?: (stationId: string) => void;
   onAddToFavorites?: (stationId: string) => void;
@@ -30,6 +32,7 @@ export default function FavoriteStationsList({
   onAddToFavorites,
   onRemoveFromFavorites,
   isLoading,
+  isError,
   favoriteIds = new Set(),
   showRank = false,
 }: FavoriteStationsListProps) {
@@ -52,6 +55,17 @@ export default function FavoriteStationsList({
 
   if (loading) {
     return <LoadingSpinner text={t.common.loading} />;
+  }
+
+  if (isError) {
+    return (
+      <EmptyPanel
+        icon={
+          <CloseIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
+        }
+        title={t.common.errorLoadingData}
+      />
+    );
   }
 
   if (favorites.length === 0) {

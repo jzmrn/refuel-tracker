@@ -6,7 +6,7 @@ import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useCarWithMinLoadTime, useUpdateCar } from "@/lib/hooks/useCars";
 import { CarUpdate } from "@/lib/api";
-import CircularProgress from "@mui/material/CircularProgress";
+import { CarDetailsForm } from "@/components/cars/CarDetailsForm";
 
 export default function EditCarDetails() {
   const { t } = useTranslation();
@@ -17,7 +17,7 @@ export default function EditCarDetails() {
   const {
     data: car,
     isLoading: carLoading,
-    error: carError,
+    isError,
   } = useCarWithMinLoadTime(carId);
 
   const updateCar = useUpdateCar();
@@ -100,18 +100,6 @@ export default function EditCarDetails() {
     }
   };
 
-  if (carError) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-        <div className="panel text-center">
-          <p className="text-red-600 dark:text-red-400">
-            {t.cars.failedToLoadCar}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       {/* Header */}
@@ -131,123 +119,15 @@ export default function EditCarDetails() {
       </div>
 
       {/* Form */}
-      {carLoading ? (
-        <div className="panel">
-          <div className="flex flex-col items-center gap-2">
-            <CircularProgress size={20} />
-            <span className="text-secondary">{t.common.loading}</span>
-          </div>
-        </div>
-      ) : car ? (
-        <div className="max-w-4xl mx-auto">
-          <form onSubmit={handleSubmit} className="panel">
-            <div className="form-container">
-              {/* Car Name - full width */}
-              <div className="field-group">
-                <label htmlFor="name" className="label">
-                  {t.cars.carName} *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="input"
-                  required
-                />
-              </div>
-
-              {/* Year and Fuel Tank Size - side by side on sm+ */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Year */}
-                <div className="field-group">
-                  <label htmlFor="year" className="label">
-                    {t.cars.year} *
-                  </label>
-                  <input
-                    type="number"
-                    id="year"
-                    value={formData.year || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        year: parseInt(e.target.value) || undefined,
-                      })
-                    }
-                    className="input"
-                    min="1900"
-                    max={new Date().getFullYear() + 1}
-                    required
-                  />
-                </div>
-
-                {/* Fuel Tank Size */}
-                <div className="field-group">
-                  <label htmlFor="fuel_tank_size" className="label">
-                    {t.cars.fuelTankSize} (L) *
-                  </label>
-                  <input
-                    type="number"
-                    id="fuel_tank_size"
-                    value={formData.fuel_tank_size || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        fuel_tank_size: parseFloat(e.target.value) || undefined,
-                      })
-                    }
-                    className="input"
-                    step="0.1"
-                    min="1"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Fuel Type */}
-              <div className="field-group">
-                <label htmlFor="fuel_type" className="label">
-                  {t.cars.fuelType} *
-                </label>
-                <select
-                  id="fuel_type"
-                  value={formData.fuel_type}
-                  onChange={(e) =>
-                    setFormData({ ...formData, fuel_type: e.target.value })
-                  }
-                  className="input"
-                  required
-                >
-                  <option value="">{t.cars.selectFuelType}</option>
-                  <option value="e5">{t.fuelPrices.e5}</option>
-                  <option value="e10">{t.fuelPrices.e10}</option>
-                  <option value="diesel">{t.fuelPrices.diesel}</option>
-                </select>
-              </div>
-
-              {/* Submit Button */}
-              <div className="form-actions">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="btn-primary w-full flex items-center justify-center gap-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <CircularProgress size={20} color="inherit" />
-                      {t.common.saving}
-                    </>
-                  ) : (
-                    t.cars.saveChanges
-                  )}
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      ) : null}
+      <CarDetailsForm
+        isLoading={carLoading}
+        isError={isError}
+        formData={formData}
+        hasData={!!car}
+        onFormDataChange={setFormData}
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+      />
 
       {/* Snackbar */}
       {snackbar.isVisible && (

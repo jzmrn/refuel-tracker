@@ -33,6 +33,7 @@ export const en: TranslationStructure = {
     name: "Name",
     actions: "Actions",
     all: "All",
+    errorLoadingData: "Error loading data",
   },
 
   navigation: {
@@ -412,7 +413,6 @@ export const en: TranslationStructure = {
     searchUserPlaceholder: "Search by email...",
     fillAllRequiredFields: "Please fill all required fields",
     failedToSearchUsers: "Failed to search users",
-    failedToLoadCar: "Failed to load car",
     sharedWithMe: "Shared With Me",
     sharedBy: "Shared by",
     deleteCarConfirm:

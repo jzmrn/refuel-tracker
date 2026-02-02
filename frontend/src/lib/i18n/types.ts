@@ -34,6 +34,7 @@ export interface TranslationStructure {
     name: string;
     actions: string;
     all: string;
+    errorLoadingData: string;
   };
 
   // Navigation
@@ -413,7 +414,6 @@ export interface TranslationStructure {
     searchUserPlaceholder: string;
     fillAllRequiredFields: string;
     failedToSearchUsers: string;
-    failedToLoadCar: string;
     myCars: string;
     sharedWithMe: string;
     sharedBy: string;
