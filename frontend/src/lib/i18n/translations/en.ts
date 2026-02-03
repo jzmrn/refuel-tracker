@@ -207,6 +207,20 @@ export const en: TranslationStructure = {
     avgDifference: "Avg Difference",
     accuracy: "Accuracy",
 
+    // RefuelDistanceChart labels
+    distanceSinceLastRefuel: "Distance Since Last Refuel",
+    noDistanceDataAvailable: "No distance data available",
+    addMoreRefuelEntriesToSeeDistanceTrends:
+      "Add more refuel entries to see distance trends",
+    noValidDistanceDataAvailable: "No valid distance data available",
+    makeSureEntriesHaveKilometersData:
+      "Make sure your entries have kilometers data",
+    distanceKm: "Distance (km)",
+    minDistance: "Min Distance",
+    maxDistance: "Max Distance",
+    avgDistance: "Avg Distance",
+    avgTankUsage: "Avg Tank Usage",
+
     // Placeholders
     placeholders: {
       notes: "e.g. Shell gas station, A1 rest stop...",

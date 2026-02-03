@@ -215,6 +215,20 @@ export const de: TranslationStructure = {
     avgDifference: "Ø Unterschied",
     accuracy: "Genauigkeit",
 
+    // RefuelDistanceChart labels
+    distanceSinceLastRefuel: "Strecke seit letzter Tankung",
+    noDistanceDataAvailable: "Keine Streckendaten verfügbar",
+    addMoreRefuelEntriesToSeeDistanceTrends:
+      "Mehr Tankeinträge hinzufügen, um Streckentrends zu sehen",
+    noValidDistanceDataAvailable: "Keine gültigen Streckendaten verfügbar",
+    makeSureEntriesHaveKilometersData:
+      "Stellen Sie sicher, dass Ihre Einträge Kilometerdaten enthalten",
+    distanceKm: "Strecke (km)",
+    minDistance: "Min. Strecke",
+    maxDistance: "Max. Strecke",
+    avgDistance: "Ø Strecke",
+    avgTankUsage: "Ø Tanknutzung",
+
     // Placeholders
     placeholders: {
       notes: "z.B. Shell Tankstelle, A1 Raststätte...",

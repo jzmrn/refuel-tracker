@@ -19,6 +19,7 @@ interface StatsContentWrapperProps {
   error: Error | null;
   statistics: RefuelStatistics | null;
   refuelData: RefuelMetric[];
+  fuelTankSize?: number;
   t: ReturnType<typeof useTranslation>["t"];
 }
 
@@ -27,6 +28,7 @@ function StatsContentWrapper({
   error,
   statistics,
   refuelData,
+  fuelTankSize,
   t,
 }: StatsContentWrapperProps): ReactNode {
   if (error) {
@@ -44,7 +46,13 @@ function StatsContentWrapper({
     return <LoadingSpinner />;
   }
 
-  return <RefuelStats statistics={statistics} refuelData={refuelData} />;
+  return (
+    <RefuelStats
+      statistics={statistics}
+      refuelData={refuelData}
+      fuelTankSize={fuelTankSize}
+    />
+  );
 }
 
 export default function CarStats() {
@@ -181,6 +189,7 @@ export default function CarStats() {
           error={contentError}
           statistics={statistics || null}
           refuelData={refuels}
+          fuelTankSize={car?.fuel_tank_size}
           t={t}
         />
       </div>

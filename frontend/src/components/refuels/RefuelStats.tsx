@@ -5,6 +5,7 @@ import {
 } from "../../lib/api";
 import RefuelPriceChart from "./RefuelPriceChart";
 import RefuelConsumptionChart from "./RefuelConsumptionChart";
+import RefuelDistanceChart from "./RefuelDistanceChart";
 import SummaryCard from "../common/SummaryCard";
 import LoadingSpinner from "../common/LoadingSpinner";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
@@ -19,12 +20,14 @@ import { renderSvgFuelPrice } from "../../lib/formatPrice";
 
 interface RefuelStatsProps {
   statistics: RefuelStatistics | null;
-  refuelData?: RefuelMetric[];
+  refuelData: RefuelMetric[];
+  fuelTankSize?: number;
 }
 
 export default function RefuelStats({
   statistics,
   refuelData,
+  fuelTankSize,
 }: RefuelStatsProps) {
   const { t } = useTranslation();
 
@@ -97,8 +100,14 @@ export default function RefuelStats({
 
       <RefuelPriceChart priceData={statistics.price_trends} />
 
+      {/* Distance Chart Panel */}
+      <RefuelDistanceChart
+        refuelData={refuelData}
+        fuelTankSize={fuelTankSize}
+      />
+
       {/* Consumption Chart Panel */}
-      {refuelData && <RefuelConsumptionChart refuelData={refuelData} />}
+      <RefuelConsumptionChart refuelData={refuelData} />
     </div>
   );
 }

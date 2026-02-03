@@ -208,6 +208,18 @@ export interface TranslationStructure {
     avgDifference: string;
     accuracy: string;
 
+    // RefuelDistanceChart labels
+    distanceSinceLastRefuel: string;
+    noDistanceDataAvailable: string;
+    addMoreRefuelEntriesToSeeDistanceTrends: string;
+    noValidDistanceDataAvailable: string;
+    makeSureEntriesHaveKilometersData: string;
+    distanceKm: string;
+    minDistance: string;
+    maxDistance: string;
+    avgDistance: string;
+    avgTankUsage: string;
+
     // Placeholders
     placeholders: {
       notes: string;

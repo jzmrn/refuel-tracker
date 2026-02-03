@@ -151,6 +151,9 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
     }
   }
 
+  const renderFuelPrice = (value: number) =>
+    renderSvgFuelPrice(value, { showCurrency: false });
+
   return (
     <Panel title={t.refuels.priceTrendsOverTime}>
       <ResponsiveContainer width="100%" height={300}>
@@ -234,7 +237,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             title={t.fuelPrices.currentPrice}
             value={{
               value: sortedData[sortedData.length - 1].price,
-              formatter: renderSvgFuelPrice,
+              formatter: renderFuelPrice,
               unit: "€/L",
             }}
             icon={
@@ -247,7 +250,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             title={t.refuels.lowestPrice}
             value={{
               value: minPrice,
-              formatter: renderSvgFuelPrice,
+              formatter: renderFuelPrice,
               unit: "€/L",
             }}
             icon={
@@ -260,7 +263,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             title={t.refuels.highestPrice}
             value={{
               value: maxPrice,
-              formatter: renderSvgFuelPrice,
+              formatter: renderFuelPrice,
               unit: "€/L",
             }}
             icon={
@@ -273,7 +276,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             title={t.refuels.priceRange}
             value={{
               value: priceRange,
-              formatter: renderSvgFuelPrice,
+              formatter: renderFuelPrice,
               unit: "€/L",
             }}
             icon={
