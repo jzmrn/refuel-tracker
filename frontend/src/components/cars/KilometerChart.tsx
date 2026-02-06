@@ -90,6 +90,7 @@ const KilometerChart: React.FC<KilometerChartProps> = ({ data }) => {
             {...axisConfig.xAxis}
           />
           <YAxis
+            domain={["dataMin", "dataMax"]}
             tickFormatter={(value) =>
               `${new Intl.NumberFormat("de-DE").format(value)} km`
             }

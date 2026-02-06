@@ -162,11 +162,6 @@ export default function RefuelDistanceChart({
       ? ((avgDistance * avgConsumption) / (fuelTankSize * 100)) * 100
       : null;
 
-  // Calculate Y-axis domain for better visualization
-  const range = maxDistance - minDistance;
-  const yAxisMin = Math.max(0, minDistance - range * 0.1);
-  const yAxisMax = maxDistance + range * 0.1;
-
   return (
     <Panel title={t.refuels.distanceSinceLastRefuel}>
       <ResponsiveContainer width="100%" height={350}>
@@ -197,7 +192,7 @@ export default function RefuelDistanceChart({
             {...axisConfig.xAxis}
           />
           <YAxis
-            domain={[yAxisMin, yAxisMax]}
+            domain={["dataMin", "dataMax"]}
             stroke={chartTheme.axis}
             tickFormatter={(value) => `${value.toFixed(0)}`}
             {...axisConfig.yAxis}

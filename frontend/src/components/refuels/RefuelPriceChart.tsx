@@ -134,8 +134,6 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
   const priceRange = maxPrice - minPrice;
-  const yAxisMin = Math.max(0, minPrice - priceRange * 0.1);
-  const yAxisMax = maxPrice + priceRange * 0.1;
 
   let ticks: number[] | undefined = undefined;
   if (prices.length > 0) {
@@ -186,7 +184,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             }}
           />
           <YAxis
-            domain={[yAxisMin, yAxisMax]}
+            domain={["dataMin", "dataMax"]}
             stroke={chartTheme.axis}
             fontSize={12}
             tickFormatter={(value) => `${value.toFixed(2)}`}

@@ -38,10 +38,6 @@ export default function DailyPriceChangesChart({
       n_unique_prices: point.n_unique_prices,
     }));
 
-  // Calculate Y-axis domain
-  const allValues = data.flatMap((p) => [p.n_price_changes, p.n_unique_prices]);
-  const maxValue = allValues.length > 0 ? Math.max(...allValues) : 10;
-
   // Calculate domain for X axis
   const dates = chartData.map((d) => d.date);
   const minDate = dates.length > 0 ? Math.min(...dates) : Date.now();
@@ -70,7 +66,7 @@ export default function DailyPriceChangesChart({
           />
           <YAxis
             {...axisConfig.yAxis}
-            domain={[0, Math.ceil(maxValue * 1.1)]}
+            domain={[0, "dataMax"]}
             allowDecimals={false}
           />
           <Tooltip

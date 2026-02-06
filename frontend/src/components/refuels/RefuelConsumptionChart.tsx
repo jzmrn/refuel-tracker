@@ -186,17 +186,6 @@ export default function RefuelConsumptionChart({
   ).length;
   const accuracyPercentage = (accurateEntries / chartData.length) * 100;
 
-  // Calculate Y-axis domain for better visualization
-  const allValues = [
-    ...chartData.map((d) => d.actualConsumption),
-    ...chartData.map((d) => d.estimatedConsumption),
-  ];
-  const minValue = Math.min(...allValues);
-  const maxValue = Math.max(...allValues);
-  const range = maxValue - minValue;
-  const yAxisMin = Math.max(0, minValue - range * 0.1);
-  const yAxisMax = maxValue + range * 0.1;
-
   return (
     <Panel title={t.refuels.fuelConsumptionEstimatedVsActual}>
       <ResponsiveContainer width="100%" height={350}>
@@ -227,7 +216,7 @@ export default function RefuelConsumptionChart({
             {...axisConfig.xAxis}
           />
           <YAxis
-            domain={[yAxisMin, yAxisMax]}
+            domain={["dataMin", "dataMax"]}
             stroke={chartTheme.axis}
             tickFormatter={(value) => `${value.toFixed(1)}`}
             {...axisConfig.yAxis}
