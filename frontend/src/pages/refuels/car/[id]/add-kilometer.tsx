@@ -10,6 +10,7 @@ import {
   useCarWithMinLoadTime,
 } from "@/lib/hooks/useCars";
 import { KilometerEntryCreate } from "@/lib/api";
+import { getLocalDateTimeString } from "@/lib/dateUtils";
 import CircularProgress from "@mui/material/CircularProgress";
 
 export default function AddKilometer() {
@@ -29,7 +30,7 @@ export default function AddKilometer() {
   }>({
     car_id: carId || "",
     total_kilometers: 0,
-    timestamp: new Date().toISOString().slice(0, 16),
+    timestamp: getLocalDateTimeString(),
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -166,7 +167,7 @@ export default function AddKilometer() {
                     className={`input ${
                       errors.timestamp ? "border-red-500" : ""
                     }`}
-                    max={new Date().toISOString().slice(0, 16)}
+                    max={getLocalDateTimeString()}
                     required
                   />
                   {errors.timestamp && (

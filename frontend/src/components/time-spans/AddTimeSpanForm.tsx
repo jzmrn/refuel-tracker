@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { TimeSpanCreate } from "@/lib/api";
 import { StandardForm } from "../common/StandardForm";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { getLocalDateTimeString } from "@/lib/dateUtils";
 
 interface AddTimeSpanFormProps {
   onSubmit: (timeSpan: TimeSpanCreate) => void;
@@ -18,7 +19,7 @@ export default function AddTimeSpanForm({
 }: AddTimeSpanFormProps) {
   const { t } = useTranslation();
   const [formData, setFormData] = useState<TimeSpanCreate>({
-    start_date: new Date().toISOString().slice(0, 16), // Current date/time in YYYY-MM-DDTHH:mm format
+    start_date: getLocalDateTimeString(), // Current local date/time in YYYY-MM-DDTHH:mm format
     end_date: "",
     label: "",
     group: "",
@@ -143,7 +144,7 @@ export default function AddTimeSpanForm({
 
       // Reset form
       setFormData({
-        start_date: new Date().toISOString().slice(0, 16), // Reset to current date/time
+        start_date: getLocalDateTimeString(), // Reset to current date/time
         end_date: "",
         label: "",
         group: "",
@@ -193,7 +194,7 @@ export default function AddTimeSpanForm({
         );
 
   const setEndDateToNow = () => {
-    const now = new Date().toISOString().slice(0, 16);
+    const now = getLocalDateTimeString();
     setFormData((prev) => ({
       ...prev,
       end_date: now,
@@ -237,7 +238,7 @@ export default function AddTimeSpanForm({
               name="start_date"
               value={formData.start_date || ""}
               onChange={handleChange}
-              max={new Date().toISOString().slice(0, 16)}
+              max={getLocalDateTimeString()}
               className={`input flex-1 min-w-0 ${
                 errors.start_date ? "border-red-300" : ""
               }`}
@@ -248,7 +249,7 @@ export default function AddTimeSpanForm({
               onClick={() => {
                 setFormData((prev) => ({
                   ...prev,
-                  start_date: new Date().toISOString().slice(0, 16),
+                  start_date: getLocalDateTimeString(),
                 }));
                 // Clear error when setting to now
                 if (errors.start_date) {
@@ -276,7 +277,7 @@ export default function AddTimeSpanForm({
               name="end_date"
               value={formData.end_date || ""}
               onChange={handleChange}
-              max={new Date().toISOString().slice(0, 16)}
+              max={getLocalDateTimeString()}
               className={`input flex-1 min-w-0 ${
                 errors.end_date ? "border-red-300" : ""
               }`}

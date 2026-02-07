@@ -34,7 +34,7 @@ const KilometerChart: React.FC<KilometerChartProps> = ({ data }) => {
     if (active && payload && payload.length) {
       const date = new Date(label);
       const formattedDate = formatDate(date, {
-        weekday: "short",
+        weekday: "long",
         month: "short",
         day: "numeric",
         year: "numeric",
@@ -42,7 +42,6 @@ const KilometerChart: React.FC<KilometerChartProps> = ({ data }) => {
       const formattedTime = formatDate(date, {
         hour: "2-digit",
         minute: "2-digit",
-        hour12: false,
       });
       return (
         <div className="panel">

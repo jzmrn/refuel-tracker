@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { TimeSpanUpdate, TimeSpanResponse } from "@/lib/api";
 import { StandardForm } from "../common/StandardForm";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { getLocalDateTimeString } from "@/lib/dateUtils";
 
 interface EditTimeSpanFormProps {
   timeSpan: TimeSpanResponse;
@@ -35,9 +36,9 @@ export default function EditTimeSpanForm({
   useEffect(() => {
     if (timeSpan) {
       setFormData({
-        start_date: new Date(timeSpan.start_date).toISOString().slice(0, 16),
+        start_date: getLocalDateTimeString(new Date(timeSpan.start_date)),
         end_date: timeSpan.end_date
-          ? new Date(timeSpan.end_date).toISOString().slice(0, 16)
+          ? getLocalDateTimeString(new Date(timeSpan.end_date))
           : "",
         label: timeSpan.label,
         group: timeSpan.group || t.timeSpans.general,
@@ -148,13 +149,13 @@ export default function EditTimeSpanForm({
       if (
         formData.start_date &&
         formData.start_date !==
-          new Date(timeSpan.start_date).toISOString().slice(0, 16)
+          getLocalDateTimeString(new Date(timeSpan.start_date))
       ) {
         updateData.start_date = new Date(formData.start_date).toISOString();
       }
 
       const originalEndDate = timeSpan.end_date
-        ? new Date(timeSpan.end_date).toISOString().slice(0, 16)
+        ? getLocalDateTimeString(new Date(timeSpan.end_date))
         : "";
       if (formData.end_date !== originalEndDate) {
         updateData.end_date = formData.end_date
@@ -219,7 +220,7 @@ export default function EditTimeSpanForm({
         );
 
   const setEndDateToNow = () => {
-    const now = new Date().toISOString().slice(0, 16);
+    const now = getLocalDateTimeString();
     setFormData((prev) => ({
       ...prev,
       end_date: now,
@@ -262,7 +263,7 @@ export default function EditTimeSpanForm({
               name="start_date"
               value={formData.start_date || ""}
               onChange={handleChange}
-              max={new Date().toISOString().slice(0, 16)}
+              max={getLocalDateTimeString()}
               className={`input flex-1 ${
                 errors.start_date ? "border-red-300" : ""
               }`}
@@ -273,7 +274,7 @@ export default function EditTimeSpanForm({
               onClick={() => {
                 setFormData((prev) => ({
                   ...prev,
-                  start_date: new Date().toISOString().slice(0, 16),
+                  start_date: getLocalDateTimeString(),
                 }));
                 // Clear error when setting to now
                 if (errors.start_date) {
@@ -301,7 +302,7 @@ export default function EditTimeSpanForm({
               name="end_date"
               value={formData.end_date || ""}
               onChange={handleChange}
-              max={new Date().toISOString().slice(0, 16)}
+              max={getLocalDateTimeString()}
               className={`input flex-1 ${
                 errors.end_date ? "border-red-300" : ""
               }`}

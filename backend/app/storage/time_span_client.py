@@ -3,7 +3,7 @@ DuckDB client for time spans storage.
 """
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from .duckdb_resource import BackendDuckDBResource
@@ -29,13 +29,13 @@ class TimeSpanClient:
                 CREATE TABLE IF NOT EXISTS time_spans (
                     id VARCHAR NOT NULL,
                     user_id VARCHAR NOT NULL,
-                    start_date TIMESTAMP NOT NULL,
-                    end_date TIMESTAMP,
+                    start_date TIMESTAMPTZ NOT NULL,
+                    end_date TIMESTAMPTZ,
                     label VARCHAR NOT NULL,
                     "group" VARCHAR NOT NULL,
                     notes VARCHAR,
-                    created_at TIMESTAMP NOT NULL,
-                    updated_at TIMESTAMP NOT NULL,
+                    created_at TIMESTAMPTZ NOT NULL,
+                    updated_at TIMESTAMPTZ NOT NULL,
                     PRIMARY KEY (user_id, id)
                 )
             """
@@ -66,7 +66,7 @@ class TimeSpanClient:
         """Calculate duration in days, hours, and minutes."""
         if end_date is None:
             # For ongoing spans, calculate duration up to now
-            end_date = datetime.now()
+            end_date = datetime.now(UTC)
 
         duration = end_date - start_date
         total_minutes = int(duration.total_seconds() / 60)
@@ -92,7 +92,7 @@ class TimeSpanClient:
     ) -> dict[str, Any]:
         """Add a new time span and return the created record."""
         span_id = f"{start_date.isoformat()}_{abs(hash(label))}"
-        current_time = datetime.now()
+        current_time = datetime.now(UTC)
 
         time_span = TimeSpan(
             id=span_id,

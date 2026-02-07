@@ -30,8 +30,8 @@ class KilometerClient:
                     id VARCHAR PRIMARY KEY,
                     car_id VARCHAR NOT NULL,
                     total_kilometers DOUBLE NOT NULL,
-                    timestamp TIMESTAMP NOT NULL,
-                    created_at TIMESTAMP NOT NULL,
+                    timestamp TIMESTAMPTZ NOT NULL,
+                    created_at TIMESTAMPTZ NOT NULL,
                     created_by VARCHAR NOT NULL
                 )
             """

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { DataPointCreate } from "@/lib/api";
 import { StandardForm } from "../common/StandardForm";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { getLocalDateTimeString } from "@/lib/dateUtils";
 
 interface AddDataPointFormProps {
   onSubmit: (dataPoint: DataPointCreate) => void;
@@ -17,7 +18,7 @@ export default function AddDataPointForm({
 }: AddDataPointFormProps) {
   const { t } = useTranslation();
   const [formData, setFormData] = useState<DataPointCreate>({
-    timestamp: new Date().toISOString().slice(0, 16), // Current date/time in YYYY-MM-DDTHH:mm format
+    timestamp: getLocalDateTimeString(), // Current local date/time in YYYY-MM-DDTHH:mm format
     value: 0,
     label: "",
     notes: "",
@@ -124,7 +125,7 @@ export default function AddDataPointForm({
 
       // Reset form
       setFormData({
-        timestamp: new Date().toISOString().slice(0, 16), // Reset to current date/time
+        timestamp: getLocalDateTimeString(), // Reset to current date/time
         value: 0,
         label: "",
         notes: "",
@@ -195,7 +196,7 @@ export default function AddDataPointForm({
               onClick={() => {
                 setFormData((prev) => ({
                   ...prev,
-                  timestamp: new Date().toISOString().slice(0, 16),
+                  timestamp: getLocalDateTimeString(),
                 }));
                 // Clear error when setting to now
                 if (errors.timestamp) {

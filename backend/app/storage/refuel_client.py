@@ -27,7 +27,7 @@ class RefuelDataClient:
             con.execute(
                 """
                 CREATE TABLE IF NOT EXISTS refuel_metrics (
-                    timestamp TIMESTAMP NOT NULL,
+                    timestamp TIMESTAMPTZ NOT NULL,
                     user_id VARCHAR NOT NULL,
                     car_id VARCHAR,
                     price DOUBLE NOT NULL,

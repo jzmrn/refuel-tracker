@@ -7,6 +7,7 @@ import {
 } from "../../lib/api";
 import { StandardForm } from "../common/StandardForm";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
+import { getLocalDateTimeString } from "../../lib/dateUtils";
 
 interface AddRefuelFormProps {
   onSubmit: (refuel: RefuelMetricCreate) => void;
@@ -26,7 +27,7 @@ export default function AddRefuelForm({
     amount: 0,
     kilometers_since_last_refuel: 0,
     estimated_fuel_consumption: 0,
-    timestamp: new Date().toISOString().slice(0, 16), // Current date/time in YYYY-MM-DDTHH:mm format
+    timestamp: getLocalDateTimeString(), // Current date/time in YYYY-MM-DDTHH:mm format
     notes: "",
     station_id: undefined,
   });
@@ -216,7 +217,7 @@ export default function AddRefuelForm({
         amount: 0,
         kilometers_since_last_refuel: 0,
         estimated_fuel_consumption: 0,
-        timestamp: new Date().toISOString().slice(0, 16), // Reset to current date/time
+        timestamp: getLocalDateTimeString(), // Reset to current date/time
         notes: "",
         station_id: undefined,
       }));
@@ -270,7 +271,7 @@ export default function AddRefuelForm({
             onClick={() => {
               setFormData((prev) => ({
                 ...prev,
-                timestamp: new Date().toISOString().slice(0, 16),
+                timestamp: getLocalDateTimeString(),
               }));
               // Clear error when setting to now
               if (errors.timestamp) {

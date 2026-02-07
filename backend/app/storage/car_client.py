@@ -36,7 +36,7 @@ class CarClient:
                     year INTEGER NOT NULL,
                     fuel_tank_size DOUBLE NOT NULL,
                     fuel_type VARCHAR,
-                    created_at TIMESTAMP NOT NULL
+                    created_at TIMESTAMPTZ NOT NULL
                 )
             """
             )
@@ -48,7 +48,7 @@ class CarClient:
                     id VARCHAR PRIMARY KEY,
                     car_id VARCHAR NOT NULL,
                     user_id VARCHAR NOT NULL,
-                    granted_at TIMESTAMP NOT NULL,
+                    granted_at TIMESTAMPTZ NOT NULL,
                     granted_by_user_id VARCHAR NOT NULL,
                     UNIQUE(car_id, user_id)
                 )

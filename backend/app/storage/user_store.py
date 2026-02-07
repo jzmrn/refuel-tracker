@@ -28,8 +28,8 @@ class UserStore:
                     email VARCHAR NOT NULL UNIQUE,
                     name VARCHAR NOT NULL,
                     picture_url VARCHAR,
-                    created_at TIMESTAMP NOT NULL,
-                    last_login TIMESTAMP NOT NULL
+                    created_at TIMESTAMPTZ NOT NULL,
+                    last_login TIMESTAMPTZ NOT NULL
                 )
             """
             )

@@ -83,15 +83,14 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
       const data = payload[0].payload;
       const date = new Date(label);
       const formattedDate = formatDate(date, {
-        weekday: "short",
-        month: "short",
+        weekday: "long",
+        month: "long",
         day: "numeric",
         year: "numeric",
       });
       const formattedTime = formatDate(date, {
         hour: "2-digit",
         minute: "2-digit",
-        hour12: false,
       });
       return (
         <div className="panel">

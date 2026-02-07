@@ -107,18 +107,14 @@ class RefuelMetricCreate(BaseModel):
     @classmethod
     def validate_timestamp(cls, v):
         if v is not None:
-            # Get current time - handle both timezone-aware and naive datetimes
-            now = datetime.now()
+            # Ensure timezone-aware: treat naive datetimes as UTC
+            if v.tzinfo is None:
+                v = v.replace(tzinfo=UTC)
+            else:
+                # Normalize to UTC
+                v = v.astimezone(UTC)
 
-            # If the input datetime has timezone info, compare with timezone-aware current time
-            if v.tzinfo is not None:
-                # Convert current time to UTC for comparison
-                now = datetime.now(UTC)
-                # If v is not in UTC, convert it
-                if v.tzinfo != UTC:
-                    v = v.astimezone(UTC)
-
-            if v > now:
+            if v > datetime.now(UTC):
                 raise ValueError("Timestamp cannot be in the future")
         return v
 
@@ -197,18 +193,14 @@ class DataPointCreate(BaseModel):
     @field_validator("timestamp")
     @classmethod
     def validate_timestamp(cls, v):
-        # Get current time - handle both timezone-aware and naive datetimes
-        now = datetime.now()
+        # Ensure timezone-aware: treat naive datetimes as UTC
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=UTC)
+        else:
+            # Normalize to UTC
+            v = v.astimezone(UTC)
 
-        # If the input datetime has timezone info, compare with timezone-aware current time
-        if v.tzinfo is not None:
-            # Convert current time to UTC for comparison
-            now = datetime.now(UTC)
-            # If v is not in UTC, convert it
-            if v.tzinfo != UTC:
-                v = v.astimezone(UTC)
-
-        if v > now:
+        if v > datetime.now(UTC):
             raise ValueError("Timestamp cannot be in the future")
         return v
 
@@ -282,15 +274,13 @@ class TimeSpanUpdate(BaseModel):
     @classmethod
     def validate_start_date(cls, v):
         if v is not None:
-            # Convert current time to UTC for comparison if needed
-            now = datetime.now()
-            if v.tzinfo is not None:
-                now = datetime.now(UTC)
-                if v.tzinfo != UTC:
-                    v = v.astimezone(UTC)
+            # Ensure timezone-aware: treat naive datetimes as UTC
+            if v.tzinfo is None:
+                v = v.replace(tzinfo=UTC)
+            else:
+                v = v.astimezone(UTC)
 
-            # Allow start dates in the past and present, but not future
-            if v > now:
+            if v > datetime.now(UTC):
                 raise ValueError("Start date cannot be in the future")
         return v
 
@@ -298,15 +288,13 @@ class TimeSpanUpdate(BaseModel):
     @classmethod
     def validate_end_date(cls, v):
         if v is not None:
-            # Convert current time to UTC for comparison if needed
-            now = datetime.now()
-            if v.tzinfo is not None:
-                now = datetime.now(UTC)
-                if v.tzinfo != UTC:
-                    v = v.astimezone(UTC)
+            # Ensure timezone-aware: treat naive datetimes as UTC
+            if v.tzinfo is None:
+                v = v.replace(tzinfo=UTC)
+            else:
+                v = v.astimezone(UTC)
 
-            # End date should not be in the future
-            if v > now:
+            if v > datetime.now(UTC):
                 raise ValueError("End date cannot be in the future")
         return v
 
@@ -649,18 +637,13 @@ class KilometerEntryCreate(BaseModel):
     @classmethod
     def validate_timestamp(cls, v):
         if v is not None:
-            # Get current time - handle both timezone-aware and naive datetimes
-            now = datetime.now()
+            # Ensure timezone-aware: treat naive datetimes as UTC
+            if v.tzinfo is None:
+                v = v.replace(tzinfo=UTC)
+            else:
+                v = v.astimezone(UTC)
 
-            # If the input datetime has timezone info, compare with timezone-aware current time
-            if v.tzinfo is not None:
-                # Convert current time to UTC for comparison
-                now = datetime.now(UTC)
-                # If v is not in UTC, convert it
-                if v.tzinfo != UTC:
-                    v = v.astimezone(UTC)
-
-            if v > now:
+            if v > datetime.now(UTC):
                 raise ValueError("Timestamp cannot be in the future")
         return v
 

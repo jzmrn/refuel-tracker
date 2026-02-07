@@ -14,6 +14,7 @@ import {
   FavoriteStationDropdown,
   apiService,
 } from "@/lib/api";
+import { getLocalDateTimeString } from "@/lib/dateUtils";
 import CircularProgress from "@mui/material/CircularProgress";
 
 export default function AddRefuel() {
@@ -32,7 +33,7 @@ export default function AddRefuel() {
     amount: 0,
     kilometers_since_last_refuel: 0,
     estimated_fuel_consumption: 0,
-    timestamp: new Date().toISOString().slice(0, 16),
+    timestamp: getLocalDateTimeString(),
     notes: "",
     station_id: undefined,
   });
@@ -380,7 +381,7 @@ export default function AddRefuel() {
                       className={`input ${
                         errors.timestamp ? "border-red-500" : ""
                       }`}
-                      max={new Date().toISOString().slice(0, 16)}
+                      max={getLocalDateTimeString()}
                       required
                     />
                     {errors.timestamp && (

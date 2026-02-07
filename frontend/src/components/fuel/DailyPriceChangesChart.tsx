@@ -81,9 +81,9 @@ export default function DailyPriceChangesChart({
                   >
                     <p className="text-gray-300 text-sm mb-2">
                       {formatDate(new Date(tooltipLabel), {
-                        weekday: "short",
+                        weekday: "long",
                         day: "2-digit",
-                        month: "2-digit",
+                        month: "long",
                         year: "numeric",
                       })}
                     </p>

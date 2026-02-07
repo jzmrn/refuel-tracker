@@ -30,7 +30,7 @@ class DataPointClient:
                 CREATE TABLE IF NOT EXISTS data_points (
                     id VARCHAR NOT NULL,
                     user_id VARCHAR NOT NULL,
-                    timestamp TIMESTAMP NOT NULL,
+                    timestamp TIMESTAMPTZ NOT NULL,
                     value DOUBLE NOT NULL,
                     label VARCHAR NOT NULL,
                     notes VARCHAR,

@@ -1,4 +1,4 @@
-import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useLocalization, useTranslation } from "@/lib/i18n/LanguageContext";
 import { GasStationResponse, FavoriteStationResponse } from "@/lib/api";
 import CircularProgress from "@mui/material/CircularProgress";
 import { renderSvgFuelPrice } from "@/lib/formatPrice";
@@ -25,6 +25,7 @@ export default function StationCard({
   onNavigateToDetail,
 }: StationCardProps) {
   const { t } = useTranslation();
+  const { formatDate } = useLocalization();
 
   const handleCardClick = () => {
     const stationId = isGasStation(station) ? station.id : station.station_id;
@@ -48,8 +49,7 @@ export default function StationCard({
   // Format timestamp to show only time
   const formatTime = (timestamp?: string) => {
     if (!timestamp) return null;
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString("de-DE", {
+    return formatDate(new Date(timestamp), {
       hour: "2-digit",
       minute: "2-digit",
     });
