@@ -1,7 +1,7 @@
 [project]
-name = "personal-data-tracker"
+name = "refuel-tracker-backend"
 version = "0.1.0"
-description = "Personal financial and metrics tracking with Parquet storage"
+description = "Refuel Tracker Backend handling fuel prices, fuel consumption and user data."
 authors = [{name = "Jan Zimmermann", email = "jzmrn@gmx.com"}]
 requires-python = ">=3.11"
 

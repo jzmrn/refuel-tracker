@@ -204,8 +204,8 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI app
 app = FastAPI(
-    title="Personal Data Tracker",
-    description="A personal finance and metrics tracking application with DuckDB storage",
+    title="Refuel Tracker",
+    description="A fuel price tracking application with DuckDB storage",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -345,8 +345,7 @@ app.include_router(fuel_prices.router, prefix="/api/fuel-prices", tags=["fuel-pr
 async def root():
     """Health check endpoint"""
     return {
-        "message": "Personal Data Tracker API",
-        "version": "1.0.0",
+        "message": "Refuel Tracker API",
         "status": "healthy",
     }
 

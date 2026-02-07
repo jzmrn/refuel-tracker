@@ -1,106 +1,100 @@
-# Analytics Pipeline
+# Refuel Tracker - Analytics Pipeline
 
-Dagster-based data pipeline for fetching and processing fuel price data from the Tankerkönig API.
+Dagster-based data pipeline for fetching, compressing, and aggregating fuel price data from the [Tankerkönig API](https://creativecommons.tankerkoenig.de).
 
 ## Overview
 
-This pipeline consists of two main assets:
+Three assets form a linear pipeline in the `fuel` group:
 
-1. **`raw_fuel_prices`** (Unpartitioned): Fetches live fuel prices from Tankerkönig API
+1. **`raw_fuel_prices`** (unpartitioned) — Fetches live E5, E10, and Diesel prices for all favorite stations from the Tankerkönig API and appends them to DuckDB. Runs every 10 minutes.
 
-   - Runs every 10 minutes (cron: `3-53/10 * * * *`)
-   - Appends timestamped data to DuckDB
-   - Tracks E5, E10, and Diesel prices for specified gas stations
+2. **`compressed_fuel_prices`** (daily partitioned) — Transforms raw wide-format data into long format (one row per station/fuel type) and deduplicates consecutive identical prices, typically achieving ~80% compression. Runs daily at 6:00 AM for the previous day.
 
-2. **`daily_aggregates`** (Daily Partitioned): Computes daily statistics from raw data
-   - Runs daily at 6:00 AM (cron: `0 6 * * *`)
-   - Calculates mean, min, max, std, and sample counts per station and fuel type
-   - Partitioned by day starting from 2025-11-01
+3. **`daily_aggregates`** (daily partitioned) — Computes per-station, per-fuel-type daily statistics (mean, min, max, std, sample count, unique prices) from compressed data. Runs daily at 7:00 AM for the previous day.
+
+A cleanup job runs daily at 8:00 AM to delete raw data older than 28 days, but only for dates where compression has been verified.
+
+### Schedules
+
+| Schedule                 | Cron              | Description                                            |
+| ------------------------ | ----------------- | ------------------------------------------------------ |
+| `fetch_fuel_prices`      | `3-53/10 * * * *` | Fetch live prices every 10 minutes                     |
+| `compressed_fuel_prices` | `0 6 * * *`       | Compress yesterday's raw data                          |
+| `daily_aggregates`       | `0 7 * * *`       | Aggregate yesterday's compressed data                  |
+| `cleanup_raw_fuel_data`  | `0 8 * * *`       | Delete stale raw data (>28 days, compression verified) |
+
+### IO Managers
+
+Custom IO managers handle reading/writing to DuckDB with partition-aware filtering:
+
+- `RawFuelPriceDataIOManager` — Appends raw data on output, filters by time window on input
+- `CompressedFuelPriceDataIOManager` — Stores/reads compressed price change records
+- `DailyFuelPriceAggregatesIOManager` — Stores/reads daily aggregate statistics
+
+All IO managers use shared clients from the `metrics` (fueldata) library.
 
 ## Configuration
 
-Set the following environment variables:
+### Environment Variables
 
-- `DATA_OUTPUT_PATH`: Path where DuckDB database will be stored (e.g., `/data/analytics` or `$(pwd)/data`)
-- `TANKERKOENIG_API_KEY`: API key for Tankerkönig service
-- `DAGSTER_HOME`: Path for Dagster instance storage (logs, runs, schedules)
+| Variable               | Description                                      |
+| ---------------------- | ------------------------------------------------ |
+| `DATA_OUTPUT_PATH`     | Directory containing `fueldata.duckdb`           |
+| `TANKERKOENIG_API_KEY` | API key for Tankerkönig                          |
+| `DAGSTER_HOME`         | Dagster instance storage (logs, runs, schedules) |
 
 ## Development
 
-### Docker (Production-like)
-
-The pipeline is containerized and runs as part of the docker-compose stack:
-
-```bash
-just up  # Starts all services including Dagster
-```
-
-### Local Development (Recommended)
-
-For faster development without Docker:
-
-**Prerequisites:**
-
-- Python 3.11+ (tested with Python 3.14.0)
-- uv package manager
-
-**Quick Start:**
-
-```bash
-# Install dependencies
-just install-analytics
-
-# Start Dagster development server
-just dev-analytics
-```
-
-Then open <http://localhost:3000> in your browser to access the Dagster UI.
-
-**Manual Setup (Alternative):**
+### Local Development
 
 ```bash
 cd analytics
 uv sync
-source .env.local
-uv run dagster dev
+dagster dev
 ```
 
-**Environment Variables (Local):**
+Or from the project root:
 
-- `DAGSTER_HOME`: Points to `./home` for local storage
-- `DATA_PATH`: Points to `./data` for DuckDB database output
-- `TANKERKOENIG_API_KEY`: Your Tankerkönig API key
+```bash
+just dev-analytics
+```
 
-**Local Storage Structure:**
+Then open <http://localhost:3000> to access the Dagster UI.
+
+### Docker
+
+The pipeline runs as part of the analytics Docker Compose stack:
+
+```bash
+just up analytics
+```
+
+Dagster is accessible at <http://localhost:8080> via Envoy proxy.
+
+### Local Storage Layout
 
 ```text
 analytics/
-├── home/                  # Local Dagster instance storage (DAGSTER_HOME)
-│   ├── storage/          # SQLite database and run metadata
-│   └── logs/             # Compute logs
-├── data/                 # Data output directory (DATA_PATH)
-│   └── fueldata.duckdb  # DuckDB database with fuel prices
-├── dagster.yaml         # Instance configuration
-└── workspace.yaml       # Code location configuration
+├── home/             # DAGSTER_HOME
+│   ├── storage/      # Run metadata (SQLite)
+│   └── logs/         # Compute logs
+├── data/             # DATA_OUTPUT_PATH (local dev only)
+│   └── fueldata.duckdb
+├── dagster.yaml      # Instance config (SQLite storage, local logs)
+└── workspace.yaml    # Code location: pipeline module
 ```
 
-**Verification:**
+### Verification
 
-1. After starting `just dev-analytics`, you should see:
+After starting `dagster dev`:
 
-   - Assets loaded: `raw_fuel_prices`, `daily_aggregates`
-   - Schedules available: `fetch_fuel_prices`, `daily_aggregates`
-   - No errors in the console output
+1. Assets tab should show `raw_fuel_prices`, `compressed_fuel_prices`, and `daily_aggregates`
+2. Schedules tab should list all four schedules
+3. Materialize `raw_fuel_prices` to fetch current prices
+4. Materialize `compressed_fuel_prices` and `daily_aggregates` for a specific partition date
 
-2. In the Dagster UI:
-   - Navigate to Assets tab
-   - You should see: `raw_fuel_prices` (unpartitioned), `daily_aggregates` (partitioned)
-   - Click "Materialize" on `raw_fuel_prices` to fetch current fuel prices
-   - Click "Materialize" on `daily_aggregates` to compute statistics for a specific day
+### Troubleshooting
 
-**Troubleshooting:**
-
-- If you get import errors, verify that the `tankerkoenig` and `metrics` packages from `lib/` are properly installed
-- If storage errors occur, verify `DAGSTER_HOME` points to the correct local directory
-- Ensure `TANKERKOENIG_API_KEY` is set in your environment
-- Check that the `data/` directory exists for DuckDB output
+- **Import errors** — Verify that `tankerkoenig-client` and `metrics` packages from `lib/` are installed (they're referenced as path dependencies in `pyproject.toml`)
+- **Storage errors** — Check that `DAGSTER_HOME` and `DATA_OUTPUT_PATH` point to existing directories
+- **Empty results** — Ensure favorite stations are configured in the app before running the pipeline

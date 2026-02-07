@@ -1,6 +1,6 @@
 # Shared Library
 
-This directory contains shared library components for the personal data tracker project.
+This directory contains shared library components for the refuel tracker project.
 
 ## Tankerkoenig API Client
 

@@ -19,15 +19,15 @@ jobs:
           - name: dagster
             context: .
             dockerfile: ./analytics/Dockerfile
-            image: jzmrn/data-tracker-dagster
+            image: jzmrn/refuel-tracker-dagster
           - name: backend
             context: .
             dockerfile: ./backend/Dockerfile
-            image: jzmrn/data-tracker-backend
+            image: jzmrn/refuel-tracker-backend
           - name: frontend
             context: ./frontend
             dockerfile: ./frontend/Dockerfile
-            image: jzmrn/data-tracker-frontend
+            image: jzmrn/refuel-tracker-frontend
 
     steps:
       - uses: actions/checkout@v3
@@ -86,11 +86,11 @@ jobs:
       matrix:
         include:
           - name: dagster
-            image: jzmrn/data-tracker-dagster
+            image: jzmrn/refuel-tracker-dagster
           - name: backend
-            image: jzmrn/data-tracker-backend
+            image: jzmrn/refuel-tracker-backend
           - name: frontend
-            image: jzmrn/data-tracker-frontend
+            image: jzmrn/refuel-tracker-frontend
 
     steps:
       - name: Download ${{ matrix.name }} image

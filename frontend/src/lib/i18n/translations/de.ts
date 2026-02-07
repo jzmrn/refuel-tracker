@@ -58,7 +58,7 @@ export const de: TranslationStructure = {
   },
 
   layout: {
-    appTitle: "Persönlicher Datentracker",
+    appTitle: "Tank Tracker",
   },
 
   dataTracking: {

@@ -1,354 +1,189 @@
-# Personal Data Tracker
+# Refuel Tracker
 
-A modern, self-hosted personal metrics tracking application built with **Parquet-based storage** for maximum performance and data ownership.
+A self-hosted application for tracking refueling events and monitoring gas station fuel prices in Germany, powered by the [Tankerkönig API](https://creativecommons.tankerkoenig.de).
 
-## 🎯 Features
+## Features
 
-- **Metrics Tracking**: Monitor any quantifiable data (fuel consumption, weight, activity tracking, etc.)
-- **Fast Analytics**: Lightning-fast queries thanks to Parquet columnar storage
-- **Data Visualization**: Beautiful charts and graphs for insights
-- **File-based Storage**: No database server required - your data stays in portable files
-- **REST API**: Full-featured API for data access and manipulation
-- **Modern UI**: Responsive web interface built with Next.js and Tailwind CSS
-- **Mobile-First Design**: Beautiful mobile experience with bottom navigation and floating action buttons
-- **Docker Ready**: Easy deployment with Docker Compose
+- **Refuel Logging** — Record price per liter, amount, distance driven, and fuel consumption per car
+- **Multi-Car Support** — Manage multiple vehicles with car sharing between users
+- **Live Fuel Prices** — Search and monitor real-time E5, E10, and Diesel prices from German gas stations
+- **Favorite Stations** — Save stations and automatically track their price history
+- **Price Analytics** — Daily aggregates, compression of raw price data, and historical price charts
+- **Consumption Statistics** — Monthly summaries, cost breakdowns, and efficiency trends
+- **Odometer Tracking** — Log kilometer readings per car with charts and stats
+- **Google OAuth** — Authentication via Google with user allowlist authorization (OPA)
+- **Mobile-First UI** — Responsive design with bottom navigation, FABs, and modal forms
 
-## 🏗️ Architecture
+## Architecture
 
-### Backend (Python)
-
-- **FastAPI**: High-performance async API framework
-- **Polars**: Blazing fast data processing library
-- **Parquet Storage**: Columnar file format for efficient storage and querying
-- **Pydantic**: Data validation and serialization
-
-### Frontend (Next.js)
-
-- **React 18**: Modern UI framework with mobile-responsive design
-- **TypeScript**: Type-safe development
-- **Tailwind CSS**: Utility-first styling with mobile breakpoints
-- **Recharts**: Beautiful data visualizations
-- **Mobile UX**: Bottom navigation, floating action buttons, and unified content views
-- **Headless UI**: Accessible modal components for mobile forms
-
-### Storage Strategy
-
-```sh
-data/
-├── data_points/
-│   ├── year=2024/
-│   │   ├── month=01/
-│   │   │   ├── data_points_2024-01-01_2024-01-07.parquet
-│   │   │   └── data_points_2024-01-08_2024-01-14.parquet
-│   │   └── month=02/
-│   └── year=2025/
-├── time_spans/
-├── metrics/
-│   └── refuel/
-└── metadata/
+```text
+       ┌────────────────────────────────────────────────┐
+       │                 Envoy Proxy                    │
+       │  (Google OAuth2 · JWT validation · routing)    │
+       └──┬─────────────┬─────────────┬───────────┬──--─┘
+          │             │             │           │
+      ┌───▼--─────┐ ┌───▼─--───┐ ┌────▼───--─┐ ┌──▼──--──┐
+      │  Frontend │ │ Backend  │ │  Dagster  │ │   OPA   │
+      │  Next.js  │ │ FastAPI  │ │ Analytics │ │Allowlist│
+      └───────────┘ └────┬─────┘ └─────┬─────┘ └─────────┘
+                         │             │
+                         │      Tankerkönig API
+                         │
+                  ┌──────▼──────┐
+                  │   DuckDB    │
+                  │ userdata.db │
+                  │ fueldata.db │
+                  └─────────────┘
 ```
 
-## 🚀 Quick Start
+### Tech Stack
+
+| Layer     | Technology                                                      |
+| --------- | --------------------------------------------------------------- |
+| Backend   | Python 3.11+, FastAPI, Pydantic v2, DuckDB                      |
+| Frontend  | Next.js 14, React 18, TypeScript, MUI 7, Tailwind CSS, Recharts |
+| Analytics | Dagster, Pandas, DuckDB                                         |
+| Auth      | Google OAuth2 (via Envoy), OPA user allowlist                   |
+| Proxy     | Envoy Proxy (OAuth2 flow, JWT validation, routing)              |
+| Storage   | DuckDB (`userdata.duckdb`, `fueldata.duckdb`)                   |
+| Build     | `just`, `uv` (Python), npm, Docker Compose                      |
+
+### Data Storage
+
+Two DuckDB databases in the `data/` directory:
+
+- **`userdata.duckdb`** — Refuels, cars, kilometer readings, users, data points, time spans
+- **`fueldata.duckdb`** — Raw fuel prices, compressed price changes, daily aggregates, favorite stations, gas station metadata
+
+## Quick Start
 
 ### Prerequisites
 
 - Docker and Docker Compose
-- OR Python 3.11+ and Node.js 18+
+- [just](https://github.com/casey/just) command runner
+- A [Tankerkönig API key](https://creativecommons.tankerkoenig.de) (for fuel price fetching)
+- Google OAuth2 credentials (for authentication)
 
-### Option 1: Docker Compose (Recommended)
+### Configuration
 
-1. **Clone or download the project structure**
-
-   ```bash
-   cd /Users/janzimmermann/Developer/privat/personal-data-tracker
-   ```
-
-2. **Start the application**
+1. **Render Envoy configuration** from templates:
 
    ```bash
-   docker-compose up --build
+   just render-envoy-config app development
+   just render-envoy-config analytics development
    ```
 
-3. **Access the application**
-   - [Frontend](http://localhost:3000)
-   - [Backend API](http://localhost:8000)
-   - [API Documentation](http://localhost:8000/docs)
+   Config variables are defined in `config/variables.*.yaml` files. Jinja2 templates in `config/templates/` generate Envoy, OPA, and secret configs.
 
-### Option 2: Development Setup
+2. **Set up environment variables** — See the per-stack compose files for required env vars (Tankerkönig API key, Google OAuth client ID/secret, etc.).
 
-#### Backend Setup
+### Running
 
 ```bash
+# Start the main app (frontend + backend + envoy + opa)
+just up app
+
+# Start the analytics pipeline (dagster + envoy + opa)
+just up analytics
+
+# Or run both
+just up app && just up analytics
+```
+
+**Access points:**
+
+| Service                         | URL                          |
+| ------------------------------- | ---------------------------- |
+| App (via Envoy)                 | <http://localhost:9090>      |
+| Analytics / Dagster (via Envoy) | <http://localhost:8080>      |
+| Backend API (direct, dev only)  | <http://localhost:8000>      |
+| API Docs                        | <http://localhost:8000/docs> |
+
+### Development Setup
+
+```bash
+# Backend
 cd backend
-
-# Install dependencies with UV (recommended)
 uv sync --group dev
-
-# Or with pip
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
-
-# Start the backend
 uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-# Or with pip
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
 
-#### Frontend Setup
-
-```bash
+# Frontend
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
+
+# Analytics
+cd analytics
+uv sync
+dagster dev
 ```
 
-## Mobile Experience
-
-The application is designed with a mobile-first approach, offering a completely different user experience on mobile devices:
-
-### Desktop Features
-
-- **Sidebar Navigation**: Traditional left-side navigation menu
-- **Tabbed Interface**: Separate tabs for adding data, viewing statistics, and browsing entries
-- **Side-by-side Layouts**: Forms and data lists displayed simultaneously
-
-### Mobile Features
-
-- **Bottom Navigation**: Easy-to-reach navigation bar at the bottom of the screen
-- **Floating Action Button (FAB)**: Quick access to add new entries via a floating + button
-- **Unified Views**: All content (statistics, data, forms) displayed in a single scrollable page
-- **Modal Forms**: Add/edit forms appear in slide-up modals for better mobile UX
-- **Touch-Optimized**: Larger touch targets and mobile-friendly spacing
-
-### Responsive Breakpoints
-
-- **Mobile**: < 768px (md breakpoint)
-- **Desktop**: ≥ 768px
-
-The app automatically detects screen size and switches between mobile and desktop layouts seamlessly.
-
-## 🛠️ Development
-
-### Backend Development
+Or use the `just` shortcuts:
 
 ```bash
-cd backend
+just dev            # Run backend + frontend
+just dev-backend    # Backend only
+just dev-frontend   # Frontend only
+just dev-analytics  # Dagster dev
+```
 
-# Install development dependencies
-uv sync --group dev
+## Analytics Pipeline
 
+The Dagster pipeline fetches and processes fuel price data on a schedule:
+
+| Schedule                 | Frequency     | Description                                                         |
+| ------------------------ | ------------- | ------------------------------------------------------------------- |
+| `fetch_fuel_prices`      | Every 10 min  | Fetch live prices from Tankerkönig for all favorite stations        |
+| `compressed_fuel_prices` | Daily 6:00 AM | Deduplicate consecutive identical prices (~80% compression)         |
+| `daily_aggregates`       | Daily 7:00 AM | Compute per-station per-fuel-type daily stats (mean, min, max, std) |
+| `cleanup_raw_fuel_data`  | Daily 8:00 AM | Delete raw data older than 28 days (after compression is verified)  |
+
+## API Endpoints
+
+| Resource    | Prefix             | Key Operations                                                |
+| ----------- | ------------------ | ------------------------------------------------------------- |
+| Cars        | `/api/cars`        | CRUD, share with other users                                  |
+| Refuels     | `/api/metrics`     | Log refuels, statistics, monthly summaries, favorite stations |
+| Kilometers  | `/api/kilometers`  | Log odometer readings                                         |
+| Fuel Prices | `/api/fuel-prices` | Search stations, manage favorites, price history, daily stats |
+| Auth        | `/api/auth`        | Current user info                                             |
+
+## Project Structure
+
+```text
+refuel-tracker/
+├── analytics/    # Dagster pipeline for fuel price ingestion and aggregation
+├── backend/      # FastAPI application with DuckDB storage
+├── config/       # Envoy, OPA, and secret templates per environment
+├── data/         # DuckDB databases (runtime, git-ignored)
+├── frontend/     # Next.js application (React, TypeScript, MUI)
+└── lib/          # Shared Python packages (Tankerkönig client, fuel data clients)
+```
+
+## Auth Flow
+
+1. User hits the app through Envoy proxy
+2. Envoy redirects to Google OAuth2 login (if no valid session)
+3. On success, Envoy sets `IdToken` and `BearerToken` cookies
+4. Envoy's JWT filter validates the token on each request
+5. OPA checks the user's Google `sub` claim against the allowlist
+6. Backend reads the `IdToken` cookie, verifies it with Google's public keys, and upserts the user in DuckDB
+
+## Development
+
+```bash
 # Run tests
-uv run pytest
+just test
 
-# Format code
-uv run black app/
-uv run ruff app/
+# Lint & format
+just lint
+just format
 
-# Type checking
-uv run mypy app/
+# Build Docker images
+just build app
+just build analytics
 ```
 
-### Frontend Development
-
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Run type checking
-npm run type-check
-
-# Lint code
-npm run lint
-```
-
-### Project Structure
-
-```sh
-personal-data-tracker/
-├── backend/
-│   ├── app/
-│   │   ├── main.py              # FastAPI application
-│   │   ├── models.py            # Pydantic models
-│   │   ├── storage/
-│   │   │   ├── parquet_store.py # Main storage implementation
-│   │   │   └── backup_manager.py # Backup functionality
-│   │   ├── api/
-│   │   │   ├── data_points.py   # Data tracking endpoints
-│   │   │   ├── refuels.py       # Refuel tracking endpoints
-│   │   │   ├── time_spans.py    # Time span endpoints
-│   │   │   └── analytics.py     # Analytics endpoints
-│   │   └── utils/
-│   │       └── date_helpers.py  # Utility functions
-│   ├── pyproject.toml           # Python dependencies
-│   └── Dockerfile
-├── frontend/
-│   ├── src/
-│   │   ├── components/          # React components
-│   │   ├── pages/              # Next.js pages
-│   │   └── lib/
-│   │       └── api.ts          # API client
-│   ├── package.json
-│   └── Dockerfile
-├── data/                       # Parquet files (created automatically)
-├── backups/                   # Automatic backups
-├── docker-compose.yml
-└── README.md
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-**Backend:**
-
-- `DATA_PATH`: Path to store Parquet files (default: `data`)
-- `BACKUP_PATH`: Path to store backups (default: `backups`)
-
-**Frontend:**
-
-- `NEXT_PUBLIC_API_URL`: Backend API URL (default: `http://localhost:8000`)
-
-### Docker Compose Override
-
-Create `docker-compose.override.yml` for custom configuration:
-
-```yaml
-version: "3.8"
-services:
-  backend:
-    volumes:
-      - /custom/data/path:/app/data
-      - /custom/backup/path:/app/backups
-    environment:
-      - CUSTOM_ENV_VAR=value
-```
-
-## 💾 Data Management
-
-### Backup and Restore
-
-**Manual Backup:**
-
-```bash
-# Create backup via API
-curl -X POST "http://localhost:8000/backup"
-
-# Or copy data directory
-cp -r data/ backup-$(date +%Y%m%d)/
-```
-
-**Restore:**
-
-```bash
-# Stop services
-docker-compose down
-
-# Restore data
-cp -r backup-20241001/ data/
-
-# Restart services
-docker-compose up
-```
-
-### Data Migration
-
-Since data is stored in portable Parquet files, migration is simple:
-
-1. Stop the application
-2. Copy the `data/` directory to the new location
-3. Update `DATA_PATH` environment variable
-4. Restart the application
-
-## 📈 Performance
-
-### Parquet Benefits
-
-- **90%+ compression** compared to JSON/CSV
-- **Column-oriented** storage for fast aggregations
-- **Predicate pushdown** - only reads relevant data
-- **Cross-platform** compatibility
-
-### Expected Performance
-
-- **Writes**: 10,000+ records/second
-- **Reads**: Millions of rows scanned in milliseconds
-- **Storage**: ~1MB per 10,000 records (compressed)
-
-## 🔒 Security
-
-- **No external database** - reduces attack surface
-- **File-based storage** - easy to backup and secure
-- **CORS protection** configured
-- **Input validation** via Pydantic models
-- **No sensitive data** stored in configuration
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Run linting and tests
-6. Submit a pull request
-
-## 📄 License
+## License
 
 This project is open source and available under the [MIT License](LICENSE).
-
-## 🆘 Troubleshooting
-
-### Common Issues
-
-**Backend won't start:**
-
-- Check Python version (3.11+ required)
-- Verify all dependencies are installed
-- Check port 8000 isn't already in use
-
-**Frontend build fails:**
-
-- Check Node.js version (18+ required)
-- Clear npm cache: `npm cache clean --force`
-- Delete `node_modules` and reinstall
-
-**Data not persisting:**
-
-- Check Docker volume mounts
-- Verify `DATA_PATH` environment variable
-- Check file permissions
-
-**Performance issues:**
-
-- Monitor file sizes in `data/` directory
-- Consider partitioning strategy for large datasets
-- Check available disk space
-
-### Getting Help
-
-1. Check the API [documentation](http://localhost:8000/docs)
-2. Review application logs: `docker-compose logs`
-3. Check GitHub issues
-4. Monitor system resources (CPU, memory, disk)
-
-## 🎯 Future Enhancements
-
-- [ ] Native macOS app with Tauri
-- [ ] Advanced analytics and forecasting
-- [ ] Data import/export tools
-- [ ] Multi-user support
-- [ ] Mobile app
-- [ ] Advanced visualization dashboards
-- [ ] Budget planning and alerts
-- [ ] Receipt scanning and OCR

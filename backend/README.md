@@ -1,28 +1,19 @@
-# Personal Data Tracker - Backend
+# Refuel Tracker — Backend
 
-A high-performance FastAPI backend with DuckDB-based storage for personal finance and metrics tracking.
+FastAPI backend for tracking refuels, managing cars, and querying gas station fuel prices. Uses DuckDB for storage and Google OAuth2 for authentication.
 
-## 🏗️ Architecture
+## Tech Stack
 
-- **Framework**: FastAPI with async support
-- **Storage**: DuckDB with pandas for data processing
-- **Data Organization**: Single database file with indexed tables
-- **Validation**: Pydantic models for type safety
-- **Pattern**: Dependency injection for clean architecture
+- **FastAPI** with async support and dependency injection
+- **DuckDB** for data storage (two databases: `userdata.duckdb`, `fueldata.duckdb`)
+- **Pydantic v2** for request/response validation
+- **Google OAuth2** token validation (via `google-auth`)
+- **Tankerkönig API** client for live fuel price search
+- **Structured logging** with request ID tracing and extra context
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Python 3.11+
-- UV package manager
-
-### Installation
+## Quick Start
 
 ```bash
-# Install UV if not already installed
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
 # Install dependencies
 uv sync --group dev
 
@@ -30,331 +21,151 @@ uv sync --group dev
 uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Using Justfile (from project root)
+Or from the project root:
 
 ```bash
-# Install dependencies
-just install
-
-# Start backend only
 just dev-backend
-
-# Run tests
-just test
-
-# Format code
-just format
 ```
 
-## 📊 Data Storage
+API docs available at <http://localhost:8000/docs>.
 
-### DuckDB Database Structure
+## Environment Variables
 
-```sh
-data/
-├── userdata.duckdb      # Main database file with all tables
-└── users.db             # SQLite database for user management
-```
+| Variable               | Description                                           |
+| ---------------------- | ----------------------------------------------------- |
+| `DATA_PATH`            | Directory containing DuckDB database files (required) |
+| `GOOGLE_CLIENT_ID`     | Google OAuth2 client ID for token validation          |
+| `TANKERKOENIG_API_KEY` | Tankerkönig API key for station search                |
+| `ENVIRONMENT`          | Set to `production` to enable HSTS headers            |
+| `LOG_LEVEL`            | Root log level (default: `INFO`)                      |
+| `LOG_LEVEL_API`        | Log level for `app.api` (default: `INFO`)             |
+| `LOG_LEVEL_STORAGE`    | Log level for `app.storage` (default: `INFO`)         |
+| `LOG_LEVEL_AUTH`       | Log level for `app.auth` (default: `INFO`)            |
 
-### Tables
+## API Endpoints
 
-- **refuel_metrics**: Fuel tracking with indexes on `(user_id, timestamp)`
-- **data_points**: Generic data tracking with indexes on `(user_id, id)`, timestamp, and label
-- **time_spans**: Time duration tracking with indexes on `(user_id, id)`, start_date, label, and group
+### Cars (`/api/cars`)
 
-### Benefits
+| Method   | Path                         | Description                       |
+| -------- | ---------------------------- | --------------------------------- |
+| `POST`   | `/cars`                      | Create a car                      |
+| `GET`    | `/cars`                      | List user's cars (owned + shared) |
+| `GET`    | `/cars/{id}`                 | Get car by ID                     |
+| `PATCH`  | `/cars/{id}`                 | Update car                        |
+| `DELETE` | `/cars/{id}`                 | Delete car                        |
+| `POST`   | `/cars/{id}/share`           | Share car with another user       |
+| `DELETE` | `/cars/{id}/share/{user_id}` | Revoke car sharing                |
+| `GET`    | `/cars/{id}/shared-users`    | List users with access            |
+| `GET`    | `/cars/{id}/statistics`      | Car-level refuel statistics       |
+| `GET`    | `/users/search`              | Search users (for sharing)        |
 
-- **ACID transactions** for data consistency
-- **SQL queries** with proper indexing for performance
-- **Single file** - easy backup and migration
-- **Built-in analytics** capabilities
+### Refuels (`/api/metrics`)
 
-## 🔌 API Endpoints
+| Method | Path                             | Description                      |
+| ------ | -------------------------------- | -------------------------------- |
+| `POST` | `/refuel`                        | Log a refuel entry               |
+| `GET`  | `/refuel`                        | List refuels (filterable by car) |
+| `GET`  | `/refuel/statistics`             | Cost stats and price trends      |
+| `GET`  | `/refuel/monthly/{year}/{month}` | Monthly summary                  |
+| `GET`  | `/refuel/favorite-stations`      | Stations used in refuels         |
 
-### Health & Status
+### Kilometers (`/api/kilometers`)
 
-- `GET /` - Health check
-- `GET /health` - Detailed health status
-- `POST /backup` - Create manual backup
+| Method   | Path               | Description                       |
+| -------- | ------------------ | --------------------------------- |
+| `POST`   | `/kilometers`      | Log odometer reading              |
+| `GET`    | `/kilometers`      | List readings (filterable by car) |
+| `DELETE` | `/kilometers/{id}` | Delete reading                    |
 
-### Data Points
+### Fuel Prices (`/api/fuel-prices`)
 
-- `POST /api/data-points/` - Add single data point
-- `GET /api/data-points/` - Query data points with filters
-- `DELETE /api/data-points/{id}` - Delete data point
+| Method   | Path                                     | Description                                |
+| -------- | ---------------------------------------- | ------------------------------------------ |
+| `POST`   | `/search`                                | Search nearby stations (Tankerkönig)       |
+| `POST`   | `/favorites`                             | Add favorite station                       |
+| `GET`    | `/favorites`                             | List favorite stations with current prices |
+| `DELETE` | `/favorites/{id}`                        | Remove favorite station                    |
+| `GET`    | `/stations/{id}`                         | Station metadata                           |
+| `GET`    | `/stations/{id}/prices/{fuel_type}`      | Compressed price history                   |
+| `GET`    | `/stations/{id}/daily-stats/{fuel_type}` | Daily price aggregates                     |
 
-### Refuel Tracking
+### Data Points (`/api/data-points`)
 
-- `POST /api/metrics/refuel` - Add refuel entry
-- `GET /api/metrics/refuel` - Query refuel data
-- `GET /api/metrics/refuel/statistics` - Get fuel statistics
+| Method   | Path                   | Description          |
+| -------- | ---------------------- | -------------------- |
+| `POST`   | `/data-points`         | Add data point       |
+| `GET`    | `/data-points`         | Query with filters   |
+| `DELETE` | `/data-points/{id}`    | Delete data point    |
+| `GET`    | `/data-points/labels`  | List distinct labels |
+| `GET`    | `/data-points/summary` | Summary statistics   |
 
-### Time Spans
+### Time Spans (`/api/time-spans`)
 
-- `POST /api/time-spans/` - Add time span
-- `GET /api/time-spans/` - Query time spans
-- `PUT /api/time-spans/{id}` - Update time span
-- `DELETE /api/time-spans/{id}` - Delete time span
+| Method   | Path                  | Description          |
+| -------- | --------------------- | -------------------- |
+| `POST`   | `/time-spans`         | Create time span     |
+| `GET`    | `/time-spans`         | Query with filters   |
+| `PUT`    | `/time-spans/{id}`    | Update time span     |
+| `DELETE` | `/time-spans/{id}`    | Delete time span     |
+| `GET`    | `/time-spans/labels`  | List distinct labels |
+| `GET`    | `/time-spans/groups`  | List distinct groups |
+| `GET`    | `/time-spans/summary` | Summary statistics   |
 
-### API Documentation
+### Other
 
-Visit the interactive [Swagger documentation](http://localhost:8000/docs).
+| Method | Path           | Description            |
+| ------ | -------------- | ---------------------- |
+| `GET`  | `/`            | Health check           |
+| `GET`  | `/health`      | Detailed health status |
+| `GET`  | `/api/auth/me` | Current user info      |
 
-## 🗃️ Data Models
+## Auth
 
-### Data Point
+The backend validates Google OAuth2 ID tokens from the `IdToken` cookie (set by Envoy's OAuth2 filter). On each request it:
 
-```python
-{
-    "timestamp": "2024-01-15T10:30:00Z",
-    "label": "weight",
-    "value": 75.5,
-    "notes": "Morning measurement"
-}
-```
+1. Reads the `IdToken` cookie
+2. Verifies the JWT against Google's public keys and the configured `GOOGLE_CLIENT_ID`
+3. Extracts user info (`sub`, `email`, `name`, `picture`)
+4. Creates or updates the user record in DuckDB (including fetching and base64-encoding the profile picture)
 
-### Refuel Metric
+All API routes receive the authenticated user via the `CurrentUser` dependency.
 
-```python
-{
-    "timestamp": "2024-01-15T10:00:00Z",
-    "price": 1.589,
-    "amount": 45.2,
-    "kilometers_since_last_refuel": 450,
-    "estimated_fuel_consumption": 7.5,
-    "notes": "Shell station"
-}
-```
+## Project Structure
 
-### Time Span
-
-```python
-{
-    "start_date": "2024-01-15T09:00:00Z",
-    "end_date": "2024-01-15T17:30:00Z",
-    "label": "Work",
-    "group": "Professional",
-    "notes": "Regular work day"
-    "unit": "km",
-    "metadata": {"vehicle": "toyota_prius"}
-}
-```
-
-## 🛠️ Development
-
-### Project Structure
-
-```sh
+```text
 app/
-├── main.py              # FastAPI application entry point
-├── models.py            # Pydantic data models
-├── storage/
-│   ├── duckdb_resource.py  # DuckDB connection manager
-│   ├── refuel_client.py    # Refuel metrics storage
-│   ├── data_point_client.py # Data points storage
-│   ├── time_span_client.py  # Time spans storage
-│   └── user_store.py        # User management (SQLite)
-├── api/
-│   ├── data_points.py   # Data tracking endpoints
-│   ├── refuels.py       # Refuel tracking endpoints
-│   └── time_spans.py    # Time span endpoints
+├── main.py              # FastAPI app, lifespan, middleware, routers
+├── auth.py              # Google OAuth2 token validation
+├── models.py            # Pydantic request/response models
+├── migrations.py        # DuckDB schema migrations
+├── api/                 # Route handlers
+│   ├── cars.py
+│   ├── refuels.py
+│   ├── kilometers.py
+│   ├── fuel_prices.py
+│   ├── data_points.py
+│   └── time_spans.py
+├── storage/             # DuckDB data access clients
+│   ├── duckdb_resource.py
+│   ├── user_store.py
+│   ├── car_client.py
+│   ├── refuel_client.py
+│   ├── kilometer_client.py
+│   ├── data_point_client.py
+│   └── time_span_client.py
 └── utils/
-    └── date_helpers.py  # Utility functions
+    └── date_helpers.py
 ```
 
-### Commands
+## Development
 
 ```bash
-# Development server with hot reload
-uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
 # Run tests
 uv run pytest
 
-# Run tests with coverage
-uv run pytest --cov=app --cov-report=html
-
-# Format code
+# Format
 uv run black app/
 
-# Lint code
+# Lint
 uv run ruff app/
-
-# Type checking
-uv run mypy app/
-```
-
-### Environment Variables
-
-- `DATA_PATH`: Path to store DuckDB database file (default: `data`)
-- `BACKUP_PATH`: Path to store backups (optional)
-
-### Configuration
-
-### Development
-
-Create `.env` file in backend directory:
-
-```env
-DATA_PATH=./data
-```
-
-### Production
-
-```env
-DATA_PATH=/app/data
-```
-
-## 🧪 Testing
-
-### Run Tests
-
-```bash
-# All tests
-uv run pytest
-
-# Specific test file
-uv run pytest tests/test_clients.py
-
-# With verbose output
-uv run pytest -v
-
-# With coverage
-uv run pytest --cov=app
-```
-
-### Test Structure
-
-```sh
-tests/
-├── test_main.py           # API endpoint tests
-├── test_clients.py        # Storage client tests
-├── test_models.py         # Data model tests
-└── conftest.py           # Test configuration
-```
-
-## 📦 Docker
-
-### Build Image
-
-```bash
-docker build -t personal-data-tracker-backend .
-```
-
-### Run Container
-
-```bash
-docker run -p 8000:8000 \
-  -v $(pwd)/data:/app/data \
-  personal-data-tracker-backend
-```
-
-## 🔒 Security Considerations
-
-- **Input Validation**: All inputs validated with Pydantic
-- **CORS Protection**: Configured for frontend origins
-- **SQL Injection Protection**: Parameterized queries throughout
-- **Dependency Injection**: Clean architecture with no global state
-
-## 📈 Performance
-
-### Expected Performance
-
-- **Writes**: 10,000+ records/second with batch inserts
-- **Reads**: Optimized with indexes on common query patterns
-- **Storage**: Efficient compression with DuckDB's columnar format
-- **Memory**: Low memory footprint with lazy evaluation
-
-### Optimization Tips
-
-- Use date range filters for large datasets
-- Batch data operations when possible
-- Leverage indexes on user_id, timestamp, and labels
-- Regular database vacuum for optimal performance
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Port already in use:**
-
-```bash
-# Kill process on port 8000
-lsof -ti:8000 | xargs kill -9
-```
-
-**UV not found:**
-
-```bash
-# Install UV
-curl -LsSf https://astral.sh/uv/install.sh | sh
-source ~/.bashrc  # or ~/.zshrc
-```
-
-**Permission errors:**
-
-```bash
-# Fix data directory permissions
-chmod -R 755 data/
-chmod -R 755 backups/
-```
-
-**Import errors:**
-
-```bash
-# Ensure proper Python path
-export PYTHONPATH="${PYTHONPATH}:$(pwd)"
-```
-
-## 🤝 Contributing
-
-1. Make changes to the code
-2. Run tests: `uv run pytest`
-3. Format code: `uv run black app/`
-4. Lint code: `uv run ruff app/`
-5. Check types: `uv run mypy app/`
-
-## 📝 API Examples
-
-### Add Data Point
-
-```bash
-curl -X POST "http://localhost:8000/api/data-points/" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "label": "weight",
-    "value": 75.5,
-    "timestamp": "2024-01-15T08:00:00Z",
-    "notes": "Morning measurement"
-  }'
-```
-
-### Query Data Points
-
-```bash
-# Recent data points
-curl "http://localhost:8000/api/data-points/?limit=10"
-
-# Data points by date range
-curl "http://localhost:8000/api/data-points/?start_date=2024-01-01&end_date=2024-01-31"
-
-# Data points by label
-curl "http://localhost:8000/api/data-points/?label=weight"
-```
-
-### Add Refuel Entry
-
-```bash
-# Add refuel entry
-curl -X POST "http://localhost:8000/api/metrics/refuel" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "price": 1.589,
-    "amount": 45.2,
-    "kilometers_since_last_refuel": 450,
-    "estimated_fuel_consumption": 7.5
-  }'
-
-# Get refuel statistics
-curl "http://localhost:8000/api/metrics/refuel/statistics"
 ```

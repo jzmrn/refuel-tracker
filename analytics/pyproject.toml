@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "analytics-pipeline"
+name = "refuel-tracker-analytics"
 version = "0.1.0"
-description = "Dagster data pipeline for personal data tracker"
+description = "Dagster data pipeline for Refuel Tracker"
 requires-python = ">=3.11"
 authors = [
     {name = "Jan Zimmermann", email = "jzmrn@gmx.de"},

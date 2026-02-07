@@ -1,7 +1,7 @@
 {
-  "name": "Personal Data Tracker",
-  "short_name": "Data Tracker",
-  "description": "Track and analyze your personal data",
+  "name": "Refuel Tracker",
+  "short_name": "Refuel Tracker",
+  "description": "A tracking system for fuel prices and consumption",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

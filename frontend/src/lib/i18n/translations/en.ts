@@ -58,7 +58,7 @@ export const en: TranslationStructure = {
   },
 
   layout: {
-    appTitle: "Personal Data Tracker",
+    appTitle: "Refuel Tracker",
   },
 
   dataTracking: {
@@ -390,12 +390,12 @@ export const en: TranslationStructure = {
 
   // Additional common phrases
   dashboard: {
-    welcome: "Welcome to your Personal Data Tracker",
+    welcome: "Welcome to Refuel Tracker",
     recentActivity: "Recent Activity",
     quickStats: "Quick Statistics",
     gettingStartedTitle: "Getting Started",
     gettingStartedDescription:
-      "Choose a tracking category below to begin monitoring your personal data. Each section provides specialized tools for different types of information.",
+      "Choose a tracking category below to begin monitoring your refuels. Each section provides specialized tools for different types of information.",
     features: {
       refuelDescription: "Track fuel consumption, prices, and costs",
       dataTrackingDescription: "Monitor numerical data with custom labels",

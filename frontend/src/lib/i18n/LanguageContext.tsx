@@ -23,7 +23,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
   undefined,
 );
 
-const STORAGE_KEY = "personal-data-tracker-language";
+const STORAGE_KEY = "refuel-tracker-language";
 
 interface LanguageProviderProps {
   children: ReactNode;

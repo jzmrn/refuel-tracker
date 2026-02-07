@@ -16,7 +16,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const STORAGE_KEY = "personal-data-tracker-theme";
+const STORAGE_KEY = "refuel-tracker-theme";
 
 // Helper function to get the initial theme synchronously
 export function getInitialTheme(): Theme {
