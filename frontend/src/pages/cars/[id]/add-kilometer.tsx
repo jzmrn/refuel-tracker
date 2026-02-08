@@ -108,7 +108,7 @@ export default function AddKilometer() {
       await createKilometerEntry.mutateAsync(submissionData);
 
       // Navigate back
-      router.push(`/refuels/car/${carId}`);
+      router.push(`/cars/${carId}`);
     } catch (error: any) {
       console.error("Error creating kilometer entry:", error);
       showError(error.response?.data?.detail || t.kilometers.errorAddingEntry);

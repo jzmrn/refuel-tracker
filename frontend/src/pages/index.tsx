@@ -3,26 +3,28 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
 
 export default function Dashboard() {
   const { t } = useTranslation();
 
   const features = [
     {
-      name: t.navigation.refuel,
-      description: t.dashboard.features.refuelDescription,
-      href: "/refuels",
-      icon: LocalShippingIcon,
-      color: "text-blue-600",
-      bgColor: "bg-blue-100",
-    },
-    {
       name: t.navigation.fuelPrices,
       description: t.dashboard.features.fuelPricesDescription,
       href: "/fuel-prices",
-      icon: AttachMoneyIcon,
+      icon: LocalGasStationIcon,
       color: "text-yellow-600",
       bgColor: "bg-yellow-100",
+    },
+    {
+      name: t.navigation.cars,
+      description: t.dashboard.features.refuelDescription,
+      href: "/cars",
+      icon: DirectionsCarIcon,
+      color: "text-blue-600",
+      bgColor: "bg-blue-100",
     },
   ];
 

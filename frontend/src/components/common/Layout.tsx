@@ -5,8 +5,8 @@ import { clsx } from "clsx";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { UserProfile } from "@/components/auth";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import SettingsIcon from "@mui/icons-material/Settings";
 
 interface LayoutProps {
@@ -31,13 +31,13 @@ export default function Layout({ children }: LayoutProps) {
       name: t.navigation.fuelPrices,
       href: "/fuel-prices",
       shortName: t.navigation.prices,
-      icon: <AttachMoneyIcon className="w-5 h-5" />,
+      icon: <LocalGasStationIcon className="w-5 h-5" />,
     },
     {
-      name: t.navigation.refuel,
-      href: "/refuels",
-      shortName: t.navigation.refuel,
-      icon: <LocalGasStationIcon className="w-5 h-5" />,
+      name: t.navigation.cars,
+      href: "/cars",
+      shortName: t.navigation.cars,
+      icon: <DirectionsCarIcon className="w-5 h-5" />,
     },
   ];
 
@@ -74,8 +74,7 @@ export default function Layout({ children }: LayoutProps) {
                 router.pathname === item.href ||
                 (item.href === "/fuel-prices" &&
                   router.pathname.startsWith("/fuel-prices/")) ||
-                (item.href === "/refuels" &&
-                  router.pathname.startsWith("/refuels/"));
+                (item.href === "/cars" && router.pathname.startsWith("/cars/"));
               return (
                 <li key={item.name}>
                   <Link
@@ -137,8 +136,7 @@ export default function Layout({ children }: LayoutProps) {
               router.pathname === item.href ||
               (item.href === "/fuel-prices" &&
                 router.pathname.startsWith("/fuel-prices/")) ||
-              (item.href === "/refuels" &&
-                router.pathname.startsWith("/refuels/"));
+              (item.href === "/cars" && router.pathname.startsWith("/cars/"));
             return (
               <Link
                 key={item.name}

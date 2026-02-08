@@ -42,9 +42,8 @@ The app runs at <http://localhost:3000>.
 | Route                        | Description                                          |
 | ---------------------------- | ---------------------------------------------------- |
 | `/`                          | Dashboard / home                                     |
-| `/refuels`                   | Refuel log with stats and charts                     |
-| `/refuels/car`               | Car list for car-specific views                      |
-| `/refuels/car/[id]`          | Individual car detail (refuels, kilometers, sharing) |
+| `/cars`.                     | Car list for car-specific views                      |
+| `/cars/[id]`.                | Individual car detail (refuels, kilometers, sharing) |
 | `/fuel-prices`               | Favorite stations with live prices                   |
 | `/fuel-prices/stations`      | Station search                                       |
 | `/fuel-prices/stations/[id]` | Station detail with price history and daily stats    |

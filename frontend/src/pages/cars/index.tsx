@@ -16,11 +16,11 @@ export default function RefuelsIndex() {
   const { snackbar, hideSnackbar } = useSnackbar();
 
   const handleAddCar = () => {
-    router.push("/refuels/car");
+    router.push("/cars/add");
   };
 
   const handleCarClick = (carId: string) => {
-    router.push(`/refuels/car/${carId}`);
+    router.push(`/cars/${carId}`);
   };
 
   return (
@@ -28,9 +28,9 @@ export default function RefuelsIndex() {
       {/* Header */}
       <div className="mb-6 md:mb-8 flex justify-between items-start">
         <div>
-          <h1 className="heading-1">{t.refuels.refuelTracking}</h1>
+          <h1 className="heading-1">{t.cars.title}</h1>
           <p className="text-secondary mt-2 text-sm md:text-base">
-            {t.refuels.manageFuelData}
+            {t.cars.description}
           </p>
         </div>
       </div>

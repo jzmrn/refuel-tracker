@@ -56,7 +56,7 @@ export default function AddCar() {
       await createCar.mutateAsync(createData);
 
       // Navigate back to cars list
-      router.push("/refuels");
+      router.push("/cars");
     } catch (error: any) {
       console.error("Error creating car:", error);
       showError(error.response?.data?.detail || t.cars.failedToCreateCar);

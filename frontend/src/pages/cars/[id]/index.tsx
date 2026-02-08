@@ -48,31 +48,31 @@ export default function CarDetails() {
 
   const handleBack = () => {
     // Navigate explicitly to cars list to avoid history stack issues
-    router.push("/refuels");
+    router.push("/cars");
   };
 
   const handleEditCar = () => {
-    router.push(`/refuels/car/${carId}/details`);
+    router.push(`/cars/${carId}/details`);
   };
 
   const handleAddRefuel = () => {
-    router.push(`/refuels/car/${carId}/add-refuel`);
+    router.push(`/cars/${carId}/add-refuel`);
   };
 
   const handleAddSharedUsers = () => {
-    router.push(`/refuels/car/${carId}/share`);
+    router.push(`/cars/${carId}/share`);
   };
 
   const handleViewStats = () => {
-    router.push(`/refuels/car/${carId}/stats`);
+    router.push(`/cars/${carId}/stats`);
   };
 
   const handleAddKilometer = () => {
-    router.push(`/refuels/car/${carId}/add-kilometer`);
+    router.push(`/cars/${carId}/add-kilometer`);
   };
 
   const handleViewKilometerChart = () => {
-    router.push(`/refuels/car/${carId}/kilometer-stats`);
+    router.push(`/cars/${carId}/kilometer-stats`);
   };
 
   const handleRemoveSharedUser = async (userId: string) => {
@@ -93,7 +93,7 @@ export default function CarDetails() {
     try {
       await deleteCar.mutateAsync(carId);
       // Navigate back immediately after successful deletion
-      router.push("/refuels");
+      router.push("/cars");
     } catch (error: any) {
       console.error("Error deleting car:", error);
       showError(error.response?.data?.detail || t.cars.failedToDeleteCar);

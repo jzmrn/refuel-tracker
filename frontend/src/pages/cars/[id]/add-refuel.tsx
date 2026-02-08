@@ -173,7 +173,7 @@ export default function AddRefuel() {
       await createRefuel.mutateAsync(submissionData);
 
       // Navigate back
-      router.push(`/refuels/car/${carId}`);
+      router.push(`/cars/${carId}`);
     } catch (error: any) {
       console.error("Error creating refuel:", error);
       showError(error.response?.data?.detail || t.refuels.errorAddingRefuel);

@@ -40,7 +40,7 @@ export const de: TranslationStructure = {
 
   navigation: {
     dashboard: "Dashboard",
-    refuel: "Tanken",
+    cars: "Autos",
     fuelPrices: "Kraftstoffpreise",
     settings: "Einstellungen",
     home: "Start",
@@ -69,13 +69,8 @@ export const de: TranslationStructure = {
     pricePerLiter: "Preis pro Liter",
     odometer: "Kilometerstand",
     date: "Datum",
-    refuelTracking: "Tank-Tracking",
-    manageFuelData:
-      "Verwalten Sie Ihre Kraftstoffdaten und verfolgen Sie Kraftstoffkosten",
-    refuelAddedSuccess: "Tankeintrag erfolgreich hinzugefügt!",
     errorAddingRefuel: "Fehler beim Hinzufügen des Tankeintrags",
     errorLoadingData: "Fehler beim Laden der Tankdaten",
-    errorFiltering: "Fehler beim Filtern der Daten",
 
     // Form labels and validation
     pricePerLiterForm: "Preis pro Liter (€)",

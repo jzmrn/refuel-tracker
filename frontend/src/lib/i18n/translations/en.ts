@@ -40,7 +40,7 @@ export const en: TranslationStructure = {
 
   navigation: {
     dashboard: "Dashboard",
-    refuel: "Refuels",
+    cars: "Cars",
     fuelPrices: "Fuel Prices",
     settings: "Settings",
     home: "Home",
@@ -69,12 +69,8 @@ export const en: TranslationStructure = {
     pricePerLiter: "Price per Liter",
     odometer: "Odometer",
     date: "Date",
-    refuelTracking: "Refuel Tracking",
-    manageFuelData: "Manage your fuel data and track fuel costs",
-    refuelAddedSuccess: "Refuel entry added successfully!",
     errorAddingRefuel: "Error adding refuel entry.",
     errorLoadingData: "Error loading refuel data.",
-    errorFiltering: "Error filtering data.",
 
     // Form labels and validation
     pricePerLiterForm: "Price per Liter (€)",

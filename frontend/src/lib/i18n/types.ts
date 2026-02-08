@@ -42,7 +42,7 @@ export interface TranslationStructure {
   // Navigation
   navigation: {
     dashboard: string;
-    refuel: string;
+    cars: string;
     fuelPrices: string;
     settings: string;
     home: string;
@@ -72,12 +72,8 @@ export interface TranslationStructure {
     pricePerLiter: string;
     odometer: string;
     date: string;
-    refuelTracking: string;
-    manageFuelData: string;
-    refuelAddedSuccess: string;
     errorAddingRefuel: string;
     errorLoadingData: string;
-    errorFiltering: string;
 
     // Form labels and validation
     pricePerLiterForm: string;
