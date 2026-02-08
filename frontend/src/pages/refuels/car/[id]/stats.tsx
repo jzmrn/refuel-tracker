@@ -133,7 +133,7 @@ export default function CarStats() {
             <ArrowBackIcon className="icon text-gray-600 dark:text-gray-400" />
           </button>
           <div className="flex-1">
-            <h1 className="heading-1">{t.dataTracking.statistics}</h1>
+            <h1 className="heading-1">{t.common.statistics}</h1>
             {car && (
               <p className="text-sm text-secondary mt-1">
                 {car.name} ({car.year})

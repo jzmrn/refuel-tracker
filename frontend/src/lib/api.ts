@@ -226,89 +226,6 @@ export interface KilometerEntryCreate {
   timestamp?: string;
 }
 
-export interface DataPointCreate {
-  timestamp: string;
-  value: number;
-  label: string;
-  notes?: string;
-}
-
-export interface DataPointCreate {
-  timestamp: string;
-  value: number;
-  label: string;
-  notes?: string;
-}
-
-export interface DataPointResponse {
-  id: string;
-  timestamp: string;
-  value: number;
-  label: string;
-  notes?: string;
-}
-
-export interface DataSummaryResponse {
-  total_entries: number;
-  unique_labels: number;
-  date_range: {
-    earliest: string | null;
-    latest: string | null;
-  };
-  value_stats: {
-    min: number | null;
-    max: number | null;
-    average: number | null;
-  };
-}
-
-export interface TimeSpanCreate {
-  start_date: string;
-  end_date?: string | null;
-  label: string;
-  group: string;
-  notes?: string | null;
-}
-
-export interface TimeSpanUpdate {
-  start_date?: string;
-  end_date?: string | null;
-  label?: string;
-  group?: string | null;
-  notes?: string | null;
-}
-
-export interface TimeSpanResponse {
-  id: string;
-  start_date: string;
-  end_date?: string | null;
-  label: string;
-  group: string;
-  notes?: string | null;
-  created_at: string;
-  updated_at: string;
-  duration_days?: number;
-  duration_hours?: number;
-  duration_minutes?: number;
-}
-
-export interface TimeSpanSummaryResponse {
-  total_entries: number;
-  unique_labels: number;
-  completed_entries: number;
-  ongoing_entries: number;
-  date_range: {
-    earliest: string | null;
-    latest: string | null;
-  };
-  duration_stats: {
-    total_minutes: number | null;
-    average_minutes: number | null;
-    min_minutes: number | null;
-    max_minutes: number | null;
-  };
-}
-
 // Fuel Prices interfaces
 export interface GasStationSearchRequest {
   lat: number;
@@ -490,11 +407,11 @@ class ApiService {
 
   // Metric Definitions
   async createMetricDefinition(
-    definition: MetricDefinitionCreate
+    definition: MetricDefinitionCreate,
   ): Promise<MetricDefinition> {
     const response = await this.api.post(
       "/api/metric-definitions/",
-      definition
+      definition,
     );
     return response.data;
   }
@@ -513,11 +430,11 @@ class ApiService {
 
   async updateMetricDefinition(
     id: string,
-    update: MetricDefinitionUpdate
+    update: MetricDefinitionUpdate,
   ): Promise<MetricDefinition> {
     const response = await this.api.put(
       `/api/metric-definitions/${id}`,
-      update
+      update,
     );
     return response.data;
   }
@@ -528,7 +445,7 @@ class ApiService {
 
   async getMetricDefinitionCategories(): Promise<string[]> {
     const response = await this.api.get(
-      "/api/metric-definitions/categories/list"
+      "/api/metric-definitions/categories/list",
     );
     return response.data;
   }
@@ -552,12 +469,12 @@ class ApiService {
 
   async getMetricsByDefinition(
     definitionId: string,
-    limit?: number
+    limit?: number,
   ): Promise<Metric[]> {
     const params = limit ? { limit } : undefined;
     const response = await this.api.get(
       `/api/metrics/by-definition/${definitionId}`,
-      { params }
+      { params },
     );
     return response.data;
   }
@@ -565,7 +482,7 @@ class ApiService {
   async deleteMetric(
     timestamp: string,
     metricId: string,
-    data: Record<string, string | number | boolean>
+    data: Record<string, string | number | boolean>,
   ): Promise<void> {
     await this.api.delete("/api/metrics/", {
       params: {
@@ -630,7 +547,7 @@ class ApiService {
 
   async updateCategory(
     id: string,
-    category: Partial<CategoryCreate>
+    category: Partial<CategoryCreate>,
   ): Promise<Category> {
     const response = await this.api.put(`/api/categories/${id}`, category);
     this.categoriesCache = null; // Invalidate cache
@@ -656,13 +573,13 @@ class ApiService {
   }
 
   private async populateCategoryNames(
-    definitions: MetricDefinition[]
+    definitions: MetricDefinition[],
   ): Promise<MetricDefinition[]> {
     await this.ensureCategoriesCache();
     return definitions.map((def) => ({
       ...def,
       category_name: this.categoriesCache?.find(
-        (cat) => cat.id === def.category_id
+        (cat) => cat.id === def.category_id,
       )?.name,
     }));
   }
@@ -703,100 +620,24 @@ class ApiService {
 
   async getRefuelMonthlySummary(
     year: number,
-    month: number
+    month: number,
   ): Promise<RefuelMonthlySummary> {
     const response = await this.api.get(
-      `/api/metrics/refuel/monthly/${year}/${month}`
+      `/api/metrics/refuel/monthly/${year}/${month}`,
     );
     return response.data;
   }
 
   async getFavoriteStationsForDropdown(): Promise<FavoriteStationDropdown[]> {
     const response = await this.api.get(
-      "/api/metrics/refuel/favorite-stations"
+      "/api/metrics/refuel/favorite-stations",
     );
-    return response.data;
-  }
-
-  // Data Points API
-  async createDataPoint(
-    dataPoint: DataPointCreate
-  ): Promise<DataPointResponse> {
-    const response = await this.api.post("/api/data-points", dataPoint);
-    return response.data;
-  }
-
-  async getDataPoints(params?: {
-    start_date?: string;
-    end_date?: string;
-    label?: string;
-    limit?: number;
-  }): Promise<DataPointResponse[]> {
-    const response = await this.api.get("/api/data-points", { params });
-    return response.data;
-  }
-
-  async deleteDataPoint(id: string): Promise<void> {
-    await this.api.delete(`/api/data-points/${id}`);
-  }
-
-  async getExistingLabels(): Promise<string[]> {
-    const response = await this.api.get("/api/data-points/labels");
-    return response.data;
-  }
-
-  async getDataSummary(): Promise<DataSummaryResponse> {
-    const response = await this.api.get("/api/data-points/summary");
-    return response.data;
-  }
-
-  // Time Spans API
-  async createTimeSpan(timeSpan: TimeSpanCreate): Promise<TimeSpanResponse> {
-    const response = await this.api.post("/api/time-spans", timeSpan);
-    return response.data;
-  }
-
-  async getTimeSpans(params?: {
-    start_date?: string;
-    end_date?: string;
-    label?: string;
-    group?: string;
-    limit?: number;
-  }): Promise<TimeSpanResponse[]> {
-    const response = await this.api.get("/api/time-spans", { params });
-    return response.data;
-  }
-
-  async updateTimeSpan(
-    id: string,
-    update: TimeSpanUpdate
-  ): Promise<TimeSpanResponse> {
-    const response = await this.api.put(`/api/time-spans/${id}`, update);
-    return response.data;
-  }
-
-  async deleteTimeSpan(id: string): Promise<void> {
-    await this.api.delete(`/api/time-spans/${id}`);
-  }
-
-  async getExistingTimeSpanLabels(): Promise<string[]> {
-    const response = await this.api.get("/api/time-spans/labels");
-    return response.data;
-  }
-
-  async getExistingTimeSpanGroups(): Promise<string[]> {
-    const response = await this.api.get("/api/time-spans/groups");
-    return response.data;
-  }
-
-  async getTimeSpanSummary(): Promise<TimeSpanSummaryResponse> {
-    const response = await this.api.get("/api/time-spans/summary");
     return response.data;
   }
 
   // Fuel Prices endpoints
   async searchGasStations(
-    params: GasStationSearchRequest
+    params: GasStationSearchRequest,
   ): Promise<GasStationResponse[]> {
     const response = await this.api.post("/api/fuel-prices/search", params);
     return response.data;
@@ -819,14 +660,14 @@ class ApiService {
 
   async getStationDetails(stationId: string): Promise<StationDetailsResponse> {
     const response = await this.api.get(
-      `/api/fuel-prices/stations/${stationId}`
+      `/api/fuel-prices/stations/${stationId}`,
     );
     return response.data;
   }
 
   async getStationMeta(stationId: string): Promise<StationMetaResponse> {
     const response = await this.api.get(
-      `/api/fuel-prices/stations/${stationId}`
+      `/api/fuel-prices/stations/${stationId}`,
     );
     return response.data;
   }
@@ -834,11 +675,11 @@ class ApiService {
   async getStationPriceHistory(
     stationId: string,
     fuelType: FuelType,
-    hours: number = 24
+    hours: number = 24,
   ): Promise<StationPriceHistoryResponse> {
     const response = await this.api.get(
       `/api/fuel-prices/stations/${stationId}/price-history/${fuelType}`,
-      { params: { hours } }
+      { params: { hours } },
     );
     return response.data;
   }
@@ -846,11 +687,11 @@ class ApiService {
   async getStationDailyStats(
     stationId: string,
     fuelType: FuelType,
-    days: number = 7
+    days: number = 7,
   ): Promise<StationDailyStatsResponse> {
     const response = await this.api.get(
       `/api/fuel-prices/stations/${stationId}/daily-stats/${fuelType}`,
-      { params: { days } }
+      { params: { days } },
     );
     return response.data;
   }
@@ -907,7 +748,7 @@ class ApiService {
 
   // Kilometer Entries endpoints
   async createKilometerEntry(
-    entry: KilometerEntryCreate
+    entry: KilometerEntryCreate,
   ): Promise<KilometerEntry> {
     const response = await this.api.post("/api/kilometers", entry);
     return response.data;

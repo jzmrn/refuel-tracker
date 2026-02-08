@@ -48,8 +48,6 @@ The app runs at <http://localhost:3000>.
 | `/fuel-prices`               | Favorite stations with live prices                   |
 | `/fuel-prices/stations`      | Station search                                       |
 | `/fuel-prices/stations/[id]` | Station detail with price history and daily stats    |
-| `/data-tracking`             | Generic data point tracking                          |
-| `/time-spans`                | Time span tracking                                   |
 | `/settings`                  | Theme, language, and app settings                    |
 
 ## Project Structure
@@ -63,8 +61,6 @@ src/
 │   ├── refuels/              # AddRefuelForm, RefuelList, RefuelStats, charts
 │   ├── fuel-prices/          # FavoriteStationsList, SearchStationsForm, StationCard, PriceStatistics
 │   ├── common/               # Layout, Panel, GridLayout, FAB, dialogs, snackbar, loading
-│   ├── data-tracking/        # Generic data point components
-│   └── time-spans/           # Time span components
 ├── lib/
 │   ├── api.ts                # Typed Axios API client (all backend endpoints)
 │   ├── auth.ts               # Auth utilities

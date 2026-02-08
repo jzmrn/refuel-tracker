@@ -133,7 +133,7 @@ export default function StationDetails() {
             {/* Fuel Type Selector */}
             <div className="panel mb-6">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                <h2 className="heading-2">{t.dataTracking.statistics}</h2>
+                <h2 className="heading-2">{t.common.statistics}</h2>
                 <FuelTypeSelector
                   selectedFuelType={selectedFuelType}
                   onFuelTypeChange={handleFuelTypeChange}

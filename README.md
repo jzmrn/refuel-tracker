@@ -52,7 +52,7 @@ A self-hosted application for tracking refueling events and monitoring gas stati
 
 Two DuckDB databases in the `data/` directory:
 
-- **`userdata.duckdb`** — Refuels, cars, kilometer readings, users, data points, time spans
+- **`userdata.duckdb`** — Refuels, cars, kilometer readings, users
 - **`fueldata.duckdb`** — Raw fuel prices, compressed price changes, daily aggregates, favorite stations, gas station metadata
 
 ## Quick Start

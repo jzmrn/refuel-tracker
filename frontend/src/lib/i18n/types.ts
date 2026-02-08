@@ -34,6 +34,8 @@ export interface TranslationStructure {
     name: string;
     actions: string;
     all: string;
+    notes: string;
+    statistics: string;
     errorLoadingData: string;
   };
 
@@ -41,14 +43,10 @@ export interface TranslationStructure {
   navigation: {
     dashboard: string;
     refuel: string;
-    dataTracking: string;
-    timeSpans: string;
     fuelPrices: string;
     settings: string;
     home: string;
     more: string;
-    data: string;
-    time: string;
     prices: string;
     addEntry: string;
     showAll: string;
@@ -62,57 +60,6 @@ export interface TranslationStructure {
   // Layout
   layout: {
     appTitle: string;
-  };
-
-  // Data tracking
-  dataTracking: {
-    title: string;
-    addDataPoint: string;
-    statistics: string;
-    statisticsFor: string;
-    noDataPoints: string;
-    addDataPointsToSeeStats: string;
-    loadingStatistics: string;
-    valuesOverTime: string;
-    hoverForDetails: string;
-    value: string;
-    notes: string;
-    label: string;
-    timestamp: string;
-    loadingDataPoints: string;
-    noDataPointsYet: string;
-    startTracking: string;
-    entry: string;
-    entries: string;
-    latest: string;
-    deleteDataPoint: string;
-    uniqueLabels: string;
-    selectMetricToView: string;
-    selectMetricToViewStats: string;
-    noMetricsAvailable: string;
-    filterByMetric: string;
-    allMetrics: string;
-    trackNumericalData: string;
-    addFirstDataPoint: string;
-    dataPointDeleteConfirm: string;
-    actionCannotBeUndone: string;
-    dataPointAdded: string;
-    dataPointDeleted: string;
-    failedToLoadData: string;
-    failedToAddDataPoint: string;
-    failedToDeleteDataPoint: string;
-
-    // Statistics
-    average: string;
-    median: string;
-    range: string;
-    maximum: string;
-    minimum: string;
-    stdDeviation: string;
-    trend: string;
-    stable: string;
-    increasing: string;
-    decreasing: string;
   };
 
   // Refuels
@@ -251,97 +198,6 @@ export interface TranslationStructure {
     lastSixMonths: string;
   };
 
-  // Time spans
-  timeSpans: {
-    title: string;
-    addTimeSpan: string;
-    editTimeSpan: string;
-    updateTimeSpan: string;
-    startDate: string;
-    endDate: string;
-    duration: string;
-    trackActivities: string;
-    filterByGroup: string;
-    allGroups: string;
-    allTimeSpans: string;
-    noTimeSpansYet: string;
-    addFirstTimeSpan: string;
-    deleteTimeSpan: string;
-    deleteConfirmMessage: string;
-    addedSuccessfully: string;
-    updatedSuccessfully: string;
-    deletedSuccessfully: string;
-    failedToAdd: string;
-    failedToUpdate: string;
-    failedToDelete: string;
-    failedToLoad: string;
-    allValues: string;
-    startDateTime: string;
-    endDateTime: string;
-    labelActivity: string;
-    group: string;
-    ongoingActivity: string;
-    labelRequired: string;
-    labelTooLong: string;
-    invalidStartDate: string;
-    invalidEndDate: string;
-    endBeforeStart: string;
-    notesTooLong: string;
-    groupRequired: string;
-    groupTooLong: string;
-    startDateRequired: string;
-    leaveEmptyOngoing: string;
-    clickForSuggestions: string;
-    clickForGroupSuggestions: string;
-    charactersUsed: string;
-    loadingTimeSpans: string;
-    startTracking: string;
-    span: string;
-    spans: string;
-    total: string;
-    started: string;
-    ended: string;
-    andCounting: string;
-    editTimeSpanTitle: string;
-    deleteTitle: string;
-    ongoing: string;
-    general: string;
-    placeholders: {
-      labelActivity: string;
-      group: string;
-      notes: string;
-    };
-    // Statistics
-    statisticsFor: string;
-    addSomeTimeSpans: string;
-    selectGroupTimeline: string;
-    statisticsShowAllSpans: string;
-    timelineShows: string;
-    timelineShowsGroup: string;
-    groupOnly: string;
-    avgDuration: string;
-    totalTime: string;
-    longest: string;
-    shortest: string;
-    median: string;
-    completed: string;
-    totalSpansCount: string;
-    completedSpans: string;
-    ongoingSpans: string;
-    activeIndicator: string;
-    chartHelpRow: string;
-    chartHelpHover: string;
-    chartHelpAxes: string;
-    chartHelpGreen: string;
-    timelineSwimlanes: string;
-    noTimelineData: string;
-    noTimeSpansForGroup: string;
-    switchTo: string;
-    currentOngoingActivities: string;
-    runningFor: string;
-    timelineFor: string;
-  };
-
   // Forms
   forms: {
     required: string;
@@ -397,8 +253,6 @@ export interface TranslationStructure {
     gettingStartedDescription: string;
     features: {
       refuelDescription: string;
-      dataTrackingDescription: string;
-      timeSpansDescription: string;
       fuelPricesDescription: string;
     };
   };

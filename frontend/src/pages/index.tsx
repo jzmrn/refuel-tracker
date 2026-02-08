@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import BarChartIcon from "@mui/icons-material/BarChart";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
@@ -17,22 +15,6 @@ export default function Dashboard() {
       icon: LocalShippingIcon,
       color: "text-blue-600",
       bgColor: "bg-blue-100",
-    },
-    {
-      name: t.navigation.dataTracking,
-      description: t.dashboard.features.dataTrackingDescription,
-      href: "/data-tracking",
-      icon: BarChartIcon,
-      color: "text-green-600",
-      bgColor: "bg-green-100",
-    },
-    {
-      name: t.navigation.timeSpans,
-      description: t.dashboard.features.timeSpansDescription,
-      href: "/time-spans",
-      icon: AccessTimeIcon,
-      color: "text-purple-600",
-      bgColor: "bg-purple-100",
     },
     {
       name: t.navigation.fuelPrices,

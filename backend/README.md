@@ -89,28 +89,6 @@ API docs available at <http://localhost:8000/docs>.
 | `GET`    | `/stations/{id}/prices/{fuel_type}`      | Compressed price history                   |
 | `GET`    | `/stations/{id}/daily-stats/{fuel_type}` | Daily price aggregates                     |
 
-### Data Points (`/api/data-points`)
-
-| Method   | Path                   | Description          |
-| -------- | ---------------------- | -------------------- |
-| `POST`   | `/data-points`         | Add data point       |
-| `GET`    | `/data-points`         | Query with filters   |
-| `DELETE` | `/data-points/{id}`    | Delete data point    |
-| `GET`    | `/data-points/labels`  | List distinct labels |
-| `GET`    | `/data-points/summary` | Summary statistics   |
-
-### Time Spans (`/api/time-spans`)
-
-| Method   | Path                  | Description          |
-| -------- | --------------------- | -------------------- |
-| `POST`   | `/time-spans`         | Create time span     |
-| `GET`    | `/time-spans`         | Query with filters   |
-| `PUT`    | `/time-spans/{id}`    | Update time span     |
-| `DELETE` | `/time-spans/{id}`    | Delete time span     |
-| `GET`    | `/time-spans/labels`  | List distinct labels |
-| `GET`    | `/time-spans/groups`  | List distinct groups |
-| `GET`    | `/time-spans/summary` | Summary statistics   |
-
 ### Other
 
 | Method | Path           | Description            |
@@ -142,17 +120,13 @@ app/
 │   ├── cars.py
 │   ├── refuels.py
 │   ├── kilometers.py
-│   ├── fuel_prices.py
-│   ├── data_points.py
-│   └── time_spans.py
+│   └── fuel_prices.py
 ├── storage/             # DuckDB data access clients
 │   ├── duckdb_resource.py
 │   ├── user_store.py
 │   ├── car_client.py
 │   ├── refuel_client.py
-│   ├── kilometer_client.py
-│   ├── data_point_client.py
-│   └── time_span_client.py
+│   └── kilometer_client.py
 └── utils/
     └── date_helpers.py
 ```

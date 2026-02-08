@@ -7,8 +7,6 @@ import { UserProfile } from "@/components/auth";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import SettingsIcon from "@mui/icons-material/Settings";
 
 interface LayoutProps {
@@ -40,18 +38,6 @@ export default function Layout({ children }: LayoutProps) {
       href: "/refuels",
       shortName: t.navigation.refuel,
       icon: <LocalGasStationIcon className="w-5 h-5" />,
-    },
-    {
-      name: t.navigation.dataTracking,
-      href: "/data-tracking",
-      shortName: t.navigation.data,
-      icon: <TrendingUpIcon className="w-5 h-5" />,
-    },
-    {
-      name: t.navigation.timeSpans,
-      href: "/time-spans",
-      shortName: t.navigation.time,
-      icon: <AccessTimeIcon className="w-5 h-5" />,
     },
   ];
 

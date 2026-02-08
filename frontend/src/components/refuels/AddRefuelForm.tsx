@@ -482,7 +482,7 @@ export default function AddRefuelForm({
 
       <div className="form-group">
         <label htmlFor="notes" className="label">
-          {t.dataTracking.notes} ({t.refuels.optional})
+          {t.common.notes} ({t.refuels.optional})
         </label>
         <textarea
           id="notes"

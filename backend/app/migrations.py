@@ -42,6 +42,8 @@ def run_migrations(db_path: Path) -> None:
         (5, remove_notes_from_cars),
         (6, add_fuel_type_to_cars),
         (7, convert_timestamps_to_timestamptz),
+        (8, drop_time_spans_table),
+        (9, drop_data_points_table),
     ]
 
     for version, migration_func in migrations:
@@ -368,20 +370,6 @@ def convert_timestamps_to_timestamptz(
             """,
         ),
         (
-            "data_points",
-            """
-            CREATE TABLE __data_points_tz_new (
-                id VARCHAR NOT NULL,
-                user_id VARCHAR NOT NULL,
-                timestamp TIMESTAMPTZ NOT NULL,
-                value DOUBLE NOT NULL,
-                label VARCHAR NOT NULL,
-                notes VARCHAR,
-                PRIMARY KEY (user_id, id)
-            )
-            """,
-        ),
-        (
             "time_spans",
             """
             CREATE TABLE __time_spans_tz_new (
@@ -565,3 +553,17 @@ def convert_timestamps_to_timestamptz(
             con.execute(f"ALTER TABLE {new_table} RENAME TO {table_name}")
 
             logger.info(f"Successfully migrated {table_name} to TIMESTAMPTZ")
+
+
+def drop_time_spans_table(duckdb_resource: BackendDuckDBResource) -> None:
+    """Migration 8: Drop the time_spans table (feature removed)."""
+    with duckdb_resource.get_connection() as con:
+        con.execute("DROP TABLE IF EXISTS time_spans")
+        logger.info("Dropped time_spans table")
+
+
+def drop_data_points_table(duckdb_resource: BackendDuckDBResource) -> None:
+    """Migration 9: Drop the data_points table (feature removed)."""
+    with duckdb_resource.get_connection() as con:
+        con.execute("DROP TABLE IF EXISTS data_points")
+        logger.info("Dropped data_points table")

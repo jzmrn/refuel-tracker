@@ -50,7 +50,7 @@ export default function RefuelStats({
   return (
     <div className="space-y-6">
       {/* Summary Statistics Panel */}
-      <Panel title={t.dataTracking.statistics}>
+      <Panel title={t.common.statistics}>
         <GridLayout variant="stats">
           <SummaryCard
             title={t.refuels.totalCost}

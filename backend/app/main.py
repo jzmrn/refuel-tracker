@@ -16,20 +16,16 @@ from tankerkoenig.client import TankerkoenigClient
 
 from app.api import (
     cars,
-    data_points,
     fuel_prices,
     kilometers,
     refuels,
-    time_spans,
 )
 from app.auth import CurrentUser
 from app.migrations import run_migrations
 from app.storage.car_client import CarClient
-from app.storage.data_point_client import DataPointClient
 from app.storage.duckdb_resource import BackendDuckDBResource
 from app.storage.kilometer_client import KilometerClient
 from app.storage.refuel_client import RefuelDataClient
-from app.storage.time_span_client import TimeSpanClient
 from app.storage.user_store import UserStore
 
 # Context variable for request ID
@@ -161,8 +157,6 @@ async def lifespan(app: FastAPI):
     # Initialize clients (they create tables on instantiation)
     user_store = UserStore(duckdb_resource)
     refuel_client = RefuelDataClient(duckdb_resource)
-    data_point_client = DataPointClient(duckdb_resource)
-    time_span_client = TimeSpanClient(duckdb_resource)
     car_client = CarClient(duckdb_resource)
     kilometer_client = KilometerClient(duckdb_resource)
 
@@ -188,8 +182,6 @@ async def lifespan(app: FastAPI):
     app.state.duckdb_resource = duckdb_resource
     app.state.user_store = user_store
     app.state.refuel_client = refuel_client
-    app.state.data_point_client = data_point_client
-    app.state.time_span_client = time_span_client
     app.state.car_client = car_client
     app.state.kilometer_client = kilometer_client
     app.state.tankerkoenig_client = tankerkoenig_client
@@ -336,8 +328,6 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.include_router(cars.router, prefix="/api", tags=["cars"])
 app.include_router(refuels.router, prefix="/api/metrics", tags=["metrics"])
 app.include_router(kilometers.router, prefix="/api", tags=["kilometers"])
-app.include_router(data_points.router, prefix="/api", tags=["data-points"])
-app.include_router(time_spans.router, prefix="/api", tags=["time-spans"])
 app.include_router(fuel_prices.router, prefix="/api/fuel-prices", tags=["fuel-prices"])
 
 
