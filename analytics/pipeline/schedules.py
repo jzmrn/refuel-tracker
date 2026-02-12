@@ -8,7 +8,7 @@ from dagster import (
     schedule,
 )
 
-from .assets import daily_partitions
+from .assets import daily_partitions, monthly_partitions
 from .jobs import cleanup_raw_fuel_data_job
 
 ## Fetch Raw Fuel Prices
@@ -78,3 +78,32 @@ schedule_cleanup_raw_fuel_data = ScheduleDefinition(
     name="cleanup_raw_fuel_data",
     description="Delete raw fuel data older than 7 days (after compression verified).",
 )
+
+
+## Monthly Aggregates
+
+monthly_aggregates_fuel_prices = define_asset_job(
+    name="monthly_aggregates_fuel_prices",
+    selection=AssetSelection.keys(
+        "monthly_agg_price_by_station",
+        "monthly_agg_price_by_brand",
+        "monthly_agg_price_by_place",
+    ),
+    partitions_def=monthly_partitions,
+)
+
+
+@schedule(
+    cron_schedule="0 8 1 * *",
+    job=monthly_aggregates_fuel_prices,
+    name="monthly_aggregates_fuel_prices",
+    description="Compute monthly aggregates on the 1st of each month for the previous month.",  # noqa: E501
+)
+def schedule_monthly_aggregates(context):
+    """Run monthly aggregation for the previous month's partition."""
+    scheduled_time = context.scheduled_execution_time
+    # Go back to the previous month's 1st day
+    first_of_current = scheduled_time.replace(day=1)
+    previous_month = (first_of_current - timedelta(days=1)).replace(day=1)
+    partition_key = previous_month.strftime("%Y-%m-%d")
+    return RunRequest(partition_key=partition_key)

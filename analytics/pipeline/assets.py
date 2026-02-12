@@ -3,12 +3,14 @@ from datetime import datetime
 import pandas as pd
 from dagster import (
     AssetIn,
+    AssetKey,
     DailyPartitionsDefinition,
+    MonthlyPartitionsDefinition,
     OpExecutionContext,
     asset,
 )
 from dagster_duckdb import DuckDBResource
-from fueldata import FuelStationClient
+from fueldata import CompressedFuelDataClient, FuelStationClient
 from tankerkoenig import TankerkoenigClient
 from tankerkoenig.models import GasStationPrice
 
@@ -16,6 +18,9 @@ from .resources import TankerkoenigResource
 
 # Shared partition definition for daily assets
 daily_partitions = DailyPartitionsDefinition(start_date="2025-11-24", end_offset=1)
+
+# Shared partition definition for monthly assets
+monthly_partitions = MonthlyPartitionsDefinition(start_date="2025-11-01", end_offset=1)
 
 
 @asset(
@@ -198,3 +203,182 @@ def daily_aggregates(
     context.log.info(f"Created {len(aggregates)} aggregate records")
 
     return aggregates
+
+
+# ---------------------------------------------------------------------------
+# Helpers for monthly aggregates
+# ---------------------------------------------------------------------------
+
+
+def _load_monthly_compressed_data(
+    context: OpExecutionContext,
+    duckdb: DuckDBResource,
+) -> tuple[pd.DataFrame, datetime]:
+    """Load compressed fuel data for the month indicated by the partition key.
+
+    Returns (DataFrame, partition_date) where partition_date is the 1st of the month.
+    """
+    partition_key = context.partition_key  # e.g. "2025-12-01"
+    start = pd.to_datetime(partition_key)
+    end = start + pd.offsets.MonthEnd(0) + pd.Timedelta(days=1)
+    partition_date = start.date()
+
+    context.log.info(
+        f"Loading compressed data for monthly partition {partition_key}: "
+        f"{start} to {end}"
+    )
+
+    client = CompressedFuelDataClient(duckdb)
+    df = client.read_compressed_data(start_date=start, end_date=end)
+
+    context.log.info(f"Loaded {len(df)} compressed price records")
+    return df, partition_date
+
+
+def _load_station_info(duckdb: DuckDBResource) -> pd.DataFrame:
+    """Load gas station metadata (brand, place, post_code) from DuckDB."""
+    with duckdb.get_connection() as con:
+        return con.execute(
+            "SELECT station_id, brand, place, post_code FROM gas_station_info"
+        ).df()
+
+
+# ---------------------------------------------------------------------------
+# Monthly aggregate assets
+# ---------------------------------------------------------------------------
+
+
+@asset(
+    partitions_def=monthly_partitions,
+    deps=[AssetKey("compressed_fuel_prices")],
+    group_name="fuel",
+    description="Monthly per-station per-fuel-type aggregates from compressed data",
+    io_manager_key="partitioned_parquet_io_manager",
+)
+def monthly_agg_price_by_station(
+    context: OpExecutionContext,
+    duckdb: DuckDBResource,
+) -> pd.DataFrame:
+    """Compute monthly aggregates grouped by station_id and fuel_type."""
+
+    df, partition_date = _load_monthly_compressed_data(context, duckdb)
+
+    if df.empty:
+        context.log.info("No compressed data available for this month")
+        return pd.DataFrame()
+
+    df = df.sort_values(["station_id", "fuel_type", "timestamp"])
+
+    grouped = df.groupby(["station_id", "fuel_type"])
+    agg = grouped.agg(
+        n_price_changes=("price", "count"),
+        n_unique_prices=("price", "nunique"),
+        price_mean=("price", "mean"),
+        price_min=("price", "min"),
+        price_max=("price", "max"),
+        price_std=("price", "std"),
+        n_days=("timestamp", lambda s: s.dt.date.nunique()),
+    ).reset_index()
+
+    agg["date"] = partition_date
+
+    context.log.info(f"Created {len(agg)} monthly station aggregate records")
+    return agg
+
+
+@asset(
+    partitions_def=monthly_partitions,
+    deps=[AssetKey("compressed_fuel_prices")],
+    group_name="fuel",
+    description="Monthly per-brand per-fuel-type aggregates from compressed data",
+    io_manager_key="partitioned_parquet_io_manager",
+)
+def monthly_agg_price_by_brand(
+    context: OpExecutionContext,
+    duckdb: DuckDBResource,
+) -> pd.DataFrame:
+    """Compute monthly aggregates grouped by brand and fuel_type."""
+
+    df, partition_date = _load_monthly_compressed_data(context, duckdb)
+
+    if df.empty:
+        context.log.info("No compressed data available for this month")
+        return pd.DataFrame()
+
+    station_info = _load_station_info(duckdb)
+    df = df.merge(station_info[["station_id", "brand"]], on="station_id", how="left")
+    df = df.dropna(subset=["brand"])
+
+    if df.empty:
+        context.log.info("No data after joining with station info")
+        return pd.DataFrame()
+
+    df = df.sort_values(["brand", "fuel_type", "timestamp"])
+
+    grouped = df.groupby(["brand", "fuel_type"])
+    agg = grouped.agg(
+        n_stations=("station_id", "nunique"),
+        n_price_changes=("price", "count"),
+        n_unique_prices=("price", "nunique"),
+        price_mean=("price", "mean"),
+        price_min=("price", "min"),
+        price_max=("price", "max"),
+        price_std=("price", "std"),
+        n_days=("timestamp", lambda s: s.dt.date.nunique()),
+    ).reset_index()
+
+    agg["date"] = partition_date
+
+    context.log.info(f"Created {len(agg)} monthly brand aggregate records")
+    return agg
+
+
+@asset(
+    partitions_def=monthly_partitions,
+    deps=[AssetKey("compressed_fuel_prices")],
+    group_name="fuel",
+    description="Monthly agg per place, post code and fuel type from compressed data",
+    io_manager_key="partitioned_parquet_io_manager",
+)
+def monthly_agg_price_by_place(
+    context: OpExecutionContext,
+    duckdb: DuckDBResource,
+) -> pd.DataFrame:
+    """Compute monthly aggregates grouped by place, post_code, and fuel_type."""
+
+    df, partition_date = _load_monthly_compressed_data(context, duckdb)
+
+    if df.empty:
+        context.log.info("No compressed data available for this month")
+        return pd.DataFrame()
+
+    station_info = _load_station_info(duckdb)
+    df = df.merge(
+        station_info[["station_id", "place", "post_code"]],
+        on="station_id",
+        how="left",
+    )
+    df = df.dropna(subset=["place", "post_code"])
+
+    if df.empty:
+        context.log.info("No data after joining with station info")
+        return pd.DataFrame()
+
+    df = df.sort_values(["place", "post_code", "fuel_type", "timestamp"])
+
+    grouped = df.groupby(["place", "post_code", "fuel_type"])
+    agg = grouped.agg(
+        n_stations=("station_id", "nunique"),
+        n_price_changes=("price", "count"),
+        n_unique_prices=("price", "nunique"),
+        price_mean=("price", "mean"),
+        price_min=("price", "min"),
+        price_max=("price", "max"),
+        price_std=("price", "std"),
+        n_days=("timestamp", lambda s: s.dt.date.nunique()),
+    ).reset_index()
+
+    agg["date"] = partition_date
+
+    context.log.info(f"Created {len(agg)} monthly place aggregate records")
+    return agg
