@@ -1,38 +1,40 @@
 """
-DuckDB client for kilometer entries storage.
+SQLite client for kilometer entries storage.
 """
 
 import logging
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from .duckdb_resource import BackendDuckDBResource
+from fueldata.utils import to_utc_iso
+
 from .models import KilometerEntry
+from .sqlite_resource import BackendSQLiteResource
 
 logger = logging.getLogger(__name__)
 
 
 class KilometerClient:
-    """Client for storing kilometer entries in DuckDB."""
+    """Client for storing kilometer entries in SQLite."""
 
-    def __init__(self, duckdb: BackendDuckDBResource):
+    def __init__(self, db: BackendSQLiteResource):
         """
         Initialize the KilometerClient.
 
         Args:
-            duckdb: BackendDuckDBResource for database operations
+            db: BackendSQLiteResource for database operations
         """
-        self._duckdb = duckdb
-        with self._duckdb.get_connection() as con:
+        self._db = db
+        with self._db.get_connection() as con:
             con.execute(
                 """
                 CREATE TABLE IF NOT EXISTS kilometer_entries (
-                    id VARCHAR PRIMARY KEY,
-                    car_id VARCHAR NOT NULL,
-                    total_kilometers DOUBLE NOT NULL,
-                    timestamp TIMESTAMPTZ NOT NULL,
-                    created_at TIMESTAMPTZ NOT NULL,
-                    created_by VARCHAR NOT NULL
+                    id TEXT PRIMARY KEY,
+                    car_id TEXT NOT NULL,
+                    total_kilometers REAL NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    created_by TEXT NOT NULL
                 )
             """
             )
@@ -65,7 +67,7 @@ class KilometerClient:
             created_by=user_id,
         )
 
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             con.execute(
                 """
                 INSERT INTO kilometer_entries (id, car_id, total_kilometers, timestamp, created_at, created_by)
@@ -75,8 +77,8 @@ class KilometerClient:
                     entry.id,
                     entry.car_id,
                     entry.total_kilometers,
-                    entry.timestamp,
-                    entry.created_at,
+                    to_utc_iso(entry.timestamp),
+                    to_utc_iso(entry.created_at),
                     entry.created_by,
                 ],
             )
@@ -96,11 +98,11 @@ class KilometerClient:
 
         if start_date is not None:
             conditions.append("timestamp >= ?")
-            params.append(start_date)
+            params.append(start_date.isoformat())
 
         if end_date is not None:
             conditions.append("timestamp <= ?")
-            params.append(end_date)
+            params.append(end_date.isoformat())
 
         query = "SELECT * FROM kilometer_entries"
         if conditions:
@@ -111,28 +113,27 @@ class KilometerClient:
         if limit is not None:
             query += f" LIMIT {limit}"
 
-        with self._duckdb.get_connection() as con:
-            results = con.execute(query, params).fetchall()
-            columns = [desc[0] for desc in con.description]
+        with self._db.get_connection() as con:
+            cursor = con.execute(query, params)
+            columns = [desc[0] for desc in cursor.description]
+            results = cursor.fetchall()
 
         return [KilometerEntry(**dict(zip(columns, row))) for row in results]
 
     def delete_entry(self, entry_id: str, car_id: str) -> bool:
         """Delete a specific kilometer entry by ID."""
-        with self._duckdb.get_connection() as con:
-            result = con.execute(
-                "DELETE FROM kilometer_entries WHERE id = ? AND car_id = ? RETURNING id",
+        with self._db.get_connection() as con:
+            cursor = con.execute(
+                "DELETE FROM kilometer_entries WHERE id = ? AND car_id = ?",
                 [entry_id, car_id],
             )
-            deleted = result.fetchone()
-            return deleted is not None
+            return cursor.rowcount > 0
 
     def delete_entries_for_car(self, car_id: str) -> int:
         """Delete all kilometer entries for a car. Returns count of deleted entries."""
-        with self._duckdb.get_connection() as con:
-            result = con.execute(
+        with self._db.get_connection() as con:
+            cursor = con.execute(
                 "DELETE FROM kilometer_entries WHERE car_id = ?",
                 [car_id],
             )
-            # DuckDB returns row count differently, count manually
-            return result.fetchone()[0] if result.description else 0
+            return cursor.rowcount

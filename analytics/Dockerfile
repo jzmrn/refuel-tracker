@@ -33,8 +33,8 @@ ENV DAGSTER_HOME=/app/home \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH="/opt/venv/bin:$PATH"
 
-# Create dagster home directory and copy config
-RUN mkdir -p $DAGSTER_HOME
+# Create dagster home and data directories (Parquet output)
+RUN mkdir -p $DAGSTER_HOME /app/data
 COPY analytics/dagster.yaml $DAGSTER_HOME/
 
 # Expose Dagster webserver port

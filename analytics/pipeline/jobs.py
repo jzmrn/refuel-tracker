@@ -10,7 +10,8 @@ from dagster import (
     job,
     op,
 )
-from dagster_duckdb import DuckDBResource
+
+from .resources import SQLiteResource
 
 RETENTION_DAYS = 28  # Default retention period for raw data
 
@@ -18,7 +19,7 @@ RETENTION_DAYS = 28  # Default retention period for raw data
 @op
 def cleanup_stale_raw_fuel_data(
     context: OpExecutionContext,
-    duckdb: ResourceParam[DuckDBResource],
+    fueldata_db: ResourceParam[SQLiteResource],
 ) -> None:
     """
     Delete raw fuel data that has been successfully compressed.
@@ -62,19 +63,19 @@ def cleanup_stale_raw_fuel_data(
 
     # Delete raw data for each safe date
     total_deleted = 0
-    with duckdb.get_connection() as conn:
+    with fueldata_db.get_connection() as conn:
         for target_date in sorted(safe_to_delete_dates):
             # Count rows before deletion
-            count_result = conn.execute(
+            cursor = conn.execute(
                 "SELECT COUNT(*) FROM fuel_prices WHERE DATE(timestamp) = ?",
-                [target_date],
-            ).fetchone()
-            row_count = count_result[0] if count_result else 0
+                [target_date.isoformat()],
+            )
+            row_count = cursor.fetchone()[0]
 
             if row_count > 0:
                 conn.execute(
                     "DELETE FROM fuel_prices WHERE DATE(timestamp) = ?",
-                    [target_date],
+                    [target_date.isoformat()],
                 )
                 context.log.info(f"Deleted {row_count} raw records for {target_date}")
                 total_deleted += row_count

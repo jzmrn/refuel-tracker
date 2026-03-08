@@ -8,4 +8,4 @@ A Python client for accessing the Tankerkoenig API to retrieve gas station price
 
 ## Metrics
 
-A Python client to store and retrieve metric data using a duckdb connection. See the [README](./metrics/README.md) for detailed documentation.
+A Python client to store and retrieve metric data using SQLite and Parquet. See the [README](./metrics/README.md) for detailed documentation.

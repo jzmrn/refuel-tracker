@@ -1,7 +1,6 @@
 from pathlib import Path
 
 from dagster import Definitions, EnvVar
-from dagster_duckdb import DuckDBResource
 
 from .assets import (
     compressed_fuel_prices,
@@ -14,11 +13,13 @@ from .assets import (
 from .iomanagers import (
     CompressedFuelPriceDataIOManager,
     DailyFuelPriceAggregatesIOManager,
-    PartitionedParquetIOManager,
+    MonthlyBrandAggregatesIOManager,
+    MonthlyPlaceAggregatesIOManager,
+    MonthlyStationAggregatesIOManager,
     RawFuelPriceDataIOManager,
 )
 from .jobs import cleanup_raw_fuel_data_job
-from .resources import TankerkoenigResource
+from .resources import CompressedFuelDataResource, SQLiteResource, TankerkoenigResource
 from .schedules import (
     compressed_fuel_prices_job,
     daily_aggregates_job,
@@ -31,11 +32,11 @@ from .schedules import (
     schedule_monthly_aggregates,
 )
 
-duckdb = DuckDBResource(
-    database=str(Path(EnvVar("DATA_OUTPUT_PATH").get_value()) / "fueldata.duckdb")
-)
-
 data_output_path = EnvVar("DATA_OUTPUT_PATH").get_value()
+
+userdata_db = SQLiteResource(database=str(Path(data_output_path) / "userdata.sqlite"))
+
+fueldata_db = SQLiteResource(database=str(Path(data_output_path) / "fueldata.sqlite"))
 
 defs = Definitions(
     assets=[
@@ -50,11 +51,23 @@ defs = Definitions(
         "tankerkoenig": TankerkoenigResource(
             api_key=EnvVar("TANKERKOENIG_API_KEY"),
         ),
-        "duckdb": duckdb,
-        "raw_fuel_io_manager": RawFuelPriceDataIOManager(duckdb=duckdb),
-        "daily_aggregates_io_manager": DailyFuelPriceAggregatesIOManager(duckdb=duckdb),
-        "compressed_fuel_io_manager": CompressedFuelPriceDataIOManager(duckdb=duckdb),
-        "partitioned_parquet_io_manager": PartitionedParquetIOManager(
+        "userdata_db": userdata_db,
+        "fueldata_db": fueldata_db,
+        "compressed_fuel_data": CompressedFuelDataResource(),
+        "raw_fuel_io_manager": RawFuelPriceDataIOManager(fueldata_db=fueldata_db),
+        "daily_aggregates_io_manager": DailyFuelPriceAggregatesIOManager(
+            base_path=data_output_path
+        ),
+        "compressed_fuel_io_manager": CompressedFuelPriceDataIOManager(
+            base_path=data_output_path
+        ),
+        "monthly_station_agg_io_manager": MonthlyStationAggregatesIOManager(
+            base_path=data_output_path
+        ),
+        "monthly_brand_agg_io_manager": MonthlyBrandAggregatesIOManager(
+            base_path=data_output_path
+        ),
+        "monthly_place_agg_io_manager": MonthlyPlaceAggregatesIOManager(
             base_path=data_output_path
         ),
     },

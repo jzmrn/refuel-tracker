@@ -3,8 +3,9 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
-from dagster_duckdb import DuckDBResource
 from pydantic import BaseModel, field_validator
+
+from .utils import SQLiteResource, utc_now_iso
 
 logger = logging.getLogger(__name__)
 
@@ -39,42 +40,28 @@ class GasStationInfo(BaseModel):
         return v
 
 
-class PriceHistoryPoint(BaseModel):
-    """Represents a price data point in history."""
-
-    timestamp: datetime
-    price_e5: float | None = None
-    price_e10: float | None = None
-    price_diesel: float | None = None
-
-    @field_validator("price_e5", "price_e10", "price_diesel", mode="before")
-    @classmethod
-    def convert_nan_to_none(cls, v):
-        """Convert NaN values to None for JSON serialization."""
-        if isinstance(v, float) and np.isnan(v):
-            return None
-        return v
-
-
 class FuelStationClient:
-    """Client for storing fuel station data."""
+    """Client for storing fuel station data using SQLite."""
 
-    def __init__(self, duckdb: DuckDBResource):
+    def __init__(self, db: SQLiteResource) -> None:
         """
         Initialize the FuelData client.
 
         Args:
-            con: DuckDBPyConnection for database operations
+            db: A resource with a ``get_connection()`` context-manager that
+                yields a sqlite3.Connection (e.g. BackendSQLiteResource or a
+                Dagster SQLiteResource wrapper).  Used for favorites and
+                gas_station_info tables (userdata.sqlite).
         """
-        self._duckdb = duckdb
+        self._db: SQLiteResource = db
 
-        with duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             con.execute(
                 """
                 CREATE TABLE IF NOT EXISTS favorite_stations (
-                    user_id VARCHAR NOT NULL,
-                    station_id VARCHAR NOT NULL,
-                    timestamp TIMESTAMP NOT NULL,
+                    user_id TEXT NOT NULL,
+                    station_id TEXT NOT NULL,
+                    timestamp TEXT NOT NULL,
                     PRIMARY KEY (user_id, station_id)
                 )
             """
@@ -83,14 +70,14 @@ class FuelStationClient:
             con.execute(
                 """
                 CREATE TABLE IF NOT EXISTS gas_station_info (
-                    station_id VARCHAR NOT NULL PRIMARY KEY,
-                    name VARCHAR NOT NULL,
-                    brand VARCHAR NOT NULL,
-                    street VARCHAR NOT NULL,
-                    place VARCHAR NOT NULL,
-                    lat DOUBLE NOT NULL,
-                    lng DOUBLE NOT NULL,
-                    house_number VARCHAR NOT NULL,
+                    station_id TEXT NOT NULL PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    brand TEXT NOT NULL,
+                    street TEXT NOT NULL,
+                    place TEXT NOT NULL,
+                    lat REAL NOT NULL,
+                    lng REAL NOT NULL,
+                    house_number TEXT NOT NULL,
                     post_code INTEGER NOT NULL
                 )
             """
@@ -110,8 +97,8 @@ class FuelStationClient:
             extra={"user_id": user_id, "station_id": station_id},
         )
 
-        timestamp = datetime.now()
-        with self._duckdb.get_connection() as con:
+        timestamp = utc_now_iso()
+        with self._db.get_connection() as con:
             con.execute(
                 """
                 INSERT OR REPLACE INTO favorite_stations (user_id, station_id, timestamp)
@@ -134,7 +121,7 @@ class FuelStationClient:
             extra={"user_id": user_id, "station_id": station_id},
         )
 
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             con.execute(
                 """
                 DELETE FROM favorite_stations
@@ -156,14 +143,16 @@ class FuelStationClient:
         """
 
         query = "SELECT user_id, station_id, timestamp FROM favorite_stations"
+        params = []
 
         if user_id is not None:
-            query += f" WHERE user_id = '{user_id}'"
+            query += " WHERE user_id = ?"
+            params.append(user_id)
 
         query += " ORDER BY timestamp DESC"
 
-        with self._duckdb.get_connection() as con:
-            df = con.execute(query).df()
+        with self._db.get_connection() as con:
+            df = pd.read_sql_query(query, con, params=params)
 
         return df
 
@@ -201,7 +190,7 @@ class FuelStationClient:
         if stations:
             logger.info("Storing gas stations", extra={"station_count": len(stations)})
 
-            with self._duckdb.get_connection() as con:
+            with self._db.get_connection() as con:
                 for station in stations:
                     con.execute(
                         """
@@ -237,12 +226,14 @@ class FuelStationClient:
         """
 
         query = "SELECT * FROM gas_station_info"
+        params = []
 
         if station_id is not None:
-            query += f" WHERE station_id = '{station_id}'"
+            query += " WHERE station_id = ?"
+            params.append(station_id)
 
-        with self._duckdb.get_connection() as con:
-            df = con.execute(query).df()
+        with self._db.get_connection() as con:
+            df = pd.read_sql_query(query, con, params=params)
 
         return df
 
@@ -275,7 +266,7 @@ class FuelStationClient:
             True if the station exists, False otherwise
         """
 
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             result = con.execute(
                 """
                 SELECT COUNT(*) as count
@@ -319,8 +310,8 @@ class FuelStationClient:
             ORDER BY fs.timestamp DESC
         """
 
-        with self._duckdb.get_connection() as con:
-            df = con.execute(query, [user_id]).df()
+        with self._db.get_connection() as con:
+            df = pd.read_sql_query(query, con, params=[user_id])
 
         records = df.to_dict(orient="records")
         return [GasStationInfo.model_validate(record) for record in records]
@@ -333,7 +324,7 @@ class FuelStationClient:
             station_id: The station ID to delete
         """
 
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             con.execute(
                 """
                 DELETE FROM gas_station_info
@@ -341,35 +332,3 @@ class FuelStationClient:
                 """,
                 [station_id],
             )
-
-    def get_price_history(
-        self, station_id: str, hours: int = 24
-    ) -> list[PriceHistoryPoint]:
-        """
-        Get price history for a station for the specified number of hours.
-
-        Args:
-            station_id: The station ID to get price history for
-            hours: Number of hours to look back (default: 24)
-
-        Returns:
-            List of PriceHistoryPoint objects sorted by timestamp in ascending order
-        """
-
-        query = f"""
-            SELECT
-                timestamp,
-                price_e5,
-                price_e10,
-                price_diesel
-            FROM fuel_prices
-            WHERE station_id = ?
-                AND timestamp >= NOW() - INTERVAL '{hours} hours'
-            ORDER BY timestamp ASC
-        """
-
-        with self._duckdb.get_connection() as con:
-            df = con.execute(query, [station_id]).df()
-
-        records = df.to_dict(orient="records")
-        return [PriceHistoryPoint.model_validate(record) for record in records]

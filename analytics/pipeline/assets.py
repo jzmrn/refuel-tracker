@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 import pandas as pd
 from dagster import (
@@ -9,12 +9,11 @@ from dagster import (
     OpExecutionContext,
     asset,
 )
-from dagster_duckdb import DuckDBResource
-from fueldata import CompressedFuelDataClient, FuelStationClient
+from fueldata import FuelStationClient, PriceEntry
 from tankerkoenig import TankerkoenigClient
 from tankerkoenig.models import GasStationPrice
 
-from .resources import TankerkoenigResource
+from .resources import CompressedFuelDataResource, SQLiteResource, TankerkoenigResource
 
 # Shared partition definition for daily assets
 daily_partitions = DailyPartitionsDefinition(start_date="2025-11-24", end_offset=1)
@@ -31,15 +30,15 @@ monthly_partitions = MonthlyPartitionsDefinition(start_date="2025-11-01", end_of
 def raw_fuel_prices(
     context: OpExecutionContext,
     tankerkoenig: TankerkoenigResource,
-    duckdb: DuckDBResource,
+    userdata_db: SQLiteResource,
 ) -> pd.DataFrame:
     """
     Fetch raw fuel prices data from Tankerkönig API.
     Unpartitioned - each scheduled run appends new live data with timestamp.
-    Returns DataFrame which IO manager appends to DuckDB.
+    Returns DataFrame which IO manager appends to SQLite.
     """
 
-    client = FuelStationClient(duckdb)
+    client = FuelStationClient(userdata_db)
     favorites = client.get_favorite_stations()
     station_ids = set([station.station_id for station in favorites])
 
@@ -65,8 +64,18 @@ def raw_fuel_prices(
 
     context.log.info(f"Successfully fetched data for {len(data)} gas stations")
 
-    timestamp = datetime.now()
-    rows = [{"timestamp": timestamp, **entry.model_dump()} for entry in data]
+    timestamp = datetime.now(tz=UTC)
+    rows = [
+        PriceEntry(
+            timestamp=timestamp,
+            station_id=entry.station_id,
+            station_status=entry.status,
+            price_e5=entry.e5,
+            price_e10=entry.e10,
+            price_diesel=entry.diesel,
+        ).model_dump()
+        for entry in data
+    ]
     df = pd.DataFrame(rows)
 
     context.log.info(f"Prepared {len(df)} rows of fuel data prices for storage")
@@ -96,6 +105,14 @@ def compressed_fuel_prices(
     if raw_fuel_prices.empty:
         context.log.info("No raw data available for this partition")
         return pd.DataFrame()
+
+    # Normalize timestamp to datetime64[ns, UTC] so Parquet stores it as
+    # native integer (microseconds) instead of a string.  Raw data read from
+    # SQLite arrives as ISO-8601 text; the migration script already provides
+    # proper datetime objects – this handles both cases consistently.
+    raw_fuel_prices["timestamp"] = pd.to_datetime(
+        raw_fuel_prices["timestamp"], utc=True
+    )
 
     context.log.info(
         f"Processing {len(raw_fuel_prices)} raw rows from "
@@ -212,7 +229,7 @@ def daily_aggregates(
 
 def _load_monthly_compressed_data(
     context: OpExecutionContext,
-    duckdb: DuckDBResource,
+    compressed_fuel_data: CompressedFuelDataResource,
 ) -> tuple[pd.DataFrame, datetime]:
     """Load compressed fuel data for the month indicated by the partition key.
 
@@ -228,19 +245,19 @@ def _load_monthly_compressed_data(
         f"{start} to {end}"
     )
 
-    client = CompressedFuelDataClient(duckdb)
+    client = compressed_fuel_data.get_client()
     df = client.read_compressed_data(start_date=start, end_date=end)
 
     context.log.info(f"Loaded {len(df)} compressed price records")
     return df, partition_date
 
 
-def _load_station_info(duckdb: DuckDBResource) -> pd.DataFrame:
-    """Load gas station metadata (brand, place, post_code) from DuckDB."""
-    with duckdb.get_connection() as con:
-        return con.execute(
-            "SELECT station_id, brand, place, post_code FROM gas_station_info"
-        ).df()
+def _load_station_info(userdata_db: SQLiteResource) -> pd.DataFrame:
+    """Load gas station metadata (brand, place, post_code) from SQLite."""
+    with userdata_db.get_connection() as con:
+        return pd.read_sql_query(
+            "SELECT station_id, brand, place, post_code FROM gas_station_info", con
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -253,15 +270,16 @@ def _load_station_info(duckdb: DuckDBResource) -> pd.DataFrame:
     deps=[AssetKey("compressed_fuel_prices")],
     group_name="fuel",
     description="Monthly per-station per-fuel-type aggregates from compressed data",
-    io_manager_key="partitioned_parquet_io_manager",
+    io_manager_key="monthly_station_agg_io_manager",
 )
 def monthly_agg_price_by_station(
     context: OpExecutionContext,
-    duckdb: DuckDBResource,
+    userdata_db: SQLiteResource,
+    compressed_fuel_data: CompressedFuelDataResource,
 ) -> pd.DataFrame:
     """Compute monthly aggregates grouped by station_id and fuel_type."""
 
-    df, partition_date = _load_monthly_compressed_data(context, duckdb)
+    df, partition_date = _load_monthly_compressed_data(context, compressed_fuel_data)
 
     if df.empty:
         context.log.info("No compressed data available for this month")
@@ -291,21 +309,22 @@ def monthly_agg_price_by_station(
     deps=[AssetKey("compressed_fuel_prices")],
     group_name="fuel",
     description="Monthly per-brand per-fuel-type aggregates from compressed data",
-    io_manager_key="partitioned_parquet_io_manager",
+    io_manager_key="monthly_brand_agg_io_manager",
 )
 def monthly_agg_price_by_brand(
     context: OpExecutionContext,
-    duckdb: DuckDBResource,
+    userdata_db: SQLiteResource,
+    compressed_fuel_data: CompressedFuelDataResource,
 ) -> pd.DataFrame:
     """Compute monthly aggregates grouped by brand and fuel_type."""
 
-    df, partition_date = _load_monthly_compressed_data(context, duckdb)
+    df, partition_date = _load_monthly_compressed_data(context, compressed_fuel_data)
 
     if df.empty:
         context.log.info("No compressed data available for this month")
         return pd.DataFrame()
 
-    station_info = _load_station_info(duckdb)
+    station_info = _load_station_info(userdata_db)
     df = df.merge(station_info[["station_id", "brand"]], on="station_id", how="left")
     df = df.dropna(subset=["brand"])
 
@@ -338,21 +357,22 @@ def monthly_agg_price_by_brand(
     deps=[AssetKey("compressed_fuel_prices")],
     group_name="fuel",
     description="Monthly agg per place, post code and fuel type from compressed data",
-    io_manager_key="partitioned_parquet_io_manager",
+    io_manager_key="monthly_place_agg_io_manager",
 )
 def monthly_agg_price_by_place(
     context: OpExecutionContext,
-    duckdb: DuckDBResource,
+    userdata_db: SQLiteResource,
+    compressed_fuel_data: CompressedFuelDataResource,
 ) -> pd.DataFrame:
     """Compute monthly aggregates grouped by place, post_code, and fuel_type."""
 
-    df, partition_date = _load_monthly_compressed_data(context, duckdb)
+    df, partition_date = _load_monthly_compressed_data(context, compressed_fuel_data)
 
     if df.empty:
         context.log.info("No compressed data available for this month")
         return pd.DataFrame()
 
-    station_info = _load_station_info(duckdb)
+    station_info = _load_station_info(userdata_db)
     df = df.merge(
         station_info[["station_id", "place", "post_code"]],
         on="station_id",

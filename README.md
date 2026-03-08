@@ -22,38 +22,42 @@ A self-hosted application for tracking refueling events and monitoring gas stati
        │  (Google OAuth2 · JWT validation · routing)    │
        └──┬─────────────┬─────────────┬───────────┬──--─┘
           │             │             │           │
-      ┌───▼--─────┐ ┌───▼─--───┐ ┌────▼───--─┐ ┌──▼──--──┐
-      │  Frontend │ │ Backend  │ │  Dagster  │ │   OPA   │
-      │  Next.js  │ │ FastAPI  │ │ Analytics │ │Allowlist│
-      └───────────┘ └────┬─────┘ └─────┬─────┘ └─────────┘
-                         │             │
-                         │      Tankerkönig API
-                         │
-                  ┌──────▼──────┐
-                  │   DuckDB    │
-                  │ userdata.db │
-                  │ fueldata.db │
-                  └─────────────┘
+      ┌───▼──────┐ ┌───▼──────┐ ┌────▼──────┐ ┌──▼──────┐
+      │ Frontend │ │ Backend  │ │  Dagster  │ │   OPA   │
+      │ Next.js  │ │ FastAPI  │ │ Analytics │ │Allowlist│
+      └──────────┘ └────┬─────┘ └─────┬─────┘ └─────────┘
+                        │             │
+                        │      Tankerkönig API
+                        │
+              ┌─────────▼─────────┐
+              │  SQLite + Parquet │
+              │ userdata.sqlite   │
+              │ fueldata.sqlite   │
+              │ *.parquet (Hive)  │
+              └───────────────────┘
 ```
 
 ### Tech Stack
 
-| Layer     | Technology                                                      |
-| --------- | --------------------------------------------------------------- |
-| Backend   | Python 3.11+, FastAPI, Pydantic v2, DuckDB                      |
-| Frontend  | Next.js 14, React 18, TypeScript, MUI 7, Tailwind CSS, Recharts |
-| Analytics | Dagster, Pandas, DuckDB                                         |
-| Auth      | Google OAuth2 (via Envoy), OPA user allowlist                   |
-| Proxy     | Envoy Proxy (OAuth2 flow, JWT validation, routing)              |
-| Storage   | DuckDB (`userdata.duckdb`, `fueldata.duckdb`)                   |
-| Build     | `just`, `uv` (Python), npm, Docker Compose                      |
+| Layer     | Technology                                                              |
+| --------- | ----------------------------------------------------------------------- |
+| Backend   | Python 3.11+, FastAPI, Pydantic v2, SQLite                              |
+| Frontend  | Next.js 14, React 18, TypeScript, MUI 7, Tailwind CSS, Recharts         |
+| Analytics | Dagster, Pandas, DuckDB, Parquet                                        |
+| Auth      | Google OAuth2 (via Envoy), OPA user allowlist                           |
+| Proxy     | Envoy Proxy (OAuth2 flow, JWT validation, routing)                      |
+| Storage   | SQLite (`userdata.sqlite`, `fueldata.sqlite`), Hive-partitioned Parquet |
+| Build     | `just`, `uv` (Python), npm, Docker Compose                              |
 
 ### Data Storage
 
-Two DuckDB databases in the `data/` directory:
+SQLite databases and Hive-partitioned Parquet datasets in the `data/` directory:
 
-- **`userdata.duckdb`** — Refuels, cars, kilometer readings, users
-- **`fueldata.duckdb`** — Raw fuel prices, compressed price changes, daily aggregates, favorite stations, gas station metadata
+- **`userdata.sqlite`** — Users, cars, car sharing, refuel metrics, kilometer entries, favorite stations, gas station info
+- **`fueldata.sqlite`** — Raw fuel prices (wide format: E5, E10, Diesel per station)
+- **`compressed_fuel_prices/`** — Hive-partitioned Parquet with deduplicated price changes (long format)
+- **`daily_aggregates/`** — Hive-partitioned Parquet with per-station per-fuel-type daily statistics
+- **`monthly_agg_price_by_*/`** — Monthly Parquet aggregates by station, brand, and place
 
 ## Quick Start
 
@@ -153,11 +157,12 @@ The Dagster pipeline fetches and processes fuel price data on a schedule:
 ```text
 refuel-tracker/
 ├── analytics/    # Dagster pipeline for fuel price ingestion and aggregation
-├── backend/      # FastAPI application with DuckDB storage
+├── backend/      # FastAPI application with SQLite + Parquet storage
 ├── config/       # Envoy, OPA, and secret templates per environment
-├── data/         # DuckDB databases (runtime, git-ignored)
+├── data/         # SQLite databases and Parquet datasets (runtime, git-ignored)
 ├── frontend/     # Next.js application (React, TypeScript, MUI)
-└── lib/          # Shared Python packages (Tankerkönig client, fuel data clients)
+├── lib/          # Shared Python packages (Tankerkönig client, fuel data clients)
+└── scripts/      # One-time data migration scripts (DuckDB → SQLite/Parquet)
 ```
 
 ## Auth Flow
@@ -167,7 +172,7 @@ refuel-tracker/
 3. On success, Envoy sets `IdToken` and `BearerToken` cookies
 4. Envoy's JWT filter validates the token on each request
 5. OPA checks the user's Google `sub` claim against the allowlist
-6. Backend reads the `IdToken` cookie, verifies it with Google's public keys, and upserts the user in DuckDB
+6. Backend reads the `IdToken` cookie, verifies it with Google's public keys, and upserts the user in SQLite
 
 ## Development
 
@@ -183,6 +188,10 @@ just format
 just build app
 just build analytics
 ```
+
+## Migration from v1.x (DuckDB)
+
+Version 2.0.0 replaces DuckDB with SQLite + Parquet for storage. If upgrading from v1.x with existing data, see [`scripts/README.md`](scripts/README.md) for one-time migration instructions.
 
 ## License
 

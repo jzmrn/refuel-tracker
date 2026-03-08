@@ -1,41 +1,43 @@
 """
-DuckDB client for refuel metrics storage.
+SQLite client for refuel metrics storage.
 """
 
 import logging
 from datetime import datetime
 from typing import Any
 
-from .duckdb_resource import BackendDuckDBResource
+from fueldata.utils import to_utc_iso
+
 from .models import RefuelMetric
+from .sqlite_resource import BackendSQLiteResource
 
 logger = logging.getLogger(__name__)
 
 
 class RefuelDataClient:
-    """Client for storing refuel metrics in DuckDB."""
+    """Client for storing refuel metrics in SQLite."""
 
-    def __init__(self, duckdb: BackendDuckDBResource):
+    def __init__(self, db: BackendSQLiteResource):
         """
         Initialize the RefuelDataClient.
 
         Args:
-            duckdb: BackendDuckDBResource for database operations
+            db: BackendSQLiteResource for database operations
         """
-        self._duckdb = duckdb
-        with self._duckdb.get_connection() as con:
+        self._db = db
+        with self._db.get_connection() as con:
             con.execute(
                 """
                 CREATE TABLE IF NOT EXISTS refuel_metrics (
-                    timestamp TIMESTAMPTZ NOT NULL,
-                    user_id VARCHAR NOT NULL,
-                    car_id VARCHAR,
-                    price DOUBLE NOT NULL,
-                    amount DOUBLE NOT NULL,
-                    kilometers_since_last_refuel DOUBLE NOT NULL,
-                    estimated_fuel_consumption DOUBLE NOT NULL,
-                    notes VARCHAR,
-                    station_id VARCHAR,
+                    timestamp TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    car_id TEXT,
+                    price REAL NOT NULL,
+                    amount REAL NOT NULL,
+                    kilometers_since_last_refuel REAL NOT NULL,
+                    estimated_fuel_consumption REAL NOT NULL,
+                    notes TEXT,
+                    station_id TEXT,
                     PRIMARY KEY (user_id, timestamp)
                 )
             """
@@ -57,7 +59,7 @@ class RefuelDataClient:
         if not metrics:
             return True
 
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             for metric in metrics:
                 con.execute(
                     """
@@ -66,7 +68,7 @@ class RefuelDataClient:
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     [
-                        metric.timestamp,
+                        to_utc_iso(metric.timestamp),
                         user_id,
                         metric.car_id,
                         metric.price,
@@ -122,20 +124,21 @@ class RefuelDataClient:
         if limit is not None:
             query += f" LIMIT {limit}"
 
-        with self._duckdb.get_connection() as con:
-            results = con.execute(query, params).fetchall()
-            columns = [desc[0] for desc in con.description]
+        with self._db.get_connection() as con:
+            cursor = con.execute(query, params)
+            columns = [desc[0] for desc in cursor.description]
+            results = cursor.fetchall()
 
         return [RefuelMetric(**dict(zip(columns, row))) for row in results]
 
     def delete_metric(self, user_id: str, timestamp: datetime) -> bool:
         """Delete a specific metric by timestamp."""
-        with self._duckdb.get_connection() as con:
-            result = con.execute(
+        with self._db.get_connection() as con:
+            cursor = con.execute(
                 "DELETE FROM refuel_metrics WHERE user_id = ? AND timestamp = ?",
-                [user_id, timestamp],
+                [user_id, to_utc_iso(timestamp)],
             )
-            return result.fetchone()[0] > 0  # Returns number of deleted rows
+            return cursor.rowcount > 0
 
     def get_total_cost_by_period(
         self,
@@ -183,7 +186,7 @@ class RefuelDataClient:
             {where_clause}
         """
 
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             result = con.execute(query, params).fetchone()
 
         return {
@@ -228,7 +231,7 @@ class RefuelDataClient:
 
         query = f"""
             SELECT
-                CAST(timestamp AS DATE) as date,
+                DATE(timestamp) as date,
                 timestamp,
                 price,
                 amount,
@@ -238,14 +241,14 @@ class RefuelDataClient:
             ORDER BY timestamp ASC
         """
 
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             results = con.execute(query, params).fetchall()
 
         trends = []
         for row in results:
             trends.append(
                 {
-                    "date": row[0].isoformat(),
+                    "date": row[0],
                     "timestamp": row[1],
                     "price": row[2],
                     "amount": row[3],
@@ -278,7 +281,7 @@ class RefuelDataClient:
             WHERE user_id = ? AND timestamp >= ? AND timestamp < ?
         """
 
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             result = con.execute(query, (user_id, start_date, end_date)).fetchone()
 
         if result and result[0] is not None:

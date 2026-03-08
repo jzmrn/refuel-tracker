@@ -15,6 +15,7 @@ from .jobs import cleanup_raw_fuel_data_job
 
 fetch_fuel_prices_job = define_asset_job(
     name="fetch_fuel_prices_job",
+    description="Fetch raw fuel prices every 10 minutes.",
     selection=AssetSelection.keys("raw_fuel_prices"),
 )
 
@@ -30,6 +31,7 @@ schedule_fetch_fuel_prices = ScheduleDefinition(
 
 compressed_fuel_prices_job = define_asset_job(
     name="compressed_fuel_prices_job",
+    description="Compress raw fuel prices daily.",
     selection=AssetSelection.keys("compressed_fuel_prices"),
     partitions_def=daily_partitions,
 )
@@ -52,6 +54,7 @@ def schedule_compressed_fuel_prices(context):
 
 daily_aggregates_job = define_asset_job(
     name="daily_aggregates_job",
+    description="Compute daily aggregates for fuel prices.",
     selection=AssetSelection.keys("daily_aggregates"),
     partitions_def=daily_partitions,
 )
@@ -84,6 +87,7 @@ schedule_cleanup_raw_fuel_data = ScheduleDefinition(
 
 monthly_aggregates_fuel_prices = define_asset_job(
     name="monthly_aggregates_fuel_prices",
+    description="Compute monthly aggregates for fuel prices.",
     selection=AssetSelection.keys(
         "monthly_agg_price_by_station",
         "monthly_agg_price_by_brand",

@@ -1,10 +1,22 @@
-import logging
-from datetime import date, datetime
+"""Client for daily aggregated fuel price data.
 
+Data is stored as Hive-partitioned Parquet files (partitioned by date)
+and read via DuckDB in-memory for efficient predicate push-down.
+"""
+
+import logging
+import shutil
+from datetime import date, datetime, timezone
+from pathlib import Path
+
+import duckdb
 import numpy as np
 import pandas as pd
-from dagster_duckdb import DuckDBResource
+import pyarrow as pa
+import pyarrow.parquet as pq
 from pydantic import BaseModel, field_validator
+
+from .utils import to_utc_iso
 
 logger = logging.getLogger(__name__)
 
@@ -33,102 +45,39 @@ class DailyAggregate(BaseModel):
         return v
 
 
-class AggregatedFuelDataClient:
-    """Client for storing fuel data."""
+def _parquet_glob(base_path: Path) -> str:
+    """Return a glob pattern that DuckDB can use with ``read_parquet``."""
+    return str(base_path / "**" / "*.parquet")
 
-    def __init__(self, duckdb: DuckDBResource):
+
+class AggregatedFuelDataClient:
+    """Client for daily aggregated fuel price data.
+
+    Data is stored as Hive-partitioned Parquet
+    (``daily_aggregates/date=YYYY-MM-DD/data.parquet``) and queried via
+    DuckDB in-memory.
+    """
+
+    def __init__(self, base_path: str):
         """
-        Initialize the FuelPriceData client.
+        Initialize the AggregatedFuelData client.
 
         Args:
-            con: DuckDBResource for database operations
+            base_path: Root data directory (e.g. ``/app/data``).
+                       Parquet files live under ``<base_path>/daily_aggregates/``.
         """
+        self._base_path = Path(base_path) / "daily_aggregates"
+        self._base_path.mkdir(parents=True, exist_ok=True)
 
-        self._duckdb = duckdb
-        with self._duckdb.get_connection() as con:
-            con.execute(
-                """
-                CREATE TABLE IF NOT EXISTS daily_aggregates (
-                    date DATE NOT NULL,
-                    station_id VARCHAR NOT NULL,
-                    type VARCHAR NOT NULL,
-                    n_samples INTEGER NOT NULL,
-                    n_unique_prices INTEGER NOT NULL DEFAULT 0,
-                    price_mean DOUBLE NOT NULL,
-                    price_min DOUBLE NOT NULL,
-                    price_max DOUBLE NOT NULL,
-                    price_std DOUBLE,
-                    ts_min TIMESTAMP NOT NULL,
-                    ts_max TIMESTAMP NOT NULL,
-                    PRIMARY KEY (date, station_id, type)
-                )
-            """
-            )
-        self._run_migrations()
-
-    def _run_migrations(self) -> None:
-        """Run any pending migrations for the daily_aggregates table."""
-        self._migrate_add_n_unique_prices()
-        self._migrate_price_std_nullable()
-
-    def _migrate_add_n_unique_prices(self) -> None:
-        """Add n_unique_prices column if it doesn't exist."""
-        with self._duckdb.get_connection() as con:
-            result = con.execute(
-                """
-                SELECT column_name
-                FROM information_schema.columns
-                WHERE table_name = 'daily_aggregates' AND column_name = 'n_unique_prices'
-                """
-            ).fetchone()
-
-            if not result:
-                logger.info("Adding n_unique_prices column to daily_aggregates table")
-                con.execute(
-                    """
-                    ALTER TABLE daily_aggregates
-                    ADD COLUMN n_unique_prices INTEGER
-                    """
-                )
-                # Set default value for existing rows
-                con.execute(
-                    """
-                    UPDATE daily_aggregates SET n_unique_prices = 0 WHERE n_unique_prices IS NULL
-                    """
-                )
-                logger.info("n_unique_prices column added successfully")
-
-    def _migrate_price_std_nullable(self) -> None:
-        """Make price_std column nullable to handle single-sample aggregates."""
-        with self._duckdb.get_connection() as con:
-            # Check if the column is currently NOT NULL
-            result = con.execute(
-                """
-                SELECT is_nullable
-                FROM information_schema.columns
-                WHERE table_name = 'daily_aggregates' AND column_name = 'price_std'
-                """
-            ).fetchone()
-
-            if result and result[0] == "NO":
-                logger.info(
-                    "Making price_std column nullable in daily_aggregates table"
-                )
-                # DuckDB doesn't support ALTER COLUMN directly, need to recreate
-                con.execute(
-                    """
-                    ALTER TABLE daily_aggregates ALTER COLUMN price_std DROP NOT NULL
-                    """
-                )
-                logger.info("price_std column is now nullable")
-
-    def _ensure_table_exists(self) -> None:
-        """Ensure the daily_aggregates table exists (no-op since created in __init__)."""
-        pass
+    # ------------------------------------------------------------------
+    # Write
+    # ------------------------------------------------------------------
 
     def store_daily_aggregates(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Store daily aggregate data into the database.
+        Store daily aggregate data as Hive-partitioned Parquet.
+
+        The ``date`` column is used as the partition key.
 
         Args:
             df: DataFrame with daily aggregate data
@@ -138,21 +87,51 @@ class AggregatedFuelDataClient:
         )
 
         if not df.empty:
-            with self._duckdb.get_connection() as con:
-                con.execute(
-                    """
-                    INSERT OR REPLACE INTO daily_aggregates
-                        (date, station_id, type, n_samples, n_unique_prices,
-                         price_mean, price_min, price_max, price_std,
-                         ts_min, ts_max)
-                    SELECT df.date, df.station_id, df.type, df.n_samples, df.n_unique_prices,
-                           df.price_mean, df.price_min, df.price_max, df.price_std,
-                           df.ts_min, df.ts_max
-                    FROM df
-                """
-                )
+            write_df = df.copy()
+            # Ensure date column is a string for partitioning
+            write_df["date"] = pd.to_datetime(write_df["date"]).dt.date.astype(str)
+
+            table = pa.Table.from_pandas(write_df, preserve_index=False)
+            pq.write_to_dataset(
+                table,
+                root_path=str(self._base_path),
+                partition_cols=["date"],
+                existing_data_behavior="delete_matching",
+            )
 
         return df
+
+    # ------------------------------------------------------------------
+    # Read helpers
+    # ------------------------------------------------------------------
+
+    def _query(
+        self,
+        filters: list[str],
+        params: list,
+        order_by: str = "date DESC",
+        columns: str = "*",
+    ) -> pd.DataFrame:
+        """Run a DuckDB in-memory query against the partitioned parquet."""
+        if not self._base_path.exists() or not any(self._base_path.iterdir()):
+            return pd.DataFrame()
+
+        glob = _parquet_glob(self._base_path)
+        where = f" WHERE {' AND '.join(filters)}" if filters else ""
+        sql = (
+            f"SELECT {columns} FROM read_parquet('{glob}', hive_partitioning=true)"
+            f"{where} ORDER BY {order_by}"
+        )
+
+        con = duckdb.connect()
+        try:
+            return con.execute(sql, params).fetchdf()
+        finally:
+            con.close()
+
+    # ------------------------------------------------------------------
+    # Read
+    # ------------------------------------------------------------------
 
     def read_daily_aggregates(
         self,
@@ -162,7 +141,7 @@ class AggregatedFuelDataClient:
         fuel_type: str | None = None,
     ) -> pd.DataFrame:
         """
-        Read daily aggregate data from the database.
+        Read daily aggregate data from Parquet.
 
         Args:
             start_date: Optional start date for filtering (inclusive)
@@ -174,37 +153,26 @@ class AggregatedFuelDataClient:
             DataFrame with daily aggregate data
         """
 
-        self._ensure_table_exists()
-
-        query = "SELECT * FROM daily_aggregates"
-        params = []
-        conditions = []
+        filters: list[str] = []
+        params: list = []
 
         if start_date is not None:
-            conditions.append("date >= ?")
-            params.append(start_date.date())
+            params.append(to_utc_iso(start_date))
+            filters.append(f"date >= ${len(params)}")
 
         if end_date is not None:
-            conditions.append("date <= ?")
-            params.append(end_date.date())
+            params.append(to_utc_iso(end_date))
+            filters.append(f"date <= ${len(params)}")
 
         if station_id is not None:
-            conditions.append("station_id = ?")
             params.append(station_id)
+            filters.append(f"station_id = ${len(params)}")
 
         if fuel_type is not None:
-            conditions.append("type = ?")
             params.append(fuel_type)
+            filters.append(f"type = ${len(params)}")
 
-        if conditions:
-            query += " WHERE " + " AND ".join(conditions)
-
-        query += " ORDER BY date DESC"
-
-        with self._duckdb.get_connection() as con:
-            df = con.execute(query, params).df()
-
-        return df
+        return self._query(filters, params)
 
     def get_daily_aggregates(
         self,
@@ -214,13 +182,7 @@ class AggregatedFuelDataClient:
         fuel_type: str | None = None,
     ) -> list[DailyAggregate]:
         """
-        Get daily aggregate data from the database within the specified date range.
-
-        Args:
-            start_date: Optional start date for filtering (inclusive)
-            end_date: Optional end date for filtering (inclusive)
-            station_id: Optional station ID to filter by
-            fuel_type: Optional fuel type to filter by (e5, e10, diesel)
+        Get daily aggregate data within the specified date range.
 
         Returns:
             List of DailyAggregate objects
@@ -247,18 +209,32 @@ class AggregatedFuelDataClient:
         Returns:
             List of DailyAggregate objects sorted by date descending
         """
-        self._ensure_table_exists()
 
-        query = """
-            SELECT * FROM daily_aggregates
-            WHERE station_id = ?
-              AND type = ?
-              AND date >= CURRENT_DATE - INTERVAL ? DAY
-            ORDER BY date DESC
-        """
+        cutoff = to_utc_iso(datetime.now(timezone.utc).date() - pd.Timedelta(days=days))
+        filters = ["station_id = $1", "type = $2", "date >= $3"]
+        params = [station_id, fuel_type, cutoff]
 
-        with self._duckdb.get_connection() as con:
-            df = con.execute(query, [station_id, fuel_type, days]).df()
-
+        df = self._query(filters, params)
         records = df.to_dict(orient="records")
         return [DailyAggregate.model_validate(record) for record in records]
+
+    # ------------------------------------------------------------------
+    # Delete
+    # ------------------------------------------------------------------
+
+    def delete_data_for_date(self, target_date: date) -> int:
+        """
+        Delete all daily aggregate data for a specific date by removing its
+        partition directory.
+
+        Args:
+            target_date: The date to delete data for
+
+        Returns:
+            0 (row count not tracked for parquet)
+        """
+        partition_dir = self._base_path / f"date={target_date.isoformat()}"
+        if partition_dir.exists():
+            shutil.rmtree(partition_dir)
+            logger.info("Deleted partition %s", partition_dir)
+        return 0

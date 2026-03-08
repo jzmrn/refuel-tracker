@@ -1,12 +1,22 @@
-"""Client for compressed fuel price data - stores only price changes."""
+"""Client for compressed fuel price data - stores only price changes.
+
+Data is stored as Hive-partitioned Parquet files (partitioned by date)
+and read via DuckDB in-memory for efficient predicate push-down.
+"""
 
 import logging
+import shutil
 from datetime import date, datetime
+from pathlib import Path
 
+import duckdb
 import numpy as np
 import pandas as pd
-from dagster_duckdb import DuckDBResource
+import pyarrow as pa
+import pyarrow.parquet as pq
 from pydantic import BaseModel, field_validator
+
+from .utils import to_utc_iso
 
 logger = logging.getLogger(__name__)
 
@@ -28,42 +38,41 @@ class CompressedPriceEntry(BaseModel):
         return v
 
 
-class CompressedFuelDataClient:
-    """Client for compressed fuel data - stores only price changes."""
+def _parquet_glob(base_path: Path) -> str:
+    """Return a glob pattern that DuckDB can use with ``read_parquet``."""
+    return str(base_path / "**" / "*.parquet")
 
-    def __init__(self, duckdb: DuckDBResource):
+
+class CompressedFuelDataClient:
+    """Client for compressed fuel data - stores only price changes.
+
+    Data is stored as Hive-partitioned Parquet (``compressed_fuel_prices/date=YYYY-MM-DD/data.parquet``)
+    and queried via DuckDB in-memory.
+    """
+
+    def __init__(self, base_path: str):
         """
         Initialize the CompressedFuelData client.
 
         Args:
-            duckdb: DuckDBResource for database operations
+            base_path: Root data directory (e.g. ``/app/data``).
+                       Parquet files live under ``<base_path>/compressed_fuel_prices/``.
         """
+        self._base_path = Path(base_path) / "compressed_fuel_prices"
+        self._base_path.mkdir(parents=True, exist_ok=True)
 
-        self._duckdb = duckdb
-        self._ensure_table_exists()
-
-    def _ensure_table_exists(self) -> None:
-        """Create the compressed fuel prices table if it doesn't exist."""
-        with self._duckdb.get_connection() as con:
-            con.execute(
-                """
-                CREATE TABLE IF NOT EXISTS compressed_fuel_prices (
-                    timestamp TIMESTAMP NOT NULL,
-                    station_id VARCHAR NOT NULL,
-                    fuel_type VARCHAR NOT NULL,
-                    price DOUBLE NOT NULL,
-                    PRIMARY KEY (timestamp, station_id, fuel_type)
-                )
-            """
-            )
+    # ------------------------------------------------------------------
+    # Write
+    # ------------------------------------------------------------------
 
     def store_compressed_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Store compressed fuel data into the database.
+        Store compressed fuel data as Hive-partitioned Parquet.
+
+        The ``date`` partition key is derived from the ``timestamp`` column.
 
         Args:
-            df: DataFrame with compressed fuel price data
-                Expected columns: timestamp, station_id, fuel_type, price
+            df: DataFrame with columns: timestamp, station_id, fuel_type, price
         """
         logger.info(
             "Storing compressed fuel data",
@@ -71,16 +80,53 @@ class CompressedFuelDataClient:
         )
 
         if not df.empty:
-            with self._duckdb.get_connection() as con:
-                con.execute(
-                    """
-                    INSERT OR REPLACE INTO compressed_fuel_prices
-                    SELECT timestamp, station_id, fuel_type, price
-                    FROM df
-                """
-                )
+            write_df = df.copy()
+            # Derive partition column
+            write_df["date"] = pd.to_datetime(
+                write_df["timestamp"], format="ISO8601"
+            ).dt.date.astype(str)
+
+            table = pa.Table.from_pandas(write_df, preserve_index=False)
+            pq.write_to_dataset(
+                table,
+                root_path=str(self._base_path),
+                partition_cols=["date"],
+                existing_data_behavior="delete_matching",
+            )
 
         return df
+
+    # ------------------------------------------------------------------
+    # Read helpers
+    # ------------------------------------------------------------------
+
+    def _query(
+        self,
+        filters: list[str],
+        params: list,
+        order_by: str = "timestamp ASC",
+        columns: str = "* EXCLUDE (date)",
+    ) -> pd.DataFrame:
+        """Run a DuckDB in-memory query against the partitioned parquet."""
+        if not self._base_path.exists() or not any(self._base_path.iterdir()):
+            return pd.DataFrame()
+
+        glob = _parquet_glob(self._base_path)
+        where = f" WHERE {' AND '.join(filters)}" if filters else ""
+        sql = (
+            f"SELECT {columns} FROM read_parquet('{glob}', hive_partitioning=true)"
+            f"{where} ORDER BY {order_by}"
+        )
+
+        con = duckdb.connect()
+        try:
+            return con.execute(sql, params).fetchdf()
+        finally:
+            con.close()
+
+    # ------------------------------------------------------------------
+    # Read
+    # ------------------------------------------------------------------
 
     def read_compressed_data(
         self,
@@ -90,7 +136,7 @@ class CompressedFuelDataClient:
         fuel_type: str | None = None,
     ) -> pd.DataFrame:
         """
-        Read compressed fuel data from the database.
+        Read compressed fuel data from Parquet.
 
         Args:
             start_date: Optional start date for filtering (inclusive)
@@ -102,37 +148,26 @@ class CompressedFuelDataClient:
             DataFrame with compressed fuel price data
         """
 
-        self._ensure_table_exists()
-
-        query = "SELECT * FROM compressed_fuel_prices"
-        params = []
-        conditions = []
+        filters: list[str] = []
+        params: list = []
 
         if start_date is not None:
-            conditions.append("timestamp >= ?")
-            params.append(start_date)
+            params.append(to_utc_iso(start_date))
+            filters.append(f"timestamp >= ${len(params)}")
 
         if end_date is not None:
-            conditions.append("timestamp <= ?")
-            params.append(end_date)
+            params.append(to_utc_iso(end_date))
+            filters.append(f"timestamp <= ${len(params)}")
 
         if station_id is not None:
-            conditions.append("station_id = ?")
             params.append(station_id)
+            filters.append(f"station_id = ${len(params)}")
 
         if fuel_type is not None:
-            conditions.append("fuel_type = ?")
             params.append(fuel_type)
+            filters.append(f"fuel_type = ${len(params)}")
 
-        if conditions:
-            query += " WHERE " + " AND ".join(conditions)
-
-        query += " ORDER BY timestamp ASC"
-
-        with self._duckdb.get_connection() as con:
-            df = con.execute(query, params).df()
-
-        return df
+        return self._query(filters, params)
 
     def get_compressed_data(
         self,
@@ -142,13 +177,7 @@ class CompressedFuelDataClient:
         fuel_type: str | None = None,
     ) -> list[CompressedPriceEntry]:
         """
-        Get compressed fuel data from the database within the specified filters.
-
-        Args:
-            start_date: Optional start date for filtering (inclusive)
-            end_date: Optional end date for filtering (inclusive)
-            station_id: Optional station ID for filtering
-            fuel_type: Optional fuel type for filtering (e5, e10, diesel)
+        Get compressed fuel data within the specified filters.
 
         Returns:
             List of CompressedPriceEntry objects
@@ -172,56 +201,61 @@ class CompressedFuelDataClient:
             DataFrame with latest prices per station and fuel type
         """
 
-        self._ensure_table_exists()
+        if not self._base_path.exists() or not any(self._base_path.iterdir()):
+            return pd.DataFrame()
 
-        query = """
-            SELECT timestamp, station_id, fuel_type, price
-            FROM compressed_fuel_prices
-            WHERE (station_id, fuel_type, timestamp) IN (
-                SELECT station_id, fuel_type, MAX(timestamp)
-                FROM compressed_fuel_prices
-                GROUP BY station_id, fuel_type
-            )
-        """
-        params = []
+        glob = _parquet_glob(self._base_path)
+        base_from = f"read_parquet('{glob}', hive_partitioning=true)"
 
         if station_ids:
-            placeholders = ", ".join(["?" for _ in station_ids])
-            query = f"""
+            placeholders = ", ".join([f"${i}" for i in range(1, len(station_ids) + 1)])
+            sql = f"""
                 SELECT timestamp, station_id, fuel_type, price
-                FROM compressed_fuel_prices
+                FROM {base_from}
                 WHERE station_id IN ({placeholders})
                   AND (station_id, fuel_type, timestamp) IN (
                     SELECT station_id, fuel_type, MAX(timestamp)
-                    FROM compressed_fuel_prices
+                    FROM {base_from}
                     WHERE station_id IN ({placeholders})
                     GROUP BY station_id, fuel_type
                 )
             """
             params = station_ids + station_ids
+        else:
+            sql = f"""
+                SELECT timestamp, station_id, fuel_type, price
+                FROM {base_from}
+                WHERE (station_id, fuel_type, timestamp) IN (
+                    SELECT station_id, fuel_type, MAX(timestamp)
+                    FROM {base_from}
+                    GROUP BY station_id, fuel_type
+                )
+            """
+            params = []
 
-        with self._duckdb.get_connection() as con:
-            df = con.execute(query, params).df()
+        con = duckdb.connect()
+        try:
+            return con.execute(sql, params).fetchdf()
+        finally:
+            con.close()
 
-        return df
+    # ------------------------------------------------------------------
+    # Delete
+    # ------------------------------------------------------------------
 
     def delete_data_for_date(self, target_date: date) -> int:
         """
-        Delete all compressed data for a specific date.
+        Delete all compressed data for a specific date by removing its
+        partition directory.
 
         Args:
             target_date: The date to delete data for
 
         Returns:
-            Number of rows deleted
+            Number of rows deleted (0 – not tracked for parquet)
         """
-        with self._duckdb.get_connection() as con:
-            con.execute(
-                """
-                DELETE FROM compressed_fuel_prices
-                WHERE DATE(timestamp) = ?
-            """,
-                [target_date],
-            )
-            # DuckDB doesn't return row count from DELETE directly
-            return 0
+        partition_dir = self._base_path / f"date={target_date.isoformat()}"
+        if partition_dir.exists():
+            shutil.rmtree(partition_dir)
+            logger.info("Deleted partition %s", partition_dir)
+        return 0

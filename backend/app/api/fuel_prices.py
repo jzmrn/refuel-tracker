@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fueldata.aggregates import AggregatedFuelDataClient
+from fueldata.prices import FuelPriceDataClient
 from fueldata.stations import FuelStationClient, GasStationInfo
 from tankerkoenig import TankerkoenigClient
 from tankerkoenig.models import (
@@ -72,6 +73,11 @@ def get_tankerkoenig_client(request: Request):
 def get_fuel_station_client(request: Request):
     """Dependency to get the fuel station client from app state"""
     return request.app.state.fuel_station_client
+
+
+def get_fuel_price_data_client(request: Request):
+    """Dependency to get the fuel price data client from app state"""
+    return request.app.state.fuel_price_data_client
 
 
 def get_aggregated_fuel_data_client(request: Request):
@@ -454,6 +460,7 @@ async def get_station_price_history(
     fuel_type: str,
     user: CurrentUser,
     fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+    fuel_price_data_client: FuelPriceDataClient = Depends(get_fuel_price_data_client),
     hours: int = 24,
 ):
     """Get price history for a specific gas station and fuel type"""
@@ -490,7 +497,9 @@ async def get_station_price_history(
         raise HTTPException(status_code=404, detail="Station not found")
 
     # Get price history for the specified number of hours
-    price_history_data = fuel_station_client.get_price_history(station_id, hours=hours)
+    price_history_data = fuel_price_data_client.get_price_history(
+        station_id, hours=hours
+    )
 
     # Map fuel type to the correct attribute
     fuel_type_attr = f"price_{fuel_type}"

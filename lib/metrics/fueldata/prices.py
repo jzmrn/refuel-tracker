@@ -3,8 +3,9 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
-from dagster_duckdb import DuckDBResource
 from pydantic import BaseModel, field_validator
+
+from .utils import SQLiteResource, to_utc_iso
 
 logger = logging.getLogger(__name__)
 
@@ -28,28 +29,46 @@ class PriceEntry(BaseModel):
         return v
 
 
-class FuelPriceDataClient:
-    """Client for storing fuel data."""
+class PriceHistoryPoint(BaseModel):
+    """Represents a price data point in history."""
 
-    def __init__(self, duckdb: DuckDBResource):
+    timestamp: datetime
+    price_e5: float | None = None
+    price_e10: float | None = None
+    price_diesel: float | None = None
+
+    @field_validator("price_e5", "price_e10", "price_diesel", mode="before")
+    @classmethod
+    def convert_nan_to_none(cls, v):
+        """Convert NaN values to None for JSON serialization."""
+        if isinstance(v, float) and np.isnan(v):
+            return None
+        return v
+
+
+class FuelPriceDataClient:
+    """Client for storing fuel data in SQLite."""
+
+    def __init__(self, db: SQLiteResource) -> None:
         """
         Initialize the FuelPriceData client.
 
         Args:
-            duckdb: DuckDBResource for database operations
+            db: A resource with a ``get_connection()`` context-manager that
+                yields a sqlite3.Connection.
         """
 
-        self._duckdb = duckdb
-        with self._duckdb.get_connection() as con:
+        self._db: SQLiteResource = db
+        with self._db.get_connection() as con:
             con.execute(
                 """
                 CREATE TABLE IF NOT EXISTS fuel_prices (
-                    timestamp TIMESTAMP NOT NULL,
-                    station_id VARCHAR NOT NULL,
-                    station_status VARCHAR NOT NULL,
-                    price_e5 DOUBLE,
-                    price_e10 DOUBLE,
-                    price_diesel DOUBLE,
+                    timestamp TEXT NOT NULL,
+                    station_id TEXT NOT NULL,
+                    station_status TEXT NOT NULL,
+                    price_e5 REAL,
+                    price_e10 REAL,
+                    price_diesel REAL,
                     PRIMARY KEY (timestamp, station_id)
                 )
             """
@@ -67,8 +86,21 @@ class FuelPriceDataClient:
         )
 
         if not df.empty:
-            with self._duckdb.get_connection() as con:
-                con.execute("INSERT INTO fuel_prices SELECT * FROM df")
+            with self._db.get_connection() as con:
+                # Convert timestamp to UTC ISO 8601 with Z suffix for SQLite
+                write_df = df.copy()
+                if "timestamp" in write_df.columns:
+                    write_df["timestamp"] = write_df["timestamp"].apply(
+                        lambda t: to_utc_iso(t) if isinstance(t, datetime) else t
+                    )
+
+                write_df.to_sql(
+                    "fuel_prices",
+                    con,
+                    if_exists="append",
+                    index=False,
+                    method="multi",
+                )
 
         return df
 
@@ -85,7 +117,7 @@ class FuelPriceDataClient:
             end_date: Optional end date for filtering (inclusive)
 
         Returns:
-            DataFrame in wide format (timestamp, station_id, station_status, price_e5, price_e10, price_diesel)
+            DataFrame in wide format
         """
 
         query = "SELECT * FROM fuel_prices"
@@ -93,16 +125,16 @@ class FuelPriceDataClient:
 
         if start_date is not None and end_date is not None:
             query += " WHERE timestamp >= ? AND timestamp <= ?"
-            params = [start_date, end_date]
+            params = [to_utc_iso(start_date), to_utc_iso(end_date)]
         elif start_date is not None:
             query += " WHERE timestamp >= ?"
-            params = [start_date]
+            params = [to_utc_iso(start_date)]
         elif end_date is not None:
             query += " WHERE timestamp <= ?"
-            params = [end_date]
+            params = [to_utc_iso(end_date)]
 
-        with self._duckdb.get_connection() as con:
-            df = con.execute(query, params).df()
+        with self._db.get_connection() as con:
+            df = pd.read_sql_query(query, con, params=params)
 
         return df
 
@@ -122,21 +154,44 @@ class FuelPriceDataClient:
             List of PriceEntry objects in wide format
         """
 
-        query = "SELECT * FROM fuel_prices"
-        params = []
-
-        if start_date is not None and end_date is not None:
-            query += " WHERE timestamp >= ? AND timestamp <= ?"
-            params = [start_date, end_date]
-        elif start_date is not None:
-            query += " WHERE timestamp >= ?"
-            params = [start_date]
-        elif end_date is not None:
-            query += " WHERE timestamp <= ?"
-            params = [end_date]
-
-        with self._duckdb.get_connection() as con:
-            df = con.execute(query, params).df()
-
+        df = self.read_fuel_data(start_date, end_date)
         records = df.to_dict(orient="records")
         return [PriceEntry.model_validate(record) for record in records]
+
+    def get_price_history(
+        self,
+        station_id: str,
+        hours: int = 24,
+    ) -> list[PriceHistoryPoint]:
+        """
+        Get price history for a station for the specified number of hours.
+
+        Args:
+            station_id: The station ID to get price history for
+            hours: Number of hours to look back (default: 24)
+
+        Returns:
+            List of PriceHistoryPoint objects sorted by timestamp in ascending order
+        """
+
+        query = """
+            SELECT
+                timestamp,
+                price_e5,
+                price_e10,
+                price_diesel
+            FROM fuel_prices
+            WHERE station_id = ?
+                AND timestamp >= datetime('now', ?)
+            ORDER BY timestamp ASC
+        """
+
+        with self._db.get_connection() as con:
+            df = pd.read_sql_query(
+                query,
+                con,
+                params=[station_id, f"-{hours} hours"],
+            )
+
+        records = df.to_dict(orient="records")
+        return [PriceHistoryPoint.model_validate(record) for record in records]

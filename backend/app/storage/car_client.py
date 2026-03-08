@@ -1,42 +1,43 @@
 """
-DuckDB client for car storage and sharing.
+SQLite client for car storage and sharing.
 """
 
 import logging
+import sqlite3
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from duckdb import DuckDBPyConnection
+from fueldata.utils import utc_now_iso
 
 from ..models import CarAccessUser, CarResponse, CarStatistics, UserSearchResponse
-from .duckdb_resource import BackendDuckDBResource
+from .sqlite_resource import BackendSQLiteResource
 
 logger = logging.getLogger(__name__)
 
 
 class CarClient:
-    """Client for managing cars and car access in DuckDB."""
+    """Client for managing cars and car access in SQLite."""
 
-    def __init__(self, duckdb: BackendDuckDBResource):
+    def __init__(self, db: BackendSQLiteResource):
         """
         Initialize the CarClient.
 
         Args:
-            duckdb: BackendDuckDBResource for database operations
+            db: BackendSQLiteResource for database operations
         """
-        self._duckdb = duckdb
-        with self._duckdb.get_connection() as con:
+        self._db = db
+        with self._db.get_connection() as con:
             # Create cars table
             con.execute(
                 """
                 CREATE TABLE IF NOT EXISTS cars (
-                    id VARCHAR PRIMARY KEY,
-                    owner_user_id VARCHAR NOT NULL,
-                    name VARCHAR NOT NULL,
+                    id TEXT PRIMARY KEY,
+                    owner_user_id TEXT NOT NULL,
+                    name TEXT NOT NULL,
                     year INTEGER NOT NULL,
-                    fuel_tank_size DOUBLE NOT NULL,
-                    fuel_type VARCHAR,
-                    created_at TIMESTAMPTZ NOT NULL
+                    fuel_tank_size REAL NOT NULL,
+                    fuel_type TEXT,
+                    created_at TEXT NOT NULL
                 )
             """
             )
@@ -45,11 +46,11 @@ class CarClient:
             con.execute(
                 """
                 CREATE TABLE IF NOT EXISTS car_access (
-                    id VARCHAR PRIMARY KEY,
-                    car_id VARCHAR NOT NULL,
-                    user_id VARCHAR NOT NULL,
-                    granted_at TIMESTAMPTZ NOT NULL,
-                    granted_by_user_id VARCHAR NOT NULL,
+                    id TEXT PRIMARY KEY,
+                    car_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    granted_at TEXT NOT NULL,
+                    granted_by_user_id TEXT NOT NULL,
                     UNIQUE(car_id, user_id)
                 )
             """
@@ -85,9 +86,9 @@ class CarClient:
     ) -> str:
         """Create a new car and return its ID."""
         car_id = str(uuid4())
-        created_at = datetime.now(UTC)
+        created_at = utc_now_iso()
 
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             con.execute(
                 """
                 INSERT INTO cars (id, owner_user_id, name, year, fuel_tank_size, fuel_type, created_at)
@@ -109,7 +110,7 @@ class CarClient:
     def get_cars_for_user(self, user_id: str) -> list[CarResponse]:
         """Get all cars that a user owns or has access to."""
 
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             # Get owned cars with refuel count and owner name
             owned_result = con.execute(
                 """
@@ -185,7 +186,7 @@ class CarClient:
 
     def user_has_car_access(self, car_id: str, user_id: str) -> bool:
         """Check if a user has access to a car (owner or shared access)."""
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             # Check if user owns the car
             result = con.execute(
                 """
@@ -210,7 +211,7 @@ class CarClient:
     def get_car(self, car_id: str, user_id: str) -> CarResponse | None:
         """Get a specific car if user has access."""
 
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             # Check if user owns the car - include owner name and refuel count
             result = con.execute(
                 """
@@ -305,7 +306,7 @@ class CarClient:
 
         params.extend([car_id, owner_user_id])
 
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             result = con.execute(
                 f"""
                 UPDATE cars
@@ -314,11 +315,11 @@ class CarClient:
                 """,
                 params,
             )
-            return result.fetchone() is not None
+            return result.rowcount > 0
 
     def delete_car(self, car_id: str, owner_user_id: str) -> bool:
         """Delete a car (owner only)."""
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             # Delete refuel metrics associated with this car first
             con.execute(
                 """
@@ -356,7 +357,7 @@ class CarClient:
     def share_car(self, car_id: str, owner_user_id: str, target_user_id: str) -> bool:
         """Share a car with another user (owner only)."""
         # Verify ownership
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             owner_check = con.execute(
                 """
                 SELECT id FROM cars WHERE id = ? AND owner_user_id = ?
@@ -373,7 +374,7 @@ class CarClient:
 
             # Add access
             access_id = str(uuid4())
-            granted_at = datetime.now(UTC)
+            granted_at = utc_now_iso()
 
             try:
                 con.execute(
@@ -381,7 +382,13 @@ class CarClient:
                     INSERT INTO car_access (id, car_id, user_id, granted_at, granted_by_user_id)
                     VALUES (?, ?, ?, ?, ?)
                     """,
-                    [access_id, car_id, target_user_id, granted_at, owner_user_id],
+                    [
+                        access_id,
+                        car_id,
+                        target_user_id,
+                        granted_at,
+                        owner_user_id,
+                    ],
                 )
                 return True
             except Exception:
@@ -401,7 +408,7 @@ class CarClient:
         self, car_id: str, owner_user_id: str, target_user_id: str
     ) -> bool:
         """Revoke car access from a user (owner only)."""
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             # Verify ownership
             owner_check = con.execute(
                 """
@@ -428,13 +435,13 @@ class CarClient:
     ) -> list[CarAccessUser]:
         """Get list of users who have access to a car (owner only)."""
 
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             users = self._get_car_shared_users(con, car_id, owner_user_id)
 
         return users
 
     def _get_car_shared_users(
-        self, con: DuckDBPyConnection, car_id: str, owner_user_id: str
+        self, con: sqlite3.Connection, car_id: str, owner_user_id: str
     ) -> list[CarAccessUser]:
         owner_check = con.execute(
             """
@@ -475,7 +482,7 @@ class CarClient:
         self, query: str, exclude_user_id: str
     ) -> list[UserSearchResponse]:
         """Search for users by name or email (for sharing)."""
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             result = con.execute(
                 """
                 SELECT id, name, email
@@ -497,7 +504,7 @@ class CarClient:
         self, car_id: str, owner_user_id: str, shared_user_ids: list[str]
     ) -> bool:
         """Sync the list of users who have access to a car (owner only)."""
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             # Verify ownership
             owner_check = con.execute(
                 """
@@ -544,7 +551,13 @@ class CarClient:
                         INSERT INTO car_access (id, car_id, user_id, granted_at, granted_by_user_id)
                         VALUES (?, ?, ?, ?, ?)
                         """,
-                        [access_id, car_id, user_id, granted_at, owner_user_id],
+                        [
+                            access_id,
+                            car_id,
+                            user_id,
+                            granted_at.isoformat(),
+                            owner_user_id,
+                        ],
                     )
                 except Exception:
                     # Handle any errors (e.g., user doesn't exist)
@@ -567,7 +580,7 @@ class CarClient:
         if not car:
             return None
 
-        with self._duckdb.get_connection() as con:
+        with self._db.get_connection() as con:
             result = con.execute(
                 """
                 SELECT

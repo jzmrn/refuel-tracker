@@ -6,11 +6,11 @@ from contextvars import ContextVar
 from pathlib import Path
 from uuid import uuid4
 
-from dagster_duckdb import DuckDBResource
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fueldata.aggregates import AggregatedFuelDataClient
+from fueldata.prices import FuelPriceDataClient
 from fueldata.stations import FuelStationClient
 from tankerkoenig.client import TankerkoenigClient
 
@@ -21,11 +21,10 @@ from app.api import (
     refuels,
 )
 from app.auth import CurrentUser
-from app.migrations import run_migrations
 from app.storage.car_client import CarClient
-from app.storage.duckdb_resource import BackendDuckDBResource
 from app.storage.kilometer_client import KilometerClient
 from app.storage.refuel_client import RefuelDataClient
+from app.storage.sqlite_resource import BackendSQLiteResource
 from app.storage.user_store import UserStore
 
 # Context variable for request ID
@@ -130,16 +129,16 @@ LOGGING_CONFIG = {
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger(__name__)
 
-# Global DuckDB resource instance
-duckdb_resource: BackendDuckDBResource = None
+# Global SQLite resource instance
+sqlite_resource: BackendSQLiteResource = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    global duckdb_resource
+    global sqlite_resource
 
-    # Initialize DuckDB resource
+    # Initialize SQLite resource
     data_path = os.getenv("DATA_PATH", None)
 
     if not data_path:
@@ -148,17 +147,14 @@ async def lifespan(app: FastAPI):
     # Ensure the directory exists
     Path(data_path).mkdir(parents=True, exist_ok=True)
 
-    db_path = Path(data_path) / "userdata.duckdb"
-    duckdb_resource = BackendDuckDBResource(db_path)
-
-    # Run database migrations
-    run_migrations(db_path)
+    db_path = Path(data_path) / "userdata.sqlite"
+    sqlite_resource = BackendSQLiteResource(db_path)
 
     # Initialize clients (they create tables on instantiation)
-    user_store = UserStore(duckdb_resource)
-    refuel_client = RefuelDataClient(duckdb_resource)
-    car_client = CarClient(duckdb_resource)
-    kilometer_client = KilometerClient(duckdb_resource)
+    user_store = UserStore(sqlite_resource)
+    refuel_client = RefuelDataClient(sqlite_resource)
+    car_client = CarClient(sqlite_resource)
+    kilometer_client = KilometerClient(sqlite_resource)
 
     tankerkoenig_api_key = os.getenv("TANKERKOENIG_API_KEY")
     if not tankerkoenig_api_key:
@@ -167,25 +163,31 @@ async def lifespan(app: FastAPI):
 
     tankerkoenig_client = TankerkoenigClient(tankerkoenig_api_key)
 
-    # Initialize FuelStationClient for favorites (uses fueldata.duckdb)
-    fuel_db_path = Path(data_path) / "fueldata.duckdb"
+    # Initialize FuelStationClient for favorites/station info (userdata.sqlite)
+    fuel_station_client = FuelStationClient(sqlite_resource)
 
-    fuel_duckdb_resource = DuckDBResource(database=str(fuel_db_path))
-    fuel_station_client = FuelStationClient(fuel_duckdb_resource)
-    aggregated_fuel_data_client = AggregatedFuelDataClient(fuel_duckdb_resource)
+    # Initialize FuelPriceDataClient for fuel prices (fueldata.sqlite)
+    fueldata_db_path = Path(data_path) / "fueldata.sqlite"
+    fueldata_resource = BackendSQLiteResource(fueldata_db_path)
+    fuel_price_data_client = FuelPriceDataClient(fueldata_resource)
 
-    logger.info(f"Fuel station client initialized at: {fuel_db_path}")
-    logger.info(f"DuckDB initialized at: {db_path}")
+    aggregated_fuel_data_client = AggregatedFuelDataClient(data_path)
+
+    logger.info(
+        f"Clients initialized (userdata: {db_path}, fueldata: {fueldata_db_path})"
+    )
+    logger.info(f"SQLite initialized at: {db_path}")
     logger.info(f"Absolute path: {db_path.absolute()}")
 
     # Store clients in app state for dependency injection
-    app.state.duckdb_resource = duckdb_resource
+    app.state.sqlite_resource = sqlite_resource
     app.state.user_store = user_store
     app.state.refuel_client = refuel_client
     app.state.car_client = car_client
     app.state.kilometer_client = kilometer_client
     app.state.tankerkoenig_client = tankerkoenig_client
     app.state.fuel_station_client = fuel_station_client
+    app.state.fuel_price_data_client = fuel_price_data_client
     app.state.aggregated_fuel_data_client = aggregated_fuel_data_client
 
     yield
@@ -197,7 +199,7 @@ async def lifespan(app: FastAPI):
 # Create FastAPI app
 app = FastAPI(
     title="Refuel Tracker",
-    description="A fuel price tracking application with DuckDB storage",
+    description="A fuel price tracking application with SQLite + Parquet storage",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -343,12 +345,12 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Detailed health check"""
-    global duckdb_resource
+    global sqlite_resource
 
-    if not duckdb_resource:
-        raise HTTPException(status_code=503, detail="DuckDB resource not initialized")
+    if not sqlite_resource:
+        raise HTTPException(status_code=503, detail="SQLite resource not initialized")
 
-    return {"status": "healthy", "data_store": "operational", "storage_type": "duckdb"}
+    return {"status": "healthy", "data_store": "operational", "storage_type": "sqlite"}
 
 
 # Authentication endpoint

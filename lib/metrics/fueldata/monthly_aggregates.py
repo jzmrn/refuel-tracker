@@ -6,12 +6,15 @@ storage layer instead of filtering in Python after a full scan.
 """
 
 import logging
+import shutil
 from datetime import date, datetime
 from pathlib import Path
 
 import duckdb
 import numpy as np
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 from pydantic import BaseModel, field_validator
 
 logger = logging.getLogger(__name__)
@@ -119,6 +122,35 @@ def _parquet_glob(base_path: Path) -> str:
     return str(base_path / "**" / "*.parquet")
 
 
+def _store_parquet(base_path: Path, df: pd.DataFrame) -> None:
+    """Write a DataFrame as Hive-partitioned Parquet (partitioned by ``date``).
+
+    Uses ``pyarrow.parquet.write_to_dataset`` so the ``date`` column is
+    stored *only* in the directory structure, not inside the data files.
+    """
+    if df.empty:
+        return
+
+    write_df = df.copy()
+    write_df["date"] = pd.to_datetime(write_df["date"]).dt.date.astype(str)
+
+    table = pa.Table.from_pandas(write_df, preserve_index=False)
+    pq.write_to_dataset(
+        table,
+        root_path=str(base_path),
+        partition_cols=["date"],
+        existing_data_behavior="delete_matching",
+    )
+
+
+def _delete_partition(base_path: Path, target_date: date) -> None:
+    """Remove a single date-partition directory."""
+    partition_dir = base_path / f"date={target_date.isoformat()}"
+    if partition_dir.exists():
+        shutil.rmtree(partition_dir)
+        logger.info("Deleted partition %s", partition_dir)
+
+
 def _query_parquet(
     base_path: Path,
     filters: list[str],
@@ -162,10 +194,37 @@ def _query_parquet(
 
 
 class MonthlyStationAggregateClient:
-    """Client for reading monthly per-station fuel price aggregates from parquet."""
+    """Client for monthly per-station fuel price aggregates stored as parquet."""
 
     def __init__(self, base_path: str):
-        self._base_path = Path(base_path) / "monthly_station_aggregates"
+        self._base_path = Path(base_path) / "monthly_agg_price_by_station"
+        self._base_path.mkdir(parents=True, exist_ok=True)
+
+    # ------------------------------------------------------------------
+    # Write / Delete
+    # ------------------------------------------------------------------
+
+    def store_monthly_station_aggregates(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Store monthly per-station aggregates as Hive-partitioned Parquet.
+
+        The ``date`` column is used as the partition key and will be
+        stripped from the data files (reconstructed via hive_partitioning
+        on read).
+        """
+        logger.info(
+            "Storing monthly station aggregates",
+            extra={"row_count": len(df), "empty": df.empty},
+        )
+        _store_parquet(self._base_path, df)
+        return df
+
+    def delete_data_for_date(self, target_date: date) -> None:
+        """Delete the partition directory for *target_date*."""
+        _delete_partition(self._base_path, target_date)
+
+    # ------------------------------------------------------------------
+    # Read
+    # ------------------------------------------------------------------
 
     def read_monthly_station_aggregates(
         self,
@@ -212,10 +271,36 @@ class MonthlyStationAggregateClient:
 
 
 class MonthlyBrandAggregateClient:
-    """Client for reading monthly per-brand fuel price aggregates from parquet."""
+    """Client for monthly per-brand fuel price aggregates stored as parquet."""
 
     def __init__(self, base_path: str):
-        self._base_path = Path(base_path) / "monthly_brand_aggregates"
+        self._base_path = Path(base_path) / "monthly_agg_price_by_brand"
+        self._base_path.mkdir(parents=True, exist_ok=True)
+
+    # ------------------------------------------------------------------
+    # Write / Delete
+    # ------------------------------------------------------------------
+
+    def store_monthly_brand_aggregates(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Store monthly per-brand aggregates as Hive-partitioned Parquet.
+
+        The ``date`` column is used as the partition key and will be
+        stripped from the data files.
+        """
+        logger.info(
+            "Storing monthly brand aggregates",
+            extra={"row_count": len(df), "empty": df.empty},
+        )
+        _store_parquet(self._base_path, df)
+        return df
+
+    def delete_data_for_date(self, target_date: date) -> None:
+        """Delete the partition directory for *target_date*."""
+        _delete_partition(self._base_path, target_date)
+
+    # ------------------------------------------------------------------
+    # Read
+    # ------------------------------------------------------------------
 
     def read_monthly_brand_aggregates(
         self,
@@ -260,10 +345,36 @@ class MonthlyBrandAggregateClient:
 
 
 class MonthlyPlaceAggregateClient:
-    """Client for reading monthly per-place fuel price aggregates from parquet."""
+    """Client for monthly per-place fuel price aggregates stored as parquet."""
 
     def __init__(self, base_path: str):
-        self._base_path = Path(base_path) / "monthly_place_aggregates"
+        self._base_path = Path(base_path) / "monthly_agg_price_by_place"
+        self._base_path.mkdir(parents=True, exist_ok=True)
+
+    # ------------------------------------------------------------------
+    # Write / Delete
+    # ------------------------------------------------------------------
+
+    def store_monthly_place_aggregates(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Store monthly per-place aggregates as Hive-partitioned Parquet.
+
+        The ``date`` column is used as the partition key and will be
+        stripped from the data files.
+        """
+        logger.info(
+            "Storing monthly place aggregates",
+            extra={"row_count": len(df), "empty": df.empty},
+        )
+        _store_parquet(self._base_path, df)
+        return df
+
+    def delete_data_for_date(self, target_date: date) -> None:
+        """Delete the partition directory for *target_date*."""
+        _delete_partition(self._base_path, target_date)
+
+    # ------------------------------------------------------------------
+    # Read
+    # ------------------------------------------------------------------
 
     def read_monthly_place_aggregates(
         self,
