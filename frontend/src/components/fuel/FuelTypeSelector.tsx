@@ -2,7 +2,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { FuelType } from "@/lib/api";
 
 interface FuelTypeSelectorProps {
-  selectedFuelType: FuelType;
+  selectedFuelType: FuelType | null;
   onFuelTypeChange: (fuelType: FuelType) => void;
   availableFuelTypes?: FuelType[];
   className?: string;

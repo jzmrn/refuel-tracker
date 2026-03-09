@@ -5,6 +5,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import TuneIcon from "@mui/icons-material/Tune";
 import SearchStationsForm from "@/components/fuel-prices/SearchStationsForm";
 import FavoriteStationsList from "@/components/fuel-prices/FavoriteStationsList";
+import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
 import Snackbar from "@/components/common/Snackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSnackbar } from "@/lib/useSnackbar";
@@ -15,7 +16,11 @@ import {
   useRemoveFavoriteStation,
   useSearchStations,
 } from "@/lib/hooks/useFuelPrices";
-import { GasStationResponse, GasStationSearchRequest } from "@/lib/api";
+import {
+  FuelType,
+  GasStationResponse,
+  GasStationSearchRequest,
+} from "@/lib/api";
 
 type SortByType = "e5" | "e10" | "diesel" | "dist";
 
@@ -284,7 +289,7 @@ export default function SearchStations() {
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {t.fuelPrices.sortBy}:
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 <button
                   onClick={() => handleSortChange("dist")}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -295,36 +300,17 @@ export default function SearchStations() {
                 >
                   {t.fuelPrices.distance}
                 </button>
-                <button
-                  onClick={() => handleSortChange("e5")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    searchSortBy === "e5"
-                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {t.fuelPrices.e5}
-                </button>
-                <button
-                  onClick={() => handleSortChange("e10")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    searchSortBy === "e10"
-                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {t.fuelPrices.e10}
-                </button>
-                <button
-                  onClick={() => handleSortChange("diesel")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    searchSortBy === "diesel"
-                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {t.fuelPrices.diesel}
-                </button>
+                <FuelTypeSelector
+                  selectedFuelType={
+                    ["e5", "e10", "diesel"].includes(searchSortBy)
+                      ? (searchSortBy as FuelType)
+                      : null
+                  }
+                  onFuelTypeChange={(fuelType) =>
+                    handleSortChange(fuelType as SortByType)
+                  }
+                  className="col-span-3"
+                />
               </div>
             </div>
           </div>

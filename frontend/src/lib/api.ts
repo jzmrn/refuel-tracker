@@ -324,6 +324,42 @@ export interface StationDailyStatsResponse {
 
 export type FuelType = "e5" | "e10" | "diesel";
 
+// Statistics types
+export interface AvailableMonth {
+  date: string;
+}
+
+export interface MonthlyBrandAggregate {
+  brand: string;
+  price_mean: number;
+  price_min: number;
+  price_max: number;
+  n_stations: number;
+  n_price_changes: number;
+}
+
+export interface MonthlyPlaceAggregate {
+  place: string;
+  post_code: number;
+  price_mean: number;
+  price_min: number;
+  price_max: number;
+  n_stations: number;
+}
+
+export interface MonthlyStationAggregate {
+  station_id: string;
+  station_name: string | null;
+  brand: string | null;
+  street: string | null;
+  house_number: string | null;
+  place: string | null;
+  price_mean: number;
+  price_min: number;
+  price_max: number;
+  n_price_changes: number;
+}
+
 /**
  * Time range options for price history
  */
@@ -768,6 +804,45 @@ class ApiService {
     await this.api.delete(`/api/kilometers/${entryId}`, {
       params: { car_id: carId },
     });
+  }
+
+  // Statistics endpoints
+  async getAvailableMonths(): Promise<AvailableMonth[]> {
+    const response = await this.api.get("/api/stats/available-months");
+    return response.data;
+  }
+
+  async getMonthlyBrandAggregates(
+    fuelType: FuelType,
+    date: string,
+    limit: number = 10,
+  ): Promise<MonthlyBrandAggregate[]> {
+    const response = await this.api.get(`/api/stats/brands/${fuelType}`, {
+      params: { date, limit },
+    });
+    return response.data;
+  }
+
+  async getMonthlyPlaceAggregates(
+    fuelType: FuelType,
+    date: string,
+    limit: number = 10,
+  ): Promise<MonthlyPlaceAggregate[]> {
+    const response = await this.api.get(`/api/stats/places/${fuelType}`, {
+      params: { date, limit },
+    });
+    return response.data;
+  }
+
+  async getMonthlyStationAggregates(
+    fuelType: FuelType,
+    date: string,
+    limit: number = 10,
+  ): Promise<MonthlyStationAggregate[]> {
+    const response = await this.api.get(`/api/stats/stations/${fuelType}`, {
+      params: { date, limit },
+    });
+    return response.data;
   }
 }
 

@@ -7,6 +7,7 @@ import { UserProfile } from "@/components/auth";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import SettingsIcon from "@mui/icons-material/Settings";
 
 interface LayoutProps {
@@ -38,6 +39,12 @@ export default function Layout({ children }: LayoutProps) {
       href: "/cars",
       shortName: t.navigation.cars,
       icon: <DirectionsCarIcon className="w-5 h-5" />,
+    },
+    {
+      name: t.navigation.statistics,
+      href: "/stats",
+      shortName: t.navigation.statistics,
+      icon: <BarChartIcon className="w-5 h-5" />,
     },
   ];
 
@@ -74,7 +81,10 @@ export default function Layout({ children }: LayoutProps) {
                 router.pathname === item.href ||
                 (item.href === "/fuel-prices" &&
                   router.pathname.startsWith("/fuel-prices/")) ||
-                (item.href === "/cars" && router.pathname.startsWith("/cars/"));
+                (item.href === "/cars" &&
+                  router.pathname.startsWith("/cars/")) ||
+                (item.href === "/stats" &&
+                  router.pathname.startsWith("/stats/"));
               return (
                 <li key={item.name}>
                   <Link
@@ -136,7 +146,8 @@ export default function Layout({ children }: LayoutProps) {
               router.pathname === item.href ||
               (item.href === "/fuel-prices" &&
                 router.pathname.startsWith("/fuel-prices/")) ||
-              (item.href === "/cars" && router.pathname.startsWith("/cars/"));
+              (item.href === "/cars" && router.pathname.startsWith("/cars/")) ||
+              (item.href === "/stats" && router.pathname.startsWith("/stats/"));
             return (
               <Link
                 key={item.name}

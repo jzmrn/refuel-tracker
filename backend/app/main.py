@@ -10,6 +10,11 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fueldata.aggregates import AggregatedFuelDataClient
+from fueldata.monthly_aggregates import (
+    MonthlyBrandAggregateClient,
+    MonthlyPlaceAggregateClient,
+    MonthlyStationAggregateClient,
+)
 from fueldata.prices import FuelPriceDataClient
 from fueldata.stations import FuelStationClient
 from tankerkoenig.client import TankerkoenigClient
@@ -19,6 +24,7 @@ from app.api import (
     fuel_prices,
     kilometers,
     refuels,
+    stats,
 )
 from app.auth import CurrentUser
 from app.storage.car_client import CarClient
@@ -173,6 +179,11 @@ async def lifespan(app: FastAPI):
 
     aggregated_fuel_data_client = AggregatedFuelDataClient(data_path)
 
+    # Initialize Monthly Aggregate Clients for statistics
+    monthly_brand_client = MonthlyBrandAggregateClient(data_path)
+    monthly_place_client = MonthlyPlaceAggregateClient(data_path)
+    monthly_station_client = MonthlyStationAggregateClient(data_path)
+
     logger.info(
         f"Clients initialized (userdata: {db_path}, fueldata: {fueldata_db_path})"
     )
@@ -189,6 +200,9 @@ async def lifespan(app: FastAPI):
     app.state.fuel_station_client = fuel_station_client
     app.state.fuel_price_data_client = fuel_price_data_client
     app.state.aggregated_fuel_data_client = aggregated_fuel_data_client
+    app.state.monthly_brand_client = monthly_brand_client
+    app.state.monthly_place_client = monthly_place_client
+    app.state.monthly_station_client = monthly_station_client
 
     yield
 
@@ -331,6 +345,7 @@ app.include_router(cars.router, prefix="/api", tags=["cars"])
 app.include_router(refuels.router, prefix="/api/metrics", tags=["metrics"])
 app.include_router(kilometers.router, prefix="/api", tags=["kilometers"])
 app.include_router(fuel_prices.router, prefix="/api/fuel-prices", tags=["fuel-prices"])
+app.include_router(stats.router, prefix="/api/stats", tags=["stats"])
 
 
 @app.get("/")

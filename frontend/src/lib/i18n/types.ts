@@ -55,6 +55,7 @@ export interface TranslationStructure {
     lastMonth: string;
     lastSixMonths: string;
     lastYear: string;
+    statistics: string;
   };
 
   // Layout
@@ -414,5 +415,25 @@ export interface TranslationStructure {
     timeRange1Month: string;
     copyAddress: string;
     addressCopied: string;
+  };
+
+  // Statistics
+  statistics: {
+    title: string;
+    description: string;
+    selectMonth: string;
+    selectFuelType: string;
+    cheapestStations: string;
+    cheapestPlaces: string;
+    cheapestBrands: string;
+    station: string;
+    address: string;
+    place: string;
+    brand: string;
+    averagePrice: string;
+    postCode: string;
+    numStations: string;
+    noDataAvailable: string;
+    noMonthsAvailable: string;
   };
 }

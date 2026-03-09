@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import FavoriteStationsList from "@/components/fuel-prices/FavoriteStationsList";
+import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { FuelType } from "@/lib/api";
 import {
   useFavoriteStationsWithMinLoadTime,
   useRefreshFavorites,
 } from "@/lib/hooks/useFuelPrices";
-
-type SortByType = "e5" | "e10" | "diesel";
 
 const SORT_BY_STORAGE_KEY = "fuelPrices.sortBy";
 
@@ -26,7 +26,7 @@ export default function FuelPrices() {
   const refreshFavorites = useRefreshFavorites();
 
   // Initialize sortBy with value from localStorage or default to "e5"
-  const [sortBy, setSortBy] = useState<SortByType>(() => {
+  const [sortBy, setSortBy] = useState<FuelType>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem(SORT_BY_STORAGE_KEY);
       if (stored === "e5" || stored === "e10" || stored === "diesel") {
@@ -36,7 +36,7 @@ export default function FuelPrices() {
     return "e5";
   });
 
-  const handleSortChange = (newSortBy: SortByType) => {
+  const handleSortChange = (newSortBy: FuelType) => {
     setSortBy(newSortBy);
     localStorage.setItem(SORT_BY_STORAGE_KEY, newSortBy);
   };
@@ -90,38 +90,10 @@ export default function FuelPrices() {
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {t.fuelPrices.sortBy}:
           </label>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={() => handleSortChange("e5")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                sortBy === "e5"
-                  ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-              }`}
-            >
-              {t.fuelPrices.e5}
-            </button>
-            <button
-              onClick={() => handleSortChange("e10")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                sortBy === "e10"
-                  ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-              }`}
-            >
-              {t.fuelPrices.e10}
-            </button>
-            <button
-              onClick={() => handleSortChange("diesel")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                sortBy === "diesel"
-                  ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-              }`}
-            >
-              {t.fuelPrices.diesel}
-            </button>
-          </div>
+          <FuelTypeSelector
+            selectedFuelType={sortBy}
+            onFuelTypeChange={handleSortChange}
+          />
         </div>
       </div>
 

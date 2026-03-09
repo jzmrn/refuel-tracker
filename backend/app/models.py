@@ -502,3 +502,47 @@ class KilometerEntryResponse(BaseModel):
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+# Monthly Statistics Models
+class AvailableMonth(BaseModel):
+    """A single available month for statistics"""
+
+    date: str = Field(..., description="Date string in YYYY-MM-DD format")
+
+
+class MonthlyBrandAggregateResponse(BaseModel):
+    """Monthly aggregated fuel price data per brand"""
+
+    brand: str
+    price_mean: float
+    price_min: float
+    price_max: float
+    n_stations: int
+    n_price_changes: int
+
+
+class MonthlyPlaceAggregateResponse(BaseModel):
+    """Monthly aggregated fuel price data per place"""
+
+    place: str
+    post_code: int
+    price_mean: float
+    price_min: float
+    price_max: float
+    n_stations: int
+
+
+class MonthlyStationAggregateResponse(BaseModel):
+    """Monthly aggregated fuel price data per station (enriched with metadata)"""
+
+    station_id: str
+    station_name: str | None = None
+    brand: str | None = None
+    street: str | None = None
+    house_number: str | None = None
+    place: str | None = None
+    price_mean: float
+    price_min: float
+    price_max: float
+    n_price_changes: int

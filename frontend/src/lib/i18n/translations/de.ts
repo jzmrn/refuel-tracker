@@ -53,6 +53,7 @@ export const de: TranslationStructure = {
     lastMonth: "Letzter Monat",
     lastSixMonths: "Letzte 6 Monate",
     lastYear: "Letztes Jahr",
+    statistics: "Statistiken",
   },
 
   layout: {
@@ -435,5 +436,25 @@ export const de: TranslationStructure = {
     timeRange1Month: "1 Monat",
     copyAddress: "Adresse kopieren",
     addressCopied: "Adresse in Zwischenablage kopiert",
+  },
+
+  statistics: {
+    title: "Statistiken",
+    description:
+      "Monatliche Kraftstoffpreisstatistiken nach Marke, Ort und Tankstelle.",
+    selectMonth: "Monat auswählen",
+    selectFuelType: "Kraftstoffart",
+    cheapestStations: "Günstigste Tankstellen",
+    cheapestPlaces: "Günstigste Orte",
+    cheapestBrands: "Günstigste Marken",
+    station: "Tankstelle",
+    address: "Adresse",
+    place: "Ort",
+    brand: "Marke",
+    averagePrice: "Ø Preis",
+    postCode: "PLZ",
+    numStations: "Tankstellen",
+    noDataAvailable: "Keine Daten für diese Auswahl verfügbar.",
+    noMonthsAvailable: "Noch keine Statistikdaten verfügbar.",
   },
 };

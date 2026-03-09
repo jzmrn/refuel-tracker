@@ -53,6 +53,7 @@ export const en: TranslationStructure = {
     lastMonth: "Last Month",
     lastSixMonths: "Last 6 Months",
     lastYear: "Last Year",
+    statistics: "Statistics",
   },
 
   layout: {
@@ -421,5 +422,24 @@ export const en: TranslationStructure = {
     timeRange1Month: "1 Month",
     copyAddress: "Copy Address",
     addressCopied: "Address copied to clipboard",
+  },
+
+  statistics: {
+    title: "Statistics",
+    description: "Monthly fuel price statistics by brand, place, and station.",
+    selectMonth: "Select Month",
+    selectFuelType: "Fuel Type",
+    cheapestStations: "Cheapest Stations",
+    cheapestPlaces: "Cheapest Places",
+    cheapestBrands: "Cheapest Brands",
+    station: "Station",
+    address: "Address",
+    place: "Place",
+    brand: "Brand",
+    averagePrice: "Avg. Price",
+    postCode: "Post Code",
+    numStations: "Stations",
+    noDataAvailable: "No data available for this selection.",
+    noMonthsAvailable: "No statistics data available yet.",
   },
 };
