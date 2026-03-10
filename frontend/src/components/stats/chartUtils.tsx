@@ -2,7 +2,7 @@ import React from "react";
 import { TooltipProps } from "recharts";
 import { tooltipStyle } from "@/lib/chartConfig";
 
-const PLACE_COLORS = [
+const CHART_COLORS = [
   "#3b82f6",
   "#10b981",
   "#f59e0b",
@@ -17,30 +17,45 @@ const PLACE_COLORS = [
   "#e11d48",
 ];
 
+export interface DetailAggregate {
+  date: string;
+  entity: string;
+  price_mean: number;
+  price_min: number;
+  price_max: number;
+  price_std: number | null;
+  n_stations: number;
+  n_price_changes: number;
+  n_unique_prices: number;
+  n_days: number;
+  price_changes_per_station_day: number;
+  unique_prices_per_station_day: number;
+}
+
 /**
- * Build a deterministic color map for places.
- * Colors are assigned based on alphabetical order so the same place
+ * Build a deterministic color map for entities.
+ * Colors are assigned based on alphabetical order so the same entity
  * always gets the same color across all charts.
  */
-export function buildPlaceColorMap(places: string[]): Map<string, string> {
-  const sorted = [...places].sort();
+export function buildColorMap(entities: string[]): Map<string, string> {
+  const sorted = [...entities].sort();
   return new Map(
-    sorted.map((p, i) => [p, PLACE_COLORS[i % PLACE_COLORS.length]]),
+    sorted.map((p, i) => [p, CHART_COLORS[i % CHART_COLORS.length]]),
   );
 }
 
-interface PlaceTooltipProps extends TooltipProps<number, string> {
+interface ChartTooltipProps extends TooltipProps<number, string> {
   labelFormatter?: (label: string) => string;
   valueFormatter: (value: number) => string;
 }
 
-export function PlaceTooltip({
+export function ChartTooltip({
   active,
   payload,
   label,
   labelFormatter,
   valueFormatter,
-}: PlaceTooltipProps) {
+}: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
 
   const sorted = [...payload]

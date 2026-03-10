@@ -1,13 +1,13 @@
 import React, { useCallback } from "react";
-import { PlaceDetailAggregate } from "@/lib/api";
+import { BrandDetailAggregate } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { usePlaceDetailsWithMinLoadTime } from "@/lib/hooks/useStats";
+import { useBrandDetailsWithMinLoadTime } from "@/lib/hooks/useStats";
 import { DetailAggregate } from "@/components/stats/chartUtils";
 import DetailContent from "@/components/stats/DetailContent";
 
-const mapPlaceToDetail = (item: PlaceDetailAggregate): DetailAggregate => ({
+const mapBrandToDetail = (item: BrandDetailAggregate): DetailAggregate => ({
   date: item.date,
-  entity: item.place,
+  entity: item.brand,
   price_mean: item.price_mean,
   price_min: item.price_min,
   price_max: item.price_max,
@@ -20,29 +20,29 @@ const mapPlaceToDetail = (item: PlaceDetailAggregate): DetailAggregate => ({
   unique_prices_per_station_day: item.unique_prices_per_station_day,
 });
 
-const PlacesContent: React.FC = () => {
+const BrandsContent: React.FC = () => {
   const { t } = useTranslation();
 
   const useDetailData = useCallback(
     (
-      fuelType: Parameters<typeof usePlaceDetailsWithMinLoadTime>[0],
+      fuelType: Parameters<typeof useBrandDetailsWithMinLoadTime>[0],
       months: number,
-    ) => usePlaceDetailsWithMinLoadTime(fuelType, months),
+    ) => useBrandDetailsWithMinLoadTime(fuelType, months),
     [],
   );
 
   return (
     <DetailContent
-      storageKeyPrefix="placesDetails"
+      storageKeyPrefix="brandsDetails"
       useDetailData={useDetailData}
-      mapToDetail={mapPlaceToDetail}
+      mapToDetail={mapBrandToDetail}
       chartLabels={{
-        avgPrice: t.statistics.avgPriceByPlace,
-        variance: t.statistics.priceVarianceByPlace,
-        activity: t.statistics.priceActivityByPlace,
+        avgPrice: t.statistics.avgPriceByBrand,
+        variance: t.statistics.priceVarianceByBrand,
+        activity: t.statistics.priceActivityByBrand,
       }}
     />
   );
 };
 
-export default PlacesContent;
+export default BrandsContent;

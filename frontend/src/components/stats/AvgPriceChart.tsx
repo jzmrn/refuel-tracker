@@ -9,7 +9,6 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { PlaceDetailAggregate } from "@/lib/api";
 import { useLocalization } from "@/lib/i18n/LanguageContext";
 import {
   axisConfig,
@@ -17,49 +16,49 @@ import {
   useAxisColor,
   renderLegendText,
 } from "@/lib/chartConfig";
-import { buildPlaceColorMap, PlaceTooltip } from "./placeChartUtils";
+import { DetailAggregate, buildColorMap, ChartTooltip } from "./chartUtils";
 
 interface ChartEntry {
   date: string;
-  [place: string]: string | number;
+  [entity: string]: string | number;
 }
 
-interface PlaceAvgPriceChartProps {
-  data: PlaceDetailAggregate[];
+interface AvgPriceChartProps {
+  data: DetailAggregate[];
 }
 
-export default function PlaceAvgPriceChart({ data }: PlaceAvgPriceChartProps) {
+export default function AvgPriceChart({ data }: AvgPriceChartProps) {
   const { formatMonthLabel } = useLocalization();
   const gridConfig = useGridConfig();
   const axisColor = useAxisColor();
 
-  const { chartData, places } = useMemo(() => {
+  const { chartData, entities } = useMemo(() => {
     const monthSet = new Set<string>();
-    const placeSet = new Set<string>();
+    const entitySet = new Set<string>();
     const byMonth = new Map<string, Record<string, number>>();
 
     for (const d of data) {
       monthSet.add(d.date);
-      placeSet.add(d.place);
+      entitySet.add(d.entity);
       const entry = byMonth.get(d.date) ?? {};
-      entry[d.place] = d.price_mean;
+      entry[d.entity] = d.price_mean;
       byMonth.set(d.date, entry);
     }
 
     const months = Array.from(monthSet).sort();
-    const places = Array.from(placeSet);
+    const entities = Array.from(entitySet);
 
-    places.sort();
+    entities.sort();
 
     const chartData: ChartEntry[] = months.map((date) => ({
       date,
       ...(byMonth.get(date) ?? {}),
     }));
 
-    return { chartData, places };
+    return { chartData, entities };
   }, [data]);
 
-  const colorMap = useMemo(() => buildPlaceColorMap(places), [places]);
+  const colorMap = useMemo(() => buildColorMap(entities), [entities]);
 
   if (chartData.length === 0) return null;
 
@@ -84,20 +83,20 @@ export default function PlaceAvgPriceChart({ data }: PlaceAvgPriceChartProps) {
         />
         <Tooltip
           content={
-            <PlaceTooltip
+            <ChartTooltip
               labelFormatter={formatMonthLabel}
               valueFormatter={(v) => `${v.toFixed(3)} €/L`}
             />
           }
         />
         <Legend formatter={renderLegendText} />
-        {places.map((place) => (
+        {entities.map((entity) => (
           <Line
-            key={place}
+            key={entity}
             type="monotone"
-            dataKey={place}
-            stroke={colorMap.get(place)}
-            name={place}
+            dataKey={entity}
+            stroke={colorMap.get(entity)}
+            name={entity}
             strokeWidth={2}
             dot={{ r: 3 }}
             connectNulls

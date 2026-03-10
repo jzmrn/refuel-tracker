@@ -183,6 +183,15 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
           <BusinessIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
         }
         iconBackground="indigo"
+        headerAction={
+          <button
+            onClick={() => router.push("/stats/brands")}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            aria-label={t.statistics.brandsDetails}
+          >
+            <BarChartIcon className="icon text-gray-600 dark:text-gray-400" />
+          </button>
+        }
       >
         {brands.length === 0 ? (
           <p className="text-secondary text-sm">

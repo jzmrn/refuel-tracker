@@ -14,6 +14,7 @@ from fueldata.stations import FuelStationClient
 from app.auth import CurrentUser
 from app.models import (
     AvailableMonth,
+    BrandDetailAggregateResponse,
     MonthlyBrandAggregateResponse,
     MonthlyPlaceAggregateResponse,
     MonthlyStationAggregateResponse,
@@ -338,6 +339,104 @@ async def get_place_details(
             date=a.date.isoformat(),
             place=a.place,
             post_code=a.post_code,
+            price_mean=a.price_mean,
+            price_min=a.price_min,
+            price_max=a.price_max,
+            price_std=a.price_std,
+            n_stations=a.n_stations,
+            n_price_changes=a.n_price_changes,
+            n_unique_prices=a.n_unique_prices,
+            n_days=a.n_days,
+            price_changes_per_station_day=(
+                a.n_price_changes / (a.n_stations * a.n_days)
+                if a.n_stations > 0 and a.n_days > 0
+                else 0.0
+            ),
+            unique_prices_per_station_day=(
+                a.n_unique_prices / (a.n_stations * a.n_days)
+                if a.n_stations > 0 and a.n_days > 0
+                else 0.0
+            ),
+        )
+        for a in result
+    ]
+
+
+@router.get(
+    "/brands/{fuel_type}/details",
+    response_model=list[BrandDetailAggregateResponse],
+)
+async def get_brand_details(
+    fuel_type: str,
+    user: CurrentUser,
+    brand_client: MonthlyBrandAggregateClient = Depends(get_monthly_brand_client),
+    months: int = 3,
+    limit: int = 10,
+):
+    """Return multi-month brand aggregates for the top N cheapest brands.
+
+    The `months` parameter selects how many months of history to include (3 or 12).
+    The top N brands are determined by their average price_mean across all months.
+    All monthly rows for those brands are returned.
+    """
+    _validate_fuel_type(fuel_type)
+
+    if months not in (3, 12):
+        raise HTTPException(
+            status_code=400,
+            detail="months must be 3 or 12",
+        )
+
+    today = date.today()
+    end_date = today.replace(day=1)
+    month_val = end_date.month - months
+    year_val = end_date.year
+    while month_val < 1:
+        month_val += 12
+        year_val -= 1
+    start_date = date(year_val, month_val, 1)
+
+    aggregates = brand_client.get_monthly_brand_aggregates(
+        start_date=start_date.isoformat(),
+        end_date=end_date.isoformat(),
+        fuel_type=fuel_type,
+    )
+
+    if not aggregates:
+        return []
+
+    # Compute average price_mean per brand across all months
+    brand_totals: dict[str, list[float]] = defaultdict(list)
+    for a in aggregates:
+        brand_totals[a.brand].append(a.price_mean)
+
+    brand_avg = {
+        brand: sum(prices) / len(prices) for brand, prices in brand_totals.items()
+    }
+
+    # Select top N cheapest brands
+    top_brands = sorted(brand_avg, key=lambda b: brand_avg[b])[:limit]
+    top_brands_set = set(top_brands)
+
+    # Filter and sort: by date then brand
+    result = [a for a in aggregates if a.brand in top_brands_set]
+    result.sort(key=lambda a: (a.date.isoformat(), a.brand))
+
+    logger.info(
+        "Brand detail aggregates requested",
+        extra={
+            "fuel_type": fuel_type,
+            "months": months,
+            "limit": limit,
+            "result_count": len(result),
+            "top_brands": len(top_brands_set),
+        },
+    )
+
+    return [
+        BrandDetailAggregateResponse(
+            date=a.date.isoformat(),
+            brand=a.brand,
             price_mean=a.price_mean,
             price_min=a.price_min,
             price_max=a.price_max,

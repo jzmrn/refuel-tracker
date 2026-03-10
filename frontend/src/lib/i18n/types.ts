@@ -443,6 +443,11 @@ export interface TranslationStructure {
     avgPriceByPlace: string;
     priceVarianceByPlace: string;
     priceActivityByPlace: string;
+    brandsDetails: string;
+    brandsDetailsDescription: string;
+    avgPriceByBrand: string;
+    priceVarianceByBrand: string;
+    priceActivityByBrand: string;
     avgDailyPriceChanges: string;
     avgDailyUniquePrices: string;
     variance: string;

@@ -9,7 +9,6 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { PlaceDetailAggregate } from "@/lib/api";
 import { useLocalization } from "@/lib/i18n/LanguageContext";
 import {
   axisConfig,
@@ -17,50 +16,50 @@ import {
   useAxisColor,
   renderLegendText,
 } from "@/lib/chartConfig";
-import { buildPlaceColorMap, PlaceTooltip } from "./placeChartUtils";
+import { DetailAggregate, buildColorMap, ChartTooltip } from "./chartUtils";
 import { renderSvgCentsPrice } from "@/lib/formatPrice";
 
 interface ChartEntry {
   date: string;
-  [place: string]: string | number;
+  [entity: string]: string | number;
 }
 
-interface PlaceVarianceChartProps {
-  data: PlaceDetailAggregate[];
+interface VarianceChartProps {
+  data: DetailAggregate[];
 }
 
-export default function PlaceVarianceChart({ data }: PlaceVarianceChartProps) {
+export default function VarianceChart({ data }: VarianceChartProps) {
   const { formatMonthLabel } = useLocalization();
   const gridConfig = useGridConfig();
   const axisColor = useAxisColor();
 
-  const { chartData, places } = useMemo(() => {
+  const { chartData, entities } = useMemo(() => {
     const monthSet = new Set<string>();
-    const placeSet = new Set<string>();
+    const entitySet = new Set<string>();
     const byMonth = new Map<string, Record<string, number>>();
 
     for (const d of data) {
       monthSet.add(d.date);
-      placeSet.add(d.place);
+      entitySet.add(d.entity);
       const entry = byMonth.get(d.date) ?? {};
-      entry[d.place] = (d.price_std ?? 0) * 100;
+      entry[d.entity] = (d.price_std ?? 0) * 100;
       byMonth.set(d.date, entry);
     }
 
     const months = Array.from(monthSet).sort();
-    const places = Array.from(placeSet);
+    const entities = Array.from(entitySet);
 
-    places.sort();
+    entities.sort();
 
     const chartData: ChartEntry[] = months.map((date) => ({
       date,
       ...(byMonth.get(date) ?? {}),
     }));
 
-    return { chartData, places };
+    return { chartData, entities };
   }, [data]);
 
-  const colorMap = useMemo(() => buildPlaceColorMap(places), [places]);
+  const colorMap = useMemo(() => buildColorMap(entities), [entities]);
 
   if (chartData.length === 0) return null;
 
@@ -80,7 +79,7 @@ export default function PlaceVarianceChart({ data }: PlaceVarianceChartProps) {
         <YAxis {...axisConfig.yAxis} stroke={axisColor} domain={[0, "auto"]} />
         <Tooltip
           content={
-            <PlaceTooltip
+            <ChartTooltip
               labelFormatter={formatMonthLabel}
               valueFormatter={(v) =>
                 renderSvgCentsPrice(v, { showCurrency: true })
@@ -89,13 +88,13 @@ export default function PlaceVarianceChart({ data }: PlaceVarianceChartProps) {
           }
         />
         <Legend formatter={renderLegendText} />
-        {places.map((place) => (
+        {entities.map((entity) => (
           <Line
-            key={place}
+            key={entity}
             type="monotone"
-            dataKey={place}
-            stroke={colorMap.get(place)}
-            name={place}
+            dataKey={entity}
+            stroke={colorMap.get(entity)}
+            name={entity}
             strokeWidth={2}
             dot={{ r: 3 }}
             connectNulls
