@@ -454,6 +454,12 @@ export const en: TranslationStructure = {
     avgPriceByBrand: "Average Price",
     priceVarianceByBrand: "Price Variance",
     priceActivityByBrand: "Price Changes by Station and Day",
+    stationsDetails: "Station Details",
+    stationsDetailsDescription:
+      "Compare fuel prices across stations over time.",
+    avgPriceByStation: "Average Price",
+    priceVarianceByStation: "Price Variance",
+    priceActivityByStation: "Price Changes per Day",
     avgDailyPriceChanges: "Avg. Daily Price Changes",
     avgDailyUniquePrices: "Avg. Daily Unique Prices",
     variance: "Variance (Std. Dev.)",

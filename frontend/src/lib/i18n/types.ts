@@ -448,6 +448,11 @@ export interface TranslationStructure {
     avgPriceByBrand: string;
     priceVarianceByBrand: string;
     priceActivityByBrand: string;
+    stationsDetails: string;
+    stationsDetailsDescription: string;
+    avgPriceByStation: string;
+    priceVarianceByStation: string;
+    priceActivityByStation: string;
     avgDailyPriceChanges: string;
     avgDailyUniquePrices: string;
     variance: string;

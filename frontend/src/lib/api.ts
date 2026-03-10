@@ -391,6 +391,24 @@ export interface MonthlyStationAggregate {
   n_price_changes: number;
 }
 
+export interface StationDetailAggregate {
+  date: string;
+  station_id: string;
+  station_name: string | null;
+  brand: string | null;
+  place: string | null;
+  price_mean: number;
+  price_min: number;
+  price_max: number;
+  price_std: number | null;
+  n_stations: number;
+  n_price_changes: number;
+  n_unique_prices: number;
+  n_days: number;
+  price_changes_per_station_day: number;
+  unique_prices_per_station_day: number;
+}
+
 /**
  * Time range options for price history
  */
@@ -897,6 +915,20 @@ class ApiService {
   ): Promise<BrandDetailAggregate[]> {
     const response = await this.api.get(
       `/api/stats/brands/${fuelType}/details`,
+      {
+        params: { months, limit },
+      },
+    );
+    return response.data;
+  }
+
+  async getStationDetailAggregates(
+    fuelType: FuelType,
+    months: number = 3,
+    limit: number = 10,
+  ): Promise<StationDetailAggregate[]> {
+    const response = await this.api.get(
+      `/api/stats/stations/${fuelType}/details`,
       {
         params: { months, limit },
       },

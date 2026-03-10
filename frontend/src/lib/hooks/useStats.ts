@@ -16,6 +16,8 @@ export const statsKeys = {
     [...statsKeys.all, "placeDetails", fuelType, months, limit] as const,
   brandDetails: (fuelType: FuelType, months: number, limit: number) =>
     [...statsKeys.all, "brandDetails", fuelType, months, limit] as const,
+  stationDetails: (fuelType: FuelType, months: number, limit: number) =>
+    [...statsKeys.all, "stationDetails", fuelType, months, limit] as const,
 };
 
 /**
@@ -151,4 +153,28 @@ export function useBrandDetailsWithMinLoadTime(
   limit: number = 10,
 ) {
   return useWithMinLoadTime(useBrandDetails(fuelType, months, limit));
+}
+
+/**
+ * Hook to fetch multi-month station detail aggregates for the top N cheapest stations.
+ */
+export function useStationDetails(
+  fuelType: FuelType,
+  months: number = 3,
+  limit: number = 10,
+) {
+  return useQuery({
+    queryKey: statsKeys.stationDetails(fuelType, months, limit),
+    queryFn: () =>
+      apiService.getStationDetailAggregates(fuelType, months, limit),
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+export function useStationDetailsWithMinLoadTime(
+  fuelType: FuelType,
+  months: number = 3,
+  limit: number = 10,
+) {
+  return useWithMinLoadTime(useStationDetails(fuelType, months, limit));
 }

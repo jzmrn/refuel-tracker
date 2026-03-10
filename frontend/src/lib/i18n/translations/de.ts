@@ -471,6 +471,12 @@ export const de: TranslationStructure = {
     avgPriceByBrand: "Durchschnittspreis",
     priceVarianceByBrand: "Preisvarianz",
     priceActivityByBrand: "Preisänderungen pro Tankstelle und Tag",
+    stationsDetails: "Tankstellendetails",
+    stationsDetailsDescription:
+      "Vergleichen Sie Kraftstoffpreise verschiedener Tankstellen über die Zeit.",
+    avgPriceByStation: "Durchschnittspreis",
+    priceVarianceByStation: "Preisvarianz",
+    priceActivityByStation: "Preisänderungen pro Tag",
     avgDailyPriceChanges: "Ø Tägliche Preisänderungen",
     avgDailyUniquePrices: "Ø Tägliche einzigartige Preise",
     variance: "Varianz (Std. Abw.)",

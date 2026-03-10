@@ -47,6 +47,15 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
           <LocalGasStationIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
         }
         iconBackground="purple"
+        headerAction={
+          <button
+            onClick={() => router.push("/stats/stations")}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            aria-label={t.statistics.stationsDetails}
+          >
+            <BarChartIcon className="icon text-gray-600 dark:text-gray-400" />
+          </button>
+        }
       >
         {stations.length === 0 ? (
           <p className="text-secondary text-sm">

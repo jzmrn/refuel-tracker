@@ -19,6 +19,7 @@ from app.models import (
     MonthlyPlaceAggregateResponse,
     MonthlyStationAggregateResponse,
     PlaceDetailAggregateResponse,
+    StationDetailAggregateResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -454,6 +455,120 @@ async def get_brand_details(
                 a.n_unique_prices / (a.n_stations * a.n_days)
                 if a.n_stations > 0 and a.n_days > 0
                 else 0.0
+            ),
+        )
+        for a in result
+    ]
+
+
+@router.get(
+    "/stations/{fuel_type}/details",
+    response_model=list[StationDetailAggregateResponse],
+)
+async def get_station_details(
+    fuel_type: str,
+    user: CurrentUser,
+    station_client: MonthlyStationAggregateClient = Depends(get_monthly_station_client),
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+    months: int = 3,
+    limit: int = 10,
+):
+    """Return multi-month station aggregates for the top N cheapest stations.
+
+    The `months` parameter selects how many months of history to include (3 or 12).
+    The top N stations are determined by their average price_mean across all months.
+    All monthly rows for those stations are returned.
+    """
+    _validate_fuel_type(fuel_type)
+
+    if months not in (3, 12):
+        raise HTTPException(
+            status_code=400,
+            detail="months must be 3 or 12",
+        )
+
+    today = date.today()
+    end_date = today.replace(day=1)
+    month_val = end_date.month - months
+    year_val = end_date.year
+    while month_val < 1:
+        month_val += 12
+        year_val -= 1
+    start_date = date(year_val, month_val, 1)
+
+    aggregates = station_client.get_monthly_station_aggregates(
+        start_date=start_date.isoformat(),
+        end_date=end_date.isoformat(),
+        fuel_type=fuel_type,
+    )
+
+    if not aggregates:
+        return []
+
+    # Compute average price_mean per station across all months
+    station_totals: dict[str, list[float]] = defaultdict(list)
+    for a in aggregates:
+        station_totals[a.station_id].append(a.price_mean)
+
+    station_avg = {
+        sid: sum(prices) / len(prices) for sid, prices in station_totals.items()
+    }
+
+    # Select top N cheapest stations
+    top_stations = sorted(station_avg, key=lambda s: station_avg[s])[:limit]
+    top_stations_set = set(top_stations)
+
+    # Filter and sort: by date then station_id
+    result = [a for a in aggregates if a.station_id in top_stations_set]
+    result.sort(key=lambda a: (a.date.isoformat(), a.station_id))
+
+    # Build a lookup map for station metadata
+    station_info_map: dict[str, dict] = {}
+    for sid in top_stations:
+        info_list = fuel_station_client.get_gas_station_info(station_id=sid)
+        if info_list:
+            info = info_list[0]
+            label = info.brand or info.name or sid
+            if info.place:
+                label = f"{label} ({info.place})"
+            station_info_map[sid] = {
+                "name": info.name,
+                "brand": info.brand,
+                "place": info.place,
+                "label": label,
+            }
+
+    logger.info(
+        "Station detail aggregates requested",
+        extra={
+            "fuel_type": fuel_type,
+            "months": months,
+            "limit": limit,
+            "result_count": len(result),
+            "top_stations": len(top_stations_set),
+        },
+    )
+
+    return [
+        StationDetailAggregateResponse(
+            date=a.date.isoformat(),
+            station_id=a.station_id,
+            station_name=station_info_map.get(a.station_id, {}).get("name"),
+            brand=station_info_map.get(a.station_id, {}).get("brand"),
+            place=station_info_map.get(a.station_id, {}).get("place"),
+            price_mean=a.price_mean,
+            price_min=a.price_min,
+            price_max=a.price_max,
+            price_std=a.price_std,
+            n_stations=1,
+            n_price_changes=a.n_price_changes,
+            n_unique_prices=a.n_unique_prices,
+            n_days=a.n_days,
+            price_changes_per_station_day=(
+                a.n_price_changes / a.n_days if a.n_days > 0 else 0.0
+            ),
+            unique_prices_per_station_day=(
+                a.n_unique_prices / a.n_days if a.n_days > 0 else 0.0
             ),
         )
         for a in result
