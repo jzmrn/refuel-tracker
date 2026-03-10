@@ -347,6 +347,22 @@ export interface MonthlyPlaceAggregate {
   n_stations: number;
 }
 
+export interface PlaceDetailAggregate {
+  date: string;
+  place: string;
+  post_code: number;
+  price_mean: number;
+  price_min: number;
+  price_max: number;
+  price_std: number | null;
+  n_stations: number;
+  n_price_changes: number;
+  n_unique_prices: number;
+  n_days: number;
+  price_changes_per_station_day: number;
+  unique_prices_per_station_day: number;
+}
+
 export interface MonthlyStationAggregate {
   station_id: string;
   station_name: string | null;
@@ -842,6 +858,20 @@ class ApiService {
     const response = await this.api.get(`/api/stats/stations/${fuelType}`, {
       params: { date, limit },
     });
+    return response.data;
+  }
+
+  async getPlaceDetails(
+    fuelType: FuelType,
+    months: number = 3,
+    limit: number = 10,
+  ): Promise<PlaceDetailAggregate[]> {
+    const response = await this.api.get(
+      `/api/stats/places/${fuelType}/details`,
+      {
+        params: { months, limit },
+      },
+    );
     return response.data;
   }
 }

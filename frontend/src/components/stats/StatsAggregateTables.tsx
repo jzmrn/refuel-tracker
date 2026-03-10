@@ -1,4 +1,5 @@
 import React from "react";
+import { useRouter } from "next/router";
 import {
   MonthlyStationAggregate,
   MonthlyPlaceAggregate,
@@ -11,6 +12,7 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
 import PlaceIcon from "@mui/icons-material/Place";
 import BusinessIcon from "@mui/icons-material/Business";
+import BarChartIcon from "@mui/icons-material/BarChart";
 
 interface StatsAggregateTablesProps {
   stations: MonthlyStationAggregate[];
@@ -30,6 +32,7 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
   brandsLoading,
 }) => {
   const { t } = useTranslation();
+  const router = useRouter();
 
   if (stationsLoading || placesLoading || brandsLoading) {
     return <LoadingSpinner text={t.common.loading} />;
@@ -110,6 +113,15 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
           <PlaceIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
         }
         iconBackground="orange"
+        headerAction={
+          <button
+            onClick={() => router.push("/stats/places")}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            aria-label={t.statistics.placesDetails}
+          >
+            <BarChartIcon className="icon text-gray-600 dark:text-gray-400" />
+          </button>
+        }
       >
         {places.length === 0 ? (
           <p className="text-secondary text-sm">

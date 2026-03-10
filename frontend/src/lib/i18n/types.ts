@@ -435,5 +435,17 @@ export interface TranslationStructure {
     numStations: string;
     noDataAvailable: string;
     noMonthsAvailable: string;
+    placesDetails: string;
+    placesDetailsDescription: string;
+    timeRange: string;
+    last3Months: string;
+    lastYear: string;
+    avgPriceByPlace: string;
+    priceVarianceByPlace: string;
+    priceActivityByPlace: string;
+    avgDailyPriceChanges: string;
+    avgDailyUniquePrices: string;
+    variance: string;
+    back: string;
   };
 }

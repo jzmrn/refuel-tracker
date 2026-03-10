@@ -456,5 +456,18 @@ export const de: TranslationStructure = {
     numStations: "Tankstellen",
     noDataAvailable: "Keine Daten für diese Auswahl verfügbar.",
     noMonthsAvailable: "Noch keine Statistikdaten verfügbar.",
+    placesDetails: "Ortsdetails",
+    placesDetailsDescription:
+      "Vergleichen Sie Kraftstoffpreise verschiedener Orte über die Zeit.",
+    timeRange: "Zeitraum",
+    last3Months: "Letzte 3 Monate",
+    lastYear: "Letztes Jahr",
+    avgPriceByPlace: "Durchschnittspreis",
+    priceVarianceByPlace: "Preisvarianz",
+    priceActivityByPlace: "Preisänderungen pro Tankstelle und Tag",
+    avgDailyPriceChanges: "Ø Tägliche Preisänderungen",
+    avgDailyUniquePrices: "Ø Tägliche einzigartige Preise",
+    variance: "Varianz (Std. Abw.)",
+    back: "Zurück",
   },
 };

@@ -533,6 +533,24 @@ class MonthlyPlaceAggregateResponse(BaseModel):
     n_stations: int
 
 
+class PlaceDetailAggregateResponse(BaseModel):
+    """Monthly aggregated fuel price data per place with full detail fields."""
+
+    date: str
+    place: str
+    post_code: int
+    price_mean: float
+    price_min: float
+    price_max: float
+    price_std: float | None = None
+    n_stations: int
+    n_price_changes: int
+    n_unique_prices: int
+    n_days: int
+    price_changes_per_station_day: float
+    unique_prices_per_station_day: float
+
+
 class MonthlyStationAggregateResponse(BaseModel):
     """Monthly aggregated fuel price data per station (enriched with metadata)"""
 

@@ -1,4 +1,6 @@
 import logging
+from collections import defaultdict
+from datetime import date
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -15,6 +17,7 @@ from app.models import (
     MonthlyBrandAggregateResponse,
     MonthlyPlaceAggregateResponse,
     MonthlyStationAggregateResponse,
+    PlaceDetailAggregateResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -254,4 +257,105 @@ async def get_monthly_stations(
             n_price_changes=a.n_price_changes,
         )
         for a in aggregates
+    ]
+
+
+@router.get(
+    "/places/{fuel_type}/details",
+    response_model=list[PlaceDetailAggregateResponse],
+)
+async def get_place_details(
+    fuel_type: str,
+    user: CurrentUser,
+    place_client: MonthlyPlaceAggregateClient = Depends(get_monthly_place_client),
+    months: int = 3,
+    limit: int = 10,
+):
+    """Return multi-month place aggregates for the top N cheapest places.
+
+    The `months` parameter selects how many months of history to include (3 or 12).
+    The top N places are determined by their average price_mean across all months.
+    All monthly rows for those places are returned.
+    """
+    _validate_fuel_type(fuel_type)
+
+    if months not in (3, 12):
+        raise HTTPException(
+            status_code=400,
+            detail="months must be 3 or 12",
+        )
+
+    # Compute date range: end_date = 1st of current month, start_date = months back
+    today = date.today()
+    end_date = today.replace(day=1)
+    # Go back `months` months
+    month_val = end_date.month - months
+    year_val = end_date.year
+    while month_val < 1:
+        month_val += 12
+        year_val -= 1
+    start_date = date(year_val, month_val, 1)
+
+    aggregates = place_client.get_monthly_place_aggregates(
+        start_date=start_date.isoformat(),
+        end_date=end_date.isoformat(),
+        fuel_type=fuel_type,
+    )
+
+    if not aggregates:
+        return []
+
+    # Compute average price_mean per place across all months
+    place_totals: dict[str, list[float]] = defaultdict(list)
+    for a in aggregates:
+        place_totals[a.place].append(a.price_mean)
+
+    place_avg = {
+        place: sum(prices) / len(prices) for place, prices in place_totals.items()
+    }
+
+    # Select top N cheapest places
+    top_places = sorted(place_avg, key=lambda p: place_avg[p])[:limit]
+    top_places_set = set(top_places)
+
+    # Filter and sort: by date then place
+    result = [a for a in aggregates if a.place in top_places_set]
+    result.sort(key=lambda a: (a.date.isoformat(), a.place))
+
+    logger.info(
+        "Place detail aggregates requested",
+        extra={
+            "fuel_type": fuel_type,
+            "months": months,
+            "limit": limit,
+            "result_count": len(result),
+            "top_places": len(top_places_set),
+        },
+    )
+
+    return [
+        PlaceDetailAggregateResponse(
+            date=a.date.isoformat(),
+            place=a.place,
+            post_code=a.post_code,
+            price_mean=a.price_mean,
+            price_min=a.price_min,
+            price_max=a.price_max,
+            price_std=a.price_std,
+            n_stations=a.n_stations,
+            n_price_changes=a.n_price_changes,
+            n_unique_prices=a.n_unique_prices,
+            n_days=a.n_days,
+            price_changes_per_station_day=(
+                a.n_price_changes / (a.n_stations * a.n_days)
+                if a.n_stations > 0 and a.n_days > 0
+                else 0.0
+            ),
+            unique_prices_per_station_day=(
+                a.n_unique_prices / (a.n_stations * a.n_days)
+                if a.n_stations > 0 and a.n_days > 0
+                else 0.0
+            ),
+        )
+        for a in result
     ]

@@ -146,3 +146,78 @@ export function renderSvgFuelPrice(
 
   return `${parts.mainPart}${superscript}${showCurrency ? " €" : ""}`;
 }
+
+/**
+ * Formats a cents value with the first decimal digit as superscript.
+ * E.g., 156.9 ct is displayed as "156" with a small raised "9".
+ *
+ * @param cents - The price in cents (e.g., 156.9)
+ * @param options - Formatting options
+ * @returns A React element with formatted cents, or "-" if cents is undefined/null
+ *
+ * @example
+ * formatCentsPrice(156.9)
+ * // => "156" with superscript "9"
+ *
+ * @example
+ * formatCentsPrice(156.9, { showCurrency: true })
+ * // => "156" with superscript "9" followed by "ct"
+ */
+export function formatCentsPrice(
+  cents?: number | null,
+  options: FuelPriceFormatOptions = {},
+): React.ReactNode {
+  const {
+    superscriptClass = "text-[0.6em]",
+    showCurrency = false,
+    suffix,
+  } = options;
+
+  if (cents === undefined || cents === null) {
+    return "-";
+  }
+
+  const centsStr = cents.toFixed(1);
+  const mainPart = centsStr.slice(0, -2); // e.g., "156"
+  const superscript = centsStr.slice(-1); // e.g., "9"
+
+  return (
+    <span className="inline-flex items-start">
+      <span>{mainPart}</span>
+      <span className={`${superscriptClass} leading-none`}>{superscript}</span>
+      {showCurrency && <span> ct</span>}
+      {suffix && <span>{suffix}</span>}
+    </span>
+  );
+}
+
+/**
+ * Formats a cents value as a plain string for SVG/chart axis ticks.
+ * Uses Unicode superscript digits for the first decimal place.
+ *
+ * @param cents - The price in cents (e.g., 156.9)
+ * @param options - Options for currency display
+ * @returns A formatted string like "156⁹ ct" or "156⁹"
+ */
+export function renderSvgCentsPrice(
+  cents: number | undefined | null,
+  options: {
+    showCurrency?: boolean;
+  } = {},
+): string {
+  const { showCurrency = true } = options;
+
+  if (cents === undefined || cents === null) {
+    return "-";
+  }
+
+  const centsStr = cents.toFixed(1);
+  const mainPart = centsStr.slice(0, -2);
+  const superscriptDigit = centsStr.slice(-1);
+
+  const superscriptDigits = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"];
+  const superscript =
+    superscriptDigits[parseInt(superscriptDigit, 10)] || superscriptDigit;
+
+  return `${mainPart}${superscript}${showCurrency ? " c/L" : ""}`;
+}
