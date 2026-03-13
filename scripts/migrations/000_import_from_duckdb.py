@@ -201,8 +201,13 @@ def transfer_table(
     table_name: str,
 ) -> int:
     """Transfer a single table from DuckDB to SQLite. Returns row count."""
+    # Get SQLite column names to ensure correct column ordering
+    cursor = dst_con.execute(f"PRAGMA table_info({table_name})")
+    dst_columns = [row[1] for row in cursor.fetchall()]
+
     try:
-        rows = src_con.execute(f"SELECT * FROM {table_name}").fetchall()
+        cols = ", ".join(dst_columns)
+        rows = src_con.execute(f"SELECT {cols} FROM {table_name}").fetchall()
     except duckdb.CatalogException:
         print(f"  ⚠  Table '{table_name}' does not exist in source — skipping")
         return 0
@@ -211,11 +216,11 @@ def transfer_table(
         print(f"  ✓  {table_name}: 0 rows (empty)")
         return 0
 
-    placeholders = ", ".join(["?"] * len(rows[0]))
+    placeholders = ", ".join(["?"] * len(dst_columns))
     converted = [tuple(to_utc_iso(v) for v in row) for row in rows]
 
     dst_con.executemany(
-        f"INSERT OR REPLACE INTO {table_name} VALUES ({placeholders})",
+        f"INSERT OR REPLACE INTO {table_name} ({cols}) VALUES ({placeholders})",
         converted,
     )
     dst_con.commit()
@@ -229,6 +234,12 @@ def transfer_fuel_prices(
     dst_con: sqlite3.Connection,
 ) -> int:
     """Transfer fuel_prices in 50k-row chunks to manage memory."""
+    # Get SQLite column names to ensure correct column ordering
+    cursor = dst_con.execute("PRAGMA table_info(fuel_prices)")
+    dst_columns = [row[1] for row in cursor.fetchall()]
+    cols = ", ".join(dst_columns)
+    placeholders = ", ".join(["?"] * len(dst_columns))
+
     total_rows = src_con.execute("SELECT COUNT(*) FROM fuel_prices").fetchone()[0]
     print(f"  fuel_prices: {total_rows} rows to transfer")
 
@@ -241,17 +252,16 @@ def transfer_fuel_prices(
 
     while offset < total_rows:
         rows = src_con.execute(
-            f"SELECT * FROM fuel_prices ORDER BY timestamp "
+            f"SELECT {cols} FROM fuel_prices ORDER BY timestamp "
             f"LIMIT {chunk_size} OFFSET {offset}"
         ).fetchall()
         if not rows:
             break
 
-        placeholders = ", ".join(["?"] * len(rows[0]))
         converted = [tuple(to_utc_iso(v) for v in row) for row in rows]
 
         dst_con.executemany(
-            f"INSERT OR REPLACE INTO fuel_prices VALUES ({placeholders})",
+            f"INSERT OR REPLACE INTO fuel_prices ({cols}) VALUES ({placeholders})",
             converted,
         )
         dst_con.commit()
