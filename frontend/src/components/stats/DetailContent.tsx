@@ -3,14 +3,11 @@ import { FuelType } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { StandardCard } from "@/components/common";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
-import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
-import TimeRangeSelector from "@/components/stats/TimeRangeSelector";
+import TimeRangeFuelTypeFilter from "@/components/fuel/TimeRangeFuelTypeFilter";
 import AvgPriceChart from "@/components/stats/AvgPriceChart";
 import VarianceChart from "@/components/stats/VarianceChart";
 import PriceActivityChart from "@/components/stats/PriceActivityChart";
 import { DetailAggregate } from "@/components/stats/chartUtils";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import OilBarrel from "@mui/icons-material/OilBarrel";
 import PlaceIcon from "@mui/icons-material/Place";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
@@ -84,31 +81,12 @@ export default function DetailContent<T>({
 
   return (
     <div className="space-y-6">
-      <StandardCard
-        title={t.statistics.timeRange}
-        icon={
-          <CalendarMonthIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-        }
-        iconBackground="blue"
-      >
-        <TimeRangeSelector
-          selectedMonths={selectedMonths}
-          onMonthsChange={handleMonthsChange}
-        />
-      </StandardCard>
-
-      <StandardCard
-        title={t.statistics.selectFuelType}
-        icon={
-          <OilBarrel className="w-5 h-5 text-green-600 dark:text-green-400" />
-        }
-        iconBackground="green"
-      >
-        <FuelTypeSelector
-          selectedFuelType={selectedFuelType}
-          onFuelTypeChange={handleFuelTypeChange}
-        />
-      </StandardCard>
+      <TimeRangeFuelTypeFilter
+        selectedFuelType={selectedFuelType}
+        onFuelTypeChange={handleFuelTypeChange}
+        selectedMonths={selectedMonths}
+        onMonthsChange={handleMonthsChange}
+      />
 
       {isLoading ? (
         <LoadingSpinner text={t.common.loading} />

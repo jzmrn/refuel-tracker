@@ -1,29 +1,32 @@
 import React from "react";
-import { FuelType, AvailableMonth } from "@/lib/api";
+import { FuelType } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { useLocalization } from "@/lib/i18n/LanguageContext";
 import { FilterPanel, FilterRow } from "@/components/common";
 import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
-import MonthSelector from "@/components/stats/MonthSelector";
+import TimeRangeSelector from "@/components/stats/TimeRangeSelector";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 
-interface StatsFiltersProps {
-  selectedMonth: string | null;
-  onMonthChange: (month: string) => void;
-  availableMonths: AvailableMonth[];
+interface TimeRangeFuelTypeFilterProps {
   selectedFuelType: FuelType;
   onFuelTypeChange: (fuelType: FuelType) => void;
+  selectedMonths: number;
+  onMonthsChange: (months: number) => void;
+  className?: string;
 }
 
-const StatsFilters: React.FC<StatsFiltersProps> = ({
-  selectedMonth,
-  onMonthChange,
-  availableMonths,
+const timeRangeLabels: Record<number, string> = {
+  3: "3M",
+  12: "12M",
+};
+
+const TimeRangeFuelTypeFilter: React.FC<TimeRangeFuelTypeFilterProps> = ({
   selectedFuelType,
   onFuelTypeChange,
+  selectedMonths,
+  onMonthsChange,
+  className,
 }) => {
   const { t } = useTranslation();
-  const { formatDate } = useLocalization();
 
   const fuelTypeLabels: Record<FuelType, string> = {
     e5: t.fuelPrices.e5Short,
@@ -32,13 +35,9 @@ const StatsFilters: React.FC<StatsFiltersProps> = ({
   };
 
   const summary = [
-    selectedMonth
-      ? formatDate(new Date(selectedMonth + "T00:00:00"), {
-          month: "long",
-        })
-      : "",
+    timeRangeLabels[selectedMonths] ?? `${selectedMonths}M`,
     fuelTypeLabels[selectedFuelType],
-  ].filter(Boolean);
+  ];
 
   return (
     <FilterPanel
@@ -47,12 +46,12 @@ const StatsFilters: React.FC<StatsFiltersProps> = ({
         <FilterAltIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
       }
       collapsedSummary={summary}
+      className={className}
     >
-      <FilterRow label={t.statistics.month}>
-        <MonthSelector
-          selectedMonth={selectedMonth}
-          onMonthChange={onMonthChange}
-          availableMonths={availableMonths}
+      <FilterRow label={t.statistics.timeRange}>
+        <TimeRangeSelector
+          selectedMonths={selectedMonths}
+          onMonthsChange={onMonthsChange}
         />
       </FilterRow>
       <FilterRow label={t.statistics.selectFuelType}>
@@ -65,4 +64,4 @@ const StatsFilters: React.FC<StatsFiltersProps> = ({
   );
 };
 
-export default StatsFilters;
+export default TimeRangeFuelTypeFilter;

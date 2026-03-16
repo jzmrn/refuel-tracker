@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import Panel from "@/components/common/Panel";
 import { useTranslation, useLocalization } from "@/lib/i18n/LanguageContext";
 import {
   useCarWithMinLoadTime,
   useKilometerEntriesWithMinLoadTime,
 } from "@/lib/hooks/useCars";
 import KilometerStatsContent from "@/components/cars/KilometerStatsContent";
+import PeriodFilter from "@/components/common/PeriodFilter";
 
 type FilterType = "month" | "6months" | "all";
 
@@ -25,18 +25,23 @@ export default function KilometerStats() {
     isError,
   } = useCarWithMinLoadTime(carId);
 
-  const [activeFilter, setActiveFilter] = useState<FilterType>("month");
+  const [activeFilter, setActiveFilter] = useState<FilterType>("6months");
+
+  const filterOptions = [
+    {
+      value: "6months" as const,
+      label: t.kilometers.lastSixMonths,
+      shortLabel: "6M",
+    },
+    { value: "all" as const, label: t.common.all },
+  ];
 
   // Calculate date filters
   const getFilterDates = () => {
     const now = new Date();
     let startDate: string | undefined;
 
-    if (activeFilter === "month") {
-      const lastMonth = new Date(now);
-      lastMonth.setMonth(lastMonth.getMonth() - 1);
-      startDate = lastMonth.toISOString().split("T")[0];
-    } else if (activeFilter === "6months") {
+    if (activeFilter === "6months") {
       const sixMonthsAgo = new Date(now);
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
       startDate = sixMonthsAgo.toISOString().split("T")[0];
@@ -102,43 +107,11 @@ export default function KilometerStats() {
 
       <div className="space-y-6">
         {/* Filter Options */}
-        <div className="panel">
-          <div className="flex flex-wrap justify-between items-center gap-4">
-            <h2 className="heading-2">{t.common.filter}</h2>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <button
-                onClick={() => handleFilterChange("month")}
-                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeFilter === "month"
-                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                }`}
-              >
-                {t.kilometers.lastMonth}
-              </button>
-              <button
-                onClick={() => handleFilterChange("6months")}
-                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeFilter === "6months"
-                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                }`}
-              >
-                {t.kilometers.lastSixMonths}
-              </button>
-              <button
-                onClick={() => handleFilterChange("all")}
-                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeFilter === "all"
-                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                }`}
-              >
-                {t.common.all}
-              </button>
-            </div>
-          </div>
-        </div>
+        <PeriodFilter
+          selectedPeriod={activeFilter}
+          onPeriodChange={handleFilterChange}
+          options={filterOptions}
+        />
 
         <KilometerStatsContent
           chartData={chartData}

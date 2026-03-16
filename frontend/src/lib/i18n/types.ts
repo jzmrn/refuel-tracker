@@ -353,7 +353,9 @@ export interface TranslationStructure {
     search: string;
     useMyLocation: string;
     e5: string;
+    e5Short: string;
     e10: string;
+    e10Short: string;
     diesel: string;
     price: string;
     distance: string;
@@ -421,7 +423,8 @@ export interface TranslationStructure {
   statistics: {
     title: string;
     description: string;
-    selectMonth: string;
+    filters: string;
+    month: string;
     selectFuelType: string;
     cheapestStations: string;
     cheapestPlaces: string;

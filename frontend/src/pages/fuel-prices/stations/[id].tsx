@@ -10,7 +10,7 @@ import {
   useStationMeta,
 } from "@/lib/hooks/useFuelPrices";
 import { FuelType } from "@/lib/api";
-import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
+import FuelTypeFilter from "@/components/fuel/FuelTypeFilter";
 import StationMetaInfo from "@/components/fuel/StationMetaInfo";
 import StationPriceChart from "@/components/fuel/StationPriceChart";
 import StationDailyStatsChart from "@/components/fuel/StationDailyStatsChart";
@@ -131,16 +131,12 @@ export default function StationDetails() {
             />
 
             {/* Fuel Type Selector */}
-            <div className="panel mb-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                <h2 className="heading-2">{t.common.statistics}</h2>
-                <FuelTypeSelector
-                  selectedFuelType={selectedFuelType}
-                  onFuelTypeChange={handleFuelTypeChange}
-                  availableFuelTypes={allFuelTypes}
-                />
-              </div>
-            </div>
+            <FuelTypeFilter
+              selectedFuelType={selectedFuelType}
+              onFuelTypeChange={handleFuelTypeChange}
+              availableFuelTypes={allFuelTypes}
+              className="mb-6"
+            />
 
             {/* Price Chart */}
             <StationPriceChart

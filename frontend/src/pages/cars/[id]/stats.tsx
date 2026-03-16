@@ -11,6 +11,7 @@ import {
 import { EmptyPanel, LoadingSpinner } from "@/components/common";
 import CloseIcon from "@mui/icons-material/Close";
 import { RefuelMetric, RefuelStatistics } from "@/lib/api";
+import PeriodFilter from "@/components/common/PeriodFilter";
 
 type FilterType = "month" | "6months" | "year";
 
@@ -68,18 +69,23 @@ export default function CarStats() {
     error: carError,
   } = useCarWithMinLoadTime(carId);
 
-  const [activeFilter, setActiveFilter] = useState<FilterType>("month");
+  const [activeFilter, setActiveFilter] = useState<FilterType>("6months");
+
+  const filterOptions = [
+    {
+      value: "6months" as const,
+      label: t.navigation.lastSixMonths,
+      shortLabel: "6M",
+    },
+    { value: "year" as const, label: t.navigation.lastYear, shortLabel: "1Y" },
+  ];
 
   // Calculate date filters
   const getFilterDates = () => {
     const now = new Date();
     let startDate: string | undefined;
 
-    if (activeFilter === "month") {
-      const lastMonth = new Date(now);
-      lastMonth.setMonth(lastMonth.getMonth() - 1);
-      startDate = lastMonth.toISOString().split("T")[0];
-    } else if (activeFilter === "6months") {
+    if (activeFilter === "6months") {
       const sixMonthsAgo = new Date(now);
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
       startDate = sixMonthsAgo.toISOString().split("T")[0];
@@ -145,43 +151,11 @@ export default function CarStats() {
 
       <div className="space-y-6">
         {/* Filter Options */}
-        <div className="panel">
-          <div className="flex flex-wrap justify-between items-center gap-4">
-            <h2 className="heading-2">{t.common.filter}</h2>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <button
-                onClick={() => handleFilterChange("month")}
-                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeFilter === "month"
-                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                }`}
-              >
-                {t.navigation.lastMonth}
-              </button>
-              <button
-                onClick={() => handleFilterChange("6months")}
-                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeFilter === "6months"
-                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                }`}
-              >
-                {t.navigation.lastSixMonths}
-              </button>
-              <button
-                onClick={() => handleFilterChange("year")}
-                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeFilter === "year"
-                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                }`}
-              >
-                {t.navigation.lastYear}
-              </button>
-            </div>
-          </div>
-        </div>
+        <PeriodFilter
+          selectedPeriod={activeFilter}
+          onPeriodChange={handleFilterChange}
+          options={filterOptions}
+        />
 
         {/* Statistics */}
         <StatsContentWrapper

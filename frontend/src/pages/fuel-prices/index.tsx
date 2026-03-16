@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import FavoriteStationsList from "@/components/fuel-prices/FavoriteStationsList";
-import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
+import FuelTypeFilter from "@/components/fuel/FuelTypeFilter";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -85,17 +85,12 @@ export default function FuelPrices() {
       </div>
 
       {/* Sort Control Panel */}
-      <div className="panel p-4 mb-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {t.fuelPrices.sortBy}:
-          </label>
-          <FuelTypeSelector
-            selectedFuelType={sortBy}
-            onFuelTypeChange={handleSortChange}
-          />
-        </div>
-      </div>
+      <FuelTypeFilter
+        selectedFuelType={sortBy}
+        onFuelTypeChange={handleSortChange}
+        className="mb-6"
+        shortLabels={false}
+      />
 
       {/* Favorites List */}
       <FavoriteStationsList

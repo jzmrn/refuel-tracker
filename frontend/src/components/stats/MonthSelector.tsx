@@ -23,18 +23,18 @@ export default function MonthSelector({
 
   function formatMonthLabel(dateStr: string): string {
     const date = new Date(dateStr + "T00:00:00");
-    return date.toLocaleDateString(locale, { month: "long", year: "numeric" });
+    return date.toLocaleDateString(locale, { month: "long" });
   }
 
   const colsClass =
     months.length === 1
-      ? "grid-cols-1"
+      ? "xs:grid-cols-1"
       : months.length === 2
-      ? "grid-cols-2"
-      : "grid-cols-3";
+      ? "xs:grid-cols-2"
+      : "xs:grid-cols-3";
 
   return (
-    <div className={`grid ${colsClass} gap-2 ${className}`}>
+    <div className={`grid grid-cols-1 ${colsClass} gap-2 ${className}`}>
       {months.map((m) => (
         <button
           key={m.date}

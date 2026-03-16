@@ -17,13 +17,13 @@ export default function FuelTypeSelector({
   const { t } = useTranslation();
 
   const fuelTypeLabels: Record<FuelType, string> = {
-    e5: t.fuelPrices.e5,
-    e10: t.fuelPrices.e10,
+    e5: t.fuelPrices.e5Short,
+    e10: t.fuelPrices.e10Short,
     diesel: t.fuelPrices.diesel,
   };
 
   return (
-    <div className={`grid grid-cols-3 gap-2 ${className}`}>
+    <div className={`grid grid-cols-1 xs:grid-cols-3 gap-2 ${className}`}>
       {availableFuelTypes.map((fuelType) => (
         <button
           key={fuelType}
