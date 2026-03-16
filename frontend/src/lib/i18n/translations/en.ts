@@ -251,6 +251,8 @@ export const en: TranslationStructure = {
     features: {
       refuelDescription: "Track fuel consumption, prices, and costs",
       fuelPricesDescription: "Compare gas station prices in your area",
+      statisticsDescription:
+        "Analyze fuel price trends by brand, station, and location",
     },
   },
 

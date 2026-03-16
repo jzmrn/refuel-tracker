@@ -251,6 +251,7 @@ export interface TranslationStructure {
     features: {
       refuelDescription: string;
       fuelPricesDescription: string;
+      statisticsDescription: string;
     };
   };
 

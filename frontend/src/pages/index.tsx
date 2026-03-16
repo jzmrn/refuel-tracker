@@ -26,6 +26,14 @@ export default function Dashboard() {
       color: "text-blue-600",
       bgColor: "bg-blue-100",
     },
+    {
+      name: t.navigation.statistics,
+      description: t.dashboard.features.statisticsDescription,
+      href: "/stats",
+      icon: AssessmentIcon,
+      color: "text-green-600",
+      bgColor: "bg-green-100",
+    },
   ];
 
   return (

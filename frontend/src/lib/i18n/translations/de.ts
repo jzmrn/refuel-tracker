@@ -257,6 +257,8 @@ export const de: TranslationStructure = {
     features: {
       refuelDescription: "Kraftstoffverbrauch, Preise und Kosten verfolgen",
       fuelPricesDescription: "Tankstellenpreise in Ihrer Nähe vergleichen",
+      statisticsDescription:
+        "Kraftstoffpreistrends nach Marke, Tankstelle und Standort analysieren",
     },
   },
 
