@@ -57,8 +57,8 @@ src/
 ├── components/
 │   ├── auth/                 # UserProfile
 │   ├── cars/                 # CarCard, CarList, CarDetails, KilometerChart, sharing
-│   ├── refuels/              # AddRefuelForm, RefuelList, RefuelStats, charts
-│   ├── fuel-prices/          # FavoriteStationsList, SearchStationsForm, StationCard, PriceStatistics
+│   ├── refuels/              # RefuelList, RefuelStats, charts
+│   ├── fuel-prices/          # FavoriteStationsList, SearchStationsForm, StationCard
 │   ├── common/               # Layout, Panel, GridLayout, FAB, dialogs, snackbar, loading
 ├── lib/
 │   ├── api.ts                # Typed Axios API client (all backend endpoints)
