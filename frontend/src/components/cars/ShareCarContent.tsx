@@ -10,21 +10,15 @@ import { useShareCar } from "@/lib/hooks/useCars";
 import { UserSearchResult, apiService } from "@/lib/api";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { Car } from "@/lib/api";
-import { EmptyPanel, LoadingSpinner } from "../common";
-import CloseIcon from "@mui/icons-material/Close";
 
 interface ShareCarContentProps {
-  car: Car | undefined;
-  isLoading: boolean;
-  isError: boolean;
+  car: Car;
   onSuccess: () => void;
   onError: (message: string) => void;
 }
 
 export default function ShareCarContent({
   car,
-  isLoading,
-  isError,
   onSuccess,
   onError,
 }: ShareCarContentProps) {
@@ -54,22 +48,6 @@ export default function ShareCarContent({
 
   // Determine if we should show loading state
   const isSearching = shouldSearch && (searching || isTyping);
-
-  // Handle loading and error states
-  if (isError || !car) {
-    return (
-      <EmptyPanel
-        icon={
-          <CloseIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
-        }
-        title={t.common.errorLoadingData}
-      />
-    );
-  }
-
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
 
   // Filter out already shared users and already selected users
   const filteredSearchResults = useMemo(() => {

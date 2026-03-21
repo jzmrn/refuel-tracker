@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, startTransition } from "react";
 
 /**
  * Hook that returns a debounced value after a specified delay.
@@ -14,7 +14,7 @@ export function useDebounce<T>(value: T, delay: number): T {
   useEffect(() => {
     // Set up a timeout to update the debounced value after the delay
     const handler = setTimeout(() => {
-      setDebouncedValue(value);
+      startTransition(() => setDebouncedValue(value));
     }, delay);
 
     // Clean up the timeout if value changes before delay expires

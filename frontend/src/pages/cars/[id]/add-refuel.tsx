@@ -1,34 +1,28 @@
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect, startTransition } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Panel from "@/components/common/Panel";
 import Snackbar from "@/components/common/Snackbar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import {
-  useCreateRefuelMetric,
-  useCarWithMinLoadTime,
-} from "@/lib/hooks/useCars";
+import { useCreateRefuelMetric, useCar } from "@/lib/hooks/useCars";
 import {
   RefuelMetricCreate,
   FavoriteStationDropdown,
   apiService,
 } from "@/lib/api";
 import { getLocalDateTimeString } from "@/lib/dateUtils";
-import CircularProgress from "@mui/material/CircularProgress";
+import { LoadingSpinner } from "@/components/common";
 
-export default function AddRefuel() {
+function AddRefuelContent({ carId }: { carId: string }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const { id } = router.query;
-  const carId = typeof id === "string" ? id : undefined;
-
-  const { data: car, isLoading: carLoading } = useCarWithMinLoadTime(carId);
+  const { data: car } = useCar(carId);
   const createRefuel = useCreateRefuelMetric();
   const { snackbar, showError, hideSnackbar } = useSnackbar();
 
   const [formData, setFormData] = useState<RefuelMetricCreate>({
-    car_id: carId || "",
+    car_id: carId,
     price: 0,
     amount: 0,
     kilometers_since_last_refuel: 0,
@@ -45,24 +39,17 @@ export default function AddRefuel() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Update car_id when carId changes
-  useEffect(() => {
-    if (carId) {
-      setFormData((prev) => ({ ...prev, car_id: carId }));
-    }
-  }, [carId]);
-
   // Fetch favorite stations
   useEffect(() => {
     const fetchStations = async () => {
       try {
-        setLoadingStations(true);
+        startTransition(() => setLoadingStations(true));
         const stations = await apiService.getFavoriteStationsForDropdown();
-        setFavoriteStations(stations);
+        startTransition(() => setFavoriteStations(stations));
       } catch (error) {
         console.error("Error fetching favorite stations:", error);
       } finally {
-        setLoadingStations(false);
+        startTransition(() => setLoadingStations(false));
       }
     };
 
@@ -189,7 +176,7 @@ export default function AddRefuel() {
       : null;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+    <>
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -212,256 +199,238 @@ export default function AddRefuel() {
       </div>
 
       {/* Form */}
-      {carLoading ? (
-        <Panel>
-          <div className="flex flex-col items-center gap-2">
-            <CircularProgress size={20} />
-            <span className="text-secondary">{t.common.loading}</span>
-          </div>
-        </Panel>
-      ) : (
-        <div className="max-w-3xl mx-auto">
-          <form onSubmit={handleSubmit}>
-            <Panel>
-              <div className="form-container">
-                {/* Price and Amount - 2 columns on desktop */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Price per Liter */}
-                  <div className="form-group">
-                    <label htmlFor="price" className="label">
-                      {t.refuels.pricePerLiter} (€/L) *
-                    </label>
-                    <input
-                      type="number"
-                      id="price"
-                      name="price"
-                      value={formData.price || ""}
-                      onChange={handleChange}
-                      className={`input ${
-                        errors.price ? "border-red-500" : ""
-                      }`}
-                      step="0.001"
-                      min="0.001"
-                      max="10"
-                      required
-                    />
-                    {errors.price && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.price}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Amount */}
-                  <div className="form-group">
-                    <label htmlFor="amount" className="label">
-                      {t.refuels.amount} (L) *
-                    </label>
-                    <input
-                      type="number"
-                      id="amount"
-                      name="amount"
-                      value={formData.amount || ""}
-                      onChange={handleChange}
-                      className={`input ${
-                        errors.amount ? "border-red-500" : ""
-                      }`}
-                      step="0.01"
-                      min="0.01"
-                      max="100"
-                      required
-                    />
-                    {errors.amount && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.amount}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Kilometers and Fuel Consumption - 2 columns on desktop */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Kilometers Since Last Refuel */}
-                  <div className="form-group">
-                    <label
-                      htmlFor="kilometers_since_last_refuel"
-                      className="label"
-                    >
-                      {t.refuels.kilometersSinceLastRefuel} (km) *
-                    </label>
-                    <input
-                      type="number"
-                      id="kilometers_since_last_refuel"
-                      name="kilometers_since_last_refuel"
-                      value={formData.kilometers_since_last_refuel || ""}
-                      onChange={handleChange}
-                      className={`input ${
-                        errors.kilometers_since_last_refuel
-                          ? "border-red-500"
-                          : ""
-                      }`}
-                      step="0.1"
-                      min="0.1"
-                      required
-                    />
-                    {errors.kilometers_since_last_refuel && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.kilometers_since_last_refuel}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Estimated Fuel Consumption */}
-                  <div className="form-group">
-                    <label
-                      htmlFor="estimated_fuel_consumption"
-                      className="label"
-                    >
-                      {t.refuels.estimatedFuelConsumption} *
-                    </label>
-                    <input
-                      type="number"
-                      id="estimated_fuel_consumption"
-                      name="estimated_fuel_consumption"
-                      value={formData.estimated_fuel_consumption || ""}
-                      onChange={handleChange}
-                      className={`input ${
-                        errors.estimated_fuel_consumption
-                          ? "border-red-500"
-                          : ""
-                      }`}
-                      step="0.1"
-                      min="0.1"
-                      max="20"
-                      required
-                    />
-                    {errors.estimated_fuel_consumption && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.estimated_fuel_consumption}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Total Cost and Actual Consumption (calculated) */}
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t.refuels.totalCost}:
-                    </span>
-                    <span className="text-lg font-bold text-primary-600 dark:text-blue-400">
-                      {totalCost > 0 ? `${totalCost.toFixed(2)} €` : "—"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t.refuels.actualConsumption}:
-                    </span>
-                    <span className="text-lg font-bold text-primary-600 dark:text-blue-400">
-                      {actualConsumption !== null
-                        ? `${actualConsumption.toFixed(2)} L/100km`
-                        : "—"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Timestamp and Station - 2 columns on desktop */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Timestamp */}
-                  <div className="form-group">
-                    <label htmlFor="timestamp" className="label">
-                      {t.forms.dateTime} *
-                    </label>
-                    <input
-                      type="datetime-local"
-                      id="timestamp"
-                      name="timestamp"
-                      value={formData.timestamp}
-                      onChange={handleChange}
-                      className={`input ${
-                        errors.timestamp ? "border-red-500" : ""
-                      }`}
-                      max={getLocalDateTimeString()}
-                      required
-                    />
-                    {errors.timestamp && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.timestamp}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Favorite Station (optional) */}
-                  <div className="form-group">
-                    <label htmlFor="station_id" className="label">
-                      {t.refuels.station} ({t.refuels.optional})
-                    </label>
-                    <select
-                      id="station_id"
-                      name="station_id"
-                      value={formData.station_id || ""}
-                      onChange={handleChange}
-                      className="input"
-                    >
-                      <option value="">{t.refuels.selectStation}</option>
-                      {favoriteStations.map((station) => (
-                        <option
-                          key={station.station_id}
-                          value={station.station_id}
-                        >
-                          {station.brand} - {station.street}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                      {t.refuels.favoriteStationsCanBeSelected}{" "}
-                      <button
-                        type="button"
-                        onClick={() => router.push("/fuel-prices")}
-                        className="text-primary-600 dark:text-blue-400 hover:underline"
-                      >
-                        {t.refuels.here}
-                      </button>
-                    </p>
-                  </div>
-                </div>
-
-                {/* Notes */}
+      <div className="max-w-3xl mx-auto">
+        <form onSubmit={handleSubmit}>
+          <Panel>
+            <div className="form-container">
+              {/* Price and Amount - 2 columns on desktop */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Price per Liter */}
                 <div className="form-group">
-                  <label htmlFor="notes" className="label">
-                    {t.common.notes} ({t.refuels.optional})
+                  <label htmlFor="price" className="label">
+                    {t.refuels.pricePerLiter} (€/L) *
                   </label>
-                  <textarea
-                    id="notes"
-                    name="notes"
-                    value={formData.notes}
+                  <input
+                    type="number"
+                    id="price"
+                    name="price"
+                    value={formData.price || ""}
                     onChange={handleChange}
-                    className={`input ${errors.notes ? "border-red-500" : ""}`}
-                    rows={3}
-                    maxLength={500}
+                    className={`input ${errors.price ? "border-red-500" : ""}`}
+                    step="0.001"
+                    min="0.001"
+                    max="10"
+                    required
                   />
-                  {errors.notes && (
+                  {errors.price && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {errors.notes}
+                      {errors.price}
                     </p>
                   )}
                 </div>
 
-                {/* Submit Button */}
-                <div className="form-actions">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="btn-primary w-full"
-                  >
-                    {isSubmitting ? t.common.saving : t.navigation.addEntry}
-                  </button>
+                {/* Amount */}
+                <div className="form-group">
+                  <label htmlFor="amount" className="label">
+                    {t.refuels.amount} (L) *
+                  </label>
+                  <input
+                    type="number"
+                    id="amount"
+                    name="amount"
+                    value={formData.amount || ""}
+                    onChange={handleChange}
+                    className={`input ${errors.amount ? "border-red-500" : ""}`}
+                    step="0.01"
+                    min="0.01"
+                    max="100"
+                    required
+                  />
+                  {errors.amount && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.amount}
+                    </p>
+                  )}
                 </div>
               </div>
-            </Panel>
-          </form>
-        </div>
-      )}
+
+              {/* Kilometers and Fuel Consumption - 2 columns on desktop */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Kilometers Since Last Refuel */}
+                <div className="form-group">
+                  <label
+                    htmlFor="kilometers_since_last_refuel"
+                    className="label"
+                  >
+                    {t.refuels.kilometersSinceLastRefuel} (km) *
+                  </label>
+                  <input
+                    type="number"
+                    id="kilometers_since_last_refuel"
+                    name="kilometers_since_last_refuel"
+                    value={formData.kilometers_since_last_refuel || ""}
+                    onChange={handleChange}
+                    className={`input ${
+                      errors.kilometers_since_last_refuel
+                        ? "border-red-500"
+                        : ""
+                    }`}
+                    step="0.1"
+                    min="0.1"
+                    required
+                  />
+                  {errors.kilometers_since_last_refuel && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.kilometers_since_last_refuel}
+                    </p>
+                  )}
+                </div>
+
+                {/* Estimated Fuel Consumption */}
+                <div className="form-group">
+                  <label htmlFor="estimated_fuel_consumption" className="label">
+                    {t.refuels.estimatedFuelConsumption} *
+                  </label>
+                  <input
+                    type="number"
+                    id="estimated_fuel_consumption"
+                    name="estimated_fuel_consumption"
+                    value={formData.estimated_fuel_consumption || ""}
+                    onChange={handleChange}
+                    className={`input ${
+                      errors.estimated_fuel_consumption ? "border-red-500" : ""
+                    }`}
+                    step="0.1"
+                    min="0.1"
+                    max="20"
+                    required
+                  />
+                  {errors.estimated_fuel_consumption && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.estimated_fuel_consumption}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Total Cost and Actual Consumption (calculated) */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t.refuels.totalCost}:
+                  </span>
+                  <span className="text-lg font-bold text-primary-600 dark:text-blue-400">
+                    {totalCost > 0 ? `${totalCost.toFixed(2)} €` : "—"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t.refuels.actualConsumption}:
+                  </span>
+                  <span className="text-lg font-bold text-primary-600 dark:text-blue-400">
+                    {actualConsumption !== null
+                      ? `${actualConsumption.toFixed(2)} L/100km`
+                      : "—"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Timestamp and Station - 2 columns on desktop */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Timestamp */}
+                <div className="form-group">
+                  <label htmlFor="timestamp" className="label">
+                    {t.forms.dateTime} *
+                  </label>
+                  <input
+                    type="datetime-local"
+                    id="timestamp"
+                    name="timestamp"
+                    value={formData.timestamp}
+                    onChange={handleChange}
+                    className={`input ${
+                      errors.timestamp ? "border-red-500" : ""
+                    }`}
+                    max={getLocalDateTimeString()}
+                    required
+                  />
+                  {errors.timestamp && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.timestamp}
+                    </p>
+                  )}
+                </div>
+
+                {/* Favorite Station (optional) */}
+                <div className="form-group">
+                  <label htmlFor="station_id" className="label">
+                    {t.refuels.station} ({t.refuels.optional})
+                  </label>
+                  <select
+                    id="station_id"
+                    name="station_id"
+                    value={formData.station_id || ""}
+                    onChange={handleChange}
+                    className="input"
+                  >
+                    <option value="">{t.refuels.selectStation}</option>
+                    {favoriteStations.map((station) => (
+                      <option
+                        key={station.station_id}
+                        value={station.station_id}
+                      >
+                        {station.brand} - {station.street}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    {t.refuels.favoriteStationsCanBeSelected}{" "}
+                    <button
+                      type="button"
+                      onClick={() => router.push("/fuel-prices")}
+                      className="text-primary-600 dark:text-blue-400 hover:underline"
+                    >
+                      {t.refuels.here}
+                    </button>
+                  </p>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div className="form-group">
+                <label htmlFor="notes" className="label">
+                  {t.common.notes} ({t.refuels.optional})
+                </label>
+                <textarea
+                  id="notes"
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  className={`input ${errors.notes ? "border-red-500" : ""}`}
+                  rows={3}
+                  maxLength={500}
+                />
+                {errors.notes && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.notes}
+                  </p>
+                )}
+              </div>
+
+              {/* Submit Button */}
+              <div className="form-actions">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-primary w-full"
+                >
+                  {isSubmitting ? t.common.saving : t.navigation.addEntry}
+                </button>
+              </div>
+            </div>
+          </Panel>
+        </form>
+      </div>
 
       {/* Snackbar */}
       {snackbar.isVisible && (
@@ -472,6 +441,20 @@ export default function AddRefuel() {
           isVisible={true}
         />
       )}
+    </>
+  );
+}
+
+export default function AddRefuel() {
+  const router = useRouter();
+  const { id } = router.query;
+  const carId = typeof id === "string" ? id : undefined;
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+      <Suspense fallback={<LoadingSpinner />}>
+        {carId ? <AddRefuelContent carId={carId} /> : <LoadingSpinner />}
+      </Suspense>
     </div>
   );
 }

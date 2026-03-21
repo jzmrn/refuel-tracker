@@ -1,8 +1,5 @@
 import CircularProgress from "@mui/material/CircularProgress";
-import { LoadingSpinner } from "@/components/common";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import CloseIcon from "@mui/icons-material/Close";
-import EmptyPanel from "@/components/common/EmptyPanel";
 
 interface CarFormData {
   name: string;
@@ -12,9 +9,6 @@ interface CarFormData {
 }
 
 interface CarDetailsFormProps {
-  isLoading: boolean;
-  isError: boolean;
-  hasData: boolean;
   formData: CarFormData;
   onFormDataChange: (data: CarFormData) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -22,30 +16,12 @@ interface CarDetailsFormProps {
 }
 
 export function CarDetailsForm({
-  isLoading,
-  isError,
   formData,
-  hasData,
   onFormDataChange,
   onSubmit,
   isSubmitting,
 }: CarDetailsFormProps) {
   const { t } = useTranslation();
-
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
-  if (isError || !hasData) {
-    return (
-      <EmptyPanel
-        icon={
-          <CloseIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
-        }
-        title={t.common.errorLoadingData}
-      />
-    );
-  }
 
   return (
     <div className="max-w-4xl mx-auto">

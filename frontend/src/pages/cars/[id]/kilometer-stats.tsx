@@ -1,29 +1,18 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useTranslation, useLocalization } from "@/lib/i18n/LanguageContext";
-import {
-  useCarWithMinLoadTime,
-  useKilometerEntriesWithMinLoadTime,
-} from "@/lib/hooks/useCars";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useCar } from "@/lib/hooks/useCars";
 import KilometerStatsContent from "@/components/cars/KilometerStatsContent";
 import PeriodFilter from "@/components/common/PeriodFilter";
+import { LoadingSpinner } from "@/components/common";
 
 type FilterType = "month" | "6months" | "all";
 
-export default function KilometerStats() {
+function KilometerStatsInner({ carId }: { carId: string }) {
   const { t } = useTranslation();
-  const { formatDate } = useLocalization();
   const router = useRouter();
-  const { id } = router.query;
-  const carId = typeof id === "string" ? id : undefined;
-
-  // Fetch car details
-  const {
-    data: car,
-    isLoading: carLoading,
-    isError,
-  } = useCarWithMinLoadTime(carId);
+  const { data: car } = useCar(carId);
 
   const [activeFilter, setActiveFilter] = useState<FilterType>("6months");
 
@@ -51,13 +40,6 @@ export default function KilometerStats() {
     return { start_date: startDate };
   };
 
-  // Fetch kilometer entries with current filter
-  const { data: kilometerEntries = [], isLoading: kilometersLoading } =
-    useKilometerEntriesWithMinLoadTime(carId, {
-      ...getFilterDates(),
-      limit: 1000,
-    });
-
   const handleBack = () => {
     router.back();
   };
@@ -66,24 +48,8 @@ export default function KilometerStats() {
     setActiveFilter(filter);
   };
 
-  // Prepare chart data - sort by timestamp ascending for the chart
-  const chartData = [...kilometerEntries]
-    .sort(
-      (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-    )
-    .map((entry) => ({
-      timestamp: new Date(entry.timestamp).getTime(),
-      total_kilometers: entry.total_kilometers,
-      displayDate: formatDate(new Date(entry.timestamp), {
-        month: "short",
-        day: "numeric",
-        year: "2-digit",
-      }),
-    }));
-
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+    <>
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -113,12 +79,22 @@ export default function KilometerStats() {
           options={filterOptions}
         />
 
-        <KilometerStatsContent
-          chartData={chartData}
-          isLoading={carLoading || kilometersLoading}
-          isError={isError}
-        />
+        <Suspense fallback={<LoadingSpinner />}>
+          <KilometerStatsContent carId={carId} filterDates={getFilterDates()} />
+        </Suspense>
       </div>
+    </>
+  );
+}
+
+export default function KilometerStats() {
+  const router = useRouter();
+  const { id } = router.query;
+  const carId = typeof id === "string" ? id : undefined;
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+      {carId ? <KilometerStatsInner carId={carId} /> : <LoadingSpinner />}
     </div>
   );
 }

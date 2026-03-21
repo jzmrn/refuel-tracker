@@ -1,6 +1,8 @@
+import { Suspense, useState, useEffect, startTransition } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { LoadingSpinner } from "@/components/common";
 import BrandsContent from "@/components/stats/BrandsContent";
 
 export default function BrandsPage() {
@@ -26,7 +28,9 @@ export default function BrandsPage() {
         </p>
       </div>
 
-      <BrandsContent />
+      <Suspense fallback={<LoadingSpinner />}>
+        <BrandsContent />
+      </Suspense>
     </div>
   );
 }

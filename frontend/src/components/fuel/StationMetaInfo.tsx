@@ -1,10 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
 import CircularProgress from "@mui/material/CircularProgress";
 import CloseIcon from "@mui/icons-material/Close";
 import LinkIcon from "@mui/icons-material/Link";
 import { useTranslation, useLocalization } from "@/lib/i18n/LanguageContext";
-import apiService, { StationMetaResponse } from "@/lib/api";
-import { fuelPricesKeys } from "@/lib/hooks/useFuelPrices";
+import { StationMetaResponse } from "@/lib/api";
+import { useStationMeta } from "@/lib/hooks/useFuelPrices";
 import Panel from "@/components/common/Panel";
 import { renderSvgFuelPrice } from "@/lib/formatPrice";
 
@@ -26,12 +25,7 @@ export default function StationMetaInfo({
   const { t } = useTranslation();
   const { formatDate } = useLocalization();
 
-  const { data: stationData, isLoading } = useQuery({
-    queryKey: fuelPricesKeys.stationMeta(stationId),
-    queryFn: () => apiService.getStationMeta(stationId),
-    staleTime: 15 * 60 * 1000, // 15 minutes
-    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
-  });
+  const { data: stationData } = useStationMeta(stationId);
 
   const formatTime = (timestamp?: string) => {
     if (!timestamp) return null;
@@ -107,39 +101,6 @@ export default function StationMetaInfo({
       {renderStatusBadge()}
     </div>
   );
-
-  if (isLoading) {
-    return (
-      <div className="mb-6">
-        <Panel>
-          <div className="text-center py-4">
-            <div className="flex flex-col items-center gap-2">
-              <CircularProgress size={20} />
-              <span className="text-secondary">{t.common.loading}</span>
-            </div>
-          </div>
-        </Panel>
-      </div>
-    );
-  }
-
-  if (!stationData) {
-    return (
-      <div className="mb-6">
-        <Panel>
-          <div className="text-center">
-            <div className="text-sm uppercase tracking-wide text-secondary mb-2">
-              {t.fuelPrices.stationId}
-            </div>
-            <div className="heading-1">{stationId || t.fuelPrices.unknown}</div>
-            <div className="text-sm text-secondary mt-2">
-              {t.fuelPrices.noDataAvailable}
-            </div>
-          </div>
-        </Panel>
-      </div>
-    );
-  }
 
   const formattedAddress = getFormattedAddress();
 

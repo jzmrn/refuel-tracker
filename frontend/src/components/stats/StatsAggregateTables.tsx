@@ -8,7 +8,6 @@ import {
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { renderSvgFuelPrice } from "@/lib/formatPrice";
 import { StandardCard } from "@/components/common";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
 import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
 import PlaceIcon from "@mui/icons-material/Place";
 import BusinessIcon from "@mui/icons-material/Business";
@@ -18,25 +17,15 @@ interface StatsAggregateTablesProps {
   stations: MonthlyStationAggregate[];
   places: MonthlyPlaceAggregate[];
   brands: MonthlyBrandAggregate[];
-  stationsLoading: boolean;
-  placesLoading: boolean;
-  brandsLoading: boolean;
 }
 
 const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
   stations,
   places,
   brands,
-  stationsLoading,
-  placesLoading,
-  brandsLoading,
 }) => {
   const { t } = useTranslation();
   const router = useRouter();
-
-  if (stationsLoading || placesLoading || brandsLoading) {
-    return <LoadingSpinner text={t.common.loading} />;
-  }
 
   return (
     <>

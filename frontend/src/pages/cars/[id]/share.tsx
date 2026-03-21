@@ -1,19 +1,17 @@
+import { Suspense } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Snackbar from "@/components/common/Snackbar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { useCarWithMinLoadTime } from "@/lib/hooks/useCars";
+import { useCar } from "@/lib/hooks/useCars";
 import ShareCarContent from "@/components/cars/ShareCarContent";
+import { LoadingSpinner } from "@/components/common";
 
-export default function AddSharedUsers() {
+function ShareContent({ carId }: { carId: string }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const { id } = router.query;
-  const carId = typeof id === "string" ? id : undefined;
-
-  const { data: car, isLoading, isError } = useCarWithMinLoadTime(carId);
-
+  const { data: car } = useCar(carId);
   const { snackbar, showError, hideSnackbar } = useSnackbar();
 
   const handleBack = () => {
@@ -25,7 +23,7 @@ export default function AddSharedUsers() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+    <>
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -47,13 +45,13 @@ export default function AddSharedUsers() {
         </div>
       </div>
 
-      <ShareCarContent
-        car={car}
-        isLoading={isLoading}
-        isError={isError}
-        onSuccess={handleSuccess}
-        onError={showError}
-      />
+      {car && (
+        <ShareCarContent
+          car={car}
+          onSuccess={handleSuccess}
+          onError={showError}
+        />
+      )}
 
       {/* Snackbar */}
       {snackbar.isVisible && (
@@ -64,6 +62,20 @@ export default function AddSharedUsers() {
           isVisible={true}
         />
       )}
+    </>
+  );
+}
+
+export default function AddSharedUsers() {
+  const router = useRouter();
+  const { id } = router.query;
+  const carId = typeof id === "string" ? id : undefined;
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+      <Suspense fallback={<LoadingSpinner />}>
+        {carId ? <ShareContent carId={carId} /> : <LoadingSpinner />}
+      </Suspense>
     </div>
   );
 }

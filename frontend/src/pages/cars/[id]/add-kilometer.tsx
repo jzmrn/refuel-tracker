@@ -1,25 +1,20 @@
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Panel from "@/components/common/Panel";
 import Snackbar from "@/components/common/Snackbar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import {
-  useCreateKilometerEntry,
-  useCarWithMinLoadTime,
-} from "@/lib/hooks/useCars";
+import { useCreateKilometerEntry, useCar } from "@/lib/hooks/useCars";
 import { KilometerEntryCreate } from "@/lib/api";
 import { getLocalDateTimeString } from "@/lib/dateUtils";
 import CircularProgress from "@mui/material/CircularProgress";
+import { LoadingSpinner } from "@/components/common";
 
-export default function AddKilometer() {
+function AddKilometerContent({ carId }: { carId: string }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const { id } = router.query;
-  const carId = typeof id === "string" ? id : undefined;
-
-  const { data: car, isLoading: carLoading } = useCarWithMinLoadTime(carId);
+  const { data: car } = useCar(carId);
   const createKilometerEntry = useCreateKilometerEntry();
   const { snackbar, showError, hideSnackbar } = useSnackbar();
 
@@ -28,20 +23,13 @@ export default function AddKilometer() {
     total_kilometers: number;
     timestamp: string;
   }>({
-    car_id: carId || "",
+    car_id: carId,
     total_kilometers: 0,
     timestamp: getLocalDateTimeString(),
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Update car_id when carId changes
-  useEffect(() => {
-    if (carId) {
-      setFormData((prev) => ({ ...prev, car_id: carId }));
-    }
-  }, [carId]);
 
   const handleBack = () => {
     router.back();
@@ -118,7 +106,7 @@ export default function AddKilometer() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+    <>
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -141,97 +129,88 @@ export default function AddKilometer() {
       </div>
 
       {/* Form */}
-      {carLoading ? (
-        <Panel>
-          <div className="flex flex-col items-center gap-2">
-            <CircularProgress size={20} />
-            <span className="text-secondary">{t.common.loading}</span>
-          </div>
-        </Panel>
-      ) : (
-        <div className="max-w-3xl mx-auto">
-          <form onSubmit={handleSubmit}>
-            <Panel>
-              <div className="form-container">
-                {/* Timestamp */}
-                <div className="form-group">
-                  <label htmlFor="timestamp" className="label">
-                    {t.forms.dateTime} *
-                  </label>
-                  <input
-                    type="datetime-local"
-                    id="timestamp"
-                    name="timestamp"
-                    value={formData.timestamp}
-                    onChange={handleChange}
-                    className={`input ${
-                      errors.timestamp ? "border-red-500" : ""
-                    }`}
-                    max={getLocalDateTimeString()}
-                    required
-                  />
-                  {errors.timestamp && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {errors.timestamp}
-                    </p>
-                  )}
-                </div>
-
-                {/* Total Kilometers */}
-                <div className="form-group">
-                  <label htmlFor="total_kilometers" className="label">
-                    {t.kilometers.totalKilometersForm} *
-                  </label>
-                  <input
-                    type="number"
-                    id="total_kilometers"
-                    name="total_kilometers"
-                    value={formData.total_kilometers || ""}
-                    onChange={handleChange}
-                    className={`input ${
-                      errors.total_kilometers ? "border-red-500" : ""
-                    }`}
-                    step="1"
-                    min="1"
-                    required
-                  />
-                  {errors.total_kilometers && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {errors.total_kilometers}
-                    </p>
-                  )}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 justify-end">
-                  <button
-                    type="button"
-                    onClick={handleBack}
-                    className="btn-secondary w-full sm:w-auto"
-                    disabled={isSubmitting}
-                  >
-                    {t.common.cancel}
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn-primary w-full sm:w-auto"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <CircularProgress size={16} color="inherit" />
-                        {t.common.saving}
-                      </div>
-                    ) : (
-                      t.navigation.addEntry
-                    )}
-                  </button>
-                </div>
+      <div className="max-w-3xl mx-auto">
+        <form onSubmit={handleSubmit}>
+          <Panel>
+            <div className="form-container">
+              {/* Timestamp */}
+              <div className="form-group">
+                <label htmlFor="timestamp" className="label">
+                  {t.forms.dateTime} *
+                </label>
+                <input
+                  type="datetime-local"
+                  id="timestamp"
+                  name="timestamp"
+                  value={formData.timestamp}
+                  onChange={handleChange}
+                  className={`input ${
+                    errors.timestamp ? "border-red-500" : ""
+                  }`}
+                  max={getLocalDateTimeString()}
+                  required
+                />
+                {errors.timestamp && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.timestamp}
+                  </p>
+                )}
               </div>
-            </Panel>
-          </form>
-        </div>
-      )}
+
+              {/* Total Kilometers */}
+              <div className="form-group">
+                <label htmlFor="total_kilometers" className="label">
+                  {t.kilometers.totalKilometersForm} *
+                </label>
+                <input
+                  type="number"
+                  id="total_kilometers"
+                  name="total_kilometers"
+                  value={formData.total_kilometers || ""}
+                  onChange={handleChange}
+                  className={`input ${
+                    errors.total_kilometers ? "border-red-500" : ""
+                  }`}
+                  step="1"
+                  min="1"
+                  required
+                />
+                {errors.total_kilometers && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.total_kilometers}
+                  </p>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 justify-end">
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="btn-secondary w-full sm:w-auto"
+                  disabled={isSubmitting}
+                >
+                  {t.common.cancel}
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary w-full sm:w-auto"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <CircularProgress size={16} color="inherit" />
+                      {t.common.saving}
+                    </div>
+                  ) : (
+                    t.navigation.addEntry
+                  )}
+                </button>
+              </div>
+            </div>
+          </Panel>
+        </form>
+      </div>
 
       {/* Snackbar */}
       {snackbar.isVisible && (
@@ -242,6 +221,20 @@ export default function AddKilometer() {
           isVisible={true}
         />
       )}
+    </>
+  );
+}
+
+export default function AddKilometer() {
+  const router = useRouter();
+  const { id } = router.query;
+  const carId = typeof id === "string" ? id : undefined;
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+      <Suspense fallback={<LoadingSpinner />}>
+        {carId ? <AddKilometerContent carId={carId} /> : <LoadingSpinner />}
+      </Suspense>
     </div>
   );
 }

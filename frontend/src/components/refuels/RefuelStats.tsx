@@ -1,13 +1,7 @@
-import React from "react";
-import {
-  RefuelStatistics as RefuelStatistics,
-  RefuelMetric,
-} from "../../lib/api";
 import RefuelPriceChart from "./RefuelPriceChart";
 import RefuelConsumptionChart from "./RefuelConsumptionChart";
 import RefuelDistanceChart from "./RefuelDistanceChart";
 import SummaryCard from "../common/SummaryCard";
-import LoadingSpinner from "../common/LoadingSpinner";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ScienceIcon from "@mui/icons-material/Science";
 import BarChartIcon from "@mui/icons-material/BarChart";
@@ -17,19 +11,29 @@ import { GridLayout } from "../common/GridLayout";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
 import Panel from "../common/Panel";
 import { renderSvgFuelPrice } from "../../lib/formatPrice";
+import { useRefuelMetrics, useRefuelStatistics } from "@/lib/hooks/useCars";
 
 interface RefuelStatsProps {
-  statistics: RefuelStatistics | null;
-  refuelData: RefuelMetric[];
+  carId: string;
+  filterDates: {
+    start_date?: string;
+    end_date?: string;
+  };
   fuelTankSize?: number;
 }
 
 export default function RefuelStats({
-  statistics,
-  refuelData,
+  carId,
   fuelTankSize,
+  filterDates,
 }: RefuelStatsProps) {
   const { t } = useTranslation();
+
+  const { data: statistics } = useRefuelStatistics(carId, filterDates);
+  const { data: refuels } = useRefuelMetrics(carId, {
+    ...filterDates,
+    limit: 365,
+  });
 
   if (!statistics) {
     return (
@@ -78,7 +82,8 @@ export default function RefuelStats({
             title={t.refuels.pricePerLiter}
             value={{
               value: cost_statistics.average_price_per_liter,
-              formatter: renderSvgFuelPrice,
+              formatter: (price: number) =>
+                renderSvgFuelPrice(price, { showCurrency: false }),
               unit: "€/L",
             }}
             icon={
@@ -99,15 +104,8 @@ export default function RefuelStats({
       </Panel>
 
       <RefuelPriceChart priceData={statistics.price_trends} />
-
-      {/* Distance Chart Panel */}
-      <RefuelDistanceChart
-        refuelData={refuelData}
-        fuelTankSize={fuelTankSize}
-      />
-
-      {/* Consumption Chart Panel */}
-      <RefuelConsumptionChart refuelData={refuelData} />
+      <RefuelDistanceChart refuelData={refuels} fuelTankSize={fuelTankSize} />
+      <RefuelConsumptionChart refuelData={refuels} />
     </div>
   );
 }

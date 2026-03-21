@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { useState, useRef } from "react";
+import { Suspense, useState } from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import Snackbar from "@/components/common/Snackbar";
@@ -19,17 +19,9 @@ import { LoadingSpinner } from "@/components/common";
 
 const FUEL_TYPE_STORAGE_KEY = "stationDetails.fuelType";
 
-export default function StationDetails() {
+function StationDetailsContent({ stationId }: { stationId: string }) {
   const router = useRouter();
   const { t } = useTranslation();
-  const { id } = router.query;
-
-  // Keep track of the last valid ID to prevent flashing during navigation
-  const lastValidIdRef = useRef<string | undefined>(undefined);
-  if (typeof id === "string") {
-    lastValidIdRef.current = id;
-  }
-  const stableId = typeof id === "string" ? id : lastValidIdRef.current;
 
   // Fuel type selection - persist in localStorage
   const [selectedFuelType, setSelectedFuelType] = useState<FuelType>(() => {
@@ -51,26 +43,22 @@ export default function StationDetails() {
   const { snackbar, showError, showSuccess, hideSnackbar } = useSnackbar();
 
   // Check if this station is in favorites
-  const { data: favorites = [] } = useFavoriteStations();
+  const { data: favorites } = useFavoriteStations();
   const removeFavorite = useRemoveFavoriteStation();
 
-  // Get station meta to determine available fuel types
-  const { data: stationMeta } = useStationMeta(stableId);
+  // Get station meta
+  const { data: stationMeta } = useStationMeta(stationId);
 
-  const isFavorite =
-    typeof stableId === "string" &&
-    favorites.some((f) => f.station_id === stableId);
+  const isFavorite = favorites.some((f) => f.station_id === stationId);
 
   const handleBack = () => {
     router.back();
   };
 
   const handleRemoveFavorite = async () => {
-    if (!stableId) return;
     try {
       setIsRemoving(true);
-      await removeFavorite.mutateAsync(stableId);
-      // Navigate back after successful removal
+      await removeFavorite.mutateAsync(stationId);
       setTimeout(() => {
         handleBack();
       }, 500);
@@ -95,8 +83,63 @@ export default function StationDetails() {
     showSuccess(t.fuelPrices.addressCopied);
   };
 
-  // Always show all fuel types
   const allFuelTypes: FuelType[] = ["e5", "e10", "diesel"];
+
+  return (
+    <>
+      {/* Station Meta Info */}
+      <StationMetaInfo
+        stationId={stationId}
+        isFavorite={isFavorite}
+        isRemoving={isRemoving}
+        onRemoveFavorite={handleRemoveFavorite}
+        onCopyAddress={handleCopyAddress}
+      />
+
+      {/* Fuel Type Selector */}
+      <FuelTypeFilter
+        selectedFuelType={selectedFuelType}
+        onFuelTypeChange={handleFuelTypeChange}
+        availableFuelTypes={allFuelTypes}
+        className="mb-6"
+      />
+
+      {/* Charts */}
+      <StationPriceChart stationId={stationId} fuelType={selectedFuelType} />
+
+      <div className="mt-6">
+        <StationDailyStatsChart
+          stationId={stationId}
+          fuelType={selectedFuelType}
+        />
+      </div>
+
+      <div className="mt-6">
+        <StationPriceChangesChart
+          stationId={stationId}
+          fuelType={selectedFuelType}
+        />
+      </div>
+
+      <Snackbar
+        message={snackbar.message}
+        type={snackbar.type}
+        isVisible={snackbar.isVisible}
+        onClose={hideSnackbar}
+      />
+    </>
+  );
+}
+
+export default function StationDetails() {
+  const router = useRouter();
+  const { t } = useTranslation();
+  const { id } = router.query;
+  const stationId = typeof id === "string" ? id : undefined;
+
+  const handleBack = () => {
+    router.back();
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
@@ -117,69 +160,14 @@ export default function StationDetails() {
       </div>
 
       <div className="max-w-3xl mx-auto">
-        {!router.isReady ? (
-          <LoadingSpinner />
-        ) : stableId ? (
-          <>
-            {/* Station Meta Info */}
-            <StationMetaInfo
-              stationId={stableId}
-              isFavorite={isFavorite}
-              isRemoving={isRemoving}
-              onRemoveFavorite={handleRemoveFavorite}
-              onCopyAddress={handleCopyAddress}
-            />
-
-            {/* Fuel Type Selector */}
-            <FuelTypeFilter
-              selectedFuelType={selectedFuelType}
-              onFuelTypeChange={handleFuelTypeChange}
-              availableFuelTypes={allFuelTypes}
-              className="mb-6"
-            />
-
-            {/* Price Chart */}
-            <StationPriceChart
-              stationId={stableId}
-              fuelType={selectedFuelType}
-            />
-
-            {/* Daily Stats Chart */}
-            <div className="mt-6">
-              <StationDailyStatsChart
-                stationId={stableId}
-                fuelType={selectedFuelType}
-              />
-            </div>
-
-            {/* Price Changes Chart */}
-            <div className="mt-6">
-              <StationPriceChangesChart
-                stationId={stableId}
-                fuelType={selectedFuelType}
-              />
-            </div>
-          </>
-        ) : (
-          <div className="panel text-center">
-            <div className="text-sm uppercase tracking-wide text-secondary mb-2">
-              {t.fuelPrices.stationId}
-            </div>
-            <div className="heading-1">{t.fuelPrices.unknown}</div>
-            <div className="text-sm text-secondary mt-2">
-              {t.fuelPrices.noDataAvailable}
-            </div>
-          </div>
-        )}
+        <Suspense fallback={<LoadingSpinner />}>
+          {stationId ? (
+            <StationDetailsContent stationId={stationId} />
+          ) : (
+            <LoadingSpinner />
+          )}
+        </Suspense>
       </div>
-
-      {/* Snackbar */}
-      <Snackbar
-        message={snackbar.message}
-        type={snackbar.type}
-        isVisible={snackbar.isVisible}
-        onClose={hideSnackbar}
-      />
     </div>
   );
 }

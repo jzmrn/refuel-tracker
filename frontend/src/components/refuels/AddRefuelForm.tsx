@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, startTransition } from "react";
 import {
   RefuelMetricCreate,
   FavoriteStationDropdown,
@@ -44,31 +44,33 @@ export default function AddRefuelForm({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoadingCars(true);
+        startTransition(() => setLoadingCars(true));
         const carsData = await apiService.getCars();
-        setCars(carsData);
+        startTransition(() => {
+          setCars(carsData);
 
-        // If preselectedCar is provided and valid, use it
-        if (preselectedCar && carsData.some((c) => c.id === preselectedCar)) {
-          setFormData((prev) => ({ ...prev, car_id: preselectedCar }));
-        } else if (carsData.length > 0 && !preselectedCar) {
-          // Auto-select first car if none selected
-          setFormData((prev) => ({ ...prev, car_id: carsData[0].id }));
-        }
+          // If preselectedCar is provided and valid, use it
+          if (preselectedCar && carsData.some((c) => c.id === preselectedCar)) {
+            setFormData((prev) => ({ ...prev, car_id: preselectedCar }));
+          } else if (carsData.length > 0 && !preselectedCar) {
+            // Auto-select first car if none selected
+            setFormData((prev) => ({ ...prev, car_id: carsData[0].id }));
+          }
+        });
       } catch (error) {
         console.error("Error fetching cars:", error);
       } finally {
-        setLoadingCars(false);
+        startTransition(() => setLoadingCars(false));
       }
 
       try {
-        setLoadingStations(true);
+        startTransition(() => setLoadingStations(true));
         const stations = await apiService.getFavoriteStationsForDropdown();
-        setFavoriteStations(stations);
+        startTransition(() => setFavoriteStations(stations));
       } catch (error) {
         console.error("Error fetching favorite stations:", error);
       } finally {
-        setLoadingStations(false);
+        startTransition(() => setLoadingStations(false));
       }
     };
 

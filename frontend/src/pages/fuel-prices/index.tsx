@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Suspense, useState, useEffect, startTransition } from "react";
 import { useRouter } from "next/router";
 import FavoriteStationsList from "@/components/fuel-prices/FavoriteStationsList";
 import FuelTypeFilter from "@/components/fuel/FuelTypeFilter";
@@ -7,34 +7,32 @@ import SearchIcon from "@mui/icons-material/Search";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { FuelType } from "@/lib/api";
 import {
-  useFavoriteStationsWithMinLoadTime,
+  useFavoriteStations,
   useRefreshFavorites,
 } from "@/lib/hooks/useFuelPrices";
+import { LoadingSpinner } from "@/components/common";
 
 const SORT_BY_STORAGE_KEY = "fuelPrices.sortBy";
 
 export default function FuelPrices() {
   const { t } = useTranslation();
+
   const router = useRouter();
 
-  // React Query hooks - data persists across navigation
-  const {
-    data: favorites = [],
-    isLoading,
-    isError,
-  } = useFavoriteStationsWithMinLoadTime();
   const refreshFavorites = useRefreshFavorites();
 
   // Initialize sortBy with value from localStorage or default to "e5"
-  const [sortBy, setSortBy] = useState<FuelType>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(SORT_BY_STORAGE_KEY);
-      if (stored === "e5" || stored === "e10" || stored === "diesel") {
-        return stored;
-      }
+
+  const [sortBy, setSortBy] = useState<FuelType>("e5");
+
+  useEffect(() => {
+    const stored = localStorage.getItem(SORT_BY_STORAGE_KEY);
+    if (stored === "e5" || stored === "e10" || stored === "diesel") {
+      startTransition(() => {
+        setSortBy(stored);
+      });
     }
-    return "e5";
-  });
+  }, []);
 
   const handleSortChange = (newSortBy: FuelType) => {
     setSortBy(newSortBy);
@@ -63,9 +61,7 @@ export default function FuelPrices() {
 
       {/* Action Bar with Refresh and Search Buttons */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="heading-2">
-          {t.fuelPrices.myFavorites} ({favorites.length})
-        </h2>
+        <h2 className="heading-2">{t.fuelPrices.myFavorites}</h2>
         <div className="flex gap-2">
           <button
             onClick={() => refreshFavorites()}
@@ -93,14 +89,12 @@ export default function FuelPrices() {
       />
 
       {/* Favorites List */}
-      <FavoriteStationsList
-        favorites={favorites}
-        loading={isLoading}
-        sortBy={sortBy}
-        onNavigateToDetail={handleNavigateToDetail}
-        showRank={true}
-        isError={isError}
-      />
+      <Suspense fallback={<LoadingSpinner />}>
+        <FavoriteStationsList
+          sortBy={sortBy}
+          onNavigateToDetail={handleNavigateToDetail}
+        />
+      </Suspense>
     </div>
   );
 }

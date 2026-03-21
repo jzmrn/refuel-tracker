@@ -1,18 +1,13 @@
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Snackbar from "@/components/common/Snackbar";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
+import { LoadingSpinner } from "@/components/common";
 import CarDetailsContent from "@/components/cars/CarDetailsContent";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import {
-  useCarWithMinLoadTime,
-  useRefuelMetricsWithMinLoadTime,
-  useKilometerEntriesWithMinLoadTime,
-  useRevokeCarAccess,
-  useDeleteCar,
-} from "@/lib/hooks/useCars";
+import { useRevokeCarAccess, useDeleteCar } from "@/lib/hooks/useCars";
 
 export default function CarDetails() {
   const { t } = useTranslation();
@@ -22,25 +17,6 @@ export default function CarDetails() {
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  // Fetch car details
-  const {
-    data: car,
-    isLoading: carLoading,
-    error: carError,
-  } = useCarWithMinLoadTime(carId);
-
-  // Fetch recent refuels (limit 5)
-  const { data: refuels = [], isLoading: refuelsLoading } =
-    useRefuelMetricsWithMinLoadTime(carId, {
-      limit: 5,
-    });
-
-  // Fetch recent kilometer entries (limit 5)
-  const { data: kilometerEntries = [], isLoading: kilometersLoading } =
-    useKilometerEntriesWithMinLoadTime(carId, {
-      limit: 5,
-    });
 
   const revokeAccess = useRevokeCarAccess();
   const deleteCar = useDeleteCar();
@@ -119,25 +95,26 @@ export default function CarDetails() {
         </div>
       </div>
 
-      <CarDetailsContent
-        car={car}
-        carLoading={carLoading}
-        carError={carError}
-        refuels={refuels}
-        refuelsLoading={refuelsLoading}
-        kilometerEntries={kilometerEntries}
-        kilometersLoading={kilometersLoading}
-        isDeleting={isDeleting}
-        isRevoking={revokeAccess.isPending}
-        onEditCar={handleEditCar}
-        onDeleteCar={() => setIsDeleteDialogOpen(true)}
-        onViewStats={handleViewStats}
-        onAddRefuel={handleAddRefuel}
-        onViewKilometerChart={handleViewKilometerChart}
-        onAddKilometer={handleAddKilometer}
-        onAddSharedUsers={handleAddSharedUsers}
-        onRemoveSharedUser={handleRemoveSharedUser}
-      />
+      <Suspense fallback={<LoadingSpinner />}>
+        {/* This ternary avoids rendering an empty page since the carId is loaded from the path */}
+        {carId ? (
+          <CarDetailsContent
+            carId={carId}
+            isDeleting={isDeleting}
+            isRevoking={revokeAccess.isPending}
+            onEditCar={handleEditCar}
+            onDeleteCar={() => setIsDeleteDialogOpen(true)}
+            onViewStats={handleViewStats}
+            onAddRefuel={handleAddRefuel}
+            onViewKilometerChart={handleViewKilometerChart}
+            onAddKilometer={handleAddKilometer}
+            onAddSharedUsers={handleAddSharedUsers}
+            onRemoveSharedUser={handleRemoveSharedUser}
+          />
+        ) : (
+          <LoadingSpinner />
+        )}
+      </Suspense>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmationDialog

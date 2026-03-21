@@ -1,73 +1,22 @@
-import { useState, ReactNode } from "react";
+import { Suspense, useState } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import RefuelStats from "@/components/refuels/RefuelStats";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import {
-  useCarWithMinLoadTime,
-  useRefuelMetricsWithMinLoadTime,
-  useRefuelStatisticsWithMinLoadTime,
+  useCar,
+  useRefuelMetrics,
+  useRefuelStatistics,
 } from "@/lib/hooks/useCars";
-import { EmptyPanel, LoadingSpinner } from "@/components/common";
-import CloseIcon from "@mui/icons-material/Close";
-import { RefuelMetric, RefuelStatistics } from "@/lib/api";
+import { LoadingSpinner } from "@/components/common";
 import PeriodFilter from "@/components/common/PeriodFilter";
 
 type FilterType = "month" | "6months" | "year";
 
-interface StatsContentWrapperProps {
-  isLoading: boolean;
-  error: Error | null;
-  statistics: RefuelStatistics | null;
-  refuelData: RefuelMetric[];
-  fuelTankSize?: number;
-  t: ReturnType<typeof useTranslation>["t"];
-}
-
-function StatsContentWrapper({
-  isLoading,
-  error,
-  statistics,
-  refuelData,
-  fuelTankSize,
-  t,
-}: StatsContentWrapperProps): ReactNode {
-  if (error) {
-    return (
-      <EmptyPanel
-        icon={
-          <CloseIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
-        }
-        title={t.common.errorLoadingData}
-      />
-    );
-  }
-
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
-  return (
-    <RefuelStats
-      statistics={statistics}
-      refuelData={refuelData}
-      fuelTankSize={fuelTankSize}
-    />
-  );
-}
-
-export default function CarStats() {
+function StatsContent({ carId }: { carId: string }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const { id } = router.query;
-  const carId = typeof id === "string" ? id : undefined;
-
-  // Fetch car details
-  const {
-    data: car,
-    isLoading: carLoading,
-    error: carError,
-  } = useCarWithMinLoadTime(carId);
+  const { data: car } = useCar(carId);
 
   const [activeFilter, setActiveFilter] = useState<FilterType>("6months");
 
@@ -98,23 +47,6 @@ export default function CarStats() {
     return { start_date: startDate };
   };
 
-  // Fetch statistics with current filter
-  const {
-    data: statistics,
-    isLoading: statsLoading,
-    error: statsError,
-  } = useRefuelStatisticsWithMinLoadTime(carId, getFilterDates());
-
-  // Fetch refuels with current filter
-  const {
-    data: refuels = [],
-    isLoading: refuelsLoading,
-    error: refuelsError,
-  } = useRefuelMetricsWithMinLoadTime(carId, {
-    ...getFilterDates(),
-    limit: 365,
-  });
-
   const handleBack = () => {
     router.back();
   };
@@ -123,11 +55,8 @@ export default function CarStats() {
     setActiveFilter(filter);
   };
 
-  const isLoading = carLoading || statsLoading || refuelsLoading;
-  const contentError = carError || statsError || refuelsError;
-
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+    <>
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -158,15 +87,26 @@ export default function CarStats() {
         />
 
         {/* Statistics */}
-        <StatsContentWrapper
-          isLoading={isLoading}
-          error={contentError}
-          statistics={statistics || null}
-          refuelData={refuels}
-          fuelTankSize={car?.fuel_tank_size}
-          t={t}
-        />
+        <Suspense fallback={<LoadingSpinner />}>
+          <RefuelStats
+            carId={carId}
+            filterDates={getFilterDates()}
+            fuelTankSize={car?.fuel_tank_size}
+          />
+        </Suspense>
       </div>
+    </>
+  );
+}
+
+export default function CarStats() {
+  const router = useRouter();
+  const { id } = router.query;
+  const carId = typeof id === "string" ? id : undefined;
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+      {carId ? <StatsContent carId={carId} /> : <LoadingSpinner />}
     </div>
   );
 }

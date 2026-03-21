@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import { StationDetailAggregate } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { useStationDetailsWithMinLoadTime } from "@/lib/hooks/useStats";
+import { useStationDetails } from "@/lib/hooks/useStats";
 import { DetailAggregate } from "@/components/stats/chartUtils";
 import DetailContent from "@/components/stats/DetailContent";
 
@@ -28,10 +28,8 @@ const StationsContent: React.FC = () => {
   const { t } = useTranslation();
 
   const useDetailData = useCallback(
-    (
-      fuelType: Parameters<typeof useStationDetailsWithMinLoadTime>[0],
-      months: number,
-    ) => useStationDetailsWithMinLoadTime(fuelType, months),
+    (fuelType: Parameters<typeof useStationDetails>[0], months: number) =>
+      useStationDetails(fuelType, months),
     [],
   );
 

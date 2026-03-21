@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect, startTransition } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import TuneIcon from "@mui/icons-material/Tune";
 import SearchStationsForm from "@/components/fuel-prices/SearchStationsForm";
-import FavoriteStationsList from "@/components/fuel-prices/FavoriteStationsList";
+import StationsList from "@/components/fuel-prices/StationsList";
 import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
 import Snackbar from "@/components/common/Snackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -21,6 +21,7 @@ import {
   GasStationResponse,
   GasStationSearchRequest,
 } from "@/lib/api";
+import { LoadingSpinner } from "@/components/common";
 
 type SortByType = "e5" | "e10" | "diesel" | "dist";
 
@@ -69,12 +70,12 @@ export default function SearchStations() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isFormLoading = isLoading("search-submit");
 
-  // React Query hooks for favorites
-  const { data: favorites = [] } = useFavoriteStations();
+  // React Query hooks for favorites (suspense-based)
+  const { data: favorites } = useFavoriteStations();
   const addFavorite = useAddFavoriteStation();
   const removeFavorite = useRemoveFavoriteStation();
 
-  // React Query hook for search results
+  // React Query hook for search results (non-suspense, requires conditional enabled)
   const { data: searchResults = [], isLoading: isLoadingResults } =
     useSearchStations(searchParams);
 
@@ -91,7 +92,7 @@ export default function SearchStations() {
       setSearchSortBy((sortBy as string) || "dist");
       // searchParams and showingResults are already initialized from URL
     }
-    setIsInitialized(true);
+    startTransition(() => setIsInitialized(true));
   }, [router.isReady, router.query]);
 
   // Switch to results view and stop loading once results are available (for new searches)
@@ -99,10 +100,10 @@ export default function SearchStations() {
     if (searchParams && !isLoadingResults && !showingResults && isSubmitting) {
       // Data has loaded (could be empty or with results)
       if (searchResults.length > 0) {
-        setShowingResults(true);
+        startTransition(() => setShowingResults(true));
       }
       stopLoading("search-submit");
-      setIsSubmitting(false);
+      startTransition(() => setIsSubmitting(false));
     }
     // Stop loading if we're already showing results (page reload scenario)
     // In this case isSubmitting might be false because we initialized from URL
@@ -113,7 +114,7 @@ export default function SearchStations() {
       isSubmitting
     ) {
       stopLoading("search-submit");
-      setIsSubmitting(false);
+      startTransition(() => setIsSubmitting(false));
     }
   }, [
     searchParams,
@@ -219,122 +220,125 @@ export default function SearchStations() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-      {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <button
-            onClick={handleBack}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            aria-label={t.common.back}
-          >
-            <ArrowBackIcon className="icon text-gray-600 dark:text-gray-400" />
-          </button>
-          <div className="flex-1">
-            <h1 className="heading-1">{t.fuelPrices.searchStations}</h1>
-            <p className="text-secondary mt-2 text-sm md:text-base">
-              {t.fuelPrices.searchDescription}
-            </p>
+      <Suspense fallback={<LoadingSpinner />}>
+        {/* Header */}
+        <div className="mb-6 md:mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <button
+              onClick={handleBack}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              aria-label={t.common.back}
+            >
+              <ArrowBackIcon className="icon text-gray-600 dark:text-gray-400" />
+            </button>
+            <div className="flex-1">
+              <h1 className="heading-1">{t.fuelPrices.searchStations}</h1>
+              <p className="text-secondary mt-2 text-sm md:text-base">
+                {t.fuelPrices.searchDescription}
+              </p>
+            </div>
+            {!showForm && searchResults.length > 0 && (
+              <button
+                onClick={handleRefineSearch}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30 transition-colors"
+              >
+                <TuneIcon className="w-5 h-5" />
+                <span className="hidden sm:inline">{t.fuelPrices.search}</span>
+              </button>
+            )}
+            {showForm && searchParams !== null && searchResults.length > 0 && (
+              <button
+                onClick={handleBackToResults}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30 transition-colors"
+              >
+                <ArrowForwardIcon className="w-5 h-5" />
+                <span className="hidden sm:inline">
+                  {t.fuelPrices.backToResults}
+                </span>
+              </button>
+            )}
           </div>
-          {!showForm && searchResults.length > 0 && (
-            <button
-              onClick={handleRefineSearch}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30 transition-colors"
-            >
-              <TuneIcon className="w-5 h-5" />
-              <span className="hidden sm:inline">{t.fuelPrices.search}</span>
-            </button>
-          )}
-          {showForm && searchParams !== null && searchResults.length > 0 && (
-            <button
-              onClick={handleBackToResults}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30 transition-colors"
-            >
-              <ArrowForwardIcon className="w-5 h-5" />
-              <span className="hidden sm:inline">
-                {t.fuelPrices.backToResults}
-              </span>
-            </button>
-          )}
         </div>
-      </div>
 
-      {/* Form or Results */}
-      {!isInitialized ? (
-        <div className="panel p-8 text-center">
-          <p className="text-secondary">{t.common.loading}...</p>
-        </div>
-      ) : showForm ? (
-        <SearchStationsForm
-          onSearch={handleSearch}
-          onError={handleSearchError}
-          isSubmitting={isSubmitting}
-          initialValues={{
-            lat: router.query.lat
-              ? parseFloat(router.query.lat as string)
-              : undefined,
-            lng: router.query.lng
-              ? parseFloat(router.query.lng as string)
-              : undefined,
-            rad: router.query.rad
-              ? parseFloat(router.query.rad as string)
-              : undefined,
-            sortBy: (router.query.sortBy as string) || undefined,
-          }}
-        />
-      ) : (
-        <>
-          {/* Fuel Type Sort Control */}
-          <div className="panel p-4 mb-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t.fuelPrices.sortBy}:
-              </label>
-              <div className="grid grid-cols-4 gap-2">
-                <button
-                  onClick={() => handleSortChange("dist")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    searchSortBy === "dist"
-                      ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {t.fuelPrices.distance}
-                </button>
-                <FuelTypeSelector
-                  selectedFuelType={
-                    ["e5", "e10", "diesel"].includes(searchSortBy)
-                      ? (searchSortBy as FuelType)
-                      : null
-                  }
-                  onFuelTypeChange={(fuelType) =>
-                    handleSortChange(fuelType as SortByType)
-                  }
-                  className="col-span-3"
-                />
+        {/* Form or Results */}
+        {!isInitialized ? (
+          <div className="panel p-8 text-center">
+            <p className="text-secondary">{t.common.loading}...</p>
+          </div>
+        ) : showForm ? (
+          <SearchStationsForm
+            onSearch={handleSearch}
+            onError={handleSearchError}
+            isSubmitting={isSubmitting}
+            initialValues={{
+              lat: router.query.lat
+                ? parseFloat(router.query.lat as string)
+                : undefined,
+              lng: router.query.lng
+                ? parseFloat(router.query.lng as string)
+                : undefined,
+              rad: router.query.rad
+                ? parseFloat(router.query.rad as string)
+                : undefined,
+              sortBy: (router.query.sortBy as string) || undefined,
+            }}
+          />
+        ) : (
+          <>
+            {/* Fuel Type Sort Control */}
+            <div className="panel p-4 mb-6">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t.fuelPrices.sortBy}:
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  <button
+                    onClick={() => handleSortChange("dist")}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      searchSortBy === "dist"
+                        ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    {t.fuelPrices.distance}
+                  </button>
+                  <FuelTypeSelector
+                    selectedFuelType={
+                      ["e5", "e10", "diesel"].includes(searchSortBy)
+                        ? (searchSortBy as FuelType)
+                        : null
+                    }
+                    onFuelTypeChange={(fuelType) =>
+                      handleSortChange(fuelType as SortByType)
+                    }
+                    className="col-span-3"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-          <FavoriteStationsList
-            favorites={searchResults}
-            loading={!searchResults || searchResults.length === 0}
-            sortBy={searchSortBy as SortByType}
-            onAddToFavorites={handleAddToFavorites}
-            onRemoveFromFavorites={handleRemoveFromFavorites}
-            isLoading={isLoading}
-            onNavigateToDetail={handleNavigateToDetail}
-            favoriteIds={favoriteIds}
-            showRank={true}
-          />
-        </>
-      )}
 
-      {/* Snackbar */}
-      <Snackbar
-        message={snackbar.message}
-        type={snackbar.type}
-        isVisible={snackbar.isVisible}
-        onClose={hideSnackbar}
-      />
+            <StationsList
+              stations={searchResults}
+              loading={!searchResults || searchResults.length === 0}
+              sortBy={searchSortBy as SortByType}
+              onAddToFavorites={handleAddToFavorites}
+              onRemoveFromFavorites={handleRemoveFromFavorites}
+              isLoading={isLoading}
+              onNavigateToDetail={handleNavigateToDetail}
+              favoriteIds={favoriteIds}
+              showRank={true}
+            />
+          </>
+        )}
+
+        {/* Snackbar */}
+        <Snackbar
+          message={snackbar.message}
+          type={snackbar.type}
+          isVisible={snackbar.isVisible}
+          onClose={hideSnackbar}
+        />
+      </Suspense>
     </div>
   );
 }

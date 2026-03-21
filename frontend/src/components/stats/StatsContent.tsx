@@ -1,51 +1,79 @@
-import React, { useState, useEffect } from "react";
+import React, { Suspense, useState, useEffect, startTransition } from "react";
 import { FuelType } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import StatsFilters from "@/components/stats/StatsFilters";
 import StatsAggregateTables from "@/components/stats/StatsAggregateTables";
 import {
-  useAvailableMonthsWithMinLoadTime,
-  useMonthlyStationAggregatesWithMinLoadTime,
-  useMonthlyPlaceAggregatesWithMinLoadTime,
-  useMonthlyBrandAggregatesWithMinLoadTime,
+  useAvailableMonths,
+  useMonthlyStationAggregates,
+  useMonthlyPlaceAggregates,
+  useMonthlyBrandAggregates,
 } from "@/lib/hooks/useStats";
 
 const FUEL_TYPE_STORAGE_KEY = "stats.fuelType";
 const MONTH_STORAGE_KEY = "stats.selectedMonth";
 
+/**
+ * Inner component that fetches aggregate data using suspense hooks.
+ * Only rendered when selectedMonth is guaranteed to be a valid string.
+ */
+function StatsAggregateData({
+  selectedMonth,
+  selectedFuelType,
+}: {
+  selectedMonth: string;
+  selectedFuelType: FuelType;
+}) {
+  const { data: stations } = useMonthlyStationAggregates(
+    selectedMonth,
+    selectedFuelType,
+    10,
+  );
+
+  const { data: places } = useMonthlyPlaceAggregates(
+    selectedMonth,
+    selectedFuelType,
+    10,
+  );
+
+  const { data: brands } = useMonthlyBrandAggregates(
+    selectedMonth,
+    selectedFuelType,
+    10,
+  );
+
+  return (
+    <StatsAggregateTables stations={stations} places={places} brands={brands} />
+  );
+}
+
 const StatsContent: React.FC = () => {
   const { t } = useTranslation();
 
-  const [selectedFuelType, setSelectedFuelType] = useState<FuelType>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(FUEL_TYPE_STORAGE_KEY);
-      if (stored === "e5" || stored === "e10" || stored === "diesel") {
-        return stored;
-      }
-    }
-    return "e5";
-  });
+  const [selectedFuelType, setSelectedFuelType] = useState<FuelType>("e5");
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
 
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem(MONTH_STORAGE_KEY);
-    }
-    return null;
-  });
+  const { data: availableMonths } = useAvailableMonths();
 
-  const { data: availableMonths = [], isLoading: monthsLoading } =
-    useAvailableMonthsWithMinLoadTime();
-
-  // Auto-select latest month when data loads and no month is selected (or stored month is unavailable)
+  // Restore persisted selections and auto-select latest month on mount
   useEffect(() => {
-    if (availableMonths.length > 0) {
-      const stored = selectedMonth;
-      const isValid = availableMonths.some((m) => m.date === stored);
-      if (!stored || !isValid) {
-        setSelectedMonth(availableMonths[0].date);
+    startTransition(() => {
+      const storedFuel = localStorage.getItem(FUEL_TYPE_STORAGE_KEY);
+      if (
+        storedFuel === "e5" ||
+        storedFuel === "e10" ||
+        storedFuel === "diesel"
+      ) {
+        setSelectedFuelType(storedFuel);
       }
-    }
+
+      if (availableMonths.length > 0) {
+        const storedMonth = localStorage.getItem(MONTH_STORAGE_KEY);
+        const isValid = availableMonths.some((m) => m.date === storedMonth);
+        setSelectedMonth(isValid ? storedMonth : availableMonths[0].date);
+      }
+    });
   }, [availableMonths]);
 
   const handleFuelTypeChange = (fuelType: FuelType) => {
@@ -57,31 +85,6 @@ const StatsContent: React.FC = () => {
     setSelectedMonth(month);
     localStorage.setItem(MONTH_STORAGE_KEY, month);
   };
-
-  const { data: stations = [], isLoading: stationsLoading } =
-    useMonthlyStationAggregatesWithMinLoadTime(
-      selectedMonth,
-      selectedFuelType,
-      10,
-    );
-
-  const { data: places = [], isLoading: placesLoading } =
-    useMonthlyPlaceAggregatesWithMinLoadTime(
-      selectedMonth,
-      selectedFuelType,
-      10,
-    );
-
-  const { data: brands = [], isLoading: brandsLoading } =
-    useMonthlyBrandAggregatesWithMinLoadTime(
-      selectedMonth,
-      selectedFuelType,
-      10,
-    );
-
-  if (monthsLoading) {
-    return <LoadingSpinner text={t.common.loading} />;
-  }
 
   if (availableMonths.length === 0) {
     return (
@@ -101,14 +104,14 @@ const StatsContent: React.FC = () => {
         onFuelTypeChange={handleFuelTypeChange}
       />
 
-      <StatsAggregateTables
-        stations={stations}
-        places={places}
-        brands={brands}
-        stationsLoading={stationsLoading}
-        placesLoading={placesLoading}
-        brandsLoading={brandsLoading}
-      />
+      {selectedMonth && (
+        <Suspense fallback={<LoadingSpinner />}>
+          <StatsAggregateData
+            selectedMonth={selectedMonth}
+            selectedFuelType={selectedFuelType}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };

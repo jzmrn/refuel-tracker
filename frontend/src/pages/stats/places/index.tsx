@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { LoadingSpinner } from "@/components/common";
 import PlacesContent from "@/components/stats/PlacesContent";
 
 export default function PlacesPage() {
@@ -26,7 +28,9 @@ export default function PlacesPage() {
         </p>
       </div>
 
-      <PlacesContent />
+      <Suspense fallback={<LoadingSpinner />}>
+        <PlacesContent />
+      </Suspense>
     </div>
   );
 }

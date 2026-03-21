@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { LoadingSpinner } from "@/components/common";
 import StationsContent from "@/components/stats/StationsContent";
 
 export default function StationsPage() {
@@ -26,7 +28,9 @@ export default function StationsPage() {
         </p>
       </div>
 
-      <StationsContent />
+      <Suspense fallback={<LoadingSpinner />}>
+        <StationsContent />
+      </Suspense>
     </div>
   );
 }

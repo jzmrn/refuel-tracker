@@ -4,6 +4,7 @@ import {
   useEffect,
   useState,
   ReactNode,
+  startTransition,
 } from "react";
 import { getApiBaseUrl } from "../api";
 
@@ -91,11 +92,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   // After hydration, load cached user to avoid flash
   useEffect(() => {
-    setIsHydrated(true);
-    const cached = getCachedUser();
-    if (cached) {
-      setUser(cached);
-    }
+    startTransition(() => {
+      setIsHydrated(true);
+      const cached = getCachedUser();
+      if (cached) {
+        setUser(cached);
+      }
+    });
   }, []);
 
   const fetchUser = async () => {
@@ -106,17 +109,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const userData = await response.json();
-        setUser(userData);
+        startTransition(() => {
+          setUser(userData);
+        });
         cacheUser(userData);
       } else {
-        setUser(null);
+        startTransition(() => {
+          setUser(null);
+        });
         cacheUser(null);
       }
     } catch (error) {
       console.error("Failed to load user:", error);
-      setUser(null);
+      startTransition(() => setUser(null));
     } finally {
-      setLoading(false);
+      startTransition(() => setLoading(false));
     }
   };
 

@@ -1,11 +1,14 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useSuspenseQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import apiService, {
   CarCreate,
   CarUpdate,
   RefuelMetricCreate,
   KilometerEntryCreate,
 } from "@/lib/api";
-import { useWithMinLoadTime } from "./useWithMinLoadTime";
 
 // Query Keys - centralized for consistency
 export const carsKeys = {
@@ -23,55 +26,45 @@ export const carsKeys = {
 };
 
 /**
- * Hook to fetch all cars
- * Data is cached for 5 minutes and persists across navigation
+ * Suspense-based hook to fetch all cars with minimum loading time.
+ * Must be used inside a <Suspense> boundary.
  */
 export function useCars() {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: carsKeys.lists(),
     queryFn: async () => {
-      const data = await apiService.getCars();
+      const dataPromise = apiService.getCars();
+      const [data] = await Promise.all([
+        dataPromise,
+        new Promise((r) => setTimeout(r, MIN_LOAD_TIME_MS)),
+      ]);
       return data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
-/**
- * Hook to fetch all cars with minimum loading time
- * Ensures loading state is shown for at least 500ms when data is not cached
- * This provides better UX by avoiding flash of loading state
- */
-export function useCarsWithMinLoadTime() {
-  return useWithMinLoadTime(useCars());
-}
+const MIN_LOAD_TIME_MS = 500;
 
 /**
- * Hook to fetch a single car by ID
- * Data is cached for 5 minutes and persists across navigation
+ * Suspense-based hook to fetch a car with a minimum loading time.
+ * Ensures the Suspense fallback is shown for at least 500ms to avoid
+ * a flash of loading state. Uses cached data instantly when available.
+ * Returns null if the car is not found.
  */
-export function useCar(carId: string | undefined) {
-  return useQuery({
-    queryKey: carId ? carsKeys.detail(carId) : ["cars", "detail", "none"],
+export function useCar(carId: string) {
+  return useSuspenseQuery({
+    queryKey: carsKeys.detail(carId),
     queryFn: async () => {
-      if (!carId) throw new Error("Car ID is required");
-      const cars = await apiService.getCars();
-      const car = cars.find((c) => c.id === carId);
-      if (!car) throw new Error("Car not found");
+      const carPromise = apiService.getCar(carId).catch(() => null);
+      const [car] = await Promise.all([
+        carPromise,
+        new Promise((r) => setTimeout(r, MIN_LOAD_TIME_MS)),
+      ]);
       return car;
     },
-    enabled: !!carId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
-}
-
-/**
- * Hook to fetch a car with minimum loading time
- * Ensures loading state is shown for at least 500ms when data is not cached
- * This provides better UX by avoiding flash of loading state
- */
-export function useCarWithMinLoadTime(carId: string | undefined) {
-  return useWithMinLoadTime(useCar(carId));
 }
 
 /**
@@ -141,91 +134,60 @@ export function useDeleteCar() {
 }
 
 /**
- * Hook to fetch refuel metrics for a car
- * Data is cached for 2 minutes
+ * Suspense-based hook to fetch refuel metrics.
+ * Must be used inside a <Suspense> boundary.
  */
 export function useRefuelMetrics(
-  carId: string | undefined,
+  carId: string,
   params?: {
     start_date?: string;
     end_date?: string;
     limit?: number;
   },
 ) {
-  return useQuery({
-    queryKey: carId
-      ? [...carsKeys.refuels(carId), params]
-      : ["refuels", "none"],
+  return useSuspenseQuery({
+    queryKey: [...carsKeys.refuels(carId), params],
     queryFn: async () => {
-      if (!carId) throw new Error("Car ID is required");
-      const data = await apiService.getRefuelMetrics({
+      const metricsPromise = apiService.getRefuelMetrics({
         car_id: carId,
         ...params,
       });
+      const [data] = await Promise.all([
+        metricsPromise,
+        new Promise((r) => setTimeout(r, MIN_LOAD_TIME_MS)),
+      ]);
       return data;
     },
-    enabled: !!carId,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
 
 /**
- * Hook to fetch refuel metrics with minimum loading time
- * Ensures loading state is shown for at least 500ms when data is not cached
- * This provides better UX by avoiding flash of loading state
- */
-export function useRefuelMetricsWithMinLoadTime(
-  carId: string | undefined,
-  params?: {
-    start_date?: string;
-    end_date?: string;
-    limit?: number;
-  },
-) {
-  return useWithMinLoadTime(useRefuelMetrics(carId, params));
-}
-
-/**
- * Hook to fetch refuel statistics for a car
- * Data is cached for 5 minutes
+ * Suspense-based hook to fetch refuel statistics.
+ * Must be used inside a <Suspense> boundary.
  */
 export function useRefuelStatistics(
-  carId: string | undefined,
+  carId: string,
   params?: {
     start_date?: string;
     end_date?: string;
   },
 ) {
-  return useQuery({
-    queryKey: carId
-      ? [...carsKeys.refuelStatistics(carId), params]
-      : ["refuelStatistics", "none"],
+  return useSuspenseQuery({
+    queryKey: [...carsKeys.refuelStatistics(carId), params],
     queryFn: async () => {
-      if (!carId) throw new Error("Car ID is required");
-      const data = await apiService.getRefuelStatistics({
+      const promise = apiService.getRefuelStatistics({
         car_id: carId,
         ...params,
       });
+      const [data] = await Promise.all([
+        promise,
+        new Promise((r) => setTimeout(r, MIN_LOAD_TIME_MS)),
+      ]);
       return data;
     },
-    enabled: !!carId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
-}
-
-/**
- * Hook to fetch refuel statistics with minimum loading time
- * Ensures loading state is shown for at least 500ms when data is not cached
- * This provides better UX by avoiding flash of loading state
- */
-export function useRefuelStatisticsWithMinLoadTime(
-  carId: string | undefined,
-  params?: {
-    start_date?: string;
-    end_date?: string;
-  },
-) {
-  return useWithMinLoadTime(useRefuelStatistics(carId, params));
 }
 
 /**
@@ -309,48 +271,32 @@ export function useRevokeCarAccess() {
 }
 
 /**
- * Hook to fetch kilometer entries for a car
- * Data is cached for 2 minutes
+ * Suspense-based hook to fetch kilometer entries.
+ * Must be used inside a <Suspense> boundary.
  */
 export function useKilometerEntries(
-  carId: string | undefined,
+  carId: string,
   params?: {
     start_date?: string;
     end_date?: string;
     limit?: number;
   },
 ) {
-  return useQuery({
-    queryKey: carId
-      ? [...carsKeys.kilometers(carId), params]
-      : ["kilometers", "none"],
+  return useSuspenseQuery({
+    queryKey: [...carsKeys.kilometers(carId), params],
     queryFn: async () => {
-      if (!carId) throw new Error("Car ID is required");
-      const data = await apiService.getKilometerEntries({
+      const promise = apiService.getKilometerEntries({
         car_id: carId,
         ...params,
       });
+      const [data] = await Promise.all([
+        promise,
+        new Promise((r) => setTimeout(r, MIN_LOAD_TIME_MS)),
+      ]);
       return data;
     },
-    enabled: !!carId,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
-}
-
-/**
- * Hook to fetch kilometer entries with minimum loading time
- * Ensures loading state is shown for at least 500ms when data is not cached
- * This provides better UX by avoiding flash of loading state
- */
-export function useKilometerEntriesWithMinLoadTime(
-  carId: string | undefined,
-  params?: {
-    start_date?: string;
-    end_date?: string;
-    limit?: number;
-  },
-) {
-  return useWithMinLoadTime(useKilometerEntries(carId, params));
 }
 
 /**

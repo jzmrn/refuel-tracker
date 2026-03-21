@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   ReactNode,
+  startTransition,
 } from "react";
 import { Language, TranslationStructure } from "./types";
 import {
@@ -43,14 +44,17 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
         storedLanguage &&
         SUPPORTED_LANGUAGES.some((lang) => lang.code === storedLanguage)
       ) {
-        setLanguageState(storedLanguage);
-        setTranslations(getTranslations(storedLanguage));
+        startTransition(() => {
+          setLanguageState(storedLanguage);
+          setTranslations(getTranslations(storedLanguage));
+        });
       } else {
-        // Detect browser language
         const browserLanguage = navigator.language.split("-")[0] as Language;
         if (SUPPORTED_LANGUAGES.some((lang) => lang.code === browserLanguage)) {
-          setLanguageState(browserLanguage);
-          setTranslations(getTranslations(browserLanguage));
+          startTransition(() => {
+            setLanguageState(browserLanguage);
+            setTranslations(getTranslations(browserLanguage));
+          });
         }
       }
     }

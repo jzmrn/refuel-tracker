@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   ReactNode,
+  startTransition,
 } from "react";
 
 export type Theme = "light" | "dark" | "system";
@@ -71,11 +72,24 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     resolveTheme(getInitialTheme()),
   );
 
+  // const [theme, setTheme] = useState<Theme>("system");
+  // const [currentTheme, setCurrentTheme] = useState<"light" | "dark">("light");
+
+  // Hydrate from localStorage after mount
+  useEffect(() => {
+    const initial = getInitialTheme();
+    const resolved = resolveTheme(initial);
+    startTransition(() => {
+      setTheme(initial);
+      setCurrentTheme(resolved);
+    });
+  }, []);
+
   // Update current theme when theme or system preference changes
   useEffect(() => {
     const updateCurrentTheme = () => {
       const resolved = resolveTheme(theme);
-      setCurrentTheme(resolved);
+      startTransition(() => setCurrentTheme(resolved));
     };
 
     updateCurrentTheme();

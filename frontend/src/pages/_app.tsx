@@ -52,20 +52,26 @@ export default function App(props: AppProps) {
   );
 
   // Implement LRU cache for station details to limit memory usage
-  // Keep only the most recent 20 station details in cache
+  // Keep only the most recent 20 station queries in cache
   useEffect(() => {
-    const MAX_STATION_DETAILS_CACHE = 20;
+    const MAX_STATION_CACHE = 20;
+    const STATION_KEY_TYPES = [
+      "stationMeta",
+      "stationPriceHistory",
+      "stationDailyStats",
+    ];
 
-    const cleanupStationDetailsCache = () => {
+    const cleanupStationCache = () => {
       const cache = queryClient.getQueryCache();
-      const stationDetailsQueries = cache
+      const stationQueries = cache
         .getAll()
         .filter((query) => {
           const key = query.queryKey;
           return (
             Array.isArray(key) &&
             key[0] === "fuelPrices" &&
-            key[1] === "stationDetails"
+            typeof key[1] === "string" &&
+            STATION_KEY_TYPES.includes(key[1])
           );
         })
         .sort((a, b) => {
@@ -76,8 +82,8 @@ export default function App(props: AppProps) {
         });
 
       // Remove oldest entries if we exceed the limit
-      if (stationDetailsQueries.length > MAX_STATION_DETAILS_CACHE) {
-        const toRemove = stationDetailsQueries.slice(MAX_STATION_DETAILS_CACHE);
+      if (stationQueries.length > MAX_STATION_CACHE) {
+        const toRemove = stationQueries.slice(MAX_STATION_CACHE);
         toRemove.forEach((query) => {
           queryClient.removeQueries({ queryKey: query.queryKey });
         });
@@ -86,7 +92,7 @@ export default function App(props: AppProps) {
 
     // Run cleanup when cache changes
     const unsubscribe = queryClient.getQueryCache().subscribe(() => {
-      cleanupStationDetailsCache();
+      cleanupStationCache();
     });
 
     return () => unsubscribe();

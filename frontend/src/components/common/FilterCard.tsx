@@ -45,6 +45,11 @@ interface FilterPanelProps {
   collapsedSummary?: string[];
 }
 
+import { useEffect } from "react";
+
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 export const FilterPanel: React.FC<FilterPanelProps> = ({
   title,
   icon,
@@ -58,7 +63,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
   const handleToggle = () => setCollapsed((c) => !c);
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const el = contentRef.current;
     if (!el) return;
 

@@ -1,17 +1,22 @@
+import { Suspense, useState, useEffect, startTransition } from "react";
 import { useRouter } from "next/router";
 import AddIcon from "@mui/icons-material/Add";
 import CarList from "@/components/cars/CarList";
 import Snackbar from "@/components/common/Snackbar";
+import { LoadingSpinner } from "@/components/common";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { useCarsWithMinLoadTime } from "@/lib/hooks/useCars";
+import { useCars } from "@/lib/hooks/useCars";
+
+function CarsContent({ onCarClick }: { onCarClick: (carId: string) => void }) {
+  const { data: cars } = useCars();
+
+  return <CarList cars={cars} onCarClick={onCarClick} />;
+}
 
 export default function RefuelsIndex() {
   const { t } = useTranslation();
   const router = useRouter();
-
-  // Fetch cars with React Query (using min load time to avoid flickering)
-  const { data: cars = [], isLoading, isError } = useCarsWithMinLoadTime();
 
   const { snackbar, hideSnackbar } = useSnackbar();
 
@@ -47,12 +52,9 @@ export default function RefuelsIndex() {
           </button>
         </div>
 
-        <CarList
-          cars={cars}
-          isLoading={isLoading}
-          isError={isError}
-          onCarClick={handleCarClick}
-        />
+        <Suspense fallback={<LoadingSpinner />}>
+          <CarsContent onCarClick={handleCarClick} />
+        </Suspense>
       </div>
 
       {/* Snackbar */}

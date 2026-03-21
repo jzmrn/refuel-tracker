@@ -71,6 +71,9 @@ dev-backend:
 dev-frontend:
     cd frontend && npm run dev
 
+tsc:
+    cd frontend && npm run type-check
+
 # Start both development servers
 dev: dev-backend dev-frontend
     @echo "Starting development servers..."

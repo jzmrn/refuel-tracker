@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import { PlaceDetailAggregate } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { usePlaceDetailsWithMinLoadTime } from "@/lib/hooks/useStats";
+import { usePlaceDetails } from "@/lib/hooks/useStats";
 import { DetailAggregate } from "@/components/stats/chartUtils";
 import DetailContent from "@/components/stats/DetailContent";
 
@@ -24,10 +24,8 @@ const PlacesContent: React.FC = () => {
   const { t } = useTranslation();
 
   const useDetailData = useCallback(
-    (
-      fuelType: Parameters<typeof usePlaceDetailsWithMinLoadTime>[0],
-      months: number,
-    ) => usePlaceDetailsWithMinLoadTime(fuelType, months),
+    (fuelType: Parameters<typeof usePlaceDetails>[0], months: number) =>
+      usePlaceDetails(fuelType, months),
     [],
   );
 

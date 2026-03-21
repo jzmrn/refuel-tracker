@@ -1,18 +1,54 @@
-import { useState } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import CircularProgress from "@mui/material/CircularProgress";
+import { Suspense, useState } from "react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import apiService, {
+import {
   FuelType,
   DailyStatsTimeRange,
   getDailyStatsRangeDays,
 } from "@/lib/api";
-import { fuelPricesKeys } from "@/lib/hooks/useFuelPrices";
+import { useStationDailyStats } from "@/lib/hooks/useFuelPrices";
 import DailyPriceChangesChart from "./DailyPriceChangesChart";
+import { LoadingSpinner } from "@/components/common";
 
 interface StationPriceChangesChartProps {
   stationId: string;
   fuelType: FuelType;
+}
+
+const CHART_HEIGHT = "h-72 sm:h-64";
+
+function PriceChangesContent({
+  stationId,
+  fuelType,
+  timeRange,
+}: {
+  stationId: string;
+  fuelType: FuelType;
+  timeRange: DailyStatsTimeRange;
+}) {
+  const { t } = useTranslation();
+
+  const { data: dailyStats } = useStationDailyStats(
+    stationId,
+    fuelType,
+    timeRange,
+  );
+
+  const hasValidData =
+    dailyStats &&
+    dailyStats.daily_stats.length > 0 &&
+    dailyStats.daily_stats.some(
+      (point) => point.n_price_changes != null || point.n_unique_prices != null,
+    );
+
+  if (!hasValidData) {
+    return (
+      <div className={`flex items-center justify-center ${CHART_HEIGHT}`}>
+        <span className="text-secondary">{t.fuelPrices.noDataAvailable}</span>
+      </div>
+    );
+  }
+
+  return <DailyPriceChangesChart data={dailyStats.daily_stats} />;
 }
 
 export default function StationPriceChangesChartContainer({
@@ -24,51 +60,16 @@ export default function StationPriceChangesChartContainer({
     DailyStatsTimeRange.OneWeek,
   );
 
-  const days = getDailyStatsRangeDays(timeRange);
-
-  const {
-    data: dailyStats,
-    isLoading,
-    isFetching,
-  } = useQuery({
-    queryKey: fuelPricesKeys.stationDailyStats(stationId, fuelType, timeRange),
-    queryFn: () => apiService.getStationDailyStats(stationId, fuelType, days),
-    staleTime: 30 * 60 * 1000, // 30 minutes
-    gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour
-    placeholderData: keepPreviousData,
-  });
-
   const timeRangeLabels: Record<DailyStatsTimeRange, string> = {
     [DailyStatsTimeRange.OneWeek]: t.fuelPrices.timeRange1Week,
     [DailyStatsTimeRange.OneMonth]: t.fuelPrices.timeRange1Month,
   };
 
-  // Only show loading on initial load
-  if (isLoading && !dailyStats) {
-    return (
-      <div className="panel flex flex-col items-center justify-center py-12">
-        <CircularProgress size={24} />
-        <span className="text-secondary mt-3 text-sm">{t.common.loading}</span>
-      </div>
-    );
-  }
-
-  // Check if there's any valid data
-  const hasValidData =
-    dailyStats &&
-    dailyStats.daily_stats.length > 0 &&
-    dailyStats.daily_stats.some(
-      (point) => point.n_price_changes != null || point.n_unique_prices != null,
-    );
-
   return (
-    <div
-      className={`panel ${isFetching ? "opacity-80" : ""} transition-opacity`}
-    >
+    <div className="panel">
       <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-3 mb-4">
         <div className="flex items-center gap-2">
           <h3 className="heading-2">{t.fuelPrices.priceActivity}</h3>
-          {isFetching && <CircularProgress size={18} />}
         </div>
         <div className="flex gap-2">
           {Object.values(DailyStatsTimeRange).map((range) => (
@@ -86,13 +87,19 @@ export default function StationPriceChangesChartContainer({
           ))}
         </div>
       </div>
-      {hasValidData ? (
-        <DailyPriceChangesChart data={dailyStats.daily_stats} />
-      ) : (
-        <div className="text-center py-8">
-          <span className="text-secondary">{t.fuelPrices.noDataAvailable}</span>
-        </div>
-      )}
+      <Suspense
+        fallback={
+          <div className={`flex items-center justify-center ${CHART_HEIGHT}`}>
+            <LoadingSpinner />
+          </div>
+        }
+      >
+        <PriceChangesContent
+          stationId={stationId}
+          fuelType={fuelType}
+          timeRange={timeRange}
+        />
+      </Suspense>
     </div>
   );
 }

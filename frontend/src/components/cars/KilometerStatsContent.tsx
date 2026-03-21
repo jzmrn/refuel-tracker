@@ -1,9 +1,8 @@
 import React from "react";
 import Panel from "@/components/common/Panel";
-import { EmptyPanel, LoadingSpinner } from "@/components/common";
-import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useLocalization, useTranslation } from "@/lib/i18n/LanguageContext";
 import KilometerChart from "./KilometerChart";
-import CloseIcon from "@mui/icons-material/Close";
+import { useCar, useKilometerEntries } from "@/lib/hooks/useCars";
 
 interface ChartDataPoint {
   timestamp: number;
@@ -12,32 +11,37 @@ interface ChartDataPoint {
 }
 
 interface KilometerStatsContentProps {
-  chartData: ChartDataPoint[];
-  isLoading: boolean;
-  isError: boolean;
+  carId: string;
+  filterDates: { start_date?: string };
 }
 
 const KilometerStatsContent: React.FC<KilometerStatsContentProps> = ({
-  chartData,
-  isLoading,
-  isError,
+  carId,
+  filterDates,
 }) => {
   const { t } = useTranslation();
+  const { formatDate } = useLocalization();
 
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
+  const { data: kilometerEntries } = useKilometerEntries(carId, {
+    ...filterDates,
+    limit: 1000,
+  });
 
-  if (isError) {
-    return (
-      <EmptyPanel
-        icon={
-          <CloseIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
-        }
-        title={t.common.errorLoadingData}
-      />
-    );
-  }
+  // Prepare chart data - sort by timestamp ascending for the chart
+  const chartData = [...kilometerEntries]
+    .sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+    )
+    .map((entry) => ({
+      timestamp: new Date(entry.timestamp).getTime(),
+      total_kilometers: entry.total_kilometers,
+      displayDate: formatDate(new Date(entry.timestamp), {
+        month: "short",
+        day: "numeric",
+        year: "2-digit",
+      }),
+    }));
 
   if (chartData.length === 0) {
     return (

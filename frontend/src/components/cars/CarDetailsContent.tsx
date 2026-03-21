@@ -1,22 +1,19 @@
 import React from "react";
-import { LoadingSpinner } from "@/components/common";
 import CarDetailsPanel from "./CarDetailsPanel";
 import RecentRefuelsPanel from "./RecentRefuelsPanel";
 import RecentKilometersPanel from "./RecentKilometersPanel";
 import SharedUsersPanel from "./SharedUsersPanel";
-import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { Car, RefuelMetric, KilometerEntry } from "@/lib/api";
 import CloseIcon from "@mui/icons-material/Close";
-import EmptyPanel from "@/components/common/EmptyPanel";
+import {
+  useCar,
+  useRefuelMetrics,
+  useKilometerEntries,
+} from "@/lib/hooks/useCars";
+import { EmptyPanel } from "@/components/common";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 interface CarDetailsContentProps {
-  car: Car | undefined;
-  carLoading: boolean;
-  carError: Error | null;
-  refuels: RefuelMetric[];
-  refuelsLoading: boolean;
-  kilometerEntries: KilometerEntry[];
-  kilometersLoading: boolean;
+  carId: string;
   isDeleting: boolean;
   isRevoking: boolean;
   onEditCar: () => void;
@@ -30,13 +27,7 @@ interface CarDetailsContentProps {
 }
 
 const CarDetailsContent: React.FC<CarDetailsContentProps> = ({
-  car,
-  carLoading,
-  carError,
-  refuels,
-  refuelsLoading,
-  kilometerEntries,
-  kilometersLoading,
+  carId,
   isDeleting,
   isRevoking,
   onEditCar,
@@ -49,8 +40,9 @@ const CarDetailsContent: React.FC<CarDetailsContentProps> = ({
   onRemoveSharedUser,
 }) => {
   const { t } = useTranslation();
+  const { data: car } = useCar(carId);
 
-  if (carError || !car) {
+  if (!car) {
     return (
       <EmptyPanel
         icon={
@@ -61,9 +53,10 @@ const CarDetailsContent: React.FC<CarDetailsContentProps> = ({
     );
   }
 
-  if (carLoading && !isDeleting) {
-    return <LoadingSpinner />;
-  }
+  const { data: refuels } = useRefuelMetrics(carId, { limit: 5 });
+  const { data: kilometerEntries } = useKilometerEntries(carId, {
+    limit: 5,
+  });
 
   return (
     <div className="space-y-6">
@@ -76,14 +69,14 @@ const CarDetailsContent: React.FC<CarDetailsContentProps> = ({
 
       <RecentRefuelsPanel
         refuels={refuels}
-        loading={refuelsLoading}
+        loading={false}
         onViewStats={onViewStats}
         onAddRefuel={onAddRefuel}
       />
 
       <RecentKilometersPanel
         entries={kilometerEntries}
-        loading={kilometersLoading}
+        loading={false}
         onViewChart={onViewKilometerChart}
         onAddEntry={onAddKilometer}
       />
