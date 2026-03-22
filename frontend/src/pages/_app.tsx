@@ -13,6 +13,8 @@ import {
   resolveTheme,
   applyTheme,
 } from "@/lib/theme";
+import { FuelTypeProvider, parseFuelTypeCookie } from "@/lib/fuelType";
+import type { FuelType } from "@/lib/api";
 import "@/styles/globals.css";
 
 // Apply theme before first render to prevent flash
@@ -38,8 +40,12 @@ function AppContent({ Component, pageProps }: AppProps) {
 }
 
 export default function MyApp(
-  appProps: AppProps & { initialLanguage: Language },
+  props: AppProps & {
+    initialLanguage: Language;
+    initialFuelType: FuelType;
+  },
 ) {
+  const { initialLanguage, initialFuelType, ...appProps } = props;
   // Create QueryClient instance - using useState ensures it's stable across renders
   const [queryClient] = useState(
     () =>
@@ -106,10 +112,12 @@ export default function MyApp(
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <LanguageProvider initialLanguage={appProps.initialLanguage}>
-          <UserProvider>
-            <AppContent {...appProps} />
-          </UserProvider>
+        <LanguageProvider initialLanguage={initialLanguage}>
+          <FuelTypeProvider initialFuelType={initialFuelType}>
+            <UserProvider>
+              <AppContent {...appProps} />
+            </UserProvider>
+          </FuelTypeProvider>
         </LanguageProvider>
       </ThemeProvider>
     </QueryClientProvider>
@@ -120,5 +128,6 @@ MyApp.getInitialProps = async (appContext: AppContext) => {
   const appProps = await App.getInitialProps(appContext);
   const cookies = appContext.ctx.req?.headers.cookie;
   const initialLanguage = parseLanguageCookie(cookies);
-  return { ...appProps, initialLanguage };
+  const initialFuelType = parseFuelTypeCookie(cookies);
+  return { ...appProps, initialLanguage, initialFuelType };
 };

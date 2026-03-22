@@ -1,4 +1,4 @@
-import { Suspense, useState, useEffect, startTransition } from "react";
+import { Suspense } from "react";
 import { useRouter } from "next/router";
 import FavoriteStationsList from "@/components/fuel-prices/FavoriteStationsList";
 import FuelTypeFilter from "@/components/fuel/FuelTypeFilter";
@@ -6,13 +6,12 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { FuelType } from "@/lib/api";
+import { useFuelType } from "@/lib/fuelType";
 import {
   useFavoriteStations,
   useRefreshFavorites,
 } from "@/lib/hooks/useFuelPrices";
 import { LoadingSpinner } from "@/components/common";
-
-const SORT_BY_STORAGE_KEY = "fuelPrices.sortBy";
 
 export default function FuelPrices() {
   const { t } = useTranslation();
@@ -21,22 +20,10 @@ export default function FuelPrices() {
 
   const refreshFavorites = useRefreshFavorites();
 
-  // Initialize sortBy with value from localStorage or default to "e5"
-
-  const [sortBy, setSortBy] = useState<FuelType>("e5");
-
-  useEffect(() => {
-    const stored = localStorage.getItem(SORT_BY_STORAGE_KEY);
-    if (stored === "e5" || stored === "e10" || stored === "diesel") {
-      startTransition(() => {
-        setSortBy(stored);
-      });
-    }
-  }, []);
+  const { fuelType: sortBy, setFuelType: setSortBy } = useFuelType();
 
   const handleSortChange = (newSortBy: FuelType) => {
     setSortBy(newSortBy);
-    localStorage.setItem(SORT_BY_STORAGE_KEY, newSortBy);
   };
 
   const handleSearchClick = () => {

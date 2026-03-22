@@ -1,6 +1,7 @@
-import React, { Suspense, useState, useEffect, startTransition } from "react";
-import { FuelType } from "@/lib/api";
+import React, { Suspense, useState } from "react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useFuelType } from "@/lib/fuelType";
+import { FuelType } from "@/lib/api";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import StatsFilters from "@/components/stats/StatsFilters";
 import StatsAggregateTables from "@/components/stats/StatsAggregateTables";
@@ -10,9 +11,6 @@ import {
   useMonthlyPlaceAggregates,
   useMonthlyBrandAggregates,
 } from "@/lib/hooks/useStats";
-
-const FUEL_TYPE_STORAGE_KEY = "stats.fuelType";
-const MONTH_STORAGE_KEY = "stats.selectedMonth";
 
 /**
  * Inner component that fetches aggregate data using suspense hooks.
@@ -51,39 +49,23 @@ function StatsAggregateData({
 const StatsContent: React.FC = () => {
   const { t } = useTranslation();
 
-  const [selectedFuelType, setSelectedFuelType] = useState<FuelType>("e5");
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
-
+  // useAvailableMonths is a suspense query — data is ready on first render,
+  // so we can derive the initial selectedMonth synchronously.
   const { data: availableMonths } = useAvailableMonths();
 
-  // Restore persisted selections and auto-select latest month on mount
-  useEffect(() => {
-    startTransition(() => {
-      const storedFuel = localStorage.getItem(FUEL_TYPE_STORAGE_KEY);
-      if (
-        storedFuel === "e5" ||
-        storedFuel === "e10" ||
-        storedFuel === "diesel"
-      ) {
-        setSelectedFuelType(storedFuel);
-      }
+  const { fuelType: selectedFuelType, setFuelType: setSelectedFuelType } =
+    useFuelType();
 
-      if (availableMonths.length > 0) {
-        const storedMonth = localStorage.getItem(MONTH_STORAGE_KEY);
-        const isValid = availableMonths.some((m) => m.date === storedMonth);
-        setSelectedMonth(isValid ? storedMonth : availableMonths[0].date);
-      }
-    });
-  }, [availableMonths]);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(
+    availableMonths.length > 0 ? availableMonths[0].date : null,
+  );
 
   const handleFuelTypeChange = (fuelType: FuelType) => {
     setSelectedFuelType(fuelType);
-    localStorage.setItem(FUEL_TYPE_STORAGE_KEY, fuelType);
   };
 
   const handleMonthChange = (month: string) => {
     setSelectedMonth(month);
-    localStorage.setItem(MONTH_STORAGE_KEY, month);
   };
 
   if (availableMonths.length === 0) {

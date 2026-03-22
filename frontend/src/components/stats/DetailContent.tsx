@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { FuelType } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useFuelType } from "@/lib/fuelType";
 import { StandardCard } from "@/components/common";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import TimeRangeFuelTypeFilter from "@/components/fuel/TimeRangeFuelTypeFilter";
@@ -106,34 +107,24 @@ export default function DetailContent<T>({
   mapToDetail,
   chartLabels,
 }: DetailContentProps<T>) {
-  const fuelTypeKey = `${storageKeyPrefix}.fuelType`;
   const monthsKey = `${storageKeyPrefix}.months`;
 
-  const [selectedFuelType, setSelectedFuelType] = useState<FuelType>("e5");
+  const { fuelType: selectedFuelType, setFuelType: setSelectedFuelType } =
+    useFuelType();
   const [selectedMonths, setSelectedMonths] = useState<number>(3);
 
-  // Restore persisted selections on mount
+  // Restore persisted months selection on mount
   useEffect(() => {
     startTransition(() => {
-      const storedFuel = localStorage.getItem(fuelTypeKey);
-      if (
-        storedFuel === "e5" ||
-        storedFuel === "e10" ||
-        storedFuel === "diesel"
-      ) {
-        setSelectedFuelType(storedFuel);
-      }
-
       const storedMonths = localStorage.getItem(monthsKey);
       if (storedMonths === "3" || storedMonths === "12") {
         setSelectedMonths(parseInt(storedMonths, 10));
       }
     });
-  }, [fuelTypeKey, monthsKey]);
+  }, [monthsKey]);
 
   const handleFuelTypeChange = (fuelType: FuelType) => {
     setSelectedFuelType(fuelType);
-    localStorage.setItem(fuelTypeKey, fuelType);
   };
 
   const handleMonthsChange = (months: number) => {

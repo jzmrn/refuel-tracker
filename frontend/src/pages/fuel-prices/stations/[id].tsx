@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 import { Suspense, useState } from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useFuelType } from "@/lib/fuelType";
 import Snackbar from "@/components/common/Snackbar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import {
@@ -17,26 +18,15 @@ import StationDailyStatsChart from "@/components/fuel/StationDailyStatsChart";
 import StationPriceChangesChart from "@/components/fuel/StationPriceChangesChart";
 import { LoadingSpinner } from "@/components/common";
 
-const FUEL_TYPE_STORAGE_KEY = "stationDetails.fuelType";
-
 function StationDetailsContent({ stationId }: { stationId: string }) {
   const router = useRouter();
   const { t } = useTranslation();
 
-  // Fuel type selection - persist in localStorage
-  const [selectedFuelType, setSelectedFuelType] = useState<FuelType>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(FUEL_TYPE_STORAGE_KEY);
-      if (stored === "e5" || stored === "e10" || stored === "diesel") {
-        return stored;
-      }
-    }
-    return "e5";
-  });
+  const { fuelType: selectedFuelType, setFuelType: setSelectedFuelType } =
+    useFuelType();
 
   const handleFuelTypeChange = (fuelType: FuelType) => {
     setSelectedFuelType(fuelType);
-    localStorage.setItem(FUEL_TYPE_STORAGE_KEY, fuelType);
   };
 
   const [isRemoving, setIsRemoving] = useState(false);
