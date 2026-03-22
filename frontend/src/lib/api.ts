@@ -226,6 +226,16 @@ export interface KilometerEntryCreate {
   timestamp?: string;
 }
 
+export interface KilometerPeriodAggregate {
+  period_start: string;
+  kilometers_driven: number;
+}
+
+export interface KilometerEntriesResponse {
+  entries: KilometerEntry[];
+  aggregates: KilometerPeriodAggregate[] | null;
+}
+
 // Fuel Prices interfaces
 export interface GasStationSearchRequest {
   lat: number;
@@ -844,7 +854,8 @@ class ApiService {
     start_date?: string;
     end_date?: string;
     limit?: number;
-  }): Promise<KilometerEntry[]> {
+    aggregation?: string;
+  }): Promise<KilometerEntriesResponse> {
     const response = await this.api.get("/api/kilometers", { params });
     return response.data;
   }

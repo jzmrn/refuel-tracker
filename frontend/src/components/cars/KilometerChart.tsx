@@ -62,8 +62,8 @@ const KilometerChart: React.FC<KilometerChartProps> = ({ data }) => {
   };
 
   return (
-    <div className="h-80">
-      <ResponsiveContainer width="100%" height="100%">
+    <div>
+      <ResponsiveContainer width="100%" height={320}>
         <LineChart
           data={data}
           margin={{
@@ -94,7 +94,7 @@ const KilometerChart: React.FC<KilometerChartProps> = ({ data }) => {
               `${new Intl.NumberFormat("de-DE").format(value)} km`
             }
             {...axisConfig.yAxis}
-            width={80}
+            width={90}
           />
           <Tooltip content={<CustomTooltip />} />
           <Line

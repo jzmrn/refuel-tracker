@@ -54,7 +54,7 @@ const CarDetailsContent: React.FC<CarDetailsContentProps> = ({
   }
 
   const { data: refuels } = useRefuelMetrics(carId, { limit: 5 });
-  const { data: kilometerEntries } = useKilometerEntries(carId, {
+  const { data: kilometerData } = useKilometerEntries(carId, {
     limit: 5,
   });
 
@@ -75,7 +75,7 @@ const CarDetailsContent: React.FC<CarDetailsContentProps> = ({
       />
 
       <RecentKilometersPanel
-        entries={kilometerEntries}
+        entries={kilometerData.entries}
         loading={false}
         onViewChart={onViewKilometerChart}
         onAddEntry={onAddKilometer}

@@ -2,33 +2,34 @@ import React from "react";
 import Panel from "@/components/common/Panel";
 import { useLocalization, useTranslation } from "@/lib/i18n/LanguageContext";
 import KilometerChart from "./KilometerChart";
-import { useCar, useKilometerEntries } from "@/lib/hooks/useCars";
-
-interface ChartDataPoint {
-  timestamp: number;
-  total_kilometers: number;
-  displayDate: string;
-}
+import KilometerAggregationChart from "./KilometerAggregationChart";
+import { useKilometerEntries } from "@/lib/hooks/useCars";
 
 interface KilometerStatsContentProps {
   carId: string;
   filterDates: { start_date?: string };
+  aggregation: "monthly" | "yearly";
 }
 
 const KilometerStatsContent: React.FC<KilometerStatsContentProps> = ({
   carId,
   filterDates,
+  aggregation,
 }) => {
   const { t } = useTranslation();
   const { formatDate } = useLocalization();
 
-  const { data: kilometerEntries } = useKilometerEntries(carId, {
+  const { data } = useKilometerEntries(carId, {
     ...filterDates,
     limit: 1000,
+    aggregation,
   });
 
+  const entries = data.entries;
+  const aggregates = data.aggregates ?? [];
+
   // Prepare chart data - sort by timestamp ascending for the chart
-  const chartData = [...kilometerEntries]
+  const chartData = [...entries]
     .sort(
       (a, b) =>
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
@@ -43,6 +44,11 @@ const KilometerStatsContent: React.FC<KilometerStatsContentProps> = ({
       }),
     }));
 
+  const aggregationTitle =
+    aggregation === "yearly"
+      ? t.kilometers.kilometersPerYear
+      : t.kilometers.kilometersPerMonth;
+
   if (chartData.length === 0) {
     return (
       <Panel title={t.kilometers.kilometerHistory}>
@@ -55,9 +61,18 @@ const KilometerStatsContent: React.FC<KilometerStatsContentProps> = ({
   }
 
   return (
-    <Panel title={t.kilometers.kilometerHistory}>
-      <KilometerChart data={chartData} />
-    </Panel>
+    <>
+      <Panel title={t.kilometers.kilometerHistory}>
+        <KilometerChart data={chartData} />
+      </Panel>
+
+      <Panel title={aggregationTitle}>
+        <KilometerAggregationChart
+          data={aggregates}
+          aggregation={aggregation}
+        />
+      </Panel>
+    </>
   );
 };
 

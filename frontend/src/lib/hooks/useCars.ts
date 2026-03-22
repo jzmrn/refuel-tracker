@@ -271,8 +271,9 @@ export function useRevokeCarAccess() {
 }
 
 /**
- * Suspense-based hook to fetch kilometer entries.
+ * Suspense-based hook to fetch kilometer entries with optional aggregates.
  * Must be used inside a <Suspense> boundary.
+ * When aggregation is provided, the response includes interpolated aggregates.
  */
 export function useKilometerEntries(
   carId: string,
@@ -280,6 +281,7 @@ export function useKilometerEntries(
     start_date?: string;
     end_date?: string;
     limit?: number;
+    aggregation?: string;
   },
 ) {
   return useSuspenseQuery({

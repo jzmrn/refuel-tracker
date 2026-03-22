@@ -9,8 +9,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from ..auth import CurrentUser
 from ..models import (
+    KilometerEntriesResponse,
     KilometerEntryCreate,
     KilometerEntryResponse,
+    KilometerPeriodAggregate,
 )
 from ..storage.car_client import CarClient
 from ..storage.kilometer_client import KilometerClient
@@ -67,7 +69,7 @@ async def create_kilometer_entry(
     )
 
 
-@router.get("/kilometers", response_model=list[KilometerEntryResponse])
+@router.get("/kilometers", response_model=KilometerEntriesResponse)
 async def get_kilometer_entries(
     user: CurrentUser,
     client: KilometerClient = Depends(get_kilometer_client),
@@ -76,10 +78,13 @@ async def get_kilometer_entries(
     start_date: str | None = None,
     end_date: str | None = None,
     limit: int | None = 100,
+    aggregation: str | None = None,
 ):
     """Get kilometer entries with optional filters.
 
     The user must have access to the car (either owner or shared access).
+    Optionally pass aggregation=monthly or aggregation=yearly to get
+    interpolated period aggregates alongside the entries.
     """
     logger.info(
         "Getting kilometer entries",
@@ -88,6 +93,12 @@ async def get_kilometer_entries(
 
     if car_id is None:
         raise HTTPException(status_code=400, detail="car_id is required")
+
+    if aggregation is not None and aggregation not in ("monthly", "yearly"):
+        raise HTTPException(
+            status_code=400,
+            detail="aggregation must be 'monthly' or 'yearly'",
+        )
 
     # Verify user has access to the car
     if not car_client.user_has_car_access(car_id, user.id):
@@ -104,7 +115,7 @@ async def get_kilometer_entries(
         limit=limit,
     )
 
-    return [
+    entry_responses = [
         KilometerEntryResponse(
             id=entry.id,
             car_id=entry.car_id,
@@ -115,6 +126,21 @@ async def get_kilometer_entries(
         )
         for entry in entries
     ]
+
+    aggregates = None
+    if aggregation is not None:
+        raw_aggregates = client.get_period_aggregates(
+            car_id=car_id,
+            aggregation=aggregation,
+            start_date=start_dt,
+            end_date=end_dt,
+        )
+        aggregates = [KilometerPeriodAggregate(**a) for a in raw_aggregates]
+
+    return KilometerEntriesResponse(
+        entries=entry_responses,
+        aggregates=aggregates,
+    )
 
 
 @router.delete("/kilometers/{entry_id}", status_code=204)

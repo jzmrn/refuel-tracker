@@ -199,6 +199,10 @@ export interface TranslationStructure {
     dateTimeRequired: string;
     lastMonth: string;
     lastSixMonths: string;
+    kilometersPerYear: string;
+    kilometersPerMonth: string;
+    kilometersDriven: string;
+    noAggregateData: string;
   };
 
   // Forms

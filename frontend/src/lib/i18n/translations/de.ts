@@ -197,6 +197,10 @@ export const de: TranslationStructure = {
     dateTimeRequired: "Datum und Zeit sind erforderlich",
     lastMonth: "Letzter Monat",
     lastSixMonths: "Letzte 6 Monate",
+    kilometersPerYear: "Kilometer pro Jahr",
+    kilometersPerMonth: "Kilometer pro Monat",
+    kilometersDriven: "Gefahrene Kilometer",
+    noAggregateData: "Nicht genügend Daten zur Berechnung der Aggregate",
   },
 
   forms: {

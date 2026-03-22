@@ -11,7 +11,7 @@ import {
 import { LoadingSpinner } from "@/components/common";
 import PeriodFilter from "@/components/common/PeriodFilter";
 
-type FilterType = "month" | "6months" | "year";
+type FilterType = "6months" | "year";
 
 function StatsContent({ carId }: { carId: string }) {
   const { t } = useTranslation();
@@ -106,7 +106,9 @@ export default function CarStats() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-      {carId ? <StatsContent carId={carId} /> : <LoadingSpinner />}
+      <Suspense fallback={<LoadingSpinner />}>
+        {carId ? <StatsContent carId={carId} /> : <LoadingSpinner />}
+      </Suspense>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import KilometerStatsContent from "@/components/cars/KilometerStatsContent";
 import PeriodFilter from "@/components/common/PeriodFilter";
 import { LoadingSpinner } from "@/components/common";
 
-type FilterType = "month" | "6months" | "all";
+type FilterType = "6months" | "all";
 
 function KilometerStatsInner({ carId }: { carId: string }) {
   const { t } = useTranslation();
@@ -48,6 +48,8 @@ function KilometerStatsInner({ carId }: { carId: string }) {
     setActiveFilter(filter);
   };
 
+  const filterDates = getFilterDates();
+
   return (
     <>
       {/* Header */}
@@ -80,7 +82,11 @@ function KilometerStatsInner({ carId }: { carId: string }) {
         />
 
         <Suspense fallback={<LoadingSpinner />}>
-          <KilometerStatsContent carId={carId} filterDates={getFilterDates()} />
+          <KilometerStatsContent
+            carId={carId}
+            filterDates={filterDates}
+            aggregation={activeFilter === "6months" ? "monthly" : "yearly"}
+          />
         </Suspense>
       </div>
     </>
@@ -94,7 +100,9 @@ export default function KilometerStats() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-      {carId ? <KilometerStatsInner carId={carId} /> : <LoadingSpinner />}
+      <Suspense fallback={<LoadingSpinner />}>
+        {carId ? <KilometerStatsInner carId={carId} /> : <LoadingSpinner />}
+      </Suspense>
     </div>
   );
 }

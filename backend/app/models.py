@@ -504,6 +504,22 @@ class KilometerEntryResponse(BaseModel):
         json_encoders = {datetime: lambda v: v.isoformat()}
 
 
+class KilometerPeriodAggregate(BaseModel):
+    """Aggregated kilometers driven in a period, computed via interpolation"""
+
+    period_start: str = Field(..., description="ISO date string of the period start")
+    kilometers_driven: float = Field(
+        ..., description="Kilometers driven during this period"
+    )
+
+
+class KilometerEntriesResponse(BaseModel):
+    """Response model wrapping kilometer entries with optional aggregates"""
+
+    entries: list[KilometerEntryResponse]
+    aggregates: list[KilometerPeriodAggregate] | None = None
+
+
 # Monthly Statistics Models
 class AvailableMonth(BaseModel):
     """A single available month for statistics"""
