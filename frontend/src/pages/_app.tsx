@@ -14,6 +14,10 @@ import {
   applyTheme,
 } from "@/lib/theme";
 import { FuelTypeProvider, parseFuelTypeCookie } from "@/lib/fuelType";
+import {
+  FilterCollapseProvider,
+  parseFilterCookies,
+} from "@/lib/filterCollapse";
 import type { FuelType } from "@/lib/api";
 import "@/styles/globals.css";
 
@@ -43,9 +47,15 @@ export default function MyApp(
   props: AppProps & {
     initialLanguage: Language;
     initialFuelType: FuelType;
+    initialFilterCollapse: Record<string, boolean>;
   },
 ) {
-  const { initialLanguage, initialFuelType, ...appProps } = props;
+  const {
+    initialLanguage,
+    initialFuelType,
+    initialFilterCollapse,
+    ...appProps
+  } = props;
   // Create QueryClient instance - using useState ensures it's stable across renders
   const [queryClient] = useState(
     () =>
@@ -114,9 +124,11 @@ export default function MyApp(
       <ThemeProvider>
         <LanguageProvider initialLanguage={initialLanguage}>
           <FuelTypeProvider initialFuelType={initialFuelType}>
-            <UserProvider>
-              <AppContent {...appProps} />
-            </UserProvider>
+            <FilterCollapseProvider initialState={initialFilterCollapse}>
+              <UserProvider>
+                <AppContent {...appProps} />
+              </UserProvider>
+            </FilterCollapseProvider>
           </FuelTypeProvider>
         </LanguageProvider>
       </ThemeProvider>
@@ -129,5 +141,11 @@ MyApp.getInitialProps = async (appContext: AppContext) => {
   const cookies = appContext.ctx.req?.headers.cookie;
   const initialLanguage = parseLanguageCookie(cookies);
   const initialFuelType = parseFuelTypeCookie(cookies);
-  return { ...appProps, initialLanguage, initialFuelType };
+  const initialFilterCollapse = parseFilterCookies(cookies);
+  return {
+    ...appProps,
+    initialLanguage,
+    initialFuelType,
+    initialFilterCollapse,
+  };
 };

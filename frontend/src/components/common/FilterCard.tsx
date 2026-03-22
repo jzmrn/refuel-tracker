@@ -43,9 +43,14 @@ interface FilterPanelProps {
   children: React.ReactNode;
   className?: string;
   collapsedSummary?: string[];
+  storageKey?: string;
 }
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
+import {
+  useFilterCollapseDefault,
+  setFilterCookie,
+} from "@/lib/filterCollapse";
 
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
@@ -56,12 +61,20 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
   children,
   className = "",
   collapsedSummary = [],
+  storageKey,
 }) => {
-  const [collapsed, setCollapsed] = useState(true);
+  const initialCollapsed = useFilterCollapseDefault(storageKey);
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
   const contentRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
 
-  const handleToggle = () => setCollapsed((c) => !c);
+  const handleToggle = useCallback(() => {
+    setCollapsed((c) => {
+      const next = !c;
+      if (storageKey) setFilterCookie(storageKey, next);
+      return next;
+    });
+  }, [storageKey]);
 
   useIsomorphicLayoutEffect(() => {
     const el = contentRef.current;
@@ -69,27 +82,38 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
     if (isFirstRender.current) {
       isFirstRender.current = false;
-      // Set initial collapsed state without animation
+      // Transfer SSR class-based state to inline styles (higher specificity)
       if (collapsed) {
         el.style.maxHeight = "0px";
+        el.style.opacity = "0";
+        el.style.marginTop = "0px";
+      } else {
+        el.style.maxHeight = "none";
+        el.style.opacity = "1";
+        el.style.marginTop = "16px";
       }
       return;
     }
 
     if (collapsed) {
-      // Collapsing: snapshot current height, force reflow, then animate to 0
+      // Collapsing: snapshot current expanded state, force reflow, then animate to 0
       el.style.maxHeight = `${el.scrollHeight}px`;
+      el.style.opacity = "1";
+      el.style.marginTop = "16px";
       void el.offsetHeight;
       el.style.maxHeight = "0px";
+      el.style.opacity = "0";
+      el.style.marginTop = "0px";
     } else {
-      // Expanding: animate from 0 to scrollHeight
+      // Expanding: animate from collapsed to expanded
       el.style.maxHeight = `${el.scrollHeight}px`;
+      el.style.opacity = "1";
+      el.style.marginTop = "16px";
     }
   }, [collapsed]);
 
   const handleTransitionEnd = () => {
     if (!collapsed && contentRef.current) {
-      // After expand animation, remove fixed maxHeight so content can resize freely
       contentRef.current.style.maxHeight = "none";
     }
   };
@@ -141,11 +165,9 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
       <div
         ref={contentRef}
         onTransitionEnd={handleTransitionEnd}
-        style={{
-          opacity: collapsed ? 0 : 1,
-          marginTop: collapsed ? 0 : 16,
-        }}
-        className="transition-all duration-300 ease-in-out overflow-hidden"
+        className={`transition-all duration-300 ease-in-out overflow-hidden ${
+          initialCollapsed ? "max-h-0 opacity-0" : "mt-4"
+        }`}
       >
         <div className="space-y-4">{children}</div>
       </div>

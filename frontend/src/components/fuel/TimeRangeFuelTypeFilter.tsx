@@ -47,6 +47,7 @@ const TimeRangeFuelTypeFilter: React.FC<TimeRangeFuelTypeFilterProps> = ({
       }
       collapsedSummary={summary}
       className={className}
+      storageKey="time-range-fuel-type-filter"
     >
       <FilterRow label={t.statistics.timeRange}>
         <TimeRangeSelector

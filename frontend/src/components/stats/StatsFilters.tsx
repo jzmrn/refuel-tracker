@@ -47,6 +47,7 @@ const StatsFilters: React.FC<StatsFiltersProps> = ({
         <FilterAltIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
       }
       collapsedSummary={summary}
+      storageKey="stats-filters"
     >
       <FilterRow label={t.statistics.month}>
         <MonthSelector

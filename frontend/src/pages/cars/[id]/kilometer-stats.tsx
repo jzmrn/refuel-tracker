@@ -15,7 +15,6 @@ function KilometerStatsInner({ carId }: { carId: string }) {
   const { data: car } = useCar(carId);
 
   const [activeFilter, setActiveFilter] = useState<FilterType>("6months");
-
   const filterOptions = [
     {
       value: "6months" as const,

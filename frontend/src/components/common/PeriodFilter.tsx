@@ -36,6 +36,7 @@ export default function PeriodFilter<T extends string>({
       }
       collapsedSummary={summary}
       className={className}
+      storageKey="period-filter"
     >
       <FilterRow label={t.statistics.timeRange}>
         <PeriodSelector

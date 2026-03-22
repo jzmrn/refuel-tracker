@@ -38,6 +38,7 @@ const FuelTypeFilter: React.FC<FuelTypeFilterProps> = ({
       }
       collapsedSummary={summary}
       className={className}
+      storageKey="fuel-type-filter"
     >
       <FilterRow label={t.statistics.selectFuelType}>
         <FuelTypeSelector
