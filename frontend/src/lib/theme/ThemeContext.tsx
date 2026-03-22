@@ -6,13 +6,15 @@ import React, {
   ReactNode,
   startTransition,
 } from "react";
+import { setThemeCookie, THEME_COOKIE_KEY, parseThemeCookie } from "./cookies";
 
-export type Theme = "light" | "dark" | "system";
+export type ResolvedTheme = "light" | "dark";
+export type Theme = ResolvedTheme | "system";
 
 interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  currentTheme: "light" | "dark"; // The actual theme being applied (resolved from system if needed)
+  currentTheme: ResolvedTheme; // The actual theme being applied (resolved from system if needed)
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -32,11 +34,12 @@ export function getInitialTheme(): Theme {
   } catch (error) {
     console.warn("Failed to load theme from localStorage:", error);
   }
-  return "system";
+  // Fall back to cookie
+  return parseThemeCookie(document.cookie);
 }
 
 // Helper function to resolve the actual theme
-export function resolveTheme(theme: Theme): "light" | "dark" {
+export function resolveTheme(theme: Theme): ResolvedTheme {
   if (theme === "system") {
     if (typeof window === "undefined") {
       return "light";
@@ -50,7 +53,7 @@ export function resolveTheme(theme: Theme): "light" | "dark" {
 }
 
 // Apply theme to document synchronously
-export function applyTheme(currentTheme: "light" | "dark") {
+export function applyTheme(currentTheme: ResolvedTheme) {
   if (typeof window === "undefined") {
     return;
   }
@@ -67,38 +70,50 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => getInitialTheme());
-  const [currentTheme, setCurrentTheme] = useState<"light" | "dark">(() =>
-    resolveTheme(getInitialTheme()),
+  const [theme, setTheme] = useState<Theme>("system");
+  const [currentTheme, setCurrentTheme] = useState<ResolvedTheme>(() =>
+    resolveTheme("system"),
   );
 
-  // const [theme, setTheme] = useState<Theme>("system");
-  // const [currentTheme, setCurrentTheme] = useState<"light" | "dark">("light");
-
-  // Hydrate from localStorage after mount
+  // On mount: resolve theme from cookie or localStorage
   useEffect(() => {
-    const initial = getInitialTheme();
-    const resolved = resolveTheme(initial);
-    startTransition(() => {
-      setTheme(initial);
-      setCurrentTheme(resolved);
-    });
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const fromCookie = parseThemeCookie(document.cookie);
+
+    const isValidTheme = (v: string): v is Theme =>
+      ["light", "dark", "system"].includes(v);
+    const resolved = stored && isValidTheme(stored) ? stored : fromCookie;
+
+    // Sync cookie if needed
+    if (
+      stored &&
+      isValidTheme(stored) &&
+      !document.cookie.includes(THEME_COOKIE_KEY)
+    ) {
+      setThemeCookie(resolved);
+    }
+
+    if (resolved !== "system") {
+      startTransition(() => {
+        setTheme(resolved);
+        setCurrentTheme(resolveTheme(resolved));
+      });
+    }
   }, []);
 
   // Update current theme when theme or system preference changes
   useEffect(() => {
-    const updateCurrentTheme = () => {
-      const resolved = resolveTheme(theme);
-      startTransition(() => setCurrentTheme(resolved));
-    };
-
-    updateCurrentTheme();
+    const resolved = resolveTheme(theme);
+    applyTheme(resolved);
+    startTransition(() => setCurrentTheme(resolved));
 
     // Listen for system theme changes
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = () => {
+    const handleChange = (e: MediaQueryListEvent) => {
       if (theme === "system") {
-        updateCurrentTheme();
+        const newResolved = e.matches ? "dark" : "light";
+        applyTheme(newResolved);
+        startTransition(() => setCurrentTheme(newResolved));
       }
     };
 
@@ -113,6 +128,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   const handleSetTheme = (newTheme: Theme) => {
     setTheme(newTheme);
+    setThemeCookie(newTheme);
     try {
       localStorage.setItem(STORAGE_KEY, newTheme);
     } catch (error) {

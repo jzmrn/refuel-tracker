@@ -1,8 +1,11 @@
 import type { AppProps } from "next/app";
+import App, { AppContext } from "next/app";
 import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Layout from "@/components/common/Layout";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
+import { parseLanguageCookie } from "@/lib/i18n/cookies";
+import { Language } from "@/lib/i18n/types";
 import { UserProvider } from "@/lib/auth/UserContext";
 import {
   ThemeProvider,
@@ -34,7 +37,9 @@ function AppContent({ Component, pageProps }: AppProps) {
   );
 }
 
-export default function App(props: AppProps) {
+export default function MyApp(
+  appProps: AppProps & { initialLanguage: Language },
+) {
   // Create QueryClient instance - using useState ensures it's stable across renders
   const [queryClient] = useState(
     () =>
@@ -101,12 +106,19 @@ export default function App(props: AppProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <LanguageProvider>
+        <LanguageProvider initialLanguage={appProps.initialLanguage}>
           <UserProvider>
-            <AppContent {...props} />
+            <AppContent {...appProps} />
           </UserProvider>
         </LanguageProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
 }
+
+MyApp.getInitialProps = async (appContext: AppContext) => {
+  const appProps = await App.getInitialProps(appContext);
+  const cookies = appContext.ctx.req?.headers.cookie;
+  const initialLanguage = parseLanguageCookie(cookies);
+  return { ...appProps, initialLanguage };
+};

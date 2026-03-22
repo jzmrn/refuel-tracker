@@ -1,8 +1,17 @@
-import { Html, Head, Main, NextScript } from "next/document";
+import { Html, Head, Main, NextScript, DocumentContext } from "next/document";
+import { parseLanguageCookie } from "@/lib/i18n/cookies";
+import { parseThemeCookie } from "@/lib/theme/cookies";
+import { resolveTheme } from "@/lib/theme";
 
-export default function Document() {
+export default function Document({
+  lang,
+  themeClass,
+}: {
+  lang: string;
+  themeClass: string;
+}) {
   return (
-    <Html lang="en">
+    <Html lang={lang || "en"} className={themeClass}>
       <Head>
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
@@ -296,3 +305,12 @@ export default function Document() {
     </Html>
   );
 }
+
+Document.getInitialProps = async (ctx: DocumentContext) => {
+  const initialProps = await ctx.defaultGetInitialProps(ctx);
+  const cookies = ctx.req?.headers.cookie;
+  const lang = parseLanguageCookie(cookies);
+  const theme = parseThemeCookie(cookies);
+  const themeClass = resolveTheme(theme) === "dark" ? "dark" : "";
+  return { ...initialProps, lang, themeClass };
+};

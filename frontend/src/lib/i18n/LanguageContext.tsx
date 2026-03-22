@@ -6,12 +6,17 @@ import React, {
   ReactNode,
   startTransition,
 } from "react";
-import { Language, TranslationStructure } from "./types";
+import { Language, TranslationStructure, isLanguage } from "./types";
 import {
   getTranslations,
   DEFAULT_LANGUAGE,
   SUPPORTED_LANGUAGES,
 } from "./index";
+import {
+  setLanguageCookie,
+  LANGUAGE_COOKIE_KEY,
+  parseLanguageCookie,
+} from "./cookies";
 
 interface LanguageContextType {
   language: Language;
@@ -28,45 +33,49 @@ const STORAGE_KEY = "refuel-tracker-language";
 
 interface LanguageProviderProps {
   children: ReactNode;
+  initialLanguage?: Language;
 }
 
-export function LanguageProvider({ children }: LanguageProviderProps) {
-  const [language, setLanguageState] = useState<Language>(DEFAULT_LANGUAGE);
-  const [translations, setTranslations] = useState<TranslationStructure>(
-    getTranslations(DEFAULT_LANGUAGE),
+export function LanguageProvider({
+  children,
+  initialLanguage,
+}: LanguageProviderProps) {
+  const initial = initialLanguage ?? DEFAULT_LANGUAGE;
+  const [language, setLanguageState] = useState<Language>(initial);
+  const [translations, setTranslations] = useState<TranslationStructure>(() =>
+    getTranslations(initial),
   );
 
-  // Load language from localStorage on mount
+  // On mount: resolve language from cookie or localStorage
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedLanguage = localStorage.getItem(STORAGE_KEY) as Language;
-      if (
-        storedLanguage &&
-        SUPPORTED_LANGUAGES.some((lang) => lang.code === storedLanguage)
-      ) {
-        startTransition(() => {
-          setLanguageState(storedLanguage);
-          setTranslations(getTranslations(storedLanguage));
-        });
-      } else {
-        const browserLanguage = navigator.language.split("-")[0] as Language;
-        if (SUPPORTED_LANGUAGES.some((lang) => lang.code === browserLanguage)) {
-          startTransition(() => {
-            setLanguageState(browserLanguage);
-            setTranslations(getTranslations(browserLanguage));
-          });
-        }
-      }
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const fromCookie = parseLanguageCookie(document.cookie);
+
+    // localStorage wins over cookie (migration path), cookie wins over default
+    const resolved = stored && isLanguage(stored) ? stored : fromCookie;
+
+    // Sync cookie if needed
+    if (
+      stored &&
+      isLanguage(stored) &&
+      !document.cookie.includes(LANGUAGE_COOKIE_KEY)
+    ) {
+      setLanguageCookie(stored);
+    }
+
+    if (resolved !== language) {
+      startTransition(() => {
+        setLanguageState(resolved);
+        setTranslations(getTranslations(resolved));
+      });
     }
   }, []);
 
   const setLanguage = (newLanguage: Language) => {
     setLanguageState(newLanguage);
     setTranslations(getTranslations(newLanguage));
-
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, newLanguage);
-    }
+    setLanguageCookie(newLanguage);
+    localStorage.setItem(STORAGE_KEY, newLanguage);
   };
 
   const value = {

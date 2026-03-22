@@ -1,5 +1,11 @@
 export type Language = "en" | "de";
 
+const LANGUAGES: ReadonlySet<string> = new Set<string>(["en", "de"]);
+
+export function isLanguage(value: unknown): value is Language {
+  return typeof value === "string" && LANGUAGES.has(value);
+}
+
 export interface TranslationStructure {
   // Common UI elements
   common: {
