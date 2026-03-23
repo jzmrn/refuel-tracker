@@ -6,6 +6,7 @@ from fueldata.stations import FuelStationClient
 
 from ..auth import CurrentUser
 from ..models import (
+    FavoriteStationsDropdownResponse,
     RefuelCostStatistics,
     RefuelMetricCreate,
     RefuelMetricResponse,
@@ -217,17 +218,21 @@ async def get_refuel_monthly_summary(
     return RefuelMonthlySummaryResponse(**summary_data)
 
 
-@router.get("/refuel/favorite-stations", response_model=list[dict])
+@router.get(
+    "/refuel/favorite-stations", response_model=FavoriteStationsDropdownResponse
+)
 async def get_favorite_stations_for_dropdown(
     user: CurrentUser,
     refuel_client: RefuelDataClient = Depends(get_refuel_client),
     fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+    lat: float | None = None,
+    lng: float | None = None,
 ):
     """Get user's favorite stations for refuel dropdown (without fuel prices)"""
     logger.info(f"Getting favorite stations for dropdown for user {user.id}")
 
     stations = refuel_client.get_favorite_stations_for_dropdown(
-        user.id, fuel_station_client
+        user.id, fuel_station_client, user_lat=lat, user_lng=lng
     )
 
     return stations

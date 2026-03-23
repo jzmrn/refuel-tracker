@@ -215,6 +215,23 @@ class GasStationResponse(BaseModel):
     is_open: bool
 
 
+class StationDropdownItem(BaseModel):
+    """Minimal station info for dropdown selection."""
+
+    station_id: str
+    brand: str | None = None
+    street: str | None = None
+    house_number: str | None = None
+    place: str | None = None
+
+
+class FavoriteStationsDropdownResponse(BaseModel):
+    """Response model for favorite stations dropdown."""
+
+    favorites: list[StationDropdownItem]
+    closest: StationDropdownItem | None = None
+
+
 class FavoriteStationCreate(BaseModel):
     """Request model for adding a favorite station"""
 

@@ -8,6 +8,7 @@ from typing import Any
 
 from fueldata.utils import to_utc_iso
 
+from ..models import FavoriteStationsDropdownResponse, StationDropdownItem
 from .models import RefuelMetric
 from .sqlite_resource import BackendSQLiteResource
 
@@ -301,34 +302,39 @@ class RefuelDataClient:
                 "smallest_fillup": 0.0,
             }
 
+    @staticmethod
+    def _station_to_dropdown(station) -> StationDropdownItem:
+        return StationDropdownItem(
+            station_id=station.station_id,
+            brand=station.brand,
+            street=station.street,
+            house_number=station.house_number,
+            place=station.place,
+        )
+
     def get_favorite_stations_for_dropdown(
-        self, user_id: str, fuel_station_client
-    ) -> list[dict[str, Any]]:
+        self,
+        user_id: str,
+        fuel_station_client,
+        user_lat: float | None = None,
+        user_lng: float | None = None,
+    ) -> FavoriteStationsDropdownResponse:
         """
-        Get user's favorite stations with basic info for dropdown selection.
-        Returns station information without fuel prices.
-
-        Args:
-            user_id: The user ID
-            fuel_station_client: FuelStationClient instance for fetching station data
-
-        Returns:
-            List of dictionaries with station_id, brand, street, house_number, and place
+        Get user's favorite stations with basic info for dropdown selection,
+        and optionally the closest station to the user's position.
         """
-        # Get favorite stations with full info using the FuelStationClient
         stations = fuel_station_client.get_favorite_stations_with_info(user_id)
 
-        # Convert to simplified format for dropdown
-        dropdown_stations = []
-        for station in stations:
-            dropdown_stations.append(
-                {
-                    "station_id": station.station_id,
-                    "brand": station.brand,
-                    "street": station.street,
-                    "house_number": station.house_number,
-                    "place": station.place,
-                }
-            )
+        dropdown_stations = [self._station_to_dropdown(s) for s in stations]
 
-        return dropdown_stations
+        closest = None
+        if user_lat is not None and user_lng is not None:
+            closest_station = fuel_station_client.find_closest_station(
+                user_lat, user_lng
+            )
+            if closest_station is not None:
+                closest = self._station_to_dropdown(closest_station)
+
+        return FavoriteStationsDropdownResponse(
+            favorites=dropdown_stations, closest=closest
+        )

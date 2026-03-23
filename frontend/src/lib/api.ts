@@ -152,6 +152,11 @@ export interface FavoriteStationDropdown {
   place: string;
 }
 
+export interface FavoriteStationsDropdownResponse {
+  favorites: FavoriteStationDropdown[];
+  closest: FavoriteStationDropdown | null;
+}
+
 // Car interfaces
 export interface Car {
   id: string;
@@ -723,9 +728,16 @@ class ApiService {
     return response.data;
   }
 
-  async getFavoriteStationsForDropdown(): Promise<FavoriteStationDropdown[]> {
+  async getFavoriteStationsForDropdown(position?: {
+    lat: number;
+    lng: number;
+  }): Promise<FavoriteStationsDropdownResponse> {
+    const params = position
+      ? { lat: position.lat, lng: position.lng }
+      : undefined;
     const response = await this.api.get(
       "/api/metrics/refuel/favorite-stations",
+      { params },
     );
     return response.data;
   }

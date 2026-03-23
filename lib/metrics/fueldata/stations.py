@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, field_validator
 
-from .utils import SQLiteResource, utc_now_iso
+from .utils import SQLiteResource, haversine, utc_now_iso
 
 logger = logging.getLogger(__name__)
 
@@ -315,6 +315,51 @@ class FuelStationClient:
 
         records = df.to_dict(orient="records")
         return [GasStationInfo.model_validate(record) for record in records]
+
+    def find_closest_station(
+        self, user_lat: float, user_lng: float, delta: float = 0.018
+    ) -> GasStationInfo | None:
+        """
+        Find the closest gas station to the user's position within a radius.
+
+        Uses a bounding-box pre-filter (~2 km at mid-latitudes) followed by
+        Haversine distance calculation to find the single nearest station.
+
+        Args:
+            user_lat: User's latitude
+            user_lng: User's longitude
+            delta: Bounding-box half-side in degrees (default 0.018 ≈ 2 km)
+
+        Returns:
+            The closest GasStationInfo, or None if no station is within range.
+        """
+        query = """
+            SELECT station_id, name, brand, street, place,
+                   lat, lng, house_number, post_code
+            FROM gas_station_info
+            WHERE lat BETWEEN ? AND ?
+              AND lng BETWEEN ? AND ?
+        """
+        params = [
+            user_lat - delta,
+            user_lat + delta,
+            user_lng - delta,
+            user_lng + delta,
+        ]
+
+        with self._db.get_connection() as con:
+            df = pd.read_sql_query(query, con, params=params)
+
+        if df.empty:
+            return None
+
+        records = df.to_dict(orient="records")
+        stations = [GasStationInfo.model_validate(r) for r in records]
+
+        if len(stations) == 1:
+            return stations[0]
+
+        return min(stations, key=lambda s: haversine(user_lat, user_lng, s.lat, s.lng))
 
     def delete_gas_station_info(self, station_id: str) -> None:
         """

@@ -1,4 +1,4 @@
-import { Suspense, useState, useEffect, startTransition } from "react";
+import { Suspense, useState, useEffect, useRef, startTransition } from "react";
 import { useRouter } from "next/router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Panel from "@/components/common/Panel";
@@ -35,17 +35,39 @@ function AddRefuelContent({ carId }: { carId: string }) {
   const [favoriteStations, setFavoriteStations] = useState<
     FavoriteStationDropdown[]
   >([]);
-  const [loadingStations, setLoadingStations] = useState(false);
+  const [loadingStations, setLoadingStations] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const stationDefaultApplied = useRef(false);
 
-  // Fetch favorite stations
+  // Fetch favorite stations, optionally with user position for closest station
   useEffect(() => {
-    const fetchStations = async () => {
+    const fetchStations = async (position?: { lat: number; lng: number }) => {
       try {
         startTransition(() => setLoadingStations(true));
-        const stations = await apiService.getFavoriteStationsForDropdown();
-        startTransition(() => setFavoriteStations(stations));
+        const response =
+          await apiService.getFavoriteStationsForDropdown(position);
+        const { favorites, closest } = response;
+
+        // Merge closest into the list, avoiding duplicates
+        let merged = [...favorites];
+        if (
+          closest &&
+          !favorites.some((s) => s.station_id === closest.station_id)
+        ) {
+          merged = [closest, ...merged];
+        }
+
+        startTransition(() => setFavoriteStations(merged));
+
+        // Pre-select closest station as default (only if user hasn't picked one)
+        if (closest && !stationDefaultApplied.current) {
+          stationDefaultApplied.current = true;
+          setFormData((prev) => {
+            if (prev.station_id) return prev;
+            return { ...prev, station_id: closest.station_id };
+          });
+        }
       } catch (error) {
         console.error("Error fetching favorite stations:", error);
       } finally {
@@ -53,7 +75,23 @@ function AddRefuelContent({ carId }: { carId: string }) {
       }
     };
 
-    fetchStations();
+    // Try to get user position silently, then fetch stations
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          fetchStations({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        },
+        () => {
+          // Location denied or unavailable — fetch without position
+          fetchStations();
+        },
+      );
+    } else {
+      fetchStations();
+    }
   }, []);
 
   const handleBack = () => {
@@ -372,8 +410,13 @@ function AddRefuelContent({ carId }: { carId: string }) {
                     value={formData.station_id || ""}
                     onChange={handleChange}
                     className="input"
+                    disabled={loadingStations}
                   >
-                    <option value="">{t.refuels.selectStation}</option>
+                    <option value="">
+                      {loadingStations
+                        ? t.common.loading
+                        : t.refuels.selectStation}
+                    </option>
                     {favoriteStations.map((station) => (
                       <option
                         key={station.station_id}
