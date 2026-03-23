@@ -7,10 +7,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { FuelType } from "@/lib/api";
 import { useFuelType } from "@/lib/fuelType";
-import {
-  useFavoriteStations,
-  useRefreshFavorites,
-} from "@/lib/hooks/useFuelPrices";
+import { useRefreshFavorites } from "@/lib/hooks/useFuelPrices";
 import { LoadingSpinner } from "@/components/common";
 
 export default function FuelPrices() {
@@ -27,11 +24,11 @@ export default function FuelPrices() {
   };
 
   const handleSearchClick = () => {
-    router.push("/fuel-prices/stations");
+    router.push("/stations/search");
   };
 
   const handleNavigateToDetail = (stationId: string) => {
-    router.push(`/fuel-prices/stations/${encodeURIComponent(stationId)}`);
+    router.push(`/stations/${encodeURIComponent(stationId)}`);
   };
 
   return (

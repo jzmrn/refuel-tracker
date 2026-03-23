@@ -30,7 +30,7 @@ export default function Layout({ children }: LayoutProps) {
   const mainNavigation = [
     {
       name: t.navigation.fuelPrices,
-      href: "/fuel-prices",
+      href: "/stations",
       shortName: t.navigation.prices,
       icon: <LocalGasStationIcon className="w-5 h-5" />,
     },
@@ -79,8 +79,8 @@ export default function Layout({ children }: LayoutProps) {
             {desktopNavigation.map((item) => {
               const isActive =
                 router.pathname === item.href ||
-                (item.href === "/fuel-prices" &&
-                  router.pathname.startsWith("/fuel-prices/")) ||
+                (item.href === "/stations" &&
+                  router.pathname.startsWith("/stations/")) ||
                 (item.href === "/cars" &&
                   router.pathname.startsWith("/cars/")) ||
                 (item.href === "/stats" &&
@@ -144,8 +144,8 @@ export default function Layout({ children }: LayoutProps) {
           {mobileNavigation.map((item) => {
             const isActive =
               router.pathname === item.href ||
-              (item.href === "/fuel-prices" &&
-                router.pathname.startsWith("/fuel-prices/")) ||
+              (item.href === "/stations" &&
+                router.pathname.startsWith("/stations/")) ||
               (item.href === "/cars" && router.pathname.startsWith("/cars/")) ||
               (item.href === "/stats" && router.pathname.startsWith("/stats/"));
             return (

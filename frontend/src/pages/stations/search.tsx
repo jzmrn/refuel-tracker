@@ -125,7 +125,7 @@ export default function SearchStations() {
   ]);
 
   const handleBack = () => {
-    router.push("/fuel-prices");
+    router.push("/stations");
   };
 
   const handleSearch = (
@@ -157,7 +157,7 @@ export default function SearchStations() {
     // Update URL with search params to preserve state on navigation
     router.push(
       {
-        pathname: "/fuel-prices/stations",
+        pathname: "/stations/search",
         query: {
           lat: searchParams.lat,
           lng: searchParams.lng,
@@ -213,7 +213,7 @@ export default function SearchStations() {
   };
 
   const handleNavigateToDetail = (stationId: string) => {
-    router.push(`/fuel-prices/stations/${encodeURIComponent(stationId)}`);
+    router.push(`/stations/${encodeURIComponent(stationId)}`);
   };
 
   const favoriteIds = new Set(favorites.map((f) => f.station_id));

@@ -13,7 +13,7 @@ export default function Dashboard() {
     {
       name: t.navigation.fuelPrices,
       description: t.dashboard.features.fuelPricesDescription,
-      href: "/fuel-prices",
+      href: "/stations",
       icon: LocalGasStationIcon,
       color: "text-yellow-600",
       bgColor: "bg-yellow-100",

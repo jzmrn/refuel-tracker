@@ -28,11 +28,11 @@ export default function CarDetails() {
   };
 
   const handleEditCar = () => {
-    router.push(`/cars/${carId}/details`);
+    router.push(`/cars/${carId}/edit`);
   };
 
   const handleAddRefuel = () => {
-    router.push(`/cars/${carId}/add-refuel`);
+    router.push(`/cars/${carId}/refuels/add`);
   };
 
   const handleAddSharedUsers = () => {
@@ -40,15 +40,15 @@ export default function CarDetails() {
   };
 
   const handleViewStats = () => {
-    router.push(`/cars/${carId}/stats`);
+    router.push(`/cars/${carId}/refuels`);
   };
 
   const handleAddKilometer = () => {
-    router.push(`/cars/${carId}/add-kilometer`);
+    router.push(`/cars/${carId}/distance/add`);
   };
 
   const handleViewKilometerChart = () => {
-    router.push(`/cars/${carId}/kilometer-stats`);
+    router.push(`/cars/${carId}/distance`);
   };
 
   const handleRemoveSharedUser = async (userId: string) => {
