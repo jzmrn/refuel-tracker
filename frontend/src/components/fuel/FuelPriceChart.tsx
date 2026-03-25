@@ -192,6 +192,8 @@ export default function FuelPriceChart({
               dot={false}
               name={label}
               connectNulls={false}
+              // Only show legend for the first segment to avoid duplicates
+              legendType={index === 0 ? "plainline" : "none"}
             />
           ))}
         </LineChart>
