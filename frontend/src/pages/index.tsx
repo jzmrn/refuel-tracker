@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import AssessmentIcon from "@mui/icons-material/Assessment";
-import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
+import { PageContainer, PageHeader } from "@/components/common";
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -37,15 +36,11 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
-          {t.navigation.dashboard}
-        </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-300 text-sm md:text-base">
-          {t.dashboard.welcome}
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={t.navigation.dashboard}
+        subtitle={t.dashboard.welcome}
+      />
 
       {/* Getting Started */}
       <div className="mb-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 p-6">
@@ -91,6 +86,6 @@ export default function Dashboard() {
           </Link>
         ))}
       </div>
-    </div>
+    </PageContainer>
   );
 }

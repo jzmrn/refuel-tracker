@@ -8,7 +8,13 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { FuelType } from "@/lib/api";
 import { useFuelType } from "@/lib/fuelType";
 import { useRefreshFavorites } from "@/lib/hooks/useFuelPrices";
-import { LoadingSpinner } from "@/components/common";
+import {
+  LoadingSpinner,
+  PageContainer,
+  PageHeader,
+  ActionBar,
+  IconButton,
+} from "@/components/common";
 
 export default function FuelPrices() {
   const { t } = useTranslation();
@@ -32,37 +38,34 @@ export default function FuelPrices() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-      {/* Header */}
-      <div className="mb-6 md:mb-8 flex justify-between items-start">
-        <div>
-          <h1 className="heading-1">{t.fuelPrices.title}</h1>
-          <p className="text-secondary mt-2 text-sm md:text-base">
-            {t.fuelPrices.searchDescription}
-          </p>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={t.fuelPrices.title}
+        subtitle={t.fuelPrices.searchDescription}
+      />
 
       {/* Action Bar with Refresh and Search Buttons */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="heading-2">{t.fuelPrices.myFavorites}</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => refreshFavorites()}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            aria-label="Refresh"
-          >
-            <RefreshIcon className="icon text-gray-600 dark:text-gray-400" />
-          </button>
-          <button
-            onClick={handleSearchClick}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            aria-label={t.fuelPrices.searchStations}
-          >
-            <SearchIcon className="icon text-gray-600 dark:text-gray-400" />
-          </button>
-        </div>
-      </div>
+      <ActionBar
+        title={t.fuelPrices.myFavorites}
+        actions={
+          <>
+            <IconButton
+              onClick={() => refreshFavorites()}
+              icon={
+                <RefreshIcon className="icon text-gray-600 dark:text-gray-400" />
+              }
+              ariaLabel="Refresh"
+            />
+            <IconButton
+              onClick={handleSearchClick}
+              icon={
+                <SearchIcon className="icon text-gray-600 dark:text-gray-400" />
+              }
+              ariaLabel={t.fuelPrices.searchStations}
+            />
+          </>
+        }
+      />
 
       {/* Sort Control Panel */}
       <FuelTypeFilter
@@ -79,6 +82,6 @@ export default function FuelPrices() {
           onNavigateToDetail={handleNavigateToDetail}
         />
       </Suspense>
-    </div>
+    </PageContainer>
   );
 }

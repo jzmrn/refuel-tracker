@@ -1,9 +1,8 @@
 import { useRouter } from "next/router";
 import { Suspense, useState } from "react";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Snackbar from "@/components/common/Snackbar";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
-import { LoadingSpinner } from "@/components/common";
+import { LoadingSpinner, PageContainer, PageHeader } from "@/components/common";
 import CarDetailsContent from "@/components/cars/CarDetailsContent";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -78,22 +77,8 @@ export default function CarDetails() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-      {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <button
-            onClick={handleBack}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            aria-label={t.common.back}
-          >
-            <ArrowBackIcon className="icon text-gray-600 dark:text-gray-400" />
-          </button>
-          <div className="flex-1">
-            <h1 className="heading-1">{t.cars.carDetails}</h1>
-          </div>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader title={t.cars.carDetails} onBack={handleBack} />
 
       <Suspense fallback={<LoadingSpinner />}>
         {/* This ternary avoids rendering an empty page since the carId is loaded from the path */}
@@ -137,6 +122,6 @@ export default function CarDetails() {
           isVisible={true}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }

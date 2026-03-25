@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { StandardForm } from "@/components/common/StandardForm";
 import Snackbar from "@/components/common/Snackbar";
+import { PageContainer, PageHeader } from "@/components/common";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useCreateCar } from "@/lib/hooks/useCars";
@@ -66,22 +66,8 @@ export default function AddCar() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-      {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <button
-            onClick={handleBack}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            aria-label={t.common.back}
-          >
-            <ArrowBackIcon className="icon text-gray-600 dark:text-gray-400" />
-          </button>
-          <div className="flex-1">
-            <h1 className="heading-1">{t.cars.addCar}</h1>
-          </div>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader title={t.cars.addCar} onBack={handleBack} />
 
       {/* Form */}
       <div className="max-w-2xl mx-auto">
@@ -99,7 +85,7 @@ export default function AddCar() {
           }
         >
           {/* Car Name */}
-          <div className="field-group">
+          <div className="form-group">
             <label htmlFor="name" className="label">
               {t.cars.carName} *
             </label>
@@ -116,7 +102,7 @@ export default function AddCar() {
           </div>
 
           {/* Year */}
-          <div className="field-group">
+          <div className="form-group">
             <label htmlFor="year" className="label">
               {t.cars.year} *
             </label>
@@ -138,7 +124,7 @@ export default function AddCar() {
           </div>
 
           {/* Fuel Tank Size */}
-          <div className="field-group">
+          <div className="form-group">
             <label htmlFor="fuel_tank_size" className="label">
               {t.cars.fuelTankSize} (L) *
             </label>
@@ -160,7 +146,7 @@ export default function AddCar() {
           </div>
 
           {/* Fuel Type */}
-          <div className="field-group">
+          <div className="form-group">
             <label htmlFor="fuel_type" className="label">
               {t.cars.fuelType} *
             </label>
@@ -191,6 +177,6 @@ export default function AddCar() {
           isVisible={true}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }

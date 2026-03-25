@@ -1,8 +1,7 @@
 import { Suspense } from "react";
 import { useRouter } from "next/router";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { LoadingSpinner } from "@/components/common";
+import { LoadingSpinner, PageContainer, PageHeader } from "@/components/common";
 import PlacesContent from "@/components/stats/PlacesContent";
 
 export default function PlacesPage() {
@@ -10,27 +9,17 @@ export default function PlacesPage() {
   const router = useRouter();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-      {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <button
-            onClick={() => router.push("/stats")}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            aria-label={t.statistics.back}
-          >
-            <ArrowBackIcon className="icon text-gray-600 dark:text-gray-400" />
-          </button>
-          <h1 className="heading-1">{t.statistics.placesDetails}</h1>
-        </div>
-        <p className="text-secondary mt-2 text-sm md:text-base ml-11">
-          {t.statistics.placesDetailsDescription}
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={t.statistics.placesDetails}
+        subtitle={t.statistics.placesDetailsDescription}
+        onBack={() => router.push("/stats")}
+        backLabel={t.statistics.back}
+      />
 
       <Suspense fallback={<LoadingSpinner />}>
         <PlacesContent />
       </Suspense>
-    </div>
+    </PageContainer>
   );
 }

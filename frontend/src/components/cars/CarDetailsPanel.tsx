@@ -2,6 +2,7 @@ import React from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import CloseIcon from "@mui/icons-material/Close";
 import Panel from "@/components/common/Panel";
+import { IconButton } from "@/components/common";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { Car } from "@/lib/api";
 
@@ -25,30 +26,22 @@ const CarDetailsPanel: React.FC<CarDetailsPanelProps> = ({
       title={car.name}
       actions={
         <div className="flex gap-1">
-          <button
+          <IconButton
             onClick={onEdit}
             disabled={!car.is_owner}
-            className={`p-2 rounded-lg transition-colors ${
-              car.is_owner
-                ? "hover:bg-gray-100 dark:hover:bg-gray-700"
-                : "opacity-50 cursor-not-allowed"
-            }`}
-            aria-label={t.cars.editCar}
-          >
-            <EditIcon className="icon text-gray-600 dark:text-gray-400" />
-          </button>
-          <button
+            icon={
+              <EditIcon className="icon text-gray-600 dark:text-gray-400" />
+            }
+            ariaLabel={t.cars.editCar}
+          />
+          <IconButton
             onClick={onDelete}
             disabled={!car.is_owner || isDeleting}
-            className={`p-2 rounded-lg transition-colors ${
-              car.is_owner
-                ? "hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
-                : "opacity-50 cursor-not-allowed"
-            }`}
-            aria-label={t.cars.deleteCar}
-          >
-            <CloseIcon className="icon text-gray-600 dark:text-gray-400" />
-          </button>
+            icon={
+              <CloseIcon className="icon text-gray-600 dark:text-gray-400" />
+            }
+            ariaLabel={t.cars.deleteCar}
+          />
         </div>
       }
     >

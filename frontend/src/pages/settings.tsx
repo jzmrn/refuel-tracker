@@ -4,22 +4,15 @@ import { useUser } from "@/lib/auth/UserContext";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import ThemeSelector from "@/components/common/ThemeSelector";
 import SettingCard from "@/components/common/SettingCard";
+import { PageContainer, PageHeader } from "@/components/common";
 
 export default function Settings() {
   const { t } = useTranslation();
   const { user } = useUser();
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-4 md:py-8">
-      {/* Page Header */}
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
-          {t.settings.title}
-        </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-300 text-sm md:text-base">
-          {t.settings.description}
-        </p>
-      </div>
+    <PageContainer maxWidth="4xl">
+      <PageHeader title={t.settings.title} subtitle={t.settings.description} />
 
       {/* Settings Sections */}
       <div className="space-y-6">
@@ -55,6 +48,6 @@ export default function Settings() {
           <ThemeSelector />
         </SettingCard>
       </div>
-    </div>
+    </PageContainer>
   );
 }

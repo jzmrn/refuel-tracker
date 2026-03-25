@@ -1,11 +1,10 @@
 import { Suspense, useState } from "react";
 import { useRouter } from "next/router";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useCar } from "@/lib/hooks/useCars";
 import KilometerStatsContent from "@/components/cars/KilometerStatsContent";
 import PeriodFilter from "@/components/common/PeriodFilter";
-import { LoadingSpinner } from "@/components/common";
+import { LoadingSpinner, DynamicPage, PageHeader } from "@/components/common";
 
 type FilterType = "6months" | "all";
 
@@ -51,26 +50,11 @@ function KilometerStatsInner({ carId }: { carId: string }) {
 
   return (
     <>
-      {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <button
-            onClick={handleBack}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            aria-label={t.common.back}
-          >
-            <ArrowBackIcon className="icon text-gray-600 dark:text-gray-400" />
-          </button>
-          <div className="flex-1">
-            <h1 className="heading-1">{t.kilometers.kilometerHistory}</h1>
-            {car && (
-              <p className="text-sm text-secondary mt-1">
-                {car.name} ({car.year})
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title={t.kilometers.kilometerHistory}
+        subtitle={car ? `${car.name} (${car.year})` : undefined}
+        onBack={handleBack}
+      />
 
       <div className="space-y-6">
         {/* Filter Options */}
@@ -93,15 +77,9 @@ function KilometerStatsInner({ carId }: { carId: string }) {
 }
 
 export default function KilometerStats() {
-  const router = useRouter();
-  const { id } = router.query;
-  const carId = typeof id === "string" ? id : undefined;
-
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-      <Suspense fallback={<LoadingSpinner />}>
-        {carId ? <KilometerStatsInner carId={carId} /> : <LoadingSpinner />}
-      </Suspense>
-    </div>
+    <DynamicPage>
+      {(carId) => <KilometerStatsInner carId={carId} />}
+    </DynamicPage>
   );
 }

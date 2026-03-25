@@ -2,6 +2,7 @@ import React from "react";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Panel from "@/components/common/Panel";
+import { IconButton } from "@/components/common";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { CarAccessUser } from "@/lib/api";
 
@@ -24,13 +25,11 @@ const SharedUsersPanel: React.FC<SharedUsersPanelProps> = ({
     <Panel
       title={t.cars.sharedWith}
       actions={
-        <button
+        <IconButton
           onClick={onAddSharedUsers}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          aria-label={t.cars.addSharedUsers}
-        >
-          <AddIcon className="icon text-gray-600 dark:text-gray-400" />
-        </button>
+          icon={<AddIcon className="icon text-gray-600 dark:text-gray-400" />}
+          ariaLabel={t.cars.addSharedUsers}
+        />
       }
     >
       {sharedUsers && sharedUsers.length > 0 ? (

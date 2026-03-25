@@ -1,6 +1,5 @@
 import { useRouter } from "next/router";
 import { Suspense, useState } from "react";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useFuelType } from "@/lib/fuelType";
 import Snackbar from "@/components/common/Snackbar";
@@ -16,7 +15,7 @@ import StationMetaInfo from "@/components/fuel/StationMetaInfo";
 import StationPriceChart from "@/components/fuel/StationPriceChart";
 import StationDailyStatsChart from "@/components/fuel/StationDailyStatsChart";
 import StationPriceChangesChart from "@/components/fuel/StationPriceChangesChart";
-import { LoadingSpinner } from "@/components/common";
+import { LoadingSpinner, PageContainer, PageHeader } from "@/components/common";
 
 function StationDetailsContent({ stationId }: { stationId: string }) {
   const router = useRouter();
@@ -111,12 +110,14 @@ function StationDetailsContent({ stationId }: { stationId: string }) {
         />
       </div>
 
-      <Snackbar
-        message={snackbar.message}
-        type={snackbar.type}
-        isVisible={snackbar.isVisible}
-        onClose={hideSnackbar}
-      />
+      {snackbar.isVisible && (
+        <Snackbar
+          message={snackbar.message}
+          type={snackbar.type}
+          isVisible={true}
+          onClose={hideSnackbar}
+        />
+      )}
     </>
   );
 }
@@ -132,22 +133,8 @@ export default function StationDetails() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-      {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <button
-            onClick={handleBack}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            aria-label={t.common.back}
-          >
-            <ArrowBackIcon className="icon text-gray-600 dark:text-gray-400" />
-          </button>
-          <div className="flex-1">
-            <h1 className="heading-1">{t.fuelPrices.stationDetails}</h1>
-          </div>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader title={t.fuelPrices.stationDetails} onBack={handleBack} />
 
       <div className="max-w-3xl mx-auto">
         <Suspense fallback={<LoadingSpinner />}>
@@ -158,6 +145,6 @@ export default function StationDetails() {
           )}
         </Suspense>
       </div>
-    </div>
+    </PageContainer>
   );
 }

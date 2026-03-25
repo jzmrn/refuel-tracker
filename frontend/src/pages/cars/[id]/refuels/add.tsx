@@ -1,6 +1,5 @@
 import { Suspense, useState, useEffect, useRef, startTransition } from "react";
 import { useRouter } from "next/router";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Panel from "@/components/common/Panel";
 import Snackbar from "@/components/common/Snackbar";
 import { useSnackbar } from "@/lib/useSnackbar";
@@ -12,7 +11,7 @@ import {
   apiService,
 } from "@/lib/api";
 import { getLocalDateTimeString } from "@/lib/dateUtils";
-import { LoadingSpinner } from "@/components/common";
+import { DynamicPage, PageHeader } from "@/components/common";
 
 function AddRefuelContent({ carId }: { carId: string }) {
   const { t } = useTranslation();
@@ -215,26 +214,11 @@ function AddRefuelContent({ carId }: { carId: string }) {
 
   return (
     <>
-      {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <button
-            onClick={handleBack}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            aria-label={t.common.back}
-          >
-            <ArrowBackIcon className="icon text-gray-600 dark:text-gray-400" />
-          </button>
-          <div className="flex-1">
-            <h1 className="heading-1">{t.navigation.addEntry}</h1>
-            {car && (
-              <p className="text-secondary mt-1 text-sm">
-                {car.name} ({car.year})
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title={t.navigation.addEntry}
+        subtitle={car ? `${car.name} (${car.year})` : undefined}
+        onBack={handleBack}
+      />
 
       {/* Form */}
       <div className="max-w-3xl mx-auto">
@@ -489,15 +473,7 @@ function AddRefuelContent({ carId }: { carId: string }) {
 }
 
 export default function AddRefuel() {
-  const router = useRouter();
-  const { id } = router.query;
-  const carId = typeof id === "string" ? id : undefined;
-
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-      <Suspense fallback={<LoadingSpinner />}>
-        {carId ? <AddRefuelContent carId={carId} /> : <LoadingSpinner />}
-      </Suspense>
-    </div>
+    <DynamicPage>{(carId) => <AddRefuelContent carId={carId} />}</DynamicPage>
   );
 }

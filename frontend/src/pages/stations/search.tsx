@@ -1,6 +1,5 @@
 import { Suspense, useState, useEffect, startTransition } from "react";
 import { useRouter } from "next/router";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import TuneIcon from "@mui/icons-material/Tune";
 import SearchStationsForm from "@/components/fuel-prices/SearchStationsForm";
@@ -21,7 +20,7 @@ import {
   GasStationResponse,
   GasStationSearchRequest,
 } from "@/lib/api";
-import { LoadingSpinner } from "@/components/common";
+import { LoadingSpinner, PageContainer, PageHeader } from "@/components/common";
 
 type SortByType = "e5" | "e10" | "diesel" | "dist";
 
@@ -219,46 +218,40 @@ export default function SearchStations() {
   const favoriteIds = new Set(favorites.map((f) => f.station_id));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+    <PageContainer>
       <Suspense fallback={<LoadingSpinner />}>
         {/* Header */}
-        <div className="mb-6 md:mb-8">
-          <div className="flex items-center gap-4 mb-4">
+        <PageHeader
+          title={t.fuelPrices.searchStations}
+          subtitle={t.fuelPrices.searchDescription}
+          onBack={handleBack}
+        />
+
+        {/* Context action buttons */}
+        {!showForm && searchResults.length > 0 && (
+          <div className="-mt-4 mb-6 flex justify-end">
             <button
-              onClick={handleBack}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              aria-label={t.common.back}
+              onClick={handleRefineSearch}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30 transition-colors"
             >
-              <ArrowBackIcon className="icon text-gray-600 dark:text-gray-400" />
+              <TuneIcon className="w-5 h-5" />
+              <span className="hidden sm:inline">{t.fuelPrices.search}</span>
             </button>
-            <div className="flex-1">
-              <h1 className="heading-1">{t.fuelPrices.searchStations}</h1>
-              <p className="text-secondary mt-2 text-sm md:text-base">
-                {t.fuelPrices.searchDescription}
-              </p>
-            </div>
-            {!showForm && searchResults.length > 0 && (
-              <button
-                onClick={handleRefineSearch}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30 transition-colors"
-              >
-                <TuneIcon className="w-5 h-5" />
-                <span className="hidden sm:inline">{t.fuelPrices.search}</span>
-              </button>
-            )}
-            {showForm && searchParams !== null && searchResults.length > 0 && (
-              <button
-                onClick={handleBackToResults}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30 transition-colors"
-              >
-                <ArrowForwardIcon className="w-5 h-5" />
-                <span className="hidden sm:inline">
-                  {t.fuelPrices.backToResults}
-                </span>
-              </button>
-            )}
           </div>
-        </div>
+        )}
+        {showForm && searchParams !== null && searchResults.length > 0 && (
+          <div className="-mt-4 mb-6 flex justify-end">
+            <button
+              onClick={handleBackToResults}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30 transition-colors"
+            >
+              <ArrowForwardIcon className="w-5 h-5" />
+              <span className="hidden sm:inline">
+                {t.fuelPrices.backToResults}
+              </span>
+            </button>
+          </div>
+        )}
 
         {/* Form or Results */}
         {!isInitialized ? (
@@ -332,13 +325,15 @@ export default function SearchStations() {
         )}
 
         {/* Snackbar */}
-        <Snackbar
-          message={snackbar.message}
-          type={snackbar.type}
-          isVisible={snackbar.isVisible}
-          onClose={hideSnackbar}
-        />
+        {snackbar.isVisible && (
+          <Snackbar
+            message={snackbar.message}
+            type={snackbar.type}
+            isVisible={true}
+            onClose={hideSnackbar}
+          />
+        )}
       </Suspense>
-    </div>
+    </PageContainer>
   );
 }
