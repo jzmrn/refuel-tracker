@@ -22,7 +22,7 @@ import {
   useLocalization,
 } from "../../lib/i18n/LanguageContext";
 import { useChartTheme } from "../../lib/theme";
-import { axisConfig, useGridConfig } from "../../lib/chartConfig";
+import { axisConfig, useGridConfig, useChartKey } from "../../lib/chartConfig";
 
 interface RefuelDataForChart {
   timestamp: string;
@@ -44,6 +44,7 @@ export default function RefuelConsumptionChart({
   const { formatDate, formatNumber } = useLocalization();
   const chartTheme = useChartTheme();
   const gridConfig = useGridConfig();
+  const chartKey = useChartKey(refuelData);
 
   if (!refuelData || refuelData.length === 0) {
     return (
@@ -189,6 +190,7 @@ export default function RefuelConsumptionChart({
     <Panel title={t.refuels.fuelConsumptionEstimatedVsActual}>
       <ResponsiveContainer width="100%" height={350}>
         <LineChart
+          key={chartKey}
           data={chartData}
           margin={{
             top: 20,

@@ -22,6 +22,7 @@ import {
 } from "../../lib/i18n/LanguageContext";
 import { useChartTheme } from "../../lib/theme";
 import { renderSvgFuelPrice } from "../../lib/formatPrice";
+import { useChartKey } from "../../lib/chartConfig";
 
 interface PriceTrend {
   date: string;
@@ -39,6 +40,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
   const { t } = useTranslation();
   const { formatDate } = useLocalization();
   const chartTheme = useChartTheme();
+  const chartKey = useChartKey(priceData);
 
   if (!priceData || priceData.length === 0) {
     return (
@@ -155,6 +157,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
     <Panel title={t.refuels.priceTrendsOverTime}>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart
+          key={chartKey}
           data={sortedData}
           margin={{
             top: 20,

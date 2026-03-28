@@ -8,7 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { axisConfig, useGridConfig } from "@/lib/chartConfig";
+import { axisConfig, useGridConfig, useChartKey } from "@/lib/chartConfig";
 import { useTranslation, useLocalization } from "@/lib/i18n/LanguageContext";
 import type { KilometerPeriodAggregate } from "@/lib/api";
 
@@ -24,6 +24,7 @@ const KilometerAggregationChart: React.FC<KilometerAggregationChartProps> = ({
   const { t } = useTranslation();
   const { formatDate } = useLocalization();
   const gridConfig = useGridConfig();
+  const chartKey = useChartKey(data);
 
   const chartData = useMemo(
     () =>
@@ -66,6 +67,7 @@ const KilometerAggregationChart: React.FC<KilometerAggregationChartProps> = ({
     <div>
       <ResponsiveContainer width="100%" height={320}>
         <BarChart
+          key={chartKey}
           data={chartData}
           margin={{
             top: 10,

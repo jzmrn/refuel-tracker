@@ -2,6 +2,7 @@
  * Shared chart configuration for consistent styling across all Recharts components
  */
 
+import { useRef } from "react";
 import { useTheme } from "@/lib/theme";
 
 // CSS class names for Recharts components (Tailwind-compatible)
@@ -117,3 +118,16 @@ export const gridConfig = {
 export const renderLegendText = (value: string) => (
   <span className={chartClassNames.legendText}>{value}</span>
 );
+
+// Hook to force chart remount on data change (animate from zero instead of morphing)
+export function useChartKey(data: unknown): number {
+  const keyRef = useRef(0);
+  const prevDataRef = useRef(data);
+
+  if (prevDataRef.current !== data) {
+    prevDataRef.current = data;
+    keyRef.current += 1;
+  }
+
+  return keyRef.current;
+}

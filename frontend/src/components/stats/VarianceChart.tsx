@@ -15,6 +15,7 @@ import {
   useGridConfig,
   useAxisColor,
   renderLegendText,
+  useChartKey,
 } from "@/lib/chartConfig";
 import { DetailAggregate, buildColorMap, ChartTooltip } from "./chartUtils";
 import { renderSvgCentsPrice } from "@/lib/formatPrice";
@@ -32,6 +33,7 @@ export default function VarianceChart({ data }: VarianceChartProps) {
   const { formatMonthLabel } = useLocalization();
   const gridConfig = useGridConfig();
   const axisColor = useAxisColor();
+  const chartKey = useChartKey(data);
 
   const { chartData, entities } = useMemo(() => {
     const monthSet = new Set<string>();
@@ -66,6 +68,7 @@ export default function VarianceChart({ data }: VarianceChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart
+        key={chartKey}
         data={chartData}
         margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
       >

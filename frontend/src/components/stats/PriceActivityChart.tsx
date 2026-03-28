@@ -14,6 +14,7 @@ import {
   useGridConfig,
   useAxisColor,
   renderLegendText,
+  useChartKey,
 } from "@/lib/chartConfig";
 import { DetailAggregate, buildColorMap, ChartTooltip } from "./chartUtils";
 import { useLocalization } from "@/lib/i18n/LanguageContext";
@@ -31,6 +32,7 @@ export default function PriceActivityChart({ data }: PriceActivityChartProps) {
   const gridConfig = useGridConfig();
   const axisColor = useAxisColor();
   const { formatMonthLabel } = useLocalization();
+  const chartKey = useChartKey(data);
 
   const { chartData, entities } = useMemo(() => {
     const monthSet = new Set<string>();
@@ -65,6 +67,7 @@ export default function PriceActivityChart({ data }: PriceActivityChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart
+        key={chartKey}
         data={chartData}
         margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
       >

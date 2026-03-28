@@ -16,6 +16,7 @@ import {
   customTooltipContainerStyle,
   tooltipStyle,
   renderLegendText,
+  useChartKey,
 } from "@/lib/chartConfig";
 
 interface DailyPriceChangesChartProps {
@@ -28,6 +29,7 @@ export default function DailyPriceChangesChart({
   const { t } = useTranslation();
   const { formatDate } = useLocalization();
   const gridConfig = useGridConfig();
+  const chartKey = useChartKey(data);
 
   // Convert data to chart format and sort by date ascending
   const chartData = [...data]
@@ -47,6 +49,7 @@ export default function DailyPriceChangesChart({
     <div className="w-full h-72 sm:h-64 -mx-2 sm:mx-0">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart
+          key={chartKey}
           data={chartData}
           margin={{ top: 5, right: 10, left: 5, bottom: 5 }}
         >

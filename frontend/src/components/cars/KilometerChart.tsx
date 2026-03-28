@@ -8,7 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { axisConfig, useGridConfig } from "@/lib/chartConfig";
+import { axisConfig, useGridConfig, useChartKey } from "@/lib/chartConfig";
 import { useTranslation, useLocalization } from "@/lib/i18n/LanguageContext";
 
 interface ChartDataPoint {
@@ -25,6 +25,7 @@ const KilometerChart: React.FC<KilometerChartProps> = ({ data }) => {
   const { t } = useTranslation();
   const { formatDate } = useLocalization();
   const gridConfig = useGridConfig();
+  const chartKey = useChartKey(data);
 
   const formatKilometers = (value: number) => {
     return new Intl.NumberFormat("de-DE").format(Math.round(value)) + " km";
@@ -65,6 +66,7 @@ const KilometerChart: React.FC<KilometerChartProps> = ({ data }) => {
     <div>
       <ResponsiveContainer width="100%" height={320}>
         <LineChart
+          key={chartKey}
           data={data}
           margin={{
             top: 10,
