@@ -70,7 +70,7 @@ export default function SearchStations() {
   const isFormLoading = isLoading("search-submit");
 
   // React Query hooks for favorites (suspense-based)
-  const { data: favorites } = useFavoriteStations();
+  const { data: favoritesResponse } = useFavoriteStations();
   const addFavorite = useAddFavoriteStation();
   const removeFavorite = useRemoveFavoriteStation();
 
@@ -215,7 +215,9 @@ export default function SearchStations() {
     router.push(`/stations/${encodeURIComponent(stationId)}`);
   };
 
-  const favoriteIds = new Set(favorites.map((f) => f.station_id));
+  const favoriteIds = new Set(
+    favoritesResponse.stations.map((f) => f.station_id),
+  );
 
   return (
     <PageContainer>

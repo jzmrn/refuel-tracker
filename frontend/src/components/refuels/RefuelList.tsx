@@ -84,7 +84,7 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
                   </div>
                 </td>
                 <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
-                  {renderSvgFuelPrice(refuel.price)} €/L
+                  {renderSvgFuelPrice(refuel.price, { showCurrency: false })}
                 </td>
                 <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
                   {formatLiters(refuel.amount)}

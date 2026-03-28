@@ -17,8 +17,11 @@ from tankerkoenig.models import (
 from ..auth import CurrentUser
 from ..models import (
     DailyStatsPoint,
+    FavoriteStation,
     FavoriteStationCreate,
-    FavoriteStationResponse,
+    FavoriteStationsResponse,
+    FuelPrice,
+    FuelPrices,
     GasStationResponse,
     GasStationSearchRequest,
     SingleFuelPriceHistoryPoint,
@@ -255,35 +258,100 @@ async def add_favorite_station(
     }
 
 
-@router.get("/favorites", response_model=list[FavoriteStationResponse])
+@router.get("/favorites", response_model=FavoriteStationsResponse)
 async def get_favorite_stations(
     user: CurrentUser,
     fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+    fuel_price_data_client: FuelPriceDataClient = Depends(get_fuel_price_data_client),
     tankerkoenig_client: TankerkoenigClient = Depends(get_tankerkoenig_client),
 ):
-    """Get user's favorite stations with current prices"""
+    """Get user's favorite stations with current prices from SQLite.
+
+    Reads the latest price from the fuel_prices table (populated every 10 min
+    by the Dagster pipeline). Falls back to the Tankerkoenig API only for
+    stations that have no data in SQLite yet.
+    """
     logger.info("Getting favorite stations with prices", extra={"user_id": user.id})
+
+    now = datetime.now(UTC)
 
     # Get favorites from database
     favorites = fuel_station_client.get_favorite_stations_with_info(user.id)
     station_info_map = {favorite.station_id: favorite for favorite in favorites}
 
-    # Check cache for existing prices (valid for 5 minutes)
-    stations_to_fetch: list[GasStationInfo] = []
+    if not station_info_map:
+        return []
+
+    all_station_ids = list(station_info_map.keys())
+
+    # Step 1: Try to get prices from SQLite for all stations
+    latest_prices = fuel_price_data_client.get_latest_prices(all_station_ids)
+    sqlite_price_map = {p.station_id: p for p in latest_prices}
+
+    # Step 2: Identify stations without SQLite data
+    stations_without_data = [
+        station_info_map[sid] for sid in all_station_ids if sid not in sqlite_price_map
+    ]
+
+    if sqlite_price_map:
+        logger.debug(
+            "Loaded prices from SQLite",
+            extra={"sqlite_station_count": len(sqlite_price_map)},
+        )
+
+    # Step 3: Fall back to Tankerkoenig API for stations without SQLite data
+    api_price_map: dict[str, GasStationPrice] = {}
+    if stations_without_data:
+        logger.debug(
+            "Falling back to Tankerkoenig API for stations without SQLite data",
+            extra={"api_station_count": len(stations_without_data)},
+        )
+        for i in range(0, len(stations_without_data), 10):
+            batch = stations_without_data[i : i + 10]
+            try:
+                batch_ids = [s.station_id for s in batch]
+                prices = tankerkoenig_client.get_gas_station_prices(batch_ids)
+                for price in prices:
+                    fuel_price_cache.set(price.station_id, price)
+                    api_price_map[price.station_id] = price
+            except Exception as e:
+                logger.error(
+                    "Error fetching prices from Tankerkoenig API",
+                    extra={
+                        "station_ids": [s.station_id for s in batch],
+                        "error": str(e),
+                    },
+                )
+
+    # Step 4: Build response
     results = []
-    cached_count = 0
+    for sid, station in station_info_map.items():
+        if sid in sqlite_price_map:
+            sp = sqlite_price_map[sid]
+            prices = FuelPrices(
+                e5=FuelPrice(value=sp.price_e5, timestamp=sp.since_e5),
+                e10=FuelPrice(value=sp.price_e10, timestamp=sp.since_e10),
+                diesel=FuelPrice(value=sp.price_diesel, timestamp=sp.since_diesel),
+            )
+            is_open = sp.station_status == "open" if sp.station_status else None
+        elif sid in api_price_map:
+            ap = api_price_map[sid]
+            prices = FuelPrices(
+                e5=FuelPrice(value=ap.e5),
+                e10=FuelPrice(value=ap.e10),
+                diesel=FuelPrice(value=ap.diesel),
+            )
+            is_open = ap.status == "open" if ap.status else None
+        else:
+            prices = FuelPrices()
+            is_open = None
 
-    for station in station_info_map.values():
-        # Try to get from cache (automatically checks expiry)
-        cache_entry = fuel_price_cache.get(station.station_id)
+        updated_at = (
+            sqlite_price_map[sid].updated_at if sid in sqlite_price_map else None
+        )
 
-        if cache_entry is None:
-            stations_to_fetch.append(station)
-            continue
-
-        cached_count += 1
         results.append(
-            FavoriteStationResponse(
+            FavoriteStation(
                 user_id=user.id,
                 station_id=station.station_id,
                 name=station.name,
@@ -294,73 +362,13 @@ async def get_favorite_stations(
                 place=station.place,
                 lat=station.lat,
                 lng=station.lng,
-                timestamp=cache_entry.timestamp,
-                current_price_e5=cache_entry.e5,
-                current_price_e10=cache_entry.e10,
-                current_price_diesel=cache_entry.diesel,
-                is_open=cache_entry.status == "open" if cache_entry.status else None,
+                prices=prices,
+                is_open=is_open,
+                updated_at=updated_at,
             )
         )
 
-    if cached_count > 0:
-        logger.debug(
-            "Using cached prices", extra={"cached_station_count": cached_count}
-        )
-    if len(stations_to_fetch) > 0:
-        logger.debug(
-            "Fetching fresh prices",
-            extra={"stations_to_fetch_count": len(stations_to_fetch)},
-        )
-
-    # Get current prices for stations not in cache, up to 10 stations at a time
-    for i in range(0, len(stations_to_fetch), 10):
-        stations = stations_to_fetch[i : i + 10]
-        prices = []
-
-        try:
-            batch_ids = [station.station_id for station in stations]
-            prices = tankerkoenig_client.get_gas_station_prices(batch_ids)
-
-        except Exception as e:
-            logger.error(
-                "Error fetching prices for favorite stations",
-                extra={
-                    "station_ids": batch_ids,
-                    "error": str(e),
-                },
-            )
-
-        # Update cache with new prices
-        for price in prices:
-            fuel_price_cache.set(price.station_id, price)
-
-        prices_map: dict[str, GasStationPrice] = {
-            price.station_id: price for price in prices
-        }
-        for station in stations:
-            price = prices_map.get(station.station_id)
-
-            results.append(
-                FavoriteStationResponse(
-                    user_id=user.id,
-                    station_id=station.station_id,
-                    name=station.name,
-                    brand=station.brand,
-                    street=station.street,
-                    house_number=station.house_number,
-                    post_code=station.post_code,
-                    place=station.place,
-                    lat=station.lat,
-                    lng=station.lng,
-                    timestamp=price.timestamp if price else None,
-                    current_price_e5=price.e5 if price else None,
-                    current_price_e10=price.e10 if price else None,
-                    current_price_diesel=price.diesel if price else None,
-                    is_open=price.status == "open" if price and price.status else None,
-                )
-            )
-
-    return results
+    return FavoriteStationsResponse(generated_at=now, stations=results)
 
 
 @router.delete("/favorites/{station_id}")
@@ -389,49 +397,72 @@ async def get_station_meta(
     station_id: str,
     user: CurrentUser,
     fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+    fuel_price_data_client: FuelPriceDataClient = Depends(get_fuel_price_data_client),
     tankerkoenig_client: TankerkoenigClient = Depends(get_tankerkoenig_client),
 ):
-    """Get meta information about a specific gas station with current prices (without price history)"""
+    """Get meta information about a specific gas station with current prices.
+
+    Reads prices from the fuel_prices SQLite table. Falls back to the
+    Tankerkoenig API only when no data exists for this station.
+    """
 
     logger.info(
         "Getting station meta",
         extra={"station_id": station_id, "user_id": user.id},
     )
 
-    # Check cache first
-    price = fuel_price_cache.get(station_id)
+    now = datetime.now(UTC)
 
     # Get station info from database
     station_infos = fuel_station_client.get_gas_station_info(station_id)
     station_info = station_infos[0] if station_infos else None
 
-    # If station doesn't exist in database, raise 404 error
     if station_info is None:
         logger.info("Station not found", extra={"station_id": station_id})
         raise HTTPException(status_code=404, detail="Station not found")
 
-    # Use cached price if available
-    if price is None:
-        logger.debug(
-            "Fetching fresh price for station", extra={"station_id": station_id}
+    # Try SQLite first
+    latest_prices = fuel_price_data_client.get_latest_prices([station_id])
+
+    if latest_prices:
+        sp = latest_prices[0]
+        logger.debug("Using SQLite price for station", extra={"station_id": station_id})
+        prices = FuelPrices(
+            e5=FuelPrice(value=sp.price_e5, timestamp=sp.since_e5),
+            e10=FuelPrice(value=sp.price_e10, timestamp=sp.since_e10),
+            diesel=FuelPrice(value=sp.price_diesel, timestamp=sp.since_diesel),
         )
+        is_open = sp.station_status == "open" if sp.station_status else None
+    else:
+        # Fall back to Tankerkoenig API
+        logger.debug(
+            "No SQLite data, falling back to Tankerkoenig API",
+            extra={"station_id": station_id},
+        )
+        price = fuel_price_cache.get(station_id)
+        if price is None:
+            try:
+                api_prices = tankerkoenig_client.get_gas_station_prices([station_id])
+                price = api_prices[0] if api_prices else None
+            except Exception as e:
+                logger.error(
+                    "Failed to fetch fuel prices",
+                    extra={"station_id": station_id, "error": str(e)},
+                )
 
-        # Fetch fresh prices from API
-        try:
-            prices = tankerkoenig_client.get_gas_station_prices([station_id])
-            price = prices[0] if prices else None
-
-        except Exception as e:
-            logger.error(
-                "Failed to fetch fuel prices",
-                extra={"station_id": station_id, "error": str(e)},
-            )
+            if price:
+                fuel_price_cache.set(station_id, price)
 
         if price:
-            fuel_price_cache.set(station_id, price)
-
-    else:
-        logger.debug("Using cached price for station", extra={"station_id": station_id})
+            prices = FuelPrices(
+                e5=FuelPrice(value=price.e5),
+                e10=FuelPrice(value=price.e10),
+                diesel=FuelPrice(value=price.diesel),
+            )
+            is_open = price.status == "open" if price.status else None
+        else:
+            prices = FuelPrices()
+            is_open = None
 
     return StationMetaResponse(
         station_id=station_info.station_id,
@@ -443,11 +474,9 @@ async def get_station_meta(
         place=station_info.place,
         lat=station_info.lat,
         lng=station_info.lng,
-        timestamp=price.timestamp if price else None,
-        current_price_e5=price.e5 if price else None,
-        current_price_e10=price.e10 if price else None,
-        current_price_diesel=price.diesel if price else None,
-        is_open=price.status == "open" if price else None,
+        generated_at=now,
+        prices=prices,
+        is_open=is_open,
     )
 
 

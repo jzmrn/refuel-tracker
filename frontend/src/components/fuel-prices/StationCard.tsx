@@ -1,10 +1,10 @@
 import { useLocalization, useTranslation } from "@/lib/i18n/LanguageContext";
-import { GasStationResponse, FavoriteStationResponse } from "@/lib/api";
+import { GasStationResponse, FavoriteStation } from "@/lib/api";
 import CircularProgress from "@mui/material/CircularProgress";
 import { renderSvgFuelPrice } from "@/lib/formatPrice";
 
 interface StationCardProps {
-  station: GasStationResponse | FavoriteStationResponse;
+  station: GasStationResponse | FavoriteStation;
   isFavorite: boolean;
   onAddToFavorites?: () => void;
   onRemoveFromFavorites?: () => void;
@@ -25,7 +25,7 @@ export default function StationCard({
   onNavigateToDetail,
 }: StationCardProps) {
   const { t } = useTranslation();
-  const { formatDate } = useLocalization();
+  const { formatTimestamp } = useLocalization();
 
   const handleCardClick = () => {
     const stationId = isGasStation(station) ? station.id : station.station_id;
@@ -36,24 +36,23 @@ export default function StationCard({
 
   // Type guard to check if this is a GasStationResponse
   const isGasStation = (
-    s: GasStationResponse | FavoriteStationResponse,
+    s: GasStationResponse | FavoriteStation,
   ): s is GasStationResponse => {
     return "id" in s;
   };
 
   const isOpen = station.is_open ?? false;
 
-  // Extract timestamp for favorite stations
-  const timestamp = !isGasStation(station) ? station.timestamp : undefined;
-
-  // Format timestamp to show only time
-  const formatTime = (timestamp?: string) => {
-    if (!timestamp) return null;
-    return formatDate(new Date(timestamp), {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  // Extract price-since timestamp for the selected fuel type (favorite stations only)
+  const getPriceSinceTimestamp = (): string | undefined => {
+    if (isGasStation(station)) return undefined;
+    if (sortBy === "e5") return station.prices.e5.timestamp;
+    if (sortBy === "e10") return station.prices.e10.timestamp;
+    if (sortBy === "diesel") return station.prices.diesel.timestamp;
+    return undefined;
   };
+
+  const priceSince = getPriceSinceTimestamp();
 
   // Get prices
   let priceE5: number | undefined;
@@ -67,9 +66,9 @@ export default function StationCard({
     priceDiesel = station.diesel;
     distance = station.dist;
   } else {
-    priceE5 = station.current_price_e5;
-    priceE10 = station.current_price_e10;
-    priceDiesel = station.current_price_diesel;
+    priceE5 = station.prices.e5.value;
+    priceE10 = station.prices.e10.value;
+    priceDiesel = station.prices.diesel.value;
   }
 
   const renderPriceColumn = (
@@ -135,9 +134,9 @@ export default function StationCard({
             <h4 className="heading-3 truncate">
               {station.brand ?? station.name}
             </h4>
-            {timestamp && (
+            {priceSince && (
               <span className="text-xs text-secondary flex-shrink-0">
-                ({formatTime(timestamp)})
+                ({formatTimestamp(priceSince)})
               </span>
             )}
             {distance !== undefined && (
@@ -225,14 +224,9 @@ export default function StationCard({
                   #{rankIndex}
                 </span>
               )}
-              <h4 className="heading-4 truncate">
+              <h4 className="heading-4 truncate min-w-0">
                 {station.brand ?? station.name}
               </h4>
-              {timestamp && (
-                <span className="text-xs text-secondary flex-shrink-0">
-                  ({formatTime(timestamp)})
-                </span>
-              )}
               {distance !== undefined && (
                 <span
                   className={`text-xs flex-shrink-0 inline-flex items-center justify-center px-2 py-0.5 rounded-full font-medium min-h-[20px] ${
@@ -242,6 +236,11 @@ export default function StationCard({
                   }`}
                 >
                   {distance.toFixed(1)} {t.fuelPrices.kmAway}
+                </span>
+              )}
+              {priceSince && (
+                <span className="text-xs text-secondary flex-shrink-0 ml-auto">
+                  {formatTimestamp(priceSince)}
                 </span>
               )}
             </div>

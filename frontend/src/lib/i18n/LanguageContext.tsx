@@ -119,10 +119,28 @@ export function useLocalization() {
     return formatDate(date, { month: "long", year: "numeric" });
   };
 
+  const formatTimestamp = (ts: string) => {
+    const date = new Date(ts);
+    const now = new Date();
+    const isToday =
+      date.getDate() === now.getDate() &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear();
+    return isToday
+      ? formatDate(date, { hour: "2-digit", minute: "2-digit" })
+      : formatDate(date, {
+          day: "2-digit",
+          month: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+  };
+
   return {
     language,
     formatDate,
     formatNumber,
     formatMonthLabel,
+    formatTimestamp,
   };
 }

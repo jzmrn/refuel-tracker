@@ -416,6 +416,8 @@ export interface TranslationStructure {
     unknown: string;
     comingSoon: string;
     lastUpdated: string;
+    lastRefresh: string;
+    pricesUpdatedAt: string;
     noDataAvailable: string;
     additionalInformation: string;
     priceHistory: string;

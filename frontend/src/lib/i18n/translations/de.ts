@@ -432,6 +432,8 @@ export const de: TranslationStructure = {
     unknown: "Unbekannt",
     comingSoon: "Weitere Details folgen in Kürze...",
     lastUpdated: "Zuletzt aktualisiert",
+    lastRefresh: "Letzte Abfrage",
+    pricesUpdatedAt: "Aktualisiert um",
     noDataAvailable: "Keine Daten verfügbar",
     additionalInformation: "Zusätzliche Informationen",
     priceHistory: "Preisverlauf",

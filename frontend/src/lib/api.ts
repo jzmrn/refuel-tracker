@@ -268,10 +268,20 @@ export interface GasStationResponse {
   is_open: boolean;
 }
 
-export interface FavoriteStationResponse {
+export interface FuelPrice {
+  value?: number;
+  timestamp?: string;
+}
+
+export interface FuelPrices {
+  e5: FuelPrice;
+  e10: FuelPrice;
+  diesel: FuelPrice;
+}
+
+export interface FavoriteStation {
   user_id: string;
   station_id: string;
-  timestamp: string;
   name?: string;
   brand?: string;
   street?: string;
@@ -280,10 +290,14 @@ export interface FavoriteStationResponse {
   place?: string;
   lat?: number;
   lng?: number;
-  current_price_e5?: number;
-  current_price_e10?: number;
-  current_price_diesel?: number;
+  prices: FuelPrices;
   is_open?: boolean;
+  updated_at?: string;
+}
+
+export interface FavoriteStationsResponse {
+  generated_at: string;
+  stations: FavoriteStation[];
 }
 
 export interface PriceHistoryPoint {
@@ -308,10 +322,8 @@ export interface StationMetaResponse {
   place?: string;
   lat?: number;
   lng?: number;
-  timestamp?: string;
-  current_price_e5?: number;
-  current_price_e10?: number;
-  current_price_diesel?: number;
+  generated_at: string;
+  prices: FuelPrices;
   is_open?: boolean;
 }
 
@@ -478,10 +490,8 @@ export interface StationDetailsResponse {
   place?: string;
   lat?: number;
   lng?: number;
-  timestamp?: string;
-  current_price_e5?: number;
-  current_price_e10?: number;
-  current_price_diesel?: number;
+  generated_at: string;
+  prices: FuelPrices;
   is_open?: boolean;
   price_history_24h?: PriceHistoryPoint[];
 }
@@ -756,7 +766,7 @@ class ApiService {
     });
   }
 
-  async getFavoriteStations(): Promise<FavoriteStationResponse[]> {
+  async getFavoriteStations(): Promise<FavoriteStationsResponse> {
     const response = await this.api.get("/api/fuel-prices/favorites");
     return response.data;
   }

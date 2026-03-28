@@ -418,6 +418,8 @@ export const en: TranslationStructure = {
     unknown: "Unknown",
     comingSoon: "More details coming soon...",
     lastUpdated: "Last Updated",
+    lastRefresh: "Last Refresh",
+    pricesUpdatedAt: "Updated at",
     noDataAvailable: "No data available",
     additionalInformation: "Additional Information",
     priceHistory: "Price History",

@@ -32,13 +32,15 @@ function StationDetailsContent({ stationId }: { stationId: string }) {
   const { snackbar, showError, showSuccess, hideSnackbar } = useSnackbar();
 
   // Check if this station is in favorites
-  const { data: favorites } = useFavoriteStations();
+  const { data: favoritesResponse } = useFavoriteStations();
   const removeFavorite = useRemoveFavoriteStation();
 
   // Get station meta
   const { data: stationMeta } = useStationMeta(stationId);
 
-  const isFavorite = favorites.some((f) => f.station_id === stationId);
+  const isFavorite = favoritesResponse.stations.some(
+    (f) => f.station_id === stationId,
+  );
 
   const handleBack = () => {
     router.back();

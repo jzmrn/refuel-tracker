@@ -1,5 +1,5 @@
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { FavoriteStationResponse, GasStationResponse } from "@/lib/api";
+import { FavoriteStation, GasStationResponse } from "@/lib/api";
 import EmptyPanel from "@/components/common/EmptyPanel";
 import StationCard from "./StationCard";
 import { LoadingSpinner } from "../common";
@@ -9,7 +9,7 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import CloseIcon from "@mui/icons-material/Close";
 
 export type SortByType = "e5" | "e10" | "diesel" | "dist";
-type StationType = FavoriteStationResponse | GasStationResponse;
+type StationType = FavoriteStation | GasStationResponse;
 
 interface StationsListProps {
   stations: StationType[];
@@ -98,15 +98,15 @@ export default function StationsList({
 
   // Helper function to get price for a station based on sortBy
   const getPrice = (station: StationType): number | undefined => {
-    if (sortBy === "e5") {
-      return isGasStation(station) ? station.e5 : station.current_price_e5;
-    } else if (sortBy === "e10") {
-      return isGasStation(station) ? station.e10 : station.current_price_e10;
-    } else if (sortBy === "diesel") {
-      return isGasStation(station)
-        ? station.diesel
-        : station.current_price_diesel;
+    if (isGasStation(station)) {
+      if (sortBy === "e5") return station.e5;
+      if (sortBy === "e10") return station.e10;
+      if (sortBy === "diesel") return station.diesel;
+      return undefined;
     }
+    if (sortBy === "e5") return station.prices.e5.value;
+    if (sortBy === "e10") return station.prices.e10.value;
+    if (sortBy === "diesel") return station.prices.diesel.value;
     return undefined;
   };
 

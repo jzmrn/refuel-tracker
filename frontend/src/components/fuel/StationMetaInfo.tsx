@@ -39,6 +39,12 @@ export default function StationMetaInfo({
     });
   };
 
+  const formatTimeShort = (timestamp: string) =>
+    formatDate(new Date(timestamp), {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
   const getFormattedAddress = () => {
     if (!stationData) return null;
     const parts: string[] = [];
@@ -124,39 +130,55 @@ export default function StationMetaInfo({
         <Panel
           title={t.fuelPrices.currentPrices}
           subtitle={
-            stationData.timestamp && (
+            stationData.generated_at && (
               <span className="text-xs text-secondary">
-                {t.fuelPrices.lastUpdated}: {formatTime(stationData.timestamp)}
+                {t.fuelPrices.lastUpdated}:{" "}
+                {formatTime(stationData.generated_at)}
               </span>
             )
           }
         >
           <div className="flex flex-col xxs:flex-row justify-center items-center gap-1.5 sm:gap-2">
             <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
-              <div className="text-2xl sm:text-3xl font-bold text-primary">
-                {renderSvgFuelPrice(stationData.current_price_e5)}
-              </div>
-              <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
+              <div className="text-xs sm:text-sm text-secondary mb-1">
                 {t.fuelPrices.e5}
               </div>
+              <div className="text-2xl sm:text-3xl font-bold text-primary">
+                {renderSvgFuelPrice(stationData.prices.e5.value)}
+              </div>
+              {stationData.prices.e5.timestamp && (
+                <div className="text-xs text-secondary mt-1">
+                  {formatTimeShort(stationData.prices.e5.timestamp)}
+                </div>
+              )}
             </div>
 
             <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
-              <div className="text-2xl sm:text-3xl font-bold text-primary">
-                {renderSvgFuelPrice(stationData.current_price_e10)}
-              </div>
-              <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
+              <div className="text-xs sm:text-sm text-secondary mb-1">
                 {t.fuelPrices.e10}
               </div>
+              <div className="text-2xl sm:text-3xl font-bold text-primary">
+                {renderSvgFuelPrice(stationData.prices.e10.value)}
+              </div>
+              {stationData.prices.e10.timestamp && (
+                <div className="text-xs text-secondary mt-1">
+                  {formatTimeShort(stationData.prices.e10.timestamp)}
+                </div>
+              )}
             </div>
 
             <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
-              <div className="text-2xl sm:text-3xl font-bold text-primary">
-                {renderSvgFuelPrice(stationData.current_price_diesel)}
-              </div>
-              <div className="text-xs sm:text-sm text-secondary mt-1.5 sm:mt-2">
+              <div className="text-xs sm:text-sm text-secondary mb-1">
                 {t.fuelPrices.diesel}
               </div>
+              <div className="text-2xl sm:text-3xl font-bold text-primary">
+                {renderSvgFuelPrice(stationData.prices.diesel.value)}
+              </div>
+              {stationData.prices.diesel.timestamp && (
+                <div className="text-xs text-secondary mt-1">
+                  {formatTimeShort(stationData.prices.diesel.timestamp)}
+                </div>
+              )}
             </div>
           </div>
         </Panel>

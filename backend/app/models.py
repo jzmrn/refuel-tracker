@@ -181,6 +181,28 @@ class RefuelMonthlySummaryResponse(BaseModel):
 
 
 # Fuel Prices Models
+
+
+class FuelPrice(BaseModel):
+    """A single fuel price with the timestamp it was first discovered."""
+
+    value: float | None = None
+    timestamp: datetime | None = Field(
+        None, description="When this price was first observed"
+    )
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
+
+class FuelPrices(BaseModel):
+    """Current prices for all fuel types."""
+
+    e5: FuelPrice = Field(default_factory=FuelPrice)
+    e10: FuelPrice = Field(default_factory=FuelPrice)
+    diesel: FuelPrice = Field(default_factory=FuelPrice)
+
+
 class GasStationSearchRequest(BaseModel):
     """Request model for searching gas stations"""
 
@@ -238,8 +260,8 @@ class FavoriteStationCreate(BaseModel):
     station_id: str = Field(..., description="Station ID to add to favorites")
 
 
-class FavoriteStationResponse(BaseModel):
-    """Response model for favorite stations"""
+class FavoriteStation(BaseModel):
+    """A single favorite station with current prices"""
 
     user_id: str
     station_id: str
@@ -251,11 +273,18 @@ class FavoriteStationResponse(BaseModel):
     place: str | None = None
     lat: float | None = None
     lng: float | None = None
-    timestamp: datetime | None = None
-    current_price_e5: float | None = None
-    current_price_e10: float | None = None
-    current_price_diesel: float | None = None
+    prices: FuelPrices = Field(default_factory=FuelPrices)
     is_open: bool | None = None
+    updated_at: datetime | None = None
+
+
+class FavoriteStationsResponse(BaseModel):
+    """Response model for favorite stations"""
+
+    generated_at: datetime = Field(
+        description="When the backend generated this response"
+    )
+    stations: list[FavoriteStation] = Field(default_factory=list)
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}
@@ -295,10 +324,10 @@ class StationMetaResponse(BaseModel):
     place: str | None = None
     lat: float | None = None
     lng: float | None = None
-    timestamp: datetime | None = None
-    current_price_e5: float | None = None
-    current_price_e10: float | None = None
-    current_price_diesel: float | None = None
+    generated_at: datetime = Field(
+        description="When the backend generated this response"
+    )
+    prices: FuelPrices = Field(default_factory=FuelPrices)
     is_open: bool | None = None
 
     class Config:
@@ -358,10 +387,10 @@ class StationDetailsResponse(BaseModel):
     place: str | None = None
     lat: float | None = None
     lng: float | None = None
-    timestamp: datetime | None = None
-    current_price_e5: float | None = None
-    current_price_e10: float | None = None
-    current_price_diesel: float | None = None
+    generated_at: datetime = Field(
+        description="When the backend generated this response"
+    )
+    prices: FuelPrices = Field(default_factory=FuelPrices)
     is_open: bool | None = None
     price_history_24h: list[PriceHistoryPoint] = Field(
         default_factory=list, description="Price history for the last 24 hours"
