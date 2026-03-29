@@ -64,7 +64,7 @@ daily_aggregates_job = define_asset_job(
     cron_schedule="0 7 * * *",
     job=daily_aggregates_job,
     name="daily_aggregates",
-    description="Compute daily aggregates at 6:00 AM every day for the previous day.",
+    description="Compute daily aggregates at 7:00 AM every day for the previous day.",
 )
 def schedule_daily_aggregates(context):
     """Run aggregation for yesterday's partition."""
@@ -77,7 +77,7 @@ def schedule_daily_aggregates(context):
 
 schedule_cleanup_raw_fuel_data = ScheduleDefinition(
     job=cleanup_raw_fuel_data_job,
-    cron_schedule="0 8 * * *",
+    cron_schedule="0 9 * * *",
     name="cleanup_raw_fuel_data",
     description="Delete raw fuel data older than 7 days (after compression verified).",
 )
@@ -98,16 +98,14 @@ monthly_aggregates_fuel_prices = define_asset_job(
 
 
 @schedule(
-    cron_schedule="0 8 1 * *",
+    cron_schedule="0 8 * * *",
     job=monthly_aggregates_fuel_prices,
     name="monthly_aggregates_fuel_prices",
-    description="Compute monthly aggregates on the 1st of each month for the previous month.",  # noqa: E501
+    description="Compute monthly aggregates daily for the previous day's month.",
 )
 def schedule_monthly_aggregates(context):
-    """Run monthly aggregation for the previous month's partition."""
+    """Run monthly aggregation for yesterday's month partition."""
     scheduled_time = context.scheduled_execution_time
-    # Go back to the previous month's 1st day
-    first_of_current = scheduled_time.replace(day=1)
-    previous_month = (first_of_current - timedelta(days=1)).replace(day=1)
-    partition_key = previous_month.strftime("%Y-%m-%d")
+    yesterday = scheduled_time - timedelta(days=1)
+    partition_key = yesterday.replace(day=1).strftime("%Y-%m-%d")
     return RunRequest(partition_key=partition_key)
