@@ -26,8 +26,8 @@ const StatsFilters: React.FC<StatsFiltersProps> = ({
   const { formatDate } = useLocalization();
 
   const fuelTypeLabels: Record<FuelType, string> = {
-    e5: t.fuelPrices.e5Short,
-    e10: t.fuelPrices.e10Short,
+    e5: t.fuelPrices.e5,
+    e10: t.fuelPrices.e10,
     diesel: t.fuelPrices.diesel,
   };
 

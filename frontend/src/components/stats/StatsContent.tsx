@@ -3,6 +3,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useFuelType } from "@/lib/fuelType";
 import { FuelType } from "@/lib/api";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { StackLayout } from "@/components/common";
 import StatsFilters from "@/components/stats/StatsFilters";
 import StatsAggregateTables from "@/components/stats/StatsAggregateTables";
 import {
@@ -77,7 +78,7 @@ const StatsContent: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <StackLayout>
       <StatsFilters
         selectedMonth={selectedMonth}
         onMonthChange={handleMonthChange}
@@ -94,7 +95,7 @@ const StatsContent: React.FC = () => {
           />
         </Suspense>
       )}
-    </div>
+    </StackLayout>
   );
 };
 

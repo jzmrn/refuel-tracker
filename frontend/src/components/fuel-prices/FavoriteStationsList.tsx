@@ -1,6 +1,7 @@
 import { useFavoriteStations } from "@/lib/hooks/useFuelPrices";
 import { useTranslation, useLocalization } from "@/lib/i18n/LanguageContext";
 import StationsList, { SortByType } from "./StationsList";
+import { StackLayout } from "@/components/common";
 
 interface FavoriteStationsListProps {
   isError?: boolean;
@@ -40,7 +41,7 @@ export default function FavoriteStationsList({
     : [];
 
   return (
-    <div className="space-y-6">
+    <StackLayout>
       <StationsList
         stations={favorites}
         loading={false}
@@ -70,6 +71,6 @@ export default function FavoriteStationsList({
           </div>
         ))}
       </div>
-    </div>
+    </StackLayout>
   );
 }

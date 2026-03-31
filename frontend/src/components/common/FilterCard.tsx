@@ -169,7 +169,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
           initialCollapsed ? "max-h-0 opacity-0" : "mt-4"
         }`}
       >
-        <div className="space-y-4">{children}</div>
+        <div className="space-y-3">{children}</div>
       </div>
     </StandardCard>
   );

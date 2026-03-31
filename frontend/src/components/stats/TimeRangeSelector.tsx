@@ -21,7 +21,7 @@ export default function TimeRangeSelector({
   };
 
   return (
-    <div className={`grid grid-cols-2 gap-2 ${className}`}>
+    <div className={`grid grid-cols-1 xs:grid-cols-2 gap-2 ${className}`}>
       {options.map((months) => (
         <button
           key={months}

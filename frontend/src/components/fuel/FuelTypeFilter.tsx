@@ -10,7 +10,6 @@ interface FuelTypeFilterProps {
   onFuelTypeChange: (fuelType: FuelType) => void;
   availableFuelTypes?: FuelType[];
   className?: string;
-  shortLabels?: boolean;
 }
 
 const FuelTypeFilter: React.FC<FuelTypeFilterProps> = ({
@@ -18,13 +17,12 @@ const FuelTypeFilter: React.FC<FuelTypeFilterProps> = ({
   onFuelTypeChange,
   availableFuelTypes,
   className,
-  shortLabels = true,
 }) => {
   const { t } = useTranslation();
 
   const fuelTypeLabels: Record<FuelType, string> = {
-    e5: shortLabels ? t.fuelPrices.e5Short : t.fuelPrices.e5,
-    e10: shortLabels ? t.fuelPrices.e10Short : t.fuelPrices.e10,
+    e5: t.fuelPrices.e5,
+    e10: t.fuelPrices.e10,
     diesel: t.fuelPrices.diesel,
   };
 

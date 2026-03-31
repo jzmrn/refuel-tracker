@@ -2,7 +2,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { FavoriteStation, GasStationResponse } from "@/lib/api";
 import EmptyPanel from "@/components/common/EmptyPanel";
 import StationCard from "./StationCard";
-import { LoadingSpinner } from "../common";
+import { LoadingSpinner, StackLayout } from "../common";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
@@ -167,10 +167,10 @@ export default function StationsList({
   const sortedClosedStations = sortStations(closedStations);
 
   return (
-    <div className="space-y-6">
+    <StackLayout>
       {/* Open Stations */}
       {sortedOpenStations.length > 0 && (
-        <div className="space-y-4">
+        <StackLayout>
           <h3 className="heading-3 flex items-center gap-2">
             <CheckCircleIcon className="icon text-green-600 dark:text-green-400" />
             {t.fuelPrices.open} ({sortedOpenStations.length})
@@ -199,12 +199,12 @@ export default function StationsList({
               />
             );
           })}
-        </div>
+        </StackLayout>
       )}
 
       {/* Closed Stations */}
       {sortedClosedStations.length > 0 && (
-        <div className="space-y-4">
+        <StackLayout>
           <h3 className="heading-3 flex items-center gap-2">
             <CancelIcon className="icon text-red-600 dark:text-red-400" />
             {t.fuelPrices.closed} ({sortedClosedStations.length})
@@ -232,12 +232,12 @@ export default function StationsList({
               />
             );
           })}
-        </div>
+        </StackLayout>
       )}
 
       {/* Unavailable Stations */}
       {unavailableStations.length > 0 && (
-        <div className="space-y-4">
+        <StackLayout>
           <h3 className="heading-3 flex items-center gap-2">
             <HelpOutlineIcon className="icon text-gray-600 dark:text-gray-400" />
             {t.fuelPrices.statusNotAvailable} ({unavailableStations.length})
@@ -265,8 +265,8 @@ export default function StationsList({
               />
             );
           })}
-        </div>
+        </StackLayout>
       )}
-    </div>
+    </StackLayout>
   );
 }

@@ -29,8 +29,8 @@ const TimeRangeFuelTypeFilter: React.FC<TimeRangeFuelTypeFilterProps> = ({
   const { t } = useTranslation();
 
   const fuelTypeLabels: Record<FuelType, string> = {
-    e5: t.fuelPrices.e5Short,
-    e10: t.fuelPrices.e10Short,
+    e5: t.fuelPrices.e5,
+    e10: t.fuelPrices.e10,
     diesel: t.fuelPrices.diesel,
   };
 

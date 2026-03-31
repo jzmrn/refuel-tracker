@@ -14,6 +14,7 @@ export { default as Panel } from "./Panel";
 
 // Export new centralized components
 export { GridLayout } from "./GridLayout";
+export { StackLayout } from "./StackLayout";
 export { StandardCard } from "./StandardCard";
 export { StandardForm } from "./StandardForm";
 export { FilterCard, FilterRow, FilterPanel } from "./FilterCard";

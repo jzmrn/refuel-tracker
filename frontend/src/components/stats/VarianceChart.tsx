@@ -7,14 +7,12 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 import { useLocalization } from "@/lib/i18n/LanguageContext";
 import {
   axisConfig,
   useGridConfig,
   useAxisColor,
-  renderLegendText,
   useChartKey,
 } from "@/lib/chartConfig";
 import { DetailAggregate, buildColorMap, ChartTooltip } from "./chartUtils";
@@ -90,7 +88,6 @@ export default function VarianceChart({ data }: VarianceChartProps) {
             />
           }
         />
-        <Legend formatter={renderLegendText} />
         {entities.map((entity) => (
           <Line
             key={entity}

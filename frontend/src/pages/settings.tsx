@@ -4,7 +4,7 @@ import { useUser } from "@/lib/auth/UserContext";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import ThemeSelector from "@/components/common/ThemeSelector";
 import SettingCard from "@/components/common/SettingCard";
-import { PageContainer, PageHeader } from "@/components/common";
+import { PageContainer, PageHeader, StackLayout } from "@/components/common";
 
 export default function Settings() {
   const { t } = useTranslation();
@@ -15,7 +15,7 @@ export default function Settings() {
       <PageHeader title={t.settings.title} subtitle={t.settings.description} />
 
       {/* Settings Sections */}
-      <div className="space-y-6">
+      <StackLayout>
         {/* Account Settings */}
         {user && (
           <SettingCard
@@ -47,7 +47,7 @@ export default function Settings() {
         >
           <ThemeSelector />
         </SettingCard>
-      </div>
+      </StackLayout>
     </PageContainer>
   );
 }

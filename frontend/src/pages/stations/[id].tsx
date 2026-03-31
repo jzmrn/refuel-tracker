@@ -15,7 +15,12 @@ import StationMetaInfo from "@/components/fuel/StationMetaInfo";
 import StationPriceChart from "@/components/fuel/StationPriceChart";
 import StationDailyStatsChart from "@/components/fuel/StationDailyStatsChart";
 import StationPriceChangesChart from "@/components/fuel/StationPriceChangesChart";
-import { LoadingSpinner, PageContainer, PageHeader } from "@/components/common";
+import {
+  LoadingSpinner,
+  PageContainer,
+  PageHeader,
+  StackLayout,
+} from "@/components/common";
 
 function StationDetailsContent({ stationId }: { stationId: string }) {
   const router = useRouter();
@@ -77,7 +82,7 @@ function StationDetailsContent({ stationId }: { stationId: string }) {
   const allFuelTypes: FuelType[] = ["e5", "e10", "diesel"];
 
   return (
-    <>
+    <StackLayout>
       {/* Station Meta Info */}
       <StationMetaInfo
         stationId={stationId}
@@ -120,7 +125,7 @@ function StationDetailsContent({ stationId }: { stationId: string }) {
           onClose={hideSnackbar}
         />
       )}
-    </>
+    </StackLayout>
   );
 }
 
@@ -138,15 +143,13 @@ export default function StationDetails() {
     <PageContainer>
       <PageHeader title={t.fuelPrices.stationDetails} onBack={handleBack} />
 
-      <div className="max-w-3xl mx-auto">
-        <Suspense fallback={<LoadingSpinner />}>
-          {stationId ? (
-            <StationDetailsContent stationId={stationId} />
-          ) : (
-            <LoadingSpinner />
-          )}
-        </Suspense>
-      </div>
+      <Suspense fallback={<LoadingSpinner />}>
+        {stationId ? (
+          <StationDetailsContent stationId={stationId} />
+        ) : (
+          <LoadingSpinner />
+        )}
+      </Suspense>
     </PageContainer>
   );
 }

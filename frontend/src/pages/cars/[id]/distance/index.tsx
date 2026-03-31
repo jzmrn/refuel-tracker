@@ -4,7 +4,12 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useCar } from "@/lib/hooks/useCars";
 import KilometerStatsContent from "@/components/cars/KilometerStatsContent";
 import PeriodFilter from "@/components/common/PeriodFilter";
-import { LoadingSpinner, DynamicPage, PageHeader } from "@/components/common";
+import {
+  LoadingSpinner,
+  DynamicPage,
+  PageHeader,
+  StackLayout,
+} from "@/components/common";
 
 type FilterType = "6months" | "all";
 
@@ -18,7 +23,6 @@ function KilometerStatsInner({ carId }: { carId: string }) {
     {
       value: "6months" as const,
       label: t.kilometers.lastSixMonths,
-      shortLabel: "6M",
     },
     { value: "all" as const, label: t.common.all },
   ];
@@ -56,7 +60,7 @@ function KilometerStatsInner({ carId }: { carId: string }) {
         onBack={handleBack}
       />
 
-      <div className="space-y-6">
+      <StackLayout>
         {/* Filter Options */}
         <PeriodFilter
           selectedPeriod={activeFilter}
@@ -71,7 +75,7 @@ function KilometerStatsInner({ carId }: { carId: string }) {
             aggregation={activeFilter === "6months" ? "monthly" : "yearly"}
           />
         </Suspense>
-      </div>
+      </StackLayout>
     </>
   );
 }

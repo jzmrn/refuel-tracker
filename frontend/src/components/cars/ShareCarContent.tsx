@@ -5,6 +5,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import AddIcon from "@mui/icons-material/Add";
 import CircularProgress from "@mui/material/CircularProgress";
 import Panel from "@/components/common/Panel";
+import { StackLayout } from "@/components/common";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useShareCar } from "@/lib/hooks/useCars";
 import { UserSearchResult, apiService } from "@/lib/api";
@@ -101,7 +102,7 @@ export default function ShareCarContent({
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <StackLayout className="max-w-2xl mx-auto">
       {/* Search Section */}
       <Panel title={t.cars.searchUsers}>
         <p className="text-secondary text-sm mb-4">
@@ -182,7 +183,7 @@ export default function ShareCarContent({
         onRemoveUser={handleRemoveSelectedUser}
         onSubmit={handleSubmit}
       />
-    </div>
+    </StackLayout>
   );
 }
 

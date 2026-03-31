@@ -93,3 +93,26 @@ export function ChartTooltip({
     </div>
   );
 }
+
+interface ChartLegendProps {
+  data: DetailAggregate[];
+}
+
+export function ChartLegend({ data }: ChartLegendProps) {
+  const entities = Array.from(new Set(data.map((d) => d.entity))).sort();
+  const colorMap = buildColorMap(entities);
+
+  return (
+    <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 px-3 py-2">
+      {entities.map((entity) => (
+        <div key={entity} className="flex items-center gap-1.5">
+          <span
+            className="inline-block w-3 h-3 rounded-full shrink-0"
+            style={{ backgroundColor: colorMap.get(entity) }}
+          />
+          <span className="text-sm text-secondary">{entity}</span>
+        </div>
+      ))}
+    </div>
+  );
+}

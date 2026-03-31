@@ -17,7 +17,10 @@ export default function PageContainer({
 }: PageContainerProps) {
   return (
     <div
-      className={clsx(maxWidthClasses[maxWidth], "mx-auto px-4 py-4 md:py-8")}
+      className={clsx(
+        maxWidthClasses[maxWidth],
+        "mx-auto px-2 md:px-4 py-4 md:py-8",
+      )}
     >
       {children}
     </div>

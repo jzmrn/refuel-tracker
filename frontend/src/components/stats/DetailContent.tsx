@@ -8,17 +8,17 @@ import React, {
 import { FuelType } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useFuelType } from "@/lib/fuelType";
-import { StandardCard } from "@/components/common";
+import { StandardCard, StackLayout } from "@/components/common";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import TimeRangeFuelTypeFilter from "@/components/fuel/TimeRangeFuelTypeFilter";
 import AvgPriceChart from "@/components/stats/AvgPriceChart";
 import VarianceChart from "@/components/stats/VarianceChart";
 import PriceActivityChart from "@/components/stats/PriceActivityChart";
-import { DetailAggregate } from "@/components/stats/chartUtils";
+import { DetailAggregate, ChartLegend } from "@/components/stats/chartUtils";
 import PlaceIcon from "@mui/icons-material/Place";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
-
+import { Legend } from "recharts";
 interface ChartLabels {
   avgPrice: string;
   variance: string;
@@ -68,6 +68,10 @@ function DetailCharts<T>({
 
   return (
     <>
+      <StandardCard>
+        <ChartLegend data={detailData} />
+      </StandardCard>
+
       <StandardCard
         title={chartLabels.avgPrice}
         icon={
@@ -133,7 +137,7 @@ export default function DetailContent<T>({
   };
 
   return (
-    <div className="space-y-6">
+    <StackLayout>
       <TimeRangeFuelTypeFilter
         selectedFuelType={selectedFuelType}
         onFuelTypeChange={handleFuelTypeChange}
@@ -150,6 +154,6 @@ export default function DetailContent<T>({
           selectedMonths={selectedMonths}
         />
       </Suspense>
-    </div>
+    </StackLayout>
   );
 }

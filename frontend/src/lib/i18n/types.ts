@@ -364,9 +364,7 @@ export interface TranslationStructure {
     search: string;
     useMyLocation: string;
     e5: string;
-    e5Short: string;
     e10: string;
-    e10Short: string;
     diesel: string;
     price: string;
     distance: string;

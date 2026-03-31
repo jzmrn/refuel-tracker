@@ -6,7 +6,7 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ScienceIcon from "@mui/icons-material/Science";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import NumbersIcon from "@mui/icons-material/Numbers";
-import { EmptyPanel } from "../common";
+import { EmptyPanel, StackLayout } from "../common";
 import { GridLayout } from "../common/GridLayout";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
 import Panel from "../common/Panel";
@@ -52,7 +52,7 @@ export default function RefuelStats({
   const formatLiters = (liters: number) => liters.toFixed(2);
 
   return (
-    <div className="space-y-6">
+    <StackLayout>
       {/* Summary Statistics Panel */}
       <Panel title={t.common.statistics}>
         <GridLayout variant="stats">
@@ -106,6 +106,6 @@ export default function RefuelStats({
       <RefuelPriceChart priceData={statistics.price_trends} />
       <RefuelDistanceChart refuelData={refuels} fuelTankSize={fuelTankSize} />
       <RefuelConsumptionChart refuelData={refuels} />
-    </div>
+    </StackLayout>
   );
 }

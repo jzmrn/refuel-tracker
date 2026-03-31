@@ -7,6 +7,39 @@ import { useStationMeta } from "@/lib/hooks/useFuelPrices";
 import Panel from "@/components/common/Panel";
 import { renderSvgFuelPrice } from "@/lib/formatPrice";
 
+function PriceCard({
+  label,
+  value,
+  timestamp,
+}: {
+  label: string;
+  value?: number | null;
+  timestamp?: string;
+}) {
+  const { formatDate } = useLocalization();
+
+  const formatTimeShort = (timestamp: string) =>
+    formatDate(new Date(timestamp), {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  return (
+    <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
+      <div className="text-xs sm:text-sm text-secondary mb-1">{label}</div>
+      <div className="text-2xl sm:text-3xl font-bold text-primary">
+        {renderSvgFuelPrice(value, { showCurrency: false })}
+        <span className="text-sm font-medium text-secondary ml-1">€</span>
+      </div>
+      {timestamp && (
+        <div className="text-xs text-secondary mt-1">
+          {formatTimeShort(timestamp)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface StationMetaInfoProps {
   stationId: string;
   isFavorite: boolean;
@@ -38,12 +71,6 @@ export default function StationMetaInfo({
       minute: "2-digit",
     });
   };
-
-  const formatTimeShort = (timestamp: string) =>
-    formatDate(new Date(timestamp), {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
 
   const getFormattedAddress = () => {
     if (!stationData) return null;
@@ -139,47 +166,21 @@ export default function StationMetaInfo({
           }
         >
           <div className="flex flex-col xxs:flex-row justify-center items-center gap-1.5 sm:gap-2">
-            <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
-              <div className="text-xs sm:text-sm text-secondary mb-1">
-                {t.fuelPrices.e5}
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold text-primary">
-                {renderSvgFuelPrice(stationData.prices.e5.value)}
-              </div>
-              {stationData.prices.e5.timestamp && (
-                <div className="text-xs text-secondary mt-1">
-                  {formatTimeShort(stationData.prices.e5.timestamp)}
-                </div>
-              )}
-            </div>
-
-            <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
-              <div className="text-xs sm:text-sm text-secondary mb-1">
-                {t.fuelPrices.e10}
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold text-primary">
-                {renderSvgFuelPrice(stationData.prices.e10.value)}
-              </div>
-              {stationData.prices.e10.timestamp && (
-                <div className="text-xs text-secondary mt-1">
-                  {formatTimeShort(stationData.prices.e10.timestamp)}
-                </div>
-              )}
-            </div>
-
-            <div className="text-center p-2 sm:p-3 rounded-lg bg-gray-50 dark:bg-gray-800 xs:flex-1 max-w-[140px] w-full xs:w-auto">
-              <div className="text-xs sm:text-sm text-secondary mb-1">
-                {t.fuelPrices.diesel}
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold text-primary">
-                {renderSvgFuelPrice(stationData.prices.diesel.value)}
-              </div>
-              {stationData.prices.diesel.timestamp && (
-                <div className="text-xs text-secondary mt-1">
-                  {formatTimeShort(stationData.prices.diesel.timestamp)}
-                </div>
-              )}
-            </div>
+            <PriceCard
+              label={t.fuelPrices.e5}
+              value={stationData.prices.e5.value}
+              timestamp={stationData.prices.e5.timestamp}
+            />
+            <PriceCard
+              label={t.fuelPrices.e10}
+              value={stationData.prices.e10.value}
+              timestamp={stationData.prices.e10.timestamp}
+            />
+            <PriceCard
+              label={t.fuelPrices.diesel}
+              value={stationData.prices.diesel.value}
+              timestamp={stationData.prices.diesel.timestamp}
+            />
           </div>
         </Panel>
       </div>

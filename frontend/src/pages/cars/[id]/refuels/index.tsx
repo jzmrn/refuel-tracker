@@ -7,7 +7,12 @@ import {
   useRefuelMetrics,
   useRefuelStatistics,
 } from "@/lib/hooks/useCars";
-import { LoadingSpinner, DynamicPage, PageHeader } from "@/components/common";
+import {
+  LoadingSpinner,
+  DynamicPage,
+  PageHeader,
+  StackLayout,
+} from "@/components/common";
 import PeriodFilter from "@/components/common/PeriodFilter";
 
 type FilterType = "6months" | "year";
@@ -23,9 +28,8 @@ function StatsContent({ carId }: { carId: string }) {
     {
       value: "6months" as const,
       label: t.navigation.lastSixMonths,
-      shortLabel: "6M",
     },
-    { value: "year" as const, label: t.navigation.lastYear, shortLabel: "1Y" },
+    { value: "year" as const, label: t.navigation.lastYear },
   ];
 
   // Calculate date filters
@@ -62,7 +66,7 @@ function StatsContent({ carId }: { carId: string }) {
         onBack={handleBack}
       />
 
-      <div className="space-y-6">
+      <StackLayout>
         {/* Filter Options */}
         <PeriodFilter
           selectedPeriod={activeFilter}
@@ -78,7 +82,7 @@ function StatsContent({ carId }: { carId: string }) {
             fuelTankSize={car?.fuel_tank_size}
           />
         </Suspense>
-      </div>
+      </StackLayout>
     </>
   );
 }

@@ -9,7 +9,7 @@ import {
   useRefuelMetrics,
   useKilometerEntries,
 } from "@/lib/hooks/useCars";
-import { EmptyPanel } from "@/components/common";
+import { EmptyPanel, StackLayout } from "@/components/common";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 interface CarDetailsContentProps {
@@ -59,7 +59,7 @@ const CarDetailsContent: React.FC<CarDetailsContentProps> = ({
   });
 
   return (
-    <div className="space-y-6">
+    <StackLayout>
       <CarDetailsPanel
         car={car}
         onEdit={onEditCar}
@@ -89,7 +89,7 @@ const CarDetailsContent: React.FC<CarDetailsContentProps> = ({
           isRemoving={isRevoking}
         />
       )}
-    </div>
+    </StackLayout>
   );
 };
 

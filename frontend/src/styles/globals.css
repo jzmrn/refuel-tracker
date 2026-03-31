@@ -56,11 +56,11 @@
 
   /* Layout Components */
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-3 dark:bg-gray-800 dark:border-gray-700;
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 dark:bg-gray-800 dark:border-gray-700;
   }
 
   .panel {
-    @apply bg-white rounded-lg shadow border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700;
+    @apply bg-white rounded-lg shadow border border-gray-200 p-4 md:p-6 dark:bg-gray-800 dark:border-gray-700;
   }
 
   .modal {
@@ -70,19 +70,6 @@
   /* Modal Overlay */
   .modal-overlay {
     @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50;
-  }
-
-  /* Layout Containers */
-  .page-container {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6;
-  }
-
-  .content-section {
-    @apply mb-8;
-  }
-
-  .section-header {
-    @apply mb-6;
   }
 
   /* Form Components */
@@ -156,76 +143,6 @@
 
   .text-muted {
     @apply text-gray-500 dark:text-gray-400;
-  }
-
-  /* Status Colors */
-  .status-blue {
-    @apply bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400;
-  }
-
-  .status-green {
-    @apply bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400;
-  }
-
-  .status-yellow {
-    @apply bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400;
-  }
-
-  .status-red {
-    @apply bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400;
-  }
-
-  .status-purple {
-    @apply bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400;
-  }
-
-  .status-indigo {
-    @apply bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400;
-  }
-
-  .status-orange {
-    @apply bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400;
-  }
-
-  .status-gray {
-    @apply bg-gray-50 text-gray-600 dark:bg-gray-700 dark:text-gray-300;
-  }
-
-  /* Statistic Cards */
-  .stat-card {
-    @apply p-4 rounded-lg;
-  }
-
-  .stat-card-blue {
-    @apply stat-card status-blue;
-  }
-
-  .stat-card-green {
-    @apply stat-card status-green;
-  }
-
-  .stat-card-yellow {
-    @apply stat-card status-yellow;
-  }
-
-  .stat-card-red {
-    @apply stat-card status-red;
-  }
-
-  .stat-card-purple {
-    @apply stat-card status-purple;
-  }
-
-  .stat-card-indigo {
-    @apply stat-card status-indigo;
-  }
-
-  .stat-card-orange {
-    @apply stat-card status-orange;
-  }
-
-  .stat-card-gray {
-    @apply stat-card status-gray;
   }
 
   /* Icon Backgrounds */
@@ -309,202 +226,11 @@
     gap: 1rem;
   }
 
-  /* Chart Container */
-  .chart-container {
-    @apply bg-white dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600;
-  }
-
-  /* Loading State */
-  .loading-container {
-    @apply flex items-center justify-center py-8;
-  }
-
-  .loading-spinner {
-    @apply animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600;
-  }
-
-  .loading-text {
-    @apply ml-2 text-gray-600 dark:text-gray-300;
-  }
-
-  /* Consolidated Loading Component */
-  .loading-state {
-    @apply flex items-center justify-center py-8;
-  }
-
-  .loading-state .spinner {
-    @apply animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600;
-  }
-
-  .loading-state .text {
-    @apply ml-2 text-secondary;
-  }
-
   /* Empty state styling */
   .empty-state {
     @apply bg-gray-50 p-8 rounded-lg text-center text-gray-500 dark:bg-gray-800 dark:text-gray-400;
   }
 
-  /* Tab Navigation Styles */
-  .tab-container {
-    @apply mb-8 hidden lg:block;
-  }
-
-  .tab-border {
-    @apply border-b border-gray-200 dark:border-gray-700;
-  }
-
-  .tab-nav {
-    @apply -mb-px flex space-x-8;
-  }
-
-  .tab-button {
-    @apply whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm transition-all duration-200 rounded-t-lg flex items-center gap-2;
-  }
-
-  .tab-button-active {
-    @apply border-blue-500 text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20;
-  }
-
-  .tab-button-inactive {
-    @apply border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600;
-  }
-
-  .tab-icon {
-    @apply text-lg;
-  }
-
-  /* Filter Section Styles */
-  .filter-container {
-    @apply mb-6 panel;
-  }
-
-  .filter-title {
-    @apply heading-4 mb-3;
-  }
-
-  /* Remove margin when filter-title is in a flex container for proper vertical centering */
-  .flex .filter-title {
-    @apply mb-0;
-  }
-
-  .filter-buttons {
-    @apply flex flex-wrap gap-2;
-  }
-
-  .filter-button {
-    @apply px-3 py-2 text-sm rounded transition-colors font-medium;
-  }
-
-  .filter-button-primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600;
-  }
-
-  .filter-button-success {
-    @apply bg-green-600 text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600;
-  }
-
-  .filter-button-accent {
-    @apply bg-purple-600 text-white hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600;
-  }
-
-  /* Grouped Items / Card List Styles */
-  .group-card {
-    @apply border border-gray-200 rounded-lg overflow-hidden dark:border-gray-700;
-  }
-
-  .group-header {
-    @apply bg-white px-4 py-3 border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700;
-  }
-
-  .group-badge {
-    @apply inline-block px-2 py-1 rounded-full text-xs font-medium;
-  }
-
-  .group-badge-blue {
-    @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200;
-  }
-
-  .group-badge-green {
-    @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
-  }
-
-  .group-badge-purple {
-    @apply bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200;
-  }
-
-  .group-badge-yellow {
-    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200;
-  }
-
-  .group-badge-red {
-    @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
-  }
-
-  .group-badge-indigo {
-    @apply bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200;
-  }
-
-  .group-badge-pink {
-    @apply bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200;
-  }
-
-  .group-badge-gray {
-    @apply bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200;
-  }
-
-  .list-item {
-    @apply p-4 bg-white hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:hover:bg-gray-700;
-  }
-
-  .list-divider {
-    @apply divide-y divide-gray-200 dark:divide-gray-700;
-  }
-
-  .status-badge-ongoing {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
-  }
-
-  .notes-box {
-    @apply text-sm bg-gray-50 p-2 rounded border border-gray-200 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200;
-  }
-
-  /* Status Message Styles */
-  .status-message-green {
-    @apply bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800;
-  }
-
-  .status-message-yellow {
-    @apply bg-yellow-50 border border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800;
-  }
-
-  /* Error State */
-  .error-container {
-    @apply p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md;
-  }
-
-  .error-text {
-    @apply text-red-600 dark:text-red-400 text-sm;
-  }
-
-  /* Mobile-specific improvements */
-  .mobile-tap-highlight {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* Improved touch targets for mobile */
-  .touch-target {
-    @apply min-h-[44px] min-w-[44px];
-  }
-
-  /* Hover and Focus States */
-  .hover-bg {
-    @apply hover:bg-gray-50 dark:hover:bg-gray-700;
-  }
-
-  .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
-  }
 }
 
 @layer utilities {
@@ -594,19 +320,6 @@
   animation: progress-bar 5s linear forwards;
 }
 
-/* Calculation box for forms */
-.calculation-box {
-  @apply bg-blue-50 dark:bg-blue-900/30 p-3 rounded-md border border-blue-200 dark:border-blue-800;
-}
-
-.calculation-text {
-  @apply text-sm text-blue-800 dark:text-blue-200;
-}
-
-.calculation-highlight {
-  @apply font-semibold text-blue-900 dark:text-blue-100;
-}
-
 /* Commonly Used SVG Icon Styles */
 .icon-sm {
   @apply w-4 h-4;
@@ -622,31 +335,4 @@
 
 .icon-xl {
   @apply w-12 h-12;
-}
-
-/* Status Indicators */
-.status-dot {
-  @apply inline-block w-2 h-2 rounded-full;
-}
-
-.status-dot-green {
-  @apply status-dot bg-green-500;
-}
-
-.status-dot-yellow {
-  @apply status-dot bg-yellow-500;
-}
-
-.status-dot-red {
-  @apply status-dot bg-red-500;
-}
-
-/* Form field suggestions dropdown */
-.suggestions-dropdown {
-  @apply absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-40 overflow-y-auto;
-}
-
-/* Form label variants */
-.label-compact {
-  @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
 }

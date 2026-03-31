@@ -72,7 +72,6 @@ export default function FuelPrices() {
         selectedFuelType={sortBy}
         onFuelTypeChange={handleSortChange}
         className="mb-6"
-        shortLabels={false}
       />
 
       {/* Favorites List */}

@@ -26,7 +26,7 @@ export default function PeriodFilter<T extends string>({
   const { t } = useTranslation();
 
   const selectedOption = options.find((o) => o.value === selectedPeriod);
-  const summary = [selectedOption?.shortLabel ?? selectedOption?.label ?? ""];
+  const summary = [selectedOption?.shortLabel ?? selectedOption?.label ?? "-"];
 
   return (
     <FilterPanel

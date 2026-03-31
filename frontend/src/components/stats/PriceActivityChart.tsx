@@ -7,13 +7,11 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 import {
   axisConfig,
   useGridConfig,
   useAxisColor,
-  renderLegendText,
   useChartKey,
 } from "@/lib/chartConfig";
 import { DetailAggregate, buildColorMap, ChartTooltip } from "./chartUtils";
@@ -87,7 +85,6 @@ export default function PriceActivityChart({ data }: PriceActivityChartProps) {
             />
           }
         />
-        <Legend formatter={renderLegendText} />
         {entities.map((entity) => (
           <Line
             key={entity}
