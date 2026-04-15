@@ -37,10 +37,7 @@ export default function Dashboard() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t.navigation.dashboard}
-        subtitle={t.dashboard.welcome}
-      />
+      <PageHeader title={t.navigation.dashboard} />
 
       {/* Getting Started */}
       <div className="mb-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 p-6">

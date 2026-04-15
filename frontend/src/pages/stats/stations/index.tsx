@@ -12,7 +12,6 @@ export default function StationsPage() {
     <PageContainer>
       <PageHeader
         title={t.statistics.stationsDetails}
-        subtitle={t.statistics.stationsDetailsDescription}
         onBack={() => router.push("/stats")}
         backLabel={t.statistics.back}
       />

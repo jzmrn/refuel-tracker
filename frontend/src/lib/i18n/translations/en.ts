@@ -231,7 +231,6 @@ export const en: TranslationStructure = {
   // Settings
   settings: {
     title: "Settings",
-    description: "Customize your preferences and app appearance",
     language: {
       title: "Language",
       description: "Choose your preferred language",
@@ -247,7 +246,6 @@ export const en: TranslationStructure = {
 
   // Additional common phrases
   dashboard: {
-    welcome: "Welcome to Refuel Tracker",
     recentActivity: "Recent Activity",
     quickStats: "Quick Statistics",
     gettingStartedTitle: "Getting Started",
@@ -262,9 +260,7 @@ export const en: TranslationStructure = {
 
   cars: {
     title: "Cars",
-    description: "Manage your vehicles and track fuel consumption",
     addCar: "Add Car",
-    myCars: "My Cars",
     sharedAccess: "Shared Access",
     addNewCar: "Add New Car",
     editCar: "Edit Car",
@@ -356,7 +352,6 @@ export const en: TranslationStructure = {
     searchStations: "Search Stations",
     favorites: "Favorites",
     searchForStations: "Search for Gas Stations",
-    searchDescription: "Find gas stations near you and compare prices",
     latitude: "Latitude",
     longitude: "Longitude",
     radius: "Radius",
@@ -380,7 +375,6 @@ export const en: TranslationStructure = {
     open: "Open",
     closed: "Closed",
     statusNotAvailable: "Status Not Available",
-    myFavorites: "My Favorite Stations",
     noFavorites: "No favorite stations yet",
     addStationsToFavorites:
       "Search and add stations to your favorites to track their prices",
@@ -436,7 +430,6 @@ export const en: TranslationStructure = {
 
   statistics: {
     title: "Statistics",
-    description: "Monthly fuel price statistics by brand, place, and station.",
     filters: "Filters",
     month: "Month",
     selectFuelType: "Fuel Type",
@@ -453,7 +446,6 @@ export const en: TranslationStructure = {
     noDataAvailable: "No data available for this selection.",
     noMonthsAvailable: "No statistics data available yet.",
     placesDetails: "Place Details",
-    placesDetailsDescription: "Compare fuel prices across places over time.",
     timeRange: "Time Range",
     last3Months: "Last 3 Months",
     lastYear: "Last Year",
@@ -461,13 +453,10 @@ export const en: TranslationStructure = {
     priceVarianceByPlace: "Price Variance",
     priceActivityByPlace: "Price Changes by Station and Day",
     brandsDetails: "Brand Details",
-    brandsDetailsDescription: "Compare fuel prices across brands over time.",
     avgPriceByBrand: "Average Price",
     priceVarianceByBrand: "Price Variance",
     priceActivityByBrand: "Price Changes by Station and Day",
     stationsDetails: "Station Details",
-    stationsDetailsDescription:
-      "Compare fuel prices across stations over time.",
     avgPriceByStation: "Average Price",
     priceVarianceByStation: "Price Variance",
     priceActivityByStation: "Price Changes per Day",

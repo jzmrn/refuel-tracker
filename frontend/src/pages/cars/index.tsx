@@ -7,7 +7,6 @@ import {
   LoadingSpinner,
   PageContainer,
   PageHeader,
-  ActionBar,
   IconButton,
 } from "@/components/common";
 import { useSnackbar } from "@/lib/useSnackbar";
@@ -36,26 +35,20 @@ export default function RefuelsIndex() {
 
   return (
     <PageContainer>
-      <PageHeader title={t.cars.title} subtitle={t.cars.description} />
+      <PageHeader
+        title={t.cars.title}
+        actions={
+          <IconButton
+            onClick={handleAddCar}
+            icon={<AddIcon className="icon text-gray-600 dark:text-gray-400" />}
+            ariaLabel={t.cars.addCar}
+          />
+        }
+      />
 
-      <div>
-        <ActionBar
-          title={t.cars.myCars}
-          actions={
-            <IconButton
-              onClick={handleAddCar}
-              icon={
-                <AddIcon className="icon text-gray-600 dark:text-gray-400" />
-              }
-              ariaLabel={t.cars.addCar}
-            />
-          }
-        />
-
-        <Suspense fallback={<LoadingSpinner />}>
-          <CarsContent onCarClick={handleCarClick} />
-        </Suspense>
-      </div>
+      <Suspense fallback={<LoadingSpinner />}>
+        <CarsContent onCarClick={handleCarClick} />
+      </Suspense>
 
       {/* Snackbar */}
       {snackbar.isVisible && (

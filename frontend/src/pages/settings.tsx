@@ -12,7 +12,7 @@ export default function Settings() {
 
   return (
     <PageContainer maxWidth="4xl">
-      <PageHeader title={t.settings.title} subtitle={t.settings.description} />
+      <PageHeader title={t.settings.title} />
 
       {/* Settings Sections */}
       <StackLayout>

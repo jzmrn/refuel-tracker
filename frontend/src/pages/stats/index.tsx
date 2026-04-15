@@ -8,10 +8,7 @@ export default function StatsPage() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t.statistics.title}
-        subtitle={t.statistics.description}
-      />
+      <PageHeader title={t.statistics.title} />
 
       <Suspense fallback={<LoadingSpinner />}>
         <StatsContent />

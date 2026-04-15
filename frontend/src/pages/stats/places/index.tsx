@@ -12,7 +12,6 @@ export default function PlacesPage() {
     <PageContainer>
       <PageHeader
         title={t.statistics.placesDetails}
-        subtitle={t.statistics.placesDetailsDescription}
         onBack={() => router.push("/stats")}
         backLabel={t.statistics.back}
       />

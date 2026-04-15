@@ -6,6 +6,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
+  actions?: React.ReactNode;
   onBack?: () => void;
   backLabel?: string;
 }
@@ -13,6 +14,7 @@ interface PageHeaderProps {
 export default function PageHeader({
   title,
   subtitle,
+  actions,
   onBack,
   backLabel,
 }: PageHeaderProps) {
@@ -31,7 +33,10 @@ export default function PageHeader({
           />
         )}
         <div className="flex-1">
-          <h1 className="heading-1">{title}</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="heading-1">{title}</h1>
+            {actions && <div className="flex gap-2">{actions}</div>}
+          </div>
           {subtitle && (
             <p className="text-secondary mt-1 text-sm md:text-base">
               {subtitle}

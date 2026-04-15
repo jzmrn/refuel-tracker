@@ -235,8 +235,6 @@ export const de: TranslationStructure = {
   // Settings
   settings: {
     title: "Einstellungen",
-    description:
-      "Passen Sie Ihre Einstellungen und das Erscheinungsbild der App an",
     language: {
       title: "Sprache",
       description: "Wählen Sie Ihre bevorzugte Sprache",
@@ -252,7 +250,6 @@ export const de: TranslationStructure = {
 
   // Dashboard
   dashboard: {
-    welcome: "Willkommen bei Ihrem Tank-Tracker!",
     recentActivity: "Letzte Aktivität",
     quickStats: "Schnellstatistiken",
     gettingStartedTitle: "Erste Schritte",
@@ -268,10 +265,7 @@ export const de: TranslationStructure = {
 
   cars: {
     title: "Autos",
-    description:
-      "Verwalten Sie Ihre Fahrzeuge und verfolgen Sie den Kraftstoffverbrauch",
     addCar: "Auto hinzufügen",
-    myCars: "Meine Autos",
     sharedAccess: "Geteilter Zugriff",
     addNewCar: "Neues Auto hinzufügen",
     editCar: "Auto bearbeiten",
@@ -367,8 +361,6 @@ export const de: TranslationStructure = {
     searchStations: "Tankstellen suchen",
     favorites: "Favoriten",
     searchForStations: "Tankstellen suchen",
-    searchDescription:
-      "Finden Sie Tankstellen in Ihrer Nähe und vergleichen Sie Preise",
     latitude: "Breitengrad",
     longitude: "Längengrad",
     radius: "Radius",
@@ -393,7 +385,6 @@ export const de: TranslationStructure = {
     open: "Geöffnet",
     closed: "Geschlossen",
     statusNotAvailable: "Status nicht verfügbar",
-    myFavorites: "Meine Favoriten",
     noFavorites: "Noch keine Favoriten",
     addStationsToFavorites:
       "Suchen und fügen Sie Tankstellen zu Ihren Favoriten hinzu, um deren Preise zu verfolgen",
@@ -450,8 +441,6 @@ export const de: TranslationStructure = {
 
   statistics: {
     title: "Statistiken",
-    description:
-      "Monatliche Kraftstoffpreisstatistiken nach Marke, Ort und Tankstelle.",
     filters: "Filter",
     month: "Monat",
     selectFuelType: "Kraftstoffart",
@@ -468,8 +457,6 @@ export const de: TranslationStructure = {
     noDataAvailable: "Keine Daten für diese Auswahl verfügbar.",
     noMonthsAvailable: "Noch keine Statistikdaten verfügbar.",
     placesDetails: "Ortsdetails",
-    placesDetailsDescription:
-      "Vergleichen Sie Kraftstoffpreise verschiedener Orte über die Zeit.",
     timeRange: "Zeitraum",
     last3Months: "Letzte 3 Monate",
     lastYear: "Letztes Jahr",
@@ -477,14 +464,10 @@ export const de: TranslationStructure = {
     priceVarianceByPlace: "Preisvarianz",
     priceActivityByPlace: "Preisänderungen pro Tankstelle und Tag",
     brandsDetails: "Markendetails",
-    brandsDetailsDescription:
-      "Vergleichen Sie Kraftstoffpreise verschiedener Marken über die Zeit.",
     avgPriceByBrand: "Durchschnittspreis",
     priceVarianceByBrand: "Preisvarianz",
     priceActivityByBrand: "Preisänderungen pro Tankstelle und Tag",
     stationsDetails: "Tankstellendetails",
-    stationsDetailsDescription:
-      "Vergleichen Sie Kraftstoffpreise verschiedener Tankstellen über die Zeit.",
     avgPriceByStation: "Durchschnittspreis",
     priceVarianceByStation: "Preisvarianz",
     priceActivityByStation: "Preisänderungen pro Tag",

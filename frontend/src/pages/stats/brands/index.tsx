@@ -12,7 +12,6 @@ export default function BrandsPage() {
     <PageContainer>
       <PageHeader
         title={t.statistics.brandsDetails}
-        subtitle={t.statistics.brandsDetailsDescription}
         onBack={() => router.push("/stats")}
         backLabel={t.statistics.back}
       />

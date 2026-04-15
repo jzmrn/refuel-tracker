@@ -237,11 +237,7 @@ export default function SearchStations() {
     <PageContainer>
       <Suspense fallback={<LoadingSpinner />}>
         {/* Header */}
-        <PageHeader
-          title={t.fuelPrices.searchStations}
-          subtitle={t.fuelPrices.searchDescription}
-          onBack={handleBack}
-        />
+        <PageHeader title={t.fuelPrices.searchStations} onBack={handleBack} />
 
         {/* Context action buttons */}
         {!showForm && searchResults.length > 0 && (

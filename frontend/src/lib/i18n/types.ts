@@ -237,7 +237,6 @@ export interface TranslationStructure {
   // Settings
   settings: {
     title: string;
-    description: string;
     language: {
       title: string;
       description: string;
@@ -253,7 +252,6 @@ export interface TranslationStructure {
 
   // Dashboard
   dashboard: {
-    welcome: string;
     recentActivity: string;
     quickStats: string;
     gettingStartedTitle: string;
@@ -268,7 +266,6 @@ export interface TranslationStructure {
   // Cars
   cars: {
     title: string;
-    description: string;
     addCar: string;
     sharedAccess: string;
     addNewCar: string;
@@ -288,7 +285,6 @@ export interface TranslationStructure {
     searchUserPlaceholder: string;
     fillAllRequiredFields: string;
     failedToSearchUsers: string;
-    myCars: string;
     sharedWithMe: string;
     sharedBy: string;
     deleteCarConfirm: string;
@@ -355,7 +351,6 @@ export interface TranslationStructure {
     searchStations: string;
     favorites: string;
     searchForStations: string;
-    searchDescription: string;
     latitude: string;
     longitude: string;
     radius: string;
@@ -379,7 +374,6 @@ export interface TranslationStructure {
     open: string;
     closed: string;
     statusNotAvailable: string;
-    myFavorites: string;
     noFavorites: string;
     addStationsToFavorites: string;
     currentPrices: string;
@@ -435,7 +429,6 @@ export interface TranslationStructure {
   // Statistics
   statistics: {
     title: string;
-    description: string;
     filters: string;
     month: string;
     selectFuelType: string;
@@ -452,7 +445,6 @@ export interface TranslationStructure {
     noDataAvailable: string;
     noMonthsAvailable: string;
     placesDetails: string;
-    placesDetailsDescription: string;
     timeRange: string;
     last3Months: string;
     lastYear: string;
@@ -460,12 +452,10 @@ export interface TranslationStructure {
     priceVarianceByPlace: string;
     priceActivityByPlace: string;
     brandsDetails: string;
-    brandsDetailsDescription: string;
     avgPriceByBrand: string;
     priceVarianceByBrand: string;
     priceActivityByBrand: string;
     stationsDetails: string;
-    stationsDetailsDescription: string;
     avgPriceByStation: string;
     priceVarianceByStation: string;
     priceActivityByStation: string;

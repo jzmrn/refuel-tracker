@@ -12,7 +12,6 @@ import {
   LoadingSpinner,
   PageContainer,
   PageHeader,
-  ActionBar,
   IconButton,
 } from "@/components/common";
 
@@ -41,12 +40,6 @@ export default function FuelPrices() {
     <PageContainer>
       <PageHeader
         title={t.fuelPrices.title}
-        subtitle={t.fuelPrices.searchDescription}
-      />
-
-      {/* Action Bar with Refresh and Search Buttons */}
-      <ActionBar
-        title={t.fuelPrices.myFavorites}
         actions={
           <>
             <IconButton
