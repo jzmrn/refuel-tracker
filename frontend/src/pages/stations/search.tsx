@@ -242,10 +242,7 @@ export default function SearchStations() {
         {/* Context action buttons */}
         {!showForm && searchResults.length > 0 && (
           <div className="-mt-4 mb-6 flex justify-end">
-            <button
-              onClick={handleRefineSearch}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30 transition-colors"
-            >
+            <button onClick={handleRefineSearch} className="btn-soft">
               <TuneIcon className="w-5 h-5" />
               <span className="hidden sm:inline">{t.fuelPrices.search}</span>
             </button>
@@ -253,10 +250,7 @@ export default function SearchStations() {
         )}
         {showForm && searchParams !== null && searchResults.length > 0 && (
           <div className="-mt-4 mb-6 flex justify-end">
-            <button
-              onClick={handleBackToResults}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30 transition-colors"
-            >
+            <button onClick={handleBackToResults} className="btn-soft">
               <ArrowForwardIcon className="w-5 h-5" />
               <span className="hidden sm:inline">
                 {t.fuelPrices.backToResults}

@@ -34,10 +34,8 @@ export default function FuelTypeSelector({
       {includeDistance && (
         <button
           onClick={onDistanceSelect}
-          className={`px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
-            isDistanceSelected
-              ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+          className={`px-2 ${
+            isDistanceSelected ? "btn-toggle-active" : "btn-toggle-inactive"
           }`}
         >
           {t.fuelPrices.distance}
@@ -47,11 +45,11 @@ export default function FuelTypeSelector({
         <button
           key={fuelType}
           onClick={() => onFuelTypeChange(fuelType)}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={
             selectedFuelType === fuelType
-              ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-          }`}
+              ? "btn-toggle-active"
+              : "btn-toggle-inactive"
+          }
         >
           {fuelTypeLabels[fuelType]}
         </button>

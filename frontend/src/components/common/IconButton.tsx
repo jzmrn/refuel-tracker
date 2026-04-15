@@ -21,10 +21,8 @@ export default function IconButton({
       onClick={onClick}
       disabled={disabled}
       className={clsx(
-        "p-2 rounded-lg transition-colors",
-        disabled
-          ? "opacity-50 cursor-not-allowed"
-          : "hover:bg-gray-100 dark:hover:bg-gray-700",
+        "btn-icon",
+        disabled && "opacity-50 cursor-not-allowed",
         className,
       )}
       aria-label={ariaLabel}

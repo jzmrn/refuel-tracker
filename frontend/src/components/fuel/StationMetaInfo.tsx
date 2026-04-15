@@ -114,7 +114,7 @@ export default function StationMetaInfo({
       <button
         onClick={onRemoveFavorite}
         disabled={isRemoving}
-        className="p-2 text-white hover:text-gray-200 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="btn-icon-danger disabled:opacity-50 disabled:cursor-not-allowed"
         title={t.fuelPrices.removeFromFavorites}
       >
         {isRemoving ? (

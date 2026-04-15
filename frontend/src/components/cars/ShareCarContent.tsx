@@ -150,7 +150,7 @@ export default function ShareCarContent({
                   <button
                     type="button"
                     onClick={() => handleSelectUser(user)}
-                    className="p-2 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+                    className="btn-icon-primary"
                     aria-label={t.common.add}
                   >
                     <AddIcon className="icon" />
@@ -223,7 +223,7 @@ function SelectedUsersPanel({
               <button
                 type="button"
                 onClick={() => onRemoveUser(user.id)}
-                className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                className="btn-icon-danger"
                 aria-label={t.common.delete}
               >
                 <DeleteIcon className="icon" />

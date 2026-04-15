@@ -48,7 +48,7 @@ const SharedUsersPanel: React.FC<SharedUsersPanelProps> = ({
               <button
                 onClick={() => onRemoveUser(user.user_id)}
                 disabled={isRemoving}
-                className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                className="btn-icon-danger disabled:opacity-50"
                 aria-label={t.cars.removeAccess}
               >
                 <DeleteIcon className="icon" />

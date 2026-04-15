@@ -136,7 +136,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
       )}
       <button
         onClick={handleToggle}
-        className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        className="btn-icon !p-1"
         aria-label={collapsed ? "Expand filters" : "Collapse filters"}
       >
         {collapsed ? (

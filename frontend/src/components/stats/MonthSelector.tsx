@@ -39,11 +39,11 @@ export default function MonthSelector({
         <button
           key={m.date}
           onClick={() => onMonthChange(m.date)}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={
             selectedMonth === m.date
-              ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-          }`}
+              ? "btn-toggle-active"
+              : "btn-toggle-inactive"
+          }
         >
           {formatMonthLabel(m.date)}
         </button>

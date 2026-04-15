@@ -101,7 +101,7 @@ export default function ThemeSelector({ className }: ThemeSelectorProps) {
     <div className={clsx("relative", className)} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+        className="btn-dropdown"
         aria-label={t.settings.theme.title}
         title={t.settings.theme.title}
       >
@@ -133,10 +133,9 @@ export default function ThemeSelector({ className }: ThemeSelectorProps) {
                 key={option.value}
                 onClick={() => handleThemeChange(option.value)}
                 className={clsx(
-                  "block w-full text-left px-4 py-2 text-sm transition-colors",
                   theme === option.value
-                    ? "bg-primary-50 text-primary-700 dark:bg-blue-900/20 dark:text-blue-300"
-                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700",
+                    ? "btn-menu-item-active"
+                    : "btn-menu-item-inactive",
                 )}
               >
                 <div className="flex items-center space-x-3">

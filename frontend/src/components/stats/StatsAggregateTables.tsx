@@ -39,7 +39,7 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
         headerAction={
           <button
             onClick={() => router.push("/stats/stations")}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="btn-icon"
             aria-label={t.statistics.stationsDetails}
           >
             <BarChartIcon className="icon text-gray-600 dark:text-gray-400" />
@@ -114,7 +114,7 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
         headerAction={
           <button
             onClick={() => router.push("/stats/places")}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="btn-icon"
             aria-label={t.statistics.placesDetails}
           >
             <BarChartIcon className="icon text-gray-600 dark:text-gray-400" />
@@ -184,7 +184,7 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
         headerAction={
           <button
             onClick={() => router.push("/stats/brands")}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="btn-icon"
             aria-label={t.statistics.brandsDetails}
           >
             <BarChartIcon className="icon text-gray-600 dark:text-gray-400" />
