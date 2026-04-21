@@ -133,6 +133,10 @@ class RefuelMetricResponse(BaseModel):
     station_id: str | None = Field(
         None, description="ID of the gas station where refuel occurred"
     )
+    remaining_range_km: float | None = Field(
+        None,
+        description="Estimated remaining range (km) based on fuel left in tank and per-entry consumption",
+    )
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}

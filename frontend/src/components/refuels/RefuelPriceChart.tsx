@@ -189,6 +189,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             domain={["dataMin", "dataMax"]}
             stroke={chartTheme.axis}
             fontSize={12}
+            width={70}
             tickFormatter={(value) => `${value.toFixed(2)}`}
             ticks={ticks}
             tick={(props: any) => {

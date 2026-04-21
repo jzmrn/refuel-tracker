@@ -164,7 +164,8 @@ export interface TranslationStructure {
     addMoreRefuelEntriesToSeeDistanceTrends: string;
     noValidDistanceDataAvailable: string;
     makeSureEntriesHaveKilometersData: string;
-    distanceKm: string;
+    remainingRange: string;
+    theoreticalMaxRange: string;
     minDistance: string;
     maxDistance: string;
     avgDistance: string;

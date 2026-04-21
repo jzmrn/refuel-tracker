@@ -104,6 +104,7 @@ export interface RefuelMetric {
   estimated_fuel_consumption: number;
   notes?: string;
   station_id?: string;
+  remaining_range_km?: number | null;
 }
 
 export interface RefuelMetricCreate {

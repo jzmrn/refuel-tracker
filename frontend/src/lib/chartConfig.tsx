@@ -81,7 +81,7 @@ export const axisConfig = {
   },
   yAxis: {
     className: chartClassNames.axisText,
-    width: 40,
+    width: 70,
     fontSize: 12,
   },
 } as const;

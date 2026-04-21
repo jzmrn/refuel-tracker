@@ -162,7 +162,8 @@ export const de: TranslationStructure = {
     noValidDistanceDataAvailable: "Keine gültigen Streckendaten verfügbar",
     makeSureEntriesHaveKilometersData:
       "Stellen Sie sicher, dass Ihre Einträge Kilometerdaten enthalten",
-    distanceKm: "Strecke (km)",
+    remainingRange: "Verbleibende Reichweite",
+    theoreticalMaxRange: "Theoretische Maximalreichweite",
     minDistance: "Min. Strecke",
     maxDistance: "Max. Strecke",
     avgDistance: "Ø Strecke",

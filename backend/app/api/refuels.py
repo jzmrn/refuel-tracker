@@ -122,9 +122,32 @@ async def get_refuel_metrics(
         limit=limit,
     )
 
+    # Look up fuel tank size for remaining range calculation
+    fuel_tank_size: float | None = None
+    if car_id is not None:
+        car = car_client.get_car(car_id, user.id)
+        if car is not None:
+            fuel_tank_size = car.fuel_tank_size
+
     # Convert to response models
     result = []
     for metric in metrics:
+        remaining_range_km: float | None = None
+        if (
+            fuel_tank_size is not None
+            and metric.amount > 0
+            and metric.kilometers_since_last_refuel > 0
+            and metric.amount < fuel_tank_size
+        ):
+            # remaining_fuel / consumption_per_km
+            # = (tank - amount) / (amount / km) = (tank - amount) * km / amount
+            remaining_range_km = round(
+                (fuel_tank_size - metric.amount)
+                / metric.amount
+                * metric.kilometers_since_last_refuel,
+                1,
+            )
+
         result.append(
             RefuelMetricResponse(
                 timestamp=metric.timestamp,
@@ -135,6 +158,7 @@ async def get_refuel_metrics(
                 kilometers_since_last_refuel=metric.kilometers_since_last_refuel,
                 estimated_fuel_consumption=metric.estimated_fuel_consumption,
                 notes=metric.notes,
+                remaining_range_km=remaining_range_km,
             )
         )
 

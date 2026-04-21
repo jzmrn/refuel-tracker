@@ -1,7 +1,7 @@
 import React from "react";
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -30,6 +30,7 @@ interface RefuelDataForChart {
   kilometers_since_last_refuel: number;
   estimated_fuel_consumption: number;
   notes?: string;
+  remaining_range_km?: number | null;
 }
 
 interface RefuelDistanceChartProps {
@@ -76,6 +77,7 @@ export default function RefuelDistanceChart({
         year: "2-digit",
       }),
       distance: item.kilometers_since_last_refuel,
+      remainingRange: item.remaining_range_km ?? 0,
     }));
 
   if (chartData.length === 0) {
@@ -90,6 +92,8 @@ export default function RefuelDistanceChart({
       </Panel>
     );
   }
+
+  const hasRemainingRange = chartData.some((item) => item.remainingRange > 0);
 
   const formatDistance = (value: number) => `${value.toFixed(0)}`;
 
@@ -107,6 +111,7 @@ export default function RefuelDistanceChart({
         hour: "2-digit",
         minute: "2-digit",
       });
+      const totalRange = data.distance + data.remainingRange;
       return (
         <div className="panel">
           <div className="mb-2">
@@ -120,16 +125,27 @@ export default function RefuelDistanceChart({
                 {formatDistance(data.distance)} km
               </span>
             </p>
-            <p className="flex justify-between gap-4">
-              <span className="text-gray-400">{t.refuels.fuel}:</span>
-              <span className="text-green-600 dark:text-green-400 font-semibold">
-                {formatNumber(data.amount, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}{" "}
-                L
-              </span>
-            </p>
+            {data.remainingRange > 0 && (
+              <>
+                <p className="flex justify-between gap-4">
+                  <span className="text-gray-400">
+                    {t.refuels.remainingRange}:
+                  </span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                    {formatDistance(data.remainingRange)} km
+                  </span>
+                </p>
+                <hr className="border-gray-200 dark:border-gray-600 my-1" />
+                <p className="flex justify-between gap-4">
+                  <span className="text-gray-400">
+                    {t.refuels.theoreticalMaxRange}:
+                  </span>
+                  <span className="font-semibold">
+                    {formatDistance(totalRange)} km
+                  </span>
+                </p>
+              </>
+            )}
           </div>
         </div>
       );
@@ -145,8 +161,6 @@ export default function RefuelDistanceChart({
     distances.reduce((sum, d) => sum + d, 0) / distances.length;
 
   // Calculate average tank usage
-  // Formula: (avgDistance * avgConsumption) / (fuelTankSize * 100)
-  // This gives us the percentage of tank used on average
   const consumptions = chartData
     .filter((item) => item.amount > 0 && item.kilometers_since_last_refuel > 0)
     .map((item) => (item.amount / item.kilometers_since_last_refuel) * 100);
@@ -155,8 +169,6 @@ export default function RefuelDistanceChart({
       ? consumptions.reduce((sum, c) => sum + c, 0) / consumptions.length
       : 0;
 
-  // Average tank usage = (avgDistance * avgConsumption / 100) / fuelTankSize * 100
-  // Simplified: (avgDistance * avgConsumption) / fuelTankSize
   const avgTankUsage =
     fuelTankSize && fuelTankSize > 0
       ? ((avgDistance * avgConsumption) / (fuelTankSize * 100)) * 100
@@ -165,7 +177,7 @@ export default function RefuelDistanceChart({
   return (
     <Panel title={t.refuels.distanceSinceLastRefuel}>
       <ResponsiveContainer width="100%" height={350}>
-        <LineChart
+        <BarChart
           key={chartKey}
           data={chartData}
           margin={{
@@ -177,48 +189,35 @@ export default function RefuelDistanceChart({
         >
           <CartesianGrid {...gridConfig} />
           <XAxis
-            type="number"
-            dataKey="timestampMs"
-            scale="time"
-            domain={["dataMin", "dataMax"]}
+            dataKey="displayDate"
             stroke={chartTheme.axis}
-            tickFormatter={(value) => {
-              const date = new Date(value);
-              return formatDate(date, {
-                month: "short",
-                day: "numeric",
-                year: "2-digit",
-              });
-            }}
             {...axisConfig.xAxis}
           />
           <YAxis
-            domain={["dataMin", "dataMax"]}
             stroke={chartTheme.axis}
-            tickFormatter={(value) => `${value.toFixed(0)}`}
+            tickFormatter={(value) => `${value.toFixed(0)} km`}
             {...axisConfig.yAxis}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
-          <Line
-            type="monotone"
+          <Bar
             dataKey="distance"
-            stroke={chartTheme.primaryLine}
-            strokeWidth={3}
-            dot={{
-              fill: chartTheme.primaryDot,
-              strokeWidth: 2,
-              r: 4,
-            }}
-            activeDot={{
-              r: 6,
-              fill: chartTheme.primaryDot,
-              strokeWidth: 2,
-              stroke: chartTheme.activeDotStroke,
-            }}
-            name={t.refuels.distanceKm}
+            stackId="range"
+            fill={chartTheme.primaryLine}
+            name={t.refuels.distance}
+            radius={hasRemainingRange ? [0, 0, 0, 0] : [4, 4, 0, 0]}
           />
-        </LineChart>
+          {hasRemainingRange && (
+            <Bar
+              dataKey="remainingRange"
+              stackId="range"
+              fill={chartTheme.secondaryLine}
+              fillOpacity={0.5}
+              name={t.refuels.remainingRange}
+              radius={[4, 4, 0, 0]}
+            />
+          )}
+        </BarChart>
       </ResponsiveContainer>
 
       <GridLayout variant="stats" className="mt-4 text-sm">

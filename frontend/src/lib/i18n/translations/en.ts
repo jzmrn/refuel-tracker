@@ -160,7 +160,8 @@ export const en: TranslationStructure = {
     noValidDistanceDataAvailable: "No valid distance data available",
     makeSureEntriesHaveKilometersData:
       "Make sure your entries have kilometers data",
-    distanceKm: "Distance (km)",
+    remainingRange: "Remaining Range",
+    theoreticalMaxRange: "Theoretical Max Range",
     minDistance: "Min Distance",
     maxDistance: "Max Distance",
     avgDistance: "Avg Distance",
