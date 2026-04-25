@@ -464,5 +464,15 @@ export interface TranslationStructure {
     avgDailyUniquePrices: string;
     variance: string;
     back: string;
+    stationStatsTitle: string;
+    dailyPriceAllFuels: string;
+    stationVsPlaceVsBrand: string;
+    stationLegendSuffix: string;
+    cityLegendSuffix: string;
+    brandLegendSuffix: string;
+    viewStationStats: string;
+    last30Days: string;
+    last60Days: string;
+    last90Days: string;
   };
 }

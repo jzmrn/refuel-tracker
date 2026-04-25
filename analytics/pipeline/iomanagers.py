@@ -10,6 +10,8 @@ from dagster import (
 from fueldata import (
     AggregatedFuelDataClient,
     CompressedFuelDataClient,
+    DailyBrandAggregateClient,
+    DailyPlaceAggregateClient,
     FuelPriceDataClient,
     MonthlyBrandAggregateClient,
     MonthlyPlaceAggregateClient,
@@ -290,3 +292,73 @@ class MonthlyPlaceAggregatesIOManager(ConfigurableIOManager):
 
         client = MonthlyPlaceAggregateClient(self.base_path)
         return client.read_monthly_place_aggregates(start, end)
+
+
+class DailyBrandAggregatesIOManager(ConfigurableIOManager):
+    """IO manager for daily per-brand aggregates stored as Parquet."""
+
+    base_path: str
+
+    def handle_output(self, context: OutputContext, obj: pd.DataFrame) -> None:
+        client = DailyBrandAggregateClient(self.base_path)
+        client.store_daily_brand_aggregates(obj)
+
+        context.log.info(f"Stored {len(obj)} rows to daily_agg_price_by_brand parquet")
+        context.add_output_metadata(
+            {
+                "num_rows": len(obj),
+                "num_columns": len(obj.columns),
+                "columns": ", ".join(obj.columns),
+                "partition_key": context.partition_key
+                if context.has_partition_key
+                else None,
+            }
+        )
+
+    def load_input(self, context: InputContext) -> pd.DataFrame:
+        if context.has_partition_key:
+            context.log.info(f"Loading data for partition {context.partition_key}")
+            start = pd.to_datetime(context.partition_key).date()
+            end = start
+        else:
+            context.log.info("No partition key found; loading all data")
+            start = None
+            end = None
+
+        client = DailyBrandAggregateClient(self.base_path)
+        return client.read_daily_brand_aggregates(start, end)
+
+
+class DailyPlaceAggregatesIOManager(ConfigurableIOManager):
+    """IO manager for daily per-place aggregates stored as Parquet."""
+
+    base_path: str
+
+    def handle_output(self, context: OutputContext, obj: pd.DataFrame) -> None:
+        client = DailyPlaceAggregateClient(self.base_path)
+        client.store_daily_place_aggregates(obj)
+
+        context.log.info(f"Stored {len(obj)} rows to daily_agg_price_by_place parquet")
+        context.add_output_metadata(
+            {
+                "num_rows": len(obj),
+                "num_columns": len(obj.columns),
+                "columns": ", ".join(obj.columns),
+                "partition_key": context.partition_key
+                if context.has_partition_key
+                else None,
+            }
+        )
+
+    def load_input(self, context: InputContext) -> pd.DataFrame:
+        if context.has_partition_key:
+            context.log.info(f"Loading data for partition {context.partition_key}")
+            start = pd.to_datetime(context.partition_key).date()
+            end = start
+        else:
+            context.log.info("No partition key found; loading all data")
+            start = None
+            end = None
+
+        client = DailyPlaceAggregateClient(self.base_path)
+        return client.read_daily_place_aggregates(start, end)

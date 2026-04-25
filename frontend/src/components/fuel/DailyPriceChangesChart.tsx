@@ -13,11 +13,12 @@ import { useTranslation, useLocalization } from "@/lib/i18n/LanguageContext";
 import {
   axisConfig,
   useGridConfig,
+  useAxisColor,
   customTooltipContainerStyle,
-  tooltipStyle,
   renderLegendText,
   useChartKey,
 } from "@/lib/chartConfig";
+import { ChartNoData, CHART_HEIGHT } from "@/components/stats/chartUtils";
 
 interface DailyPriceChangesChartProps {
   data: DailyStatsPoint[];
@@ -29,7 +30,19 @@ export default function DailyPriceChangesChart({
   const { t } = useTranslation();
   const { formatDate } = useLocalization();
   const gridConfig = useGridConfig();
+  const axisColor = useAxisColor();
   const chartKey = useChartKey(data);
+
+  // Check if we have valid data
+  const hasValidData =
+    data.length > 0 &&
+    data.some(
+      (point) => point.n_price_changes != null || point.n_unique_prices != null,
+    );
+
+  if (!hasValidData) {
+    return <ChartNoData />;
+  }
 
   // Convert data to chart format and sort by date ascending
   const chartData = [...data]
@@ -46,12 +59,12 @@ export default function DailyPriceChangesChart({
   const maxDate = dates.length > 0 ? Math.max(...dates) : Date.now();
 
   return (
-    <div className="w-full h-72 sm:h-64 -mx-2 sm:mx-0">
+    <div className={`w-full ${CHART_HEIGHT} -mx-2 sm:mx-0`}>
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart
           key={chartKey}
           data={chartData}
-          margin={{ top: 5, right: 10, left: 5, bottom: 5 }}
+          margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
         >
           <CartesianGrid {...gridConfig} />
           <XAxis
@@ -66,14 +79,16 @@ export default function DailyPriceChangesChart({
               })
             }
             {...axisConfig.xAxis}
+            stroke={axisColor}
           />
           <YAxis
             {...axisConfig.yAxis}
+            width={50}
+            stroke={axisColor}
             domain={[0, "dataMax"]}
             allowDecimals={false}
           />
           <Tooltip
-            contentStyle={tooltipStyle.contentStyle}
             content={({ active, payload, label: tooltipLabel }) => {
               if (active && payload && payload.length > 0) {
                 const dataPoint = payload[0].payload;
@@ -114,7 +129,7 @@ export default function DailyPriceChangesChart({
               return null;
             }}
           />
-          <Legend formatter={renderLegendText} />
+          <Legend iconType="line" formatter={renderLegendText} />
           {/* Line for price changes */}
           <Line
             type="linear"

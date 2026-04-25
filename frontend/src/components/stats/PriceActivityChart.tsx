@@ -81,7 +81,7 @@ export default function PriceActivityChart({ data }: PriceActivityChartProps) {
           content={
             <ChartTooltip
               labelFormatter={formatMonthLabel}
-              valueFormatter={(v) => v.toFixed(2)}
+              isFuelPrice={false}
             />
           }
         />

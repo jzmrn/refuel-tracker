@@ -119,6 +119,39 @@ export const renderLegendText = (value: string) => (
   <span className={chartClassNames.legendText}>{value}</span>
 );
 
+/**
+ * Calculate Y-axis ticks ending in .009 for fuel price charts.
+ * Creates evenly spaced ticks at 0.01 intervals aligned to .009 values
+ * (e.g., 1.459, 1.469, 1.479).
+ * Returns undefined if no prices, or a single-element array for single data points.
+ */
+export function calculateFuelPriceTicks(
+  prices: number[],
+): number[] | undefined {
+  if (prices.length === 0) return undefined;
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+
+  // Single data point: return it as the only tick
+  if (min === max) {
+    return [min];
+  }
+
+  const start = Math.floor(min * 1000) / 1000;
+  const startCents = Math.round(start * 1000) % 10;
+  let current = start - (startCents - 9) / 1000;
+  // Ensure we start before or at min
+  if (current > min) {
+    current -= 0.01;
+  }
+  const result: number[] = [];
+  while (current <= max + 0.005) {
+    result.push(Math.round(current * 1000) / 1000);
+    current += 0.01;
+  }
+  return result;
+}
+
 // Hook to force chart remount on data change (animate from zero instead of morphing)
 export function useChartKey(data: unknown): number {
   const keyRef = useRef(0);

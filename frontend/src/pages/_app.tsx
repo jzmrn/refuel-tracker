@@ -1,5 +1,6 @@
 import type { AppProps } from "next/app";
 import App, { AppContext } from "next/app";
+import Head from "next/head";
 import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Layout from "@/components/common/Layout";
@@ -120,19 +121,27 @@ export default function MyApp(
   }, [queryClient]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <LanguageProvider initialLanguage={initialLanguage}>
-          <FuelTypeProvider initialFuelType={initialFuelType}>
-            <FilterCollapseProvider initialState={initialFilterCollapse}>
-              <UserProvider>
-                <AppContent {...appProps} />
-              </UserProvider>
-            </FilterCollapseProvider>
-          </FuelTypeProvider>
-        </LanguageProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <>
+      <Head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+        />
+      </Head>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <LanguageProvider initialLanguage={initialLanguage}>
+            <FuelTypeProvider initialFuelType={initialFuelType}>
+              <FilterCollapseProvider initialState={initialFilterCollapse}>
+                <UserProvider>
+                  <AppContent {...appProps} />
+                </UserProvider>
+              </FilterCollapseProvider>
+            </FuelTypeProvider>
+          </LanguageProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </>
   );
 }
 

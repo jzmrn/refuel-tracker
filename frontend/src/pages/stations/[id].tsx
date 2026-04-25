@@ -1,10 +1,11 @@
 import { useRouter } from "next/router";
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useFuelType } from "@/lib/fuelType";
 import Snackbar from "@/components/common/Snackbar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import {
+  useAddFavoriteStation,
   useFavoriteStations,
   useRemoveFavoriteStation,
   useStationMeta,
@@ -14,8 +15,9 @@ import FuelTypeFilter from "@/components/fuel/FuelTypeFilter";
 import StationMetaInfo from "@/components/fuel/StationMetaInfo";
 import StationPriceChart from "@/components/fuel/StationPriceChart";
 import StationDailyStatsChart from "@/components/fuel/StationDailyStatsChart";
-import StationPriceChangesChart from "@/components/fuel/StationPriceChangesChart";
+import StationSubtitle from "@/components/fuel/StationSubtitle";
 import {
+  FavoriteToggleButton,
   LoadingSpinner,
   PageContainer,
   PageHeader,
@@ -33,37 +35,10 @@ function StationDetailsContent({ stationId }: { stationId: string }) {
     setSelectedFuelType(fuelType);
   };
 
-  const [isRemoving, setIsRemoving] = useState(false);
   const { snackbar, showError, showSuccess, hideSnackbar } = useSnackbar();
-
-  // Check if this station is in favorites
-  const { data: favoritesResponse } = useFavoriteStations();
-  const removeFavorite = useRemoveFavoriteStation();
 
   // Get station meta
   const { data: stationMeta } = useStationMeta(stationId);
-
-  const isFavorite = favoritesResponse.stations.some(
-    (f) => f.station_id === stationId,
-  );
-
-  const handleBack = () => {
-    router.back();
-  };
-
-  const handleRemoveFavorite = async () => {
-    try {
-      setIsRemoving(true);
-      await removeFavorite.mutateAsync(stationId);
-      setTimeout(() => {
-        handleBack();
-      }, 500);
-    } catch (error) {
-      console.error("Error removing favorite:", error);
-      showError(t.fuelPrices.failedToRemoveFavorite);
-      setIsRemoving(false);
-    }
-  };
 
   const handleCopyAddress = () => {
     if (!stationMeta) return;
@@ -86,9 +61,6 @@ function StationDetailsContent({ stationId }: { stationId: string }) {
       {/* Station Meta Info */}
       <StationMetaInfo
         stationId={stationId}
-        isFavorite={isFavorite}
-        isRemoving={isRemoving}
-        onRemoveFavorite={handleRemoveFavorite}
         onCopyAddress={handleCopyAddress}
       />
 
@@ -105,13 +77,6 @@ function StationDetailsContent({ stationId }: { stationId: string }) {
 
       <div className="mt-6">
         <StationDailyStatsChart
-          stationId={stationId}
-          fuelType={selectedFuelType}
-        />
-      </div>
-
-      <div className="mt-6">
-        <StationPriceChangesChart
           stationId={stationId}
           fuelType={selectedFuelType}
         />
@@ -141,7 +106,17 @@ export default function StationDetails() {
 
   return (
     <PageContainer>
-      <PageHeader title={t.fuelPrices.stationDetails} onBack={handleBack} />
+      <Suspense
+        fallback={
+          <PageHeader title={t.fuelPrices.stationDetails} onBack={handleBack} />
+        }
+      >
+        {stationId ? (
+          <StationDetailsHeader stationId={stationId} onBack={handleBack} />
+        ) : (
+          <PageHeader title={t.fuelPrices.stationDetails} onBack={handleBack} />
+        )}
+      </Suspense>
 
       <Suspense fallback={<LoadingSpinner />}>
         {stationId ? (
@@ -151,5 +126,49 @@ export default function StationDetails() {
         )}
       </Suspense>
     </PageContainer>
+  );
+}
+
+function StationFavoriteButton({ stationId }: { stationId: string }) {
+  const { data: favoritesResponse } = useFavoriteStations();
+  const addFavorite = useAddFavoriteStation();
+  const removeFavorite = useRemoveFavoriteStation();
+
+  const isFavorite = favoritesResponse.stations.some(
+    (f) => f.station_id === stationId,
+  );
+
+  return (
+    <FavoriteToggleButton
+      isFavorite={isFavorite}
+      onAdd={() => addFavorite.mutateAsync(stationId)}
+      onRemove={() => removeFavorite.mutateAsync(stationId)}
+      isLoading={addFavorite.isPending || removeFavorite.isPending}
+      size="md"
+    />
+  );
+}
+
+function StationDetailsHeader({
+  stationId,
+  onBack,
+}: {
+  stationId: string;
+  onBack: () => void;
+}) {
+  const { t } = useTranslation();
+  const { data: stationMeta } = useStationMeta(stationId);
+
+  return (
+    <PageHeader
+      title={t.fuelPrices.stationDetails}
+      subtitle={<StationSubtitle station={stationMeta} />}
+      onBack={onBack}
+      actions={
+        <Suspense fallback={null}>
+          <StationFavoriteButton stationId={stationId} />
+        </Suspense>
+      }
+    />
   );
 }

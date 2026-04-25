@@ -238,3 +238,235 @@ class AggregatedFuelDataClient:
             shutil.rmtree(partition_dir)
             logger.info("Deleted partition %s", partition_dir)
         return 0
+
+
+# ---------------------------------------------------------------------------
+# Daily brand aggregate
+# ---------------------------------------------------------------------------
+
+
+class DailyBrandAggregate(BaseModel):
+    """Daily aggregated fuel price data per brand."""
+
+    date: date
+    brand: str
+    fuel_type: str
+    n_stations: int
+    n_samples: int
+    n_unique_prices: int
+    price_mean: float
+    price_min: float
+    price_max: float
+    price_std: float | None
+
+    @field_validator("price_mean", "price_min", "price_max", "price_std", mode="before")
+    @classmethod
+    def convert_nan_to_none(cls, v):
+        if isinstance(v, float) and np.isnan(v):
+            return None
+        return v
+
+
+class DailyBrandAggregateClient:
+    """Client for daily per-brand fuel price aggregates stored as parquet."""
+
+    def __init__(self, base_path: str):
+        self._base_path = Path(base_path) / "daily_agg_price_by_brand"
+        self._base_path.mkdir(parents=True, exist_ok=True)
+
+    def store_daily_brand_aggregates(self, df: pd.DataFrame) -> pd.DataFrame:
+        logger.info(
+            "Storing daily brand aggregates",
+            extra={"row_count": len(df), "empty": df.empty},
+        )
+        if not df.empty:
+            write_df = df.copy()
+            write_df["date"] = pd.to_datetime(write_df["date"]).dt.date.astype(str)
+            table = pa.Table.from_pandas(write_df, preserve_index=False)
+            pq.write_to_dataset(
+                table,
+                root_path=str(self._base_path),
+                partition_cols=["date"],
+                existing_data_behavior="delete_matching",
+            )
+        return df
+
+    def delete_data_for_date(self, target_date: date) -> None:
+        partition_dir = self._base_path / f"date={target_date.isoformat()}"
+        if partition_dir.exists():
+            shutil.rmtree(partition_dir)
+            logger.info("Deleted partition %s", partition_dir)
+
+    def _query(
+        self,
+        filters: list[str],
+        params: list,
+        order_by: str = "date DESC",
+    ) -> pd.DataFrame:
+        if not self._base_path.exists() or not any(self._base_path.iterdir()):
+            return pd.DataFrame()
+        glob = _parquet_glob(self._base_path)
+        where = f" WHERE {' AND '.join(filters)}" if filters else ""
+        sql = (
+            f"SELECT * FROM read_parquet('{glob}', hive_partitioning=true)"
+            f"{where} ORDER BY {order_by}"
+        )
+        con = duckdb.connect()
+        try:
+            return con.execute(sql, params).fetchdf()
+        finally:
+            con.close()
+
+    def read_daily_brand_aggregates(
+        self,
+        start_date: datetime | date | None = None,
+        end_date: datetime | date | None = None,
+        brand: str | None = None,
+        fuel_type: str | None = None,
+    ) -> pd.DataFrame:
+        filters: list[str] = []
+        params: list = []
+        if start_date is not None:
+            params.append(pd.to_datetime(start_date).date().isoformat())
+            filters.append(f"date >= ${len(params)}")
+        if end_date is not None:
+            params.append(pd.to_datetime(end_date).date().isoformat())
+            filters.append(f"date <= ${len(params)}")
+        if brand is not None:
+            params.append(brand)
+            filters.append(f"brand = ${len(params)}")
+        if fuel_type is not None:
+            params.append(fuel_type)
+            filters.append(f"fuel_type = ${len(params)}")
+        return self._query(filters, params)
+
+    def get_daily_brand_aggregates(
+        self,
+        start_date: datetime | date | None = None,
+        end_date: datetime | date | None = None,
+        brand: str | None = None,
+        fuel_type: str | None = None,
+    ) -> list[DailyBrandAggregate]:
+        df = self.read_daily_brand_aggregates(start_date, end_date, brand, fuel_type)
+        records = df.to_dict(orient="records")
+        return [DailyBrandAggregate.model_validate(r) for r in records]
+
+
+# ---------------------------------------------------------------------------
+# Daily place aggregate
+# ---------------------------------------------------------------------------
+
+
+class DailyPlaceAggregate(BaseModel):
+    """Daily aggregated fuel price data per place."""
+
+    date: date
+    place: str
+    post_code: int
+    fuel_type: str
+    n_stations: int
+    n_samples: int
+    n_unique_prices: int
+    price_mean: float
+    price_min: float
+    price_max: float
+    price_std: float | None
+
+    @field_validator("price_mean", "price_min", "price_max", "price_std", mode="before")
+    @classmethod
+    def convert_nan_to_none(cls, v):
+        if isinstance(v, float) and np.isnan(v):
+            return None
+        return v
+
+
+class DailyPlaceAggregateClient:
+    """Client for daily per-place fuel price aggregates stored as parquet."""
+
+    def __init__(self, base_path: str):
+        self._base_path = Path(base_path) / "daily_agg_price_by_place"
+        self._base_path.mkdir(parents=True, exist_ok=True)
+
+    def store_daily_place_aggregates(self, df: pd.DataFrame) -> pd.DataFrame:
+        logger.info(
+            "Storing daily place aggregates",
+            extra={"row_count": len(df), "empty": df.empty},
+        )
+        if not df.empty:
+            write_df = df.copy()
+            write_df["date"] = pd.to_datetime(write_df["date"]).dt.date.astype(str)
+            table = pa.Table.from_pandas(write_df, preserve_index=False)
+            pq.write_to_dataset(
+                table,
+                root_path=str(self._base_path),
+                partition_cols=["date"],
+                existing_data_behavior="delete_matching",
+            )
+        return df
+
+    def delete_data_for_date(self, target_date: date) -> None:
+        partition_dir = self._base_path / f"date={target_date.isoformat()}"
+        if partition_dir.exists():
+            shutil.rmtree(partition_dir)
+            logger.info("Deleted partition %s", partition_dir)
+
+    def _query(
+        self,
+        filters: list[str],
+        params: list,
+        order_by: str = "date DESC",
+    ) -> pd.DataFrame:
+        if not self._base_path.exists() or not any(self._base_path.iterdir()):
+            return pd.DataFrame()
+        glob = _parquet_glob(self._base_path)
+        where = f" WHERE {' AND '.join(filters)}" if filters else ""
+        sql = (
+            f"SELECT * FROM read_parquet('{glob}', hive_partitioning=true)"
+            f"{where} ORDER BY {order_by}"
+        )
+        con = duckdb.connect()
+        try:
+            return con.execute(sql, params).fetchdf()
+        finally:
+            con.close()
+
+    def read_daily_place_aggregates(
+        self,
+        start_date: datetime | date | None = None,
+        end_date: datetime | date | None = None,
+        place: str | None = None,
+        post_code: int | None = None,
+        fuel_type: str | None = None,
+    ) -> pd.DataFrame:
+        filters: list[str] = []
+        params: list = []
+        if start_date is not None:
+            params.append(pd.to_datetime(start_date).date().isoformat())
+            filters.append(f"date >= ${len(params)}")
+        if end_date is not None:
+            params.append(pd.to_datetime(end_date).date().isoformat())
+            filters.append(f"date <= ${len(params)}")
+        if place is not None:
+            params.append(place)
+            filters.append(f"place = ${len(params)}")
+        if post_code is not None:
+            params.append(post_code)
+            filters.append(f"post_code = ${len(params)}")
+        if fuel_type is not None:
+            params.append(fuel_type)
+            filters.append(f"fuel_type = ${len(params)}")
+        return self._query(filters, params)
+
+    def get_daily_place_aggregates(
+        self,
+        start_date: datetime | date | None = None,
+        end_date: datetime | date | None = None,
+        place: str | None = None,
+        post_code: int | None = None,
+        fuel_type: str | None = None,
+    ) -> list[DailyPlaceAggregate]:
+        df = self.read_daily_place_aggregates(
+            start_date, end_date, place, post_code, fuel_type
+        )
+        records = df.to_dict(orient="records")
+        return [DailyPlaceAggregate.model_validate(r) for r in records]

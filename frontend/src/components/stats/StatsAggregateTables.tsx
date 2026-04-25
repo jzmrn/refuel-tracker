@@ -73,7 +73,10 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
                 {stations.map((s) => (
                   <tr
                     key={s.station_id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    onClick={() =>
+                      router.push(`/stats/stations/${s.station_id}`)
+                    }
                   >
                     <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-primary">
                       <div className="font-medium">

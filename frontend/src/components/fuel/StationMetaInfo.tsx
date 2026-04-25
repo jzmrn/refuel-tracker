@@ -1,6 +1,6 @@
-import CircularProgress from "@mui/material/CircularProgress";
-import CloseIcon from "@mui/icons-material/Close";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import LinkIcon from "@mui/icons-material/Link";
+import { useRouter } from "next/router";
 import { useTranslation, useLocalization } from "@/lib/i18n/LanguageContext";
 import { StationMetaResponse } from "@/lib/api";
 import { useStationMeta } from "@/lib/hooks/useFuelPrices";
@@ -42,21 +42,16 @@ function PriceCard({
 
 interface StationMetaInfoProps {
   stationId: string;
-  isFavorite: boolean;
-  isRemoving: boolean;
-  onRemoveFavorite: () => void;
   onCopyAddress: () => void;
 }
 
 export default function StationMetaInfo({
   stationId,
-  isFavorite,
-  isRemoving,
-  onRemoveFavorite,
   onCopyAddress,
 }: StationMetaInfoProps) {
   const { t } = useTranslation();
   const { formatDate } = useLocalization();
+  const router = useRouter();
 
   const { data: stationData } = useStationMeta(stationId);
 
@@ -108,39 +103,28 @@ export default function StationMetaInfo({
     </span>
   );
 
-  const renderHeaderActions = () => {
-    if (!isFavorite && !isRemoving) return null;
-    return (
-      <button
-        onClick={onRemoveFavorite}
-        disabled={isRemoving}
-        className="btn-icon-danger disabled:opacity-50 disabled:cursor-not-allowed"
-        title={t.fuelPrices.removeFromFavorites}
-      >
-        {isRemoving ? (
-          <CircularProgress size={18} sx={{ color: "currentColor" }} />
-        ) : (
-          <CloseIcon fontSize="small" />
-        )}
-      </button>
-    );
-  };
-
   const renderTitle = () => (
-    <div className="flex items-center gap-3">
-      <span className="text-xl font-semibold">
-        {stationData?.brand || stationData?.name || t.fuelPrices.unknown}
-      </span>
-      {renderStatusBadge()}
-    </div>
+    <span className="text-xl font-semibold">
+      {stationData?.brand || stationData?.name || t.fuelPrices.unknown}
+    </span>
   );
 
   const formattedAddress = getFormattedAddress();
 
+  const statsButton = (
+    <button
+      onClick={() => router.push(`/stats/stations/${stationId}`)}
+      className="btn-icon"
+      title={t.statistics.viewStationStats}
+    >
+      <BarChartIcon fontSize="small" />
+    </button>
+  );
+
   return (
     <>
-      {/* Station Header with Address and Actions */}
-      <Panel title={renderTitle()} actions={renderHeaderActions()}>
+      {/* Station Header with Address and Status */}
+      <Panel title={renderTitle()} actions={renderStatusBadge()}>
         {formattedAddress && (
           <button
             onClick={onCopyAddress}
@@ -164,6 +148,7 @@ export default function StationMetaInfo({
               </span>
             )
           }
+          actions={statsButton}
         >
           <div className="flex flex-col xxs:flex-row justify-center items-center gap-1.5 sm:gap-2">
             <PriceCard

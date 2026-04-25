@@ -206,7 +206,7 @@
 
   /* Icon Buttons - ghost buttons with icon only */
   .btn-icon {
-    @apply p-2 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-700;
+    @apply p-2 rounded-lg transition-colors text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600;
   }
 
   .btn-icon-primary {

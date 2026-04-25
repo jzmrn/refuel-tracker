@@ -402,3 +402,108 @@ def monthly_agg_price_by_place(
 
     context.log.info(f"Created {len(agg)} monthly place aggregate records")
     return agg
+
+
+# ---------------------------------------------------------------------------
+# Daily aggregate assets (by brand and by place)
+# ---------------------------------------------------------------------------
+
+
+@asset(
+    partitions_def=daily_partitions,
+    ins={"compressed_fuel_prices": AssetIn()},
+    group_name="fuel",
+    description="Daily per-brand per-fuel-type aggregates from compressed data",
+    io_manager_key="daily_brand_agg_io_manager",
+)
+def daily_agg_price_by_brand(
+    context: OpExecutionContext,
+    compressed_fuel_prices: pd.DataFrame,
+    userdata_db: SQLiteResource,
+) -> pd.DataFrame:
+    """Compute daily aggregates grouped by brand and fuel_type."""
+
+    if compressed_fuel_prices.empty:
+        context.log.info("No compressed data available for this partition")
+        return pd.DataFrame()
+
+    partition_date = pd.to_datetime(context.partition_key).date()
+
+    station_info = _load_station_info(userdata_db)
+    df = compressed_fuel_prices.merge(
+        station_info[["station_id", "brand"]], on="station_id", how="left"
+    )
+    df = df.dropna(subset=["brand"])
+
+    if df.empty:
+        context.log.info("No data after joining with station info")
+        return pd.DataFrame()
+
+    df = df.sort_values(["brand", "fuel_type", "timestamp"])
+
+    grouped = df.groupby(["brand", "fuel_type"])
+    agg = grouped.agg(
+        n_stations=("station_id", "nunique"),
+        n_samples=("price", "count"),
+        n_unique_prices=("price", "nunique"),
+        price_mean=("price", "mean"),
+        price_min=("price", "min"),
+        price_max=("price", "max"),
+        price_std=("price", "std"),
+    ).reset_index()
+
+    agg["date"] = partition_date
+
+    context.log.info(f"Created {len(agg)} daily brand aggregate records")
+    return agg
+
+
+@asset(
+    partitions_def=daily_partitions,
+    ins={"compressed_fuel_prices": AssetIn()},
+    group_name="fuel",
+    description="Daily per-place per-fuel-type aggregates from compressed data",
+    io_manager_key="daily_place_agg_io_manager",
+)
+def daily_agg_price_by_place(
+    context: OpExecutionContext,
+    compressed_fuel_prices: pd.DataFrame,
+    userdata_db: SQLiteResource,
+) -> pd.DataFrame:
+    """Compute daily aggregates grouped by place, post_code, and fuel_type."""
+
+    if compressed_fuel_prices.empty:
+        context.log.info("No compressed data available for this partition")
+        return pd.DataFrame()
+
+    partition_date = pd.to_datetime(context.partition_key).date()
+
+    station_info = _load_station_info(userdata_db)
+    df = compressed_fuel_prices.merge(
+        station_info[["station_id", "place", "post_code"]],
+        on="station_id",
+        how="left",
+    )
+    df = df.dropna(subset=["place", "post_code"])
+
+    if df.empty:
+        context.log.info("No data after joining with station info")
+        return pd.DataFrame()
+
+    df = df.sort_values(["place", "post_code", "fuel_type", "timestamp"])
+
+    grouped = df.groupby(["place", "post_code", "fuel_type"])
+    agg = grouped.agg(
+        n_stations=("station_id", "nunique"),
+        n_samples=("price", "count"),
+        n_unique_prices=("price", "nunique"),
+        price_mean=("price", "mean"),
+        price_min=("price", "min"),
+        price_max=("price", "max"),
+        price_std=("price", "std"),
+    ).reset_index()
+
+    agg["date"] = partition_date
+
+    context.log.info(f"Created {len(agg)} daily place aggregate records")
+    return agg

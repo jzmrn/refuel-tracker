@@ -16,7 +16,6 @@ import {
   useChartKey,
 } from "@/lib/chartConfig";
 import { DetailAggregate, buildColorMap, ChartTooltip } from "./chartUtils";
-import { renderSvgCentsPrice } from "@/lib/formatPrice";
 
 interface ChartEntry {
   date: string;
@@ -78,16 +77,7 @@ export default function VarianceChart({ data }: VarianceChartProps) {
           tickFormatter={formatMonthLabel}
         />
         <YAxis {...axisConfig.yAxis} stroke={axisColor} domain={[0, "auto"]} />
-        <Tooltip
-          content={
-            <ChartTooltip
-              labelFormatter={formatMonthLabel}
-              valueFormatter={(v) =>
-                renderSvgCentsPrice(v, { showCurrency: true })
-              }
-            />
-          }
-        />
+        <Tooltip content={<ChartTooltip labelFormatter={formatMonthLabel} />} />
         {entities.map((entity) => (
           <Line
             key={entity}

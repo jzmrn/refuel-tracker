@@ -4,6 +4,8 @@ from dagster import Definitions, EnvVar
 
 from .assets import (
     compressed_fuel_prices,
+    daily_agg_price_by_brand,
+    daily_agg_price_by_place,
     daily_aggregates,
     monthly_agg_price_by_brand,
     monthly_agg_price_by_place,
@@ -12,7 +14,9 @@ from .assets import (
 )
 from .iomanagers import (
     CompressedFuelPriceDataIOManager,
+    DailyBrandAggregatesIOManager,
     DailyFuelPriceAggregatesIOManager,
+    DailyPlaceAggregatesIOManager,
     MonthlyBrandAggregatesIOManager,
     MonthlyPlaceAggregatesIOManager,
     MonthlyStationAggregatesIOManager,
@@ -23,11 +27,15 @@ from .resources import CompressedFuelDataResource, SQLiteResource, TankerkoenigR
 from .schedules import (
     compressed_fuel_prices_job,
     daily_aggregates_job,
+    daily_brand_aggregates_job,
+    daily_place_aggregates_job,
     fetch_fuel_prices_job,
     monthly_aggregates_fuel_prices,
     schedule_cleanup_raw_fuel_data,
     schedule_compressed_fuel_prices,
     schedule_daily_aggregates,
+    schedule_daily_brand_aggregates,
+    schedule_daily_place_aggregates,
     schedule_fetch_fuel_prices,
     schedule_monthly_aggregates,
 )
@@ -42,6 +50,8 @@ defs = Definitions(
     assets=[
         raw_fuel_prices,
         daily_aggregates,
+        daily_agg_price_by_brand,
+        daily_agg_price_by_place,
         compressed_fuel_prices,
         monthly_agg_price_by_station,
         monthly_agg_price_by_brand,
@@ -70,10 +80,18 @@ defs = Definitions(
         "monthly_place_agg_io_manager": MonthlyPlaceAggregatesIOManager(
             base_path=data_output_path
         ),
+        "daily_brand_agg_io_manager": DailyBrandAggregatesIOManager(
+            base_path=data_output_path
+        ),
+        "daily_place_agg_io_manager": DailyPlaceAggregatesIOManager(
+            base_path=data_output_path
+        ),
     },
     jobs=[
         fetch_fuel_prices_job,
         daily_aggregates_job,
+        daily_brand_aggregates_job,
+        daily_place_aggregates_job,
         compressed_fuel_prices_job,
         cleanup_raw_fuel_data_job,
         monthly_aggregates_fuel_prices,
@@ -81,6 +99,8 @@ defs = Definitions(
     schedules=[
         schedule_fetch_fuel_prices,
         schedule_daily_aggregates,
+        schedule_daily_brand_aggregates,
+        schedule_daily_place_aggregates,
         schedule_compressed_fuel_prices,
         schedule_cleanup_raw_fuel_data,
         schedule_monthly_aggregates,

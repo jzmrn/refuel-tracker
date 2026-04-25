@@ -9,7 +9,11 @@ from uuid import uuid4
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fueldata.aggregates import AggregatedFuelDataClient
+from fueldata.aggregates import (
+    AggregatedFuelDataClient,
+    DailyBrandAggregateClient,
+    DailyPlaceAggregateClient,
+)
 from fueldata.monthly_aggregates import (
     MonthlyBrandAggregateClient,
     MonthlyPlaceAggregateClient,
@@ -179,6 +183,10 @@ async def lifespan(app: FastAPI):
 
     aggregated_fuel_data_client = AggregatedFuelDataClient(data_path)
 
+    # Initialize Daily Aggregate Clients for station stats
+    daily_brand_client = DailyBrandAggregateClient(data_path)
+    daily_place_client = DailyPlaceAggregateClient(data_path)
+
     # Initialize Monthly Aggregate Clients for statistics
     monthly_brand_client = MonthlyBrandAggregateClient(data_path)
     monthly_place_client = MonthlyPlaceAggregateClient(data_path)
@@ -200,6 +208,8 @@ async def lifespan(app: FastAPI):
     app.state.fuel_station_client = fuel_station_client
     app.state.fuel_price_data_client = fuel_price_data_client
     app.state.aggregated_fuel_data_client = aggregated_fuel_data_client
+    app.state.daily_brand_client = daily_brand_client
+    app.state.daily_place_client = daily_place_client
     app.state.monthly_brand_client = monthly_brand_client
     app.state.monthly_place_client = monthly_place_client
     app.state.monthly_station_client = monthly_station_client

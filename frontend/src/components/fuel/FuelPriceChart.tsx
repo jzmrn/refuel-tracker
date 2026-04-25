@@ -19,6 +19,7 @@ import {
   renderLegendText,
   tooltipStyle,
   useChartKey,
+  calculateFuelPriceTicks,
 } from "@/lib/chartConfig";
 
 interface PriceHistoryPoint {
@@ -99,19 +100,7 @@ export default function FuelPriceChart({
         .filter((v): v is number => v != null)
     : data.map((p) => p.price).filter((v): v is number => v != null);
 
-  let ticks: number[] | undefined = undefined;
-  if (prices.length > 0) {
-    const min = Math.min(...prices);
-    const max = Math.max(...prices);
-    const start = Math.floor(min * 1000) / 1000;
-    const startCents = Math.round(start * 1000) % 10;
-    let current = start - (startCents - 9) / 1000;
-    ticks = [];
-    while (current <= max) {
-      ticks.push(Math.round(current * 1000) / 1000);
-      current += 0.01;
-    }
-  }
+  const ticks = calculateFuelPriceTicks(prices);
 
   return (
     <div className="w-full h-72 sm:h-64 -mx-2 sm:mx-0">
@@ -142,12 +131,18 @@ export default function FuelPriceChart({
               })
             }
             {...axisConfig.xAxis}
+            stroke={axisColor}
           />
           <YAxis
             {...axisConfig.yAxis}
             width={50}
-            domain={["auto", "auto"]}
-            allowDataOverflow={true}
+            stroke={axisColor}
+            dataKey="price"
+            domain={
+              ticks && ticks.length >= 2
+                ? [ticks[0], ticks[ticks.length - 1]]
+                : ["auto", "auto"]
+            }
             tick={createYAxisTick(axisColor, renderSvgFuelPrice)}
             ticks={ticks}
           />
@@ -182,6 +177,7 @@ export default function FuelPriceChart({
           />
           <Legend
             wrapperStyle={{ paddingTop: "10px" }}
+            iconType="line"
             formatter={renderLegendText}
           />
           {segments.map((segment, index) => (

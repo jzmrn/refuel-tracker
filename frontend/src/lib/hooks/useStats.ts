@@ -19,6 +19,12 @@ export const statsKeys = {
     [...statsKeys.all, "brandDetails", fuelType, months, limit] as const,
   stationDetails: (fuelType: FuelType, months: number, limit: number) =>
     [...statsKeys.all, "stationDetails", fuelType, months, limit] as const,
+  stationDailyPrices: (stationId: string, days: number) =>
+    [...statsKeys.all, "stationDailyPrices", stationId, days] as const,
+  stationComparison: (stationId: string, fuelType: FuelType, days: number) =>
+    [...statsKeys.all, "stationComparison", stationId, fuelType, days] as const,
+  stationDailyStats: (stationId: string, fuelType: FuelType, days: number) =>
+    [...statsKeys.all, "stationDailyStats", stationId, fuelType, days] as const,
 };
 
 /**
@@ -183,6 +189,79 @@ export function useStationDetails(
         fuelType,
         months,
         limit,
+      );
+      const [data] = await Promise.all([
+        promise,
+        new Promise((r) => setTimeout(r, MIN_LOAD_TIME_MS)),
+      ]);
+      return data;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+/**
+ * Suspense-based hook to fetch daily prices for all fuel types at a specific station.
+ * Must be used inside a <Suspense> boundary.
+ */
+export function useStationDailyPrices(stationId: string, days: number = 90) {
+  return useSuspenseQuery({
+    queryKey: statsKeys.stationDailyPrices(stationId, days),
+    queryFn: async () => {
+      const promise = apiService.getStationDailyPrices(stationId, days);
+      const [data] = await Promise.all([
+        promise,
+        new Promise((r) => setTimeout(r, MIN_LOAD_TIME_MS)),
+      ]);
+      return data;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+/**
+ * Suspense-based hook to fetch daily price comparison (station vs place vs brand).
+ * Must be used inside a <Suspense> boundary.
+ */
+export function useStationComparison(
+  stationId: string,
+  fuelType: FuelType,
+  days: number = 90,
+) {
+  return useSuspenseQuery({
+    queryKey: statsKeys.stationComparison(stationId, fuelType, days),
+    queryFn: async () => {
+      const promise = apiService.getStationComparison(
+        stationId,
+        fuelType,
+        days,
+      );
+      const [data] = await Promise.all([
+        promise,
+        new Promise((r) => setTimeout(r, MIN_LOAD_TIME_MS)),
+      ]);
+      return data;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+/**
+ * Suspense-based hook to fetch daily statistics for a specific station and fuel type.
+ * Must be used inside a <Suspense> boundary.
+ */
+export function useStationDailyStatsByDays(
+  stationId: string,
+  fuelType: FuelType,
+  days: number = 90,
+) {
+  return useSuspenseQuery({
+    queryKey: statsKeys.stationDailyStats(stationId, fuelType, days),
+    queryFn: async () => {
+      const promise = apiService.getStationDailyStats(
+        stationId,
+        fuelType,
+        days,
       );
       const [data] = await Promise.all([
         promise,

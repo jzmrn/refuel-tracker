@@ -1,7 +1,7 @@
 import { useLocalization, useTranslation } from "@/lib/i18n/LanguageContext";
 import { GasStationResponse, FavoriteStation } from "@/lib/api";
-import CircularProgress from "@mui/material/CircularProgress";
 import { renderSvgFuelPrice } from "@/lib/formatPrice";
+import FavoriteToggleButton from "@/components/common/FavoriteToggleButton";
 
 interface StationCardProps {
   station: GasStationResponse | FavoriteStation;
@@ -172,32 +172,12 @@ export default function StationCard({
         {/* Far Right: Favorite Button */}
         {(onAddToFavorites || onRemoveFromFavorites) && (
           <div className="flex-shrink-0">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (isLoading) return;
-                if (isFavorite && onRemoveFromFavorites) {
-                  onRemoveFromFavorites();
-                } else if (!isFavorite && onAddToFavorites) {
-                  onAddToFavorites();
-                }
-              }}
-              className={isFavorite ? "btn-sm-secondary" : "btn-sm-primary"}
-              title={
-                isFavorite
-                  ? t.fuelPrices.removeFromFavorites
-                  : t.fuelPrices.addToFavorites
-              }
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <CircularProgress size={20} sx={{ color: "white" }} />
-              ) : isFavorite ? (
-                "★"
-              ) : (
-                "☆"
-              )}
-            </button>
+            <FavoriteToggleButton
+              isFavorite={isFavorite}
+              onAdd={onAddToFavorites}
+              onRemove={onRemoveFromFavorites}
+              isLoading={isLoading}
+            />
           </div>
         )}
       </div>
@@ -258,32 +238,12 @@ export default function StationCard({
           {/* Favorite Button */}
           {(onAddToFavorites || onRemoveFromFavorites) && (
             <div className="flex-shrink-0">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (isLoading) return;
-                  if (isFavorite && onRemoveFromFavorites) {
-                    onRemoveFromFavorites();
-                  } else if (!isFavorite && onAddToFavorites) {
-                    onAddToFavorites();
-                  }
-                }}
-                className={isFavorite ? "btn-sm-secondary" : "btn-sm-primary"}
-                title={
-                  isFavorite
-                    ? t.fuelPrices.removeFromFavorites
-                    : t.fuelPrices.addToFavorites
-                }
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <span className="inline-block animate-spin">⟳</span>
-                ) : isFavorite ? (
-                  "★"
-                ) : (
-                  "☆"
-                )}
-              </button>
+              <FavoriteToggleButton
+                isFavorite={isFavorite}
+                onAdd={onAddToFavorites}
+                onRemove={onRemoveFromFavorites}
+                isLoading={isLoading}
+              />
             </div>
           )}
         </div>

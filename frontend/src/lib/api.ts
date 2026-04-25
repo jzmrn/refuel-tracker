@@ -437,6 +437,36 @@ export interface StationDetailAggregate {
   unique_prices_per_station_day: number;
 }
 
+export interface DailyPricePoint {
+  date: string;
+  e5: number | null;
+  e10: number | null;
+  diesel: number | null;
+}
+
+export interface StationDailyPricesResponse {
+  station_id: string;
+  days: DailyPricePoint[];
+}
+
+export interface ComparisonDailyPoint {
+  date: string;
+  price_mean: number;
+}
+
+export interface StationComparisonSeries {
+  label: string;
+  data: ComparisonDailyPoint[];
+}
+
+export interface StationComparisonResponse {
+  station_id: string;
+  fuel_type: string;
+  station: StationComparisonSeries;
+  place: StationComparisonSeries;
+  brand: StationComparisonSeries;
+}
+
 /**
  * Time range options for price history
  */
@@ -965,6 +995,33 @@ class ApiService {
       `/api/stats/stations/${fuelType}/details`,
       {
         params: { months, limit },
+      },
+    );
+    return response.data;
+  }
+
+  async getStationDailyPrices(
+    stationId: string,
+    days: number = 90,
+  ): Promise<StationDailyPricesResponse> {
+    const response = await this.api.get(
+      `/api/stats/stations/${stationId}/daily-prices`,
+      {
+        params: { days },
+      },
+    );
+    return response.data;
+  }
+
+  async getStationComparison(
+    stationId: string,
+    fuelType: FuelType,
+    days: number = 90,
+  ): Promise<StationComparisonResponse> {
+    const response = await this.api.get(
+      `/api/stats/stations/${stationId}/comparison/${fuelType}`,
+      {
+        params: { days },
       },
     );
     return response.data;

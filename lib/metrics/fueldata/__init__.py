@@ -1,5 +1,7 @@
 from .aggregates import AggregatedFuelDataClient as AggregatedFuelDataClient
 from .aggregates import DailyAggregate as DailyAggregate
+from .aggregates import DailyBrandAggregateClient as DailyBrandAggregateClient
+from .aggregates import DailyPlaceAggregateClient as DailyPlaceAggregateClient
 from .compressed import CompressedFuelDataClient as CompressedFuelDataClient
 from .compressed import CompressedPriceEntry as CompressedPriceEntry
 from .monthly_aggregates import (

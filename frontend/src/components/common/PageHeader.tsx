@@ -5,7 +5,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 interface PageHeaderProps {
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   actions?: React.ReactNode;
   onBack?: () => void;
   backLabel?: string;

@@ -82,14 +82,7 @@ export default function AvgPriceChart({ data }: AvgPriceChartProps) {
           domain={["auto", "auto"]}
           tickFormatter={(v: number) => v.toFixed(2)}
         />
-        <Tooltip
-          content={
-            <ChartTooltip
-              labelFormatter={formatMonthLabel}
-              valueFormatter={(v) => `${v.toFixed(3)} €/L`}
-            />
-          }
-        />
+        <Tooltip content={<ChartTooltip labelFormatter={formatMonthLabel} />} />
         {entities.map((entity) => (
           <Line
             key={entity}

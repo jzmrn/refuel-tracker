@@ -22,7 +22,7 @@ import {
 } from "../../lib/i18n/LanguageContext";
 import { useChartTheme } from "../../lib/theme";
 import { renderSvgFuelPrice } from "../../lib/formatPrice";
-import { useChartKey } from "../../lib/chartConfig";
+import { useChartKey, calculateFuelPriceTicks } from "../../lib/chartConfig";
 
 interface PriceTrend {
   date: string;
@@ -136,19 +136,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
   const maxPrice = Math.max(...prices);
   const priceRange = maxPrice - minPrice;
 
-  let ticks: number[] | undefined = undefined;
-  if (prices.length > 0) {
-    const min = Math.min(...prices);
-    const max = Math.max(...prices);
-    const start = Math.floor(min * 1000) / 1000;
-    const startCents = Math.round(start * 1000) % 10;
-    let current = start - (startCents - 9) / 1000;
-    ticks = [];
-    while (current <= max) {
-      ticks.push(Math.round(current * 1000) / 1000);
-      current += 0.01;
-    }
-  }
+  const ticks = calculateFuelPriceTicks(prices);
 
   const renderFuelPrice = (value: number) =>
     renderSvgFuelPrice(value, { showCurrency: false });
@@ -186,7 +174,11 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             }}
           />
           <YAxis
-            domain={["dataMin", "dataMax"]}
+            domain={
+              ticks && ticks.length >= 2
+                ? [ticks[0], ticks[ticks.length - 1]]
+                : ["auto", "auto"]
+            }
             stroke={chartTheme.axis}
             fontSize={12}
             width={70}

@@ -667,3 +667,43 @@ class StationDetailAggregateResponse(BaseModel):
     n_days: int
     price_changes_per_station_day: float
     unique_prices_per_station_day: float
+
+
+class DailyPricePoint(BaseModel):
+    """A single day's average prices for all fuel types at a station."""
+
+    date: str
+    e5: float | None = None
+    e10: float | None = None
+    diesel: float | None = None
+
+
+class StationDailyPricesResponse(BaseModel):
+    """Response model for daily prices of all fuel types at a station."""
+
+    station_id: str
+    days: list[DailyPricePoint] = Field(default_factory=list)
+
+
+class ComparisonDailyPoint(BaseModel):
+    """A single day's average price for one entity in a comparison."""
+
+    date: str
+    price_mean: float
+
+
+class StationComparisonSeries(BaseModel):
+    """A named series of daily price data for the comparison chart."""
+
+    label: str
+    data: list[ComparisonDailyPoint] = Field(default_factory=list)
+
+
+class StationComparisonResponse(BaseModel):
+    """Response model for station vs place vs brand daily price comparison."""
+
+    station_id: str
+    fuel_type: str
+    station: StationComparisonSeries
+    place: StationComparisonSeries
+    brand: StationComparisonSeries

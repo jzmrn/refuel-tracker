@@ -1,9 +1,14 @@
 import logging
 from collections import defaultdict
-from datetime import date
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fueldata.aggregates import (
+    AggregatedFuelDataClient,
+    DailyBrandAggregateClient,
+    DailyPlaceAggregateClient,
+)
 from fueldata.monthly_aggregates import (
     MonthlyBrandAggregateClient,
     MonthlyPlaceAggregateClient,
@@ -15,10 +20,15 @@ from app.auth import CurrentUser
 from app.models import (
     AvailableMonth,
     BrandDetailAggregateResponse,
+    ComparisonDailyPoint,
+    DailyPricePoint,
     MonthlyBrandAggregateResponse,
     MonthlyPlaceAggregateResponse,
     MonthlyStationAggregateResponse,
     PlaceDetailAggregateResponse,
+    StationComparisonResponse,
+    StationComparisonSeries,
+    StationDailyPricesResponse,
     StationDetailAggregateResponse,
 )
 
@@ -48,6 +58,18 @@ def get_monthly_station_client(request: Request) -> MonthlyStationAggregateClien
 
 def get_fuel_station_client(request: Request) -> FuelStationClient:
     return request.app.state.fuel_station_client
+
+
+def get_aggregated_fuel_data_client(request: Request) -> AggregatedFuelDataClient:
+    return request.app.state.aggregated_fuel_data_client
+
+
+def get_daily_brand_client(request: Request) -> DailyBrandAggregateClient:
+    return request.app.state.daily_brand_client
+
+
+def get_daily_place_client(request: Request) -> DailyPlaceAggregateClient:
+    return request.app.state.daily_place_client
 
 
 def _validate_fuel_type(fuel_type: str) -> None:
@@ -573,3 +595,170 @@ async def get_station_details(
         )
         for a in result
     ]
+
+
+@router.get(
+    "/stations/{station_id}/daily-prices",
+    response_model=StationDailyPricesResponse,
+)
+async def get_station_daily_prices(
+    station_id: str,
+    user: CurrentUser,
+    agg_client: AggregatedFuelDataClient = Depends(get_aggregated_fuel_data_client),
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+    days: int = 90,
+):
+    """Return daily average prices for all fuel types at a station."""
+
+    if days < 1:
+        days = 90
+    elif days > 365:
+        days = 365
+
+    # Verify station exists
+    station_infos = fuel_station_client.get_gas_station_info(station_id)
+    if not station_infos:
+        raise HTTPException(status_code=404, detail="Station not found")
+
+    end_date = datetime.now(UTC)
+    start_date = end_date - timedelta(days=days)
+
+    # Fetch all fuel types for this station
+    all_aggs = agg_client.get_daily_aggregates(
+        start_date=start_date,
+        end_date=end_date,
+        station_id=station_id,
+    )
+
+    # Pivot into {date -> {fuel_type -> price_mean}}
+    by_date: dict[str, dict[str, float]] = defaultdict(dict)
+    for agg in all_aggs:
+        by_date[agg.date.isoformat()][agg.type] = agg.price_mean
+
+    sorted_dates = sorted(by_date.keys())
+    daily_points = [
+        DailyPricePoint(
+            date=d,
+            e5=by_date[d].get("e5"),
+            e10=by_date[d].get("e10"),
+            diesel=by_date[d].get("diesel"),
+        )
+        for d in sorted_dates
+    ]
+
+    logger.info(
+        "Station daily prices requested",
+        extra={
+            "station_id": station_id,
+            "days": days,
+            "result_count": len(daily_points),
+        },
+    )
+
+    return StationDailyPricesResponse(station_id=station_id, days=daily_points)
+
+
+@router.get(
+    "/stations/{station_id}/comparison/{fuel_type}",
+    response_model=StationComparisonResponse,
+)
+async def get_station_comparison(
+    station_id: str,
+    fuel_type: str,
+    user: CurrentUser,
+    agg_client: AggregatedFuelDataClient = Depends(get_aggregated_fuel_data_client),
+    daily_brand_client: DailyBrandAggregateClient = Depends(get_daily_brand_client),
+    daily_place_client: DailyPlaceAggregateClient = Depends(get_daily_place_client),
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+    days: int = 90,
+):
+    """Return daily price comparison of station vs its place vs its brand."""
+
+    _validate_fuel_type(fuel_type)
+
+    if days < 1:
+        days = 90
+    elif days > 365:
+        days = 365
+
+    # Get station metadata
+    station_infos = fuel_station_client.get_gas_station_info(station_id)
+    if not station_infos:
+        raise HTTPException(status_code=404, detail="Station not found")
+
+    info = station_infos[0]
+    station_label = info.brand or info.name or station_id
+    brand_name = info.brand
+    place_name = info.place
+
+    end_date = datetime.now(UTC)
+    start_date = end_date - timedelta(days=days)
+
+    # Station daily data
+    station_aggs = agg_client.get_daily_aggregates(
+        start_date=start_date,
+        end_date=end_date,
+        station_id=station_id,
+        fuel_type=fuel_type,
+    )
+    station_series = StationComparisonSeries(
+        label=station_label,
+        data=[
+            ComparisonDailyPoint(date=a.date.isoformat(), price_mean=a.price_mean)
+            for a in sorted(station_aggs, key=lambda x: x.date)
+        ],
+    )
+
+    # Brand daily data
+    brand_series = StationComparisonSeries(label=brand_name or "Unknown", data=[])
+    if brand_name:
+        brand_aggs = daily_brand_client.get_daily_brand_aggregates(
+            start_date=start_date,
+            end_date=end_date,
+            brand=brand_name,
+            fuel_type=fuel_type,
+        )
+        brand_series = StationComparisonSeries(
+            label=brand_name,
+            data=[
+                ComparisonDailyPoint(date=a.date.isoformat(), price_mean=a.price_mean)
+                for a in sorted(brand_aggs, key=lambda x: x.date)
+            ],
+        )
+
+    # Place daily data
+    place_series = StationComparisonSeries(label=place_name or "Unknown", data=[])
+    if place_name:
+        place_aggs = daily_place_client.get_daily_place_aggregates(
+            start_date=start_date,
+            end_date=end_date,
+            place=place_name,
+            fuel_type=fuel_type,
+        )
+        place_series = StationComparisonSeries(
+            label=place_name,
+            data=[
+                ComparisonDailyPoint(date=a.date.isoformat(), price_mean=a.price_mean)
+                for a in sorted(place_aggs, key=lambda x: x.date)
+            ],
+        )
+
+    logger.info(
+        "Station comparison requested",
+        extra={
+            "station_id": station_id,
+            "fuel_type": fuel_type,
+            "days": days,
+            "station_points": len(station_series.data),
+            "brand_points": len(brand_series.data),
+            "place_points": len(place_series.data),
+        },
+    )
+
+    return StationComparisonResponse(
+        station_id=station_id,
+        fuel_type=fuel_type,
+        station=station_series,
+        place=place_series,
+        brand=brand_series,
+    )

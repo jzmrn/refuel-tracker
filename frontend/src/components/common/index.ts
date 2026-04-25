@@ -22,3 +22,4 @@ export { default as IconButton } from "./IconButton";
 export { default as PageContainer } from "./PageContainer";
 export { default as PageHeader } from "./PageHeader";
 export { default as DynamicPage } from "./DynamicPage";
+export { default as FavoriteToggleButton } from "./FavoriteToggleButton";

@@ -73,6 +73,52 @@ def schedule_daily_aggregates(context):
     return RunRequest(partition_key=yesterday)
 
 
+## Daily Brand Aggregates
+
+daily_brand_aggregates_job = define_asset_job(
+    name="daily_brand_aggregates_job",
+    description="Compute daily per-brand aggregates for fuel prices.",
+    selection=AssetSelection.keys("daily_agg_price_by_brand"),
+    partitions_def=daily_partitions,
+)
+
+
+@schedule(
+    cron_schedule="5 7 * * *",
+    job=daily_brand_aggregates_job,
+    name="daily_brand_aggregates",
+    description="Compute daily brand aggregates at 7:05 AM for the previous day.",
+)
+def schedule_daily_brand_aggregates(context):
+    """Run brand aggregation for yesterday's partition."""
+    scheduled_time = context.scheduled_execution_time
+    yesterday = (scheduled_time - timedelta(days=1)).strftime("%Y-%m-%d")
+    return RunRequest(partition_key=yesterday)
+
+
+## Daily Place Aggregates
+
+daily_place_aggregates_job = define_asset_job(
+    name="daily_place_aggregates_job",
+    description="Compute daily per-place aggregates for fuel prices.",
+    selection=AssetSelection.keys("daily_agg_price_by_place"),
+    partitions_def=daily_partitions,
+)
+
+
+@schedule(
+    cron_schedule="10 7 * * *",
+    job=daily_place_aggregates_job,
+    name="daily_place_aggregates",
+    description="Compute daily place aggregates at 7:10 AM for the previous day.",
+)
+def schedule_daily_place_aggregates(context):
+    """Run place aggregation for yesterday's partition."""
+    scheduled_time = context.scheduled_execution_time
+    yesterday = (scheduled_time - timedelta(days=1)).strftime("%Y-%m-%d")
+    return RunRequest(partition_key=yesterday)
+
+
 ## Cleanup Raw Fuel Data
 
 schedule_cleanup_raw_fuel_data = ScheduleDefinition(
