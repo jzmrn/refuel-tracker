@@ -105,6 +105,12 @@ export interface RefuelMetric {
   notes?: string;
   station_id?: string;
   remaining_range_km?: number | null;
+  // Station metadata
+  station_brand?: string;
+  station_place?: string;
+  station_street?: string;
+  station_house_number?: string;
+  station_post_code?: number;
 }
 
 export interface RefuelMetricCreate {

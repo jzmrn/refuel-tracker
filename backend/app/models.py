@@ -137,6 +137,16 @@ class RefuelMetricResponse(BaseModel):
         None,
         description="Estimated remaining range (km) based on fuel left in tank and per-entry consumption",
     )
+    # Station metadata (populated from gas_station_info table)
+    station_brand: str | None = Field(None, description="Brand of the gas station")
+    station_place: str | None = Field(None, description="City/place of the gas station")
+    station_street: str | None = Field(None, description="Street of the gas station")
+    station_house_number: str | None = Field(
+        None, description="House number of the gas station"
+    )
+    station_post_code: int | None = Field(
+        None, description="Post code of the gas station"
+    )
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}

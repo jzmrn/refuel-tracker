@@ -361,6 +361,43 @@ class FuelStationClient:
 
         return min(stations, key=lambda s: haversine(user_lat, user_lng, s.lat, s.lng))
 
+    def get_gas_stations_by_ids(
+        self, station_ids: list[str]
+    ) -> dict[str, GasStationInfo]:
+        """
+        Get gas station information for multiple station IDs.
+
+        Args:
+            station_ids: List of station IDs to fetch
+
+        Returns:
+            Dictionary mapping station_id to GasStationInfo
+        """
+
+        if not station_ids:
+            return {}
+
+        # Filter out None values and duplicates
+        unique_ids = list(set(sid for sid in station_ids if sid is not None))
+        if not unique_ids:
+            return {}
+
+        placeholders = ",".join("?" * len(unique_ids))
+        query = f"""
+            SELECT station_id, name, brand, street, place,
+                   lat, lng, house_number, post_code
+            FROM gas_station_info
+            WHERE station_id IN ({placeholders})
+        """
+
+        with self._db.get_connection() as con:
+            df = pd.read_sql_query(query, con, params=unique_ids)
+
+        records = df.to_dict(orient="records")
+        stations = [GasStationInfo.model_validate(r) for r in records]
+
+        return {s.station_id: s for s in stations}
+
     def delete_gas_station_info(self, station_id: str) -> None:
         """
         Delete gas station information from the database.

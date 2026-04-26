@@ -86,6 +86,7 @@ async def get_refuel_metrics(
     user: CurrentUser,
     client: RefuelDataClient = Depends(get_refuel_client),
     car_client: CarClient = Depends(get_car_client),
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
     car_id: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
@@ -129,6 +130,10 @@ async def get_refuel_metrics(
         if car is not None:
             fuel_tank_size = car.fuel_tank_size
 
+    # Collect unique station IDs and fetch station info in bulk
+    station_ids = [m.station_id for m in metrics if m.station_id]
+    stations_map = fuel_station_client.get_gas_stations_by_ids(station_ids)
+
     # Convert to response models
     result = []
     for metric in metrics:
@@ -148,6 +153,11 @@ async def get_refuel_metrics(
                 1,
             )
 
+        # Get station info if available
+        station_info = (
+            stations_map.get(metric.station_id) if metric.station_id else None
+        )
+
         result.append(
             RefuelMetricResponse(
                 timestamp=metric.timestamp,
@@ -158,7 +168,15 @@ async def get_refuel_metrics(
                 kilometers_since_last_refuel=metric.kilometers_since_last_refuel,
                 estimated_fuel_consumption=metric.estimated_fuel_consumption,
                 notes=metric.notes,
+                station_id=metric.station_id,
                 remaining_range_km=remaining_range_km,
+                station_brand=station_info.brand if station_info else None,
+                station_place=station_info.place if station_info else None,
+                station_street=station_info.street if station_info else None,
+                station_house_number=station_info.house_number
+                if station_info
+                else None,
+                station_post_code=station_info.post_code if station_info else None,
             )
         )
 

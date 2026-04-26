@@ -171,6 +171,14 @@ export interface TranslationStructure {
     avgDistance: string;
     avgTankUsage: string;
 
+    // RefuelDistributionChart labels
+    refuelDistribution: string;
+    byStation: string;
+    byBrand: string;
+    byPlace: string;
+    unknownStation: string;
+    noDistributionDataAvailable: string;
+
     // Placeholders
     placeholders: {
       notes: string;

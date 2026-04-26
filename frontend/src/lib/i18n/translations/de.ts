@@ -169,6 +169,14 @@ export const de: TranslationStructure = {
     avgDistance: "Ø Strecke",
     avgTankUsage: "Ø Tanknutzung",
 
+    // RefuelDistributionChart labels
+    refuelDistribution: "Tankverteilung",
+    byStation: "Nach Tankstelle",
+    byBrand: "Nach Marke",
+    byPlace: "Nach Ort",
+    unknownStation: "Unbekannt",
+    noDistributionDataAvailable: "Keine Verteilungsdaten verfügbar",
+
     // Placeholders
     placeholders: {
       notes: "z.B. Shell Tankstelle, A1 Raststätte...",

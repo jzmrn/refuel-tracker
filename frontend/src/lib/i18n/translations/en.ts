@@ -167,6 +167,14 @@ export const en: TranslationStructure = {
     avgDistance: "Avg Distance",
     avgTankUsage: "Avg Tank Usage",
 
+    // RefuelDistributionChart labels
+    refuelDistribution: "Refuel Distribution",
+    byStation: "By Station",
+    byBrand: "By Brand",
+    byPlace: "By Place",
+    unknownStation: "Unknown",
+    noDistributionDataAvailable: "No distribution data available",
+
     // Placeholders
     placeholders: {
       notes: "e.g. Shell gas station, A1 rest stop...",
