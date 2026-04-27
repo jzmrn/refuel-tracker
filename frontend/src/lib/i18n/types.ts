@@ -171,6 +171,17 @@ export interface TranslationStructure {
     avgDistance: string;
     avgTankUsage: string;
 
+    // RefuelCostPer100kmChart labels
+    costPer100km: string;
+    noCostDataAvailable: string;
+    addMoreRefuelEntriesToSeeCostTrends: string;
+    noValidCostDataAvailable: string;
+    makeSureEntriesHaveCostData: string;
+    minCost: string;
+    maxCost: string;
+    avgCost: string;
+    costRange: string;
+
     // RefuelDistributionChart labels
     refuelDistribution: string;
     byStation: string;

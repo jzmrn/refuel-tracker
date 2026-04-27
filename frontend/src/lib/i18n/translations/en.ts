@@ -167,6 +167,19 @@ export const en: TranslationStructure = {
     avgDistance: "Avg Distance",
     avgTankUsage: "Avg Tank Usage",
 
+    // RefuelCostPer100kmChart labels
+    costPer100km: "Cost per 100km",
+    noCostDataAvailable: "No cost data available",
+    addMoreRefuelEntriesToSeeCostTrends:
+      "Add more refuel entries to see cost trends",
+    noValidCostDataAvailable: "No valid cost data available",
+    makeSureEntriesHaveCostData:
+      "Make sure your entries have price and distance data",
+    minCost: "Min Cost",
+    maxCost: "Max Cost",
+    avgCost: "Avg Cost",
+    costRange: "Cost Range",
+
     // RefuelDistributionChart labels
     refuelDistribution: "Refuel Distribution",
     byStation: "By Station",

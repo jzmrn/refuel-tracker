@@ -169,6 +169,19 @@ export const de: TranslationStructure = {
     avgDistance: "Ø Strecke",
     avgTankUsage: "Ø Tanknutzung",
 
+    // RefuelCostPer100kmChart labels
+    costPer100km: "Kosten pro 100km",
+    noCostDataAvailable: "Keine Kostendaten verfügbar",
+    addMoreRefuelEntriesToSeeCostTrends:
+      "Mehr Tankeinträge hinzufügen, um Kostentrends zu sehen",
+    noValidCostDataAvailable: "Keine gültigen Kostendaten verfügbar",
+    makeSureEntriesHaveCostData:
+      "Stellen Sie sicher, dass Ihre Einträge Preis- und Streckendaten enthalten",
+    minCost: "Min. Kosten",
+    maxCost: "Max. Kosten",
+    avgCost: "Ø Kosten",
+    costRange: "Kostenspanne",
+
     // RefuelDistributionChart labels
     refuelDistribution: "Tankverteilung",
     byStation: "Nach Tankstelle",

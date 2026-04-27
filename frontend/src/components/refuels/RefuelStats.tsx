@@ -2,6 +2,7 @@ import RefuelPriceChart from "./RefuelPriceChart";
 import RefuelConsumptionChart from "./RefuelConsumptionChart";
 import RefuelDistanceChart from "./RefuelDistanceChart";
 import RefuelDistributionChart from "./RefuelDistributionChart";
+import RefuelCostPer100kmChart from "./RefuelCostPer100kmChart";
 import SummaryCard from "../common/SummaryCard";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ScienceIcon from "@mui/icons-material/Science";
@@ -106,6 +107,7 @@ export default function RefuelStats({
 
       <RefuelPriceChart priceData={statistics.price_trends} />
       <RefuelDistanceChart refuelData={refuels} fuelTankSize={fuelTankSize} />
+      <RefuelCostPer100kmChart refuelData={refuels} />
       <RefuelConsumptionChart refuelData={refuels} />
       <RefuelDistributionChart refuelData={refuels} />
     </StackLayout>
