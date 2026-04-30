@@ -18,6 +18,8 @@ const mapBrandToDetail = (item: BrandDetailAggregate): DetailAggregate => ({
   n_days: item.n_days,
   price_changes_per_station_day: item.price_changes_per_station_day,
   unique_prices_per_station_day: item.unique_prices_per_station_day,
+  price_increased_per_station_day: item.price_increased_per_station_day,
+  price_decreased_per_station_day: item.price_decreased_per_station_day,
 });
 
 const BrandsContent: React.FC = () => {
@@ -38,6 +40,8 @@ const BrandsContent: React.FC = () => {
         avgPrice: t.statistics.avgPriceByBrand,
         variance: t.statistics.priceVarianceByBrand,
         activity: t.statistics.priceActivityByBrand,
+        priceIncreased: t.statistics.priceIncreasedByBrand,
+        priceDecreased: t.statistics.priceDecreasedByBrand,
       }}
     />
   );

@@ -40,6 +40,12 @@ export default function DailyPriceChangesChart({
       (point) => point.n_price_changes != null || point.n_unique_prices != null,
     );
 
+  // Check if increased/decreased data is available
+  const hasIncreasedDecreased = data.some(
+    (point) =>
+      point.n_price_increased != null && point.n_price_decreased != null,
+  );
+
   if (!hasValidData) {
     return <ChartNoData />;
   }
@@ -51,6 +57,8 @@ export default function DailyPriceChangesChart({
       date: new Date(point.date).getTime(),
       n_price_changes: point.n_price_changes,
       n_unique_prices: point.n_unique_prices,
+      n_price_increased: point.n_price_increased,
+      n_price_decreased: point.n_price_decreased,
     }));
 
   // Calculate domain for X axis
@@ -106,14 +114,6 @@ export default function DailyPriceChangesChart({
                       })}
                     </p>
                     <div className="space-y-1 text-sm">
-                      <p className="text-amber-400 flex justify-between gap-4">
-                        <span className="text-gray-400">
-                          {t.fuelPrices.priceChanges}:
-                        </span>
-                        <span className="font-semibold">
-                          {dataPoint.n_price_changes}
-                        </span>
-                      </p>
                       <p className="text-purple-400 flex justify-between gap-4">
                         <span className="text-gray-400">
                           {t.fuelPrices.uniquePrices}:
@@ -122,6 +122,34 @@ export default function DailyPriceChangesChart({
                           {dataPoint.n_unique_prices}
                         </span>
                       </p>
+                      <p className="text-amber-400 flex justify-between gap-4">
+                        <span className="text-gray-400">
+                          {t.fuelPrices.priceChanges}:
+                        </span>
+                        <span className="font-semibold">
+                          {dataPoint.n_price_changes}
+                        </span>
+                      </p>
+                      {hasIncreasedDecreased && (
+                        <>
+                          <p className="text-red-400 flex justify-between gap-4">
+                            <span className="text-gray-400">
+                              {t.fuelPrices.priceIncreased}:
+                            </span>
+                            <span className="font-semibold">
+                              {dataPoint.n_price_increased ?? "-"}
+                            </span>
+                          </p>
+                          <p className="text-green-400 flex justify-between gap-4">
+                            <span className="text-gray-400">
+                              {t.fuelPrices.priceDecreased}:
+                            </span>
+                            <span className="font-semibold">
+                              {dataPoint.n_price_decreased ?? "-"}
+                            </span>
+                          </p>
+                        </>
+                      )}
                     </div>
                   </div>
                 );
@@ -140,6 +168,30 @@ export default function DailyPriceChangesChart({
             name={t.fuelPrices.priceChanges}
             connectNulls={false}
           />
+          {/* Line for price increases (only if data available) */}
+          {hasIncreasedDecreased && (
+            <Line
+              type="linear"
+              dataKey="n_price_increased"
+              stroke="#ef4444"
+              strokeWidth={2}
+              dot={{ fill: "#ef4444", r: 3 }}
+              name={t.fuelPrices.priceIncreased}
+              connectNulls={false}
+            />
+          )}
+          {/* Line for price decreases (only if data available) */}
+          {hasIncreasedDecreased && (
+            <Line
+              type="linear"
+              dataKey="n_price_decreased"
+              stroke="#22c55e"
+              strokeWidth={2}
+              dot={{ fill: "#22c55e", r: 3 }}
+              name={t.fuelPrices.priceDecreased}
+              connectNulls={false}
+            />
+          )}
           {/* Line for unique prices */}
           <Line
             type="linear"

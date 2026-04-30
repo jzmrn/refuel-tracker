@@ -199,6 +199,16 @@ def daily_aggregates(
 
     partition_date = pd.to_datetime(context.partition_key).date()
 
+    # Compute price direction changes per station/fuel_type group
+    compressed_fuel_prices = compressed_fuel_prices.sort_values(
+        ["station_id", "fuel_type", "timestamp"]
+    )
+    price_diff = compressed_fuel_prices.groupby(["station_id", "fuel_type"])[
+        "price"
+    ].diff()
+    compressed_fuel_prices["price_increased"] = price_diff > 0
+    compressed_fuel_prices["price_decreased"] = price_diff < 0
+
     # Group by station_id and fuel_type (compressed data is already in long format)
     grouped = compressed_fuel_prices.groupby(["station_id", "fuel_type"])
 
@@ -209,6 +219,8 @@ def daily_aggregates(
         price_min=("price", "min"),
         price_max=("price", "max"),
         price_std=("price", "std"),
+        n_price_increased=("price_increased", "sum"),
+        n_price_decreased=("price_decreased", "sum"),
         ts_min=("timestamp", "min"),
         ts_max=("timestamp", "max"),
     ).reset_index()
@@ -287,6 +299,11 @@ def monthly_agg_price_by_station(
 
     df = df.sort_values(["station_id", "fuel_type", "timestamp"])
 
+    # Compute price direction changes per station/fuel_type group
+    price_diff = df.groupby(["station_id", "fuel_type"])["price"].diff()
+    df["price_increased"] = price_diff > 0
+    df["price_decreased"] = price_diff < 0
+
     grouped = df.groupby(["station_id", "fuel_type"])
     agg = grouped.agg(
         n_price_changes=("price", "count"),
@@ -295,6 +312,8 @@ def monthly_agg_price_by_station(
         price_min=("price", "min"),
         price_max=("price", "max"),
         price_std=("price", "std"),
+        n_price_increased=("price_increased", "sum"),
+        n_price_decreased=("price_decreased", "sum"),
         n_days=("timestamp", lambda s: s.dt.date.nunique()),
     ).reset_index()
 
@@ -332,7 +351,12 @@ def monthly_agg_price_by_brand(
         context.log.info("No data after joining with station info")
         return pd.DataFrame()
 
-    df = df.sort_values(["brand", "fuel_type", "timestamp"])
+    df = df.sort_values(["station_id", "fuel_type", "timestamp"])
+
+    # Compute price direction changes per station/fuel_type group
+    price_diff = df.groupby(["station_id", "fuel_type"])["price"].diff()
+    df["price_increased"] = price_diff > 0
+    df["price_decreased"] = price_diff < 0
 
     grouped = df.groupby(["brand", "fuel_type"])
     agg = grouped.agg(
@@ -343,6 +367,8 @@ def monthly_agg_price_by_brand(
         price_min=("price", "min"),
         price_max=("price", "max"),
         price_std=("price", "std"),
+        n_price_increased=("price_increased", "sum"),
+        n_price_decreased=("price_decreased", "sum"),
         n_days=("timestamp", lambda s: s.dt.date.nunique()),
     ).reset_index()
 
@@ -384,7 +410,12 @@ def monthly_agg_price_by_place(
         context.log.info("No data after joining with station info")
         return pd.DataFrame()
 
-    df = df.sort_values(["place", "post_code", "fuel_type", "timestamp"])
+    df = df.sort_values(["station_id", "fuel_type", "timestamp"])
+
+    # Compute price direction changes per station/fuel_type group
+    price_diff = df.groupby(["station_id", "fuel_type"])["price"].diff()
+    df["price_increased"] = price_diff > 0
+    df["price_decreased"] = price_diff < 0
 
     grouped = df.groupby(["place", "post_code", "fuel_type"])
     agg = grouped.agg(
@@ -395,6 +426,8 @@ def monthly_agg_price_by_place(
         price_min=("price", "min"),
         price_max=("price", "max"),
         price_std=("price", "std"),
+        n_price_increased=("price_increased", "sum"),
+        n_price_decreased=("price_decreased", "sum"),
         n_days=("timestamp", lambda s: s.dt.date.nunique()),
     ).reset_index()
 
@@ -439,7 +472,12 @@ def daily_agg_price_by_brand(
         context.log.info("No data after joining with station info")
         return pd.DataFrame()
 
-    df = df.sort_values(["brand", "fuel_type", "timestamp"])
+    df = df.sort_values(["station_id", "fuel_type", "timestamp"])
+
+    # Compute price direction changes per station/fuel_type group
+    price_diff = df.groupby(["station_id", "fuel_type"])["price"].diff()
+    df["price_increased"] = price_diff > 0
+    df["price_decreased"] = price_diff < 0
 
     grouped = df.groupby(["brand", "fuel_type"])
     agg = grouped.agg(
@@ -450,6 +488,8 @@ def daily_agg_price_by_brand(
         price_min=("price", "min"),
         price_max=("price", "max"),
         price_std=("price", "std"),
+        n_price_increased=("price_increased", "sum"),
+        n_price_decreased=("price_decreased", "sum"),
     ).reset_index()
 
     agg["date"] = partition_date
@@ -490,7 +530,12 @@ def daily_agg_price_by_place(
         context.log.info("No data after joining with station info")
         return pd.DataFrame()
 
-    df = df.sort_values(["place", "post_code", "fuel_type", "timestamp"])
+    df = df.sort_values(["station_id", "fuel_type", "timestamp"])
+
+    # Compute price direction changes per station/fuel_type group
+    price_diff = df.groupby(["station_id", "fuel_type"])["price"].diff()
+    df["price_increased"] = price_diff > 0
+    df["price_decreased"] = price_diff < 0
 
     grouped = df.groupby(["place", "post_code", "fuel_type"])
     agg = grouped.agg(
@@ -501,6 +546,8 @@ def daily_agg_price_by_place(
         price_min=("price", "min"),
         price_max=("price", "max"),
         price_std=("price", "std"),
+        n_price_increased=("price_increased", "sum"),
+        n_price_decreased=("price_decreased", "sum"),
     ).reset_index()
 
     agg["date"] = partition_date

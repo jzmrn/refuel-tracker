@@ -16,8 +16,6 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from pydantic import BaseModel, field_validator
 
-from .utils import to_utc_iso
-
 logger = logging.getLogger(__name__)
 
 
@@ -33,15 +31,39 @@ class DailyAggregate(BaseModel):
     price_min: float
     price_max: float
     price_std: float | None
+    n_price_increased: int | None = None
+    n_price_decreased: int | None = None
     ts_min: datetime
     ts_max: datetime
 
-    @field_validator("price_mean", "price_min", "price_max", "price_std", mode="before")
+    @field_validator(
+        "price_mean",
+        "price_min",
+        "price_max",
+        "price_std",
+        mode="before",
+    )
     @classmethod
     def convert_nan_to_none(cls, v):
         """Convert NaN values to None for JSON serialization."""
         if isinstance(v, float) and np.isnan(v):
             return None
+        return v
+
+    @field_validator(
+        "n_price_increased",
+        "n_price_decreased",
+        mode="before",
+    )
+    @classmethod
+    def convert_price_change_counts(cls, v):
+        """Convert NaN to None and float to int for price change counts."""
+        if v is None:
+            return None
+        if isinstance(v, float):
+            if np.isnan(v):
+                return None
+            return int(v)
         return v
 
 
@@ -118,8 +140,9 @@ class AggregatedFuelDataClient:
 
         glob = _parquet_glob(self._base_path)
         where = f" WHERE {' AND '.join(filters)}" if filters else ""
+        # union_by_name=true handles schema evolution (older files may lack new columns)
         sql = (
-            f"SELECT {columns} FROM read_parquet('{glob}', hive_partitioning=true)"
+            f"SELECT {columns} FROM read_parquet('{glob}', hive_partitioning=true, union_by_name=true)"
             f"{where} ORDER BY {order_by}"
         )
 
@@ -157,11 +180,15 @@ class AggregatedFuelDataClient:
         params: list = []
 
         if start_date is not None:
-            params.append(to_utc_iso(start_date))
+            # Use date-only format (YYYY-MM-DD) to match parquet partition column
+            date_str = start_date.strftime("%Y-%m-%d")
+            params.append(date_str)
             filters.append(f"date >= ${len(params)}")
 
         if end_date is not None:
-            params.append(to_utc_iso(end_date))
+            # Use date-only format (YYYY-MM-DD) to match parquet partition column
+            date_str = end_date.strftime("%Y-%m-%d")
+            params.append(date_str)
             filters.append(f"date <= ${len(params)}")
 
         if station_id is not None:
@@ -210,7 +237,9 @@ class AggregatedFuelDataClient:
             List of DailyAggregate objects sorted by date descending
         """
 
-        cutoff = to_utc_iso(datetime.now(timezone.utc).date() - pd.Timedelta(days=days))
+        cutoff = (datetime.now(timezone.utc) - pd.Timedelta(days=days)).strftime(
+            "%Y-%m-%d"
+        )
         filters = ["station_id = $1", "type = $2", "date >= $3"]
         params = [station_id, fuel_type, cutoff]
 
@@ -258,6 +287,8 @@ class DailyBrandAggregate(BaseModel):
     price_min: float
     price_max: float
     price_std: float | None
+    n_price_increased: int | None = None
+    n_price_decreased: int | None = None
 
     @field_validator("price_mean", "price_min", "price_max", "price_std", mode="before")
     @classmethod
@@ -307,8 +338,9 @@ class DailyBrandAggregateClient:
             return pd.DataFrame()
         glob = _parquet_glob(self._base_path)
         where = f" WHERE {' AND '.join(filters)}" if filters else ""
+        # union_by_name=true handles schema evolution (older files may lack new columns)
         sql = (
-            f"SELECT * FROM read_parquet('{glob}', hive_partitioning=true)"
+            f"SELECT * FROM read_parquet('{glob}', hive_partitioning=true, union_by_name=true)"
             f"{where} ORDER BY {order_by}"
         )
         con = duckdb.connect()
@@ -371,6 +403,8 @@ class DailyPlaceAggregate(BaseModel):
     price_min: float
     price_max: float
     price_std: float | None
+    n_price_increased: int | None = None
+    n_price_decreased: int | None = None
 
     @field_validator("price_mean", "price_min", "price_max", "price_std", mode="before")
     @classmethod
@@ -420,8 +454,9 @@ class DailyPlaceAggregateClient:
             return pd.DataFrame()
         glob = _parquet_glob(self._base_path)
         where = f" WHERE {' AND '.join(filters)}" if filters else ""
+        # union_by_name=true handles schema evolution (older files may lack new columns)
         sql = (
-            f"SELECT * FROM read_parquet('{glob}', hive_partitioning=true)"
+            f"SELECT * FROM read_parquet('{glob}', hive_partitioning=true, union_by_name=true)"
             f"{where} ORDER BY {order_by}"
         )
         con = duckdb.connect()

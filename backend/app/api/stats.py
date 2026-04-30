@@ -160,6 +160,8 @@ async def get_monthly_brands(
             price_max=a.price_max,
             n_stations=a.n_stations,
             n_price_changes=a.n_price_changes,
+            n_price_increased=a.n_price_increased,
+            n_price_decreased=a.n_price_decreased,
         )
         for a in aggregates
     ]
@@ -207,6 +209,8 @@ async def get_monthly_places(
             price_min=a.price_min,
             price_max=a.price_max,
             n_stations=a.n_stations,
+            n_price_increased=a.n_price_increased,
+            n_price_decreased=a.n_price_decreased,
         )
         for a in aggregates
     ]
@@ -279,6 +283,8 @@ async def get_monthly_stations(
             price_min=a.price_min,
             price_max=a.price_max,
             n_price_changes=a.n_price_changes,
+            n_price_increased=a.n_price_increased,
+            n_price_decreased=a.n_price_decreased,
         )
         for a in aggregates
     ]
@@ -370,6 +376,8 @@ async def get_place_details(
             n_price_changes=a.n_price_changes,
             n_unique_prices=a.n_unique_prices,
             n_days=a.n_days,
+            n_price_increased=a.n_price_increased,
+            n_price_decreased=a.n_price_decreased,
             price_changes_per_station_day=(
                 a.n_price_changes / (a.n_stations * a.n_days)
                 if a.n_stations > 0 and a.n_days > 0
@@ -379,6 +387,16 @@ async def get_place_details(
                 a.n_unique_prices / (a.n_stations * a.n_days)
                 if a.n_stations > 0 and a.n_days > 0
                 else 0.0
+            ),
+            price_increased_per_station_day=(
+                a.n_price_increased / (a.n_stations * a.n_days)
+                if a.n_price_increased is not None and a.n_stations > 0 and a.n_days > 0
+                else None
+            ),
+            price_decreased_per_station_day=(
+                a.n_price_decreased / (a.n_stations * a.n_days)
+                if a.n_price_decreased is not None and a.n_stations > 0 and a.n_days > 0
+                else None
             ),
         )
         for a in result
@@ -468,6 +486,8 @@ async def get_brand_details(
             n_price_changes=a.n_price_changes,
             n_unique_prices=a.n_unique_prices,
             n_days=a.n_days,
+            n_price_increased=a.n_price_increased,
+            n_price_decreased=a.n_price_decreased,
             price_changes_per_station_day=(
                 a.n_price_changes / (a.n_stations * a.n_days)
                 if a.n_stations > 0 and a.n_days > 0
@@ -477,6 +497,16 @@ async def get_brand_details(
                 a.n_unique_prices / (a.n_stations * a.n_days)
                 if a.n_stations > 0 and a.n_days > 0
                 else 0.0
+            ),
+            price_increased_per_station_day=(
+                a.n_price_increased / (a.n_stations * a.n_days)
+                if a.n_price_increased is not None and a.n_stations > 0 and a.n_days > 0
+                else None
+            ),
+            price_decreased_per_station_day=(
+                a.n_price_decreased / (a.n_stations * a.n_days)
+                if a.n_price_decreased is not None and a.n_stations > 0 and a.n_days > 0
+                else None
             ),
         )
         for a in result
@@ -586,11 +616,23 @@ async def get_station_details(
             n_price_changes=a.n_price_changes,
             n_unique_prices=a.n_unique_prices,
             n_days=a.n_days,
+            n_price_increased=a.n_price_increased,
+            n_price_decreased=a.n_price_decreased,
             price_changes_per_station_day=(
                 a.n_price_changes / a.n_days if a.n_days > 0 else 0.0
             ),
             unique_prices_per_station_day=(
                 a.n_unique_prices / a.n_days if a.n_days > 0 else 0.0
+            ),
+            price_increased_per_station_day=(
+                a.n_price_increased / a.n_days
+                if a.n_price_increased is not None and a.n_days > 0
+                else None
+            ),
+            price_decreased_per_station_day=(
+                a.n_price_decreased / a.n_days
+                if a.n_price_decreased is not None and a.n_days > 0
+                else None
             ),
         )
         for a in result

@@ -86,6 +86,8 @@ export interface DetailAggregate {
   n_days: number;
   price_changes_per_station_day: number;
   unique_prices_per_station_day: number;
+  price_increased_per_station_day?: number | null;
+  price_decreased_per_station_day?: number | null;
 }
 
 /**

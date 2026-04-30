@@ -18,6 +18,8 @@ const mapPlaceToDetail = (item: PlaceDetailAggregate): DetailAggregate => ({
   n_days: item.n_days,
   price_changes_per_station_day: item.price_changes_per_station_day,
   unique_prices_per_station_day: item.unique_prices_per_station_day,
+  price_increased_per_station_day: item.price_increased_per_station_day,
+  price_decreased_per_station_day: item.price_decreased_per_station_day,
 });
 
 const PlacesContent: React.FC = () => {
@@ -38,6 +40,8 @@ const PlacesContent: React.FC = () => {
         avgPrice: t.statistics.avgPriceByPlace,
         variance: t.statistics.priceVarianceByPlace,
         activity: t.statistics.priceActivityByPlace,
+        priceIncreased: t.statistics.priceIncreasedByPlace,
+        priceDecreased: t.statistics.priceDecreasedByPlace,
       }}
     />
   );

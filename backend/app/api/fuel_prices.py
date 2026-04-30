@@ -616,18 +616,28 @@ async def get_station_daily_stats(
         fuel_type=fuel_type,
     )
 
-    daily_stats = [
-        DailyStatsPoint(
-            date=agg.date,
-            n_samples=agg.n_samples,
-            n_price_changes=max(0, agg.n_samples - 1),
-            n_unique_prices=agg.n_unique_prices,
-            price_mean=agg.price_mean,
-            price_min=agg.price_min,
-            price_max=agg.price_max,
+    daily_stats = []
+    for agg in daily_aggregates:
+        # Calculate n_price_changes from increases + decreases if available,
+        # otherwise fall back to n_samples - 1
+        if agg.n_price_increased is not None and agg.n_price_decreased is not None:
+            n_price_changes = agg.n_price_increased + agg.n_price_decreased
+        else:
+            n_price_changes = max(0, agg.n_samples - 1)
+
+        daily_stats.append(
+            DailyStatsPoint(
+                date=agg.date,
+                n_samples=agg.n_samples,
+                n_price_changes=n_price_changes,
+                n_unique_prices=agg.n_unique_prices,
+                price_mean=agg.price_mean,
+                price_min=agg.price_min,
+                price_max=agg.price_max,
+                n_price_increased=agg.n_price_increased,
+                n_price_decreased=agg.n_price_decreased,
+            )
         )
-        for agg in daily_aggregates
-    ]
 
     logger.debug(
         "Retrieved daily stats",

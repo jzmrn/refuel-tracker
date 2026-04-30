@@ -371,6 +371,8 @@ class DailyStatsPoint(BaseModel):
     price_mean: float
     price_min: float
     price_max: float
+    n_price_increased: int | None = None
+    n_price_decreased: int | None = None
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat()}
@@ -596,6 +598,8 @@ class MonthlyBrandAggregateResponse(BaseModel):
     price_max: float
     n_stations: int
     n_price_changes: int
+    n_price_increased: int | None = None
+    n_price_decreased: int | None = None
 
 
 class MonthlyPlaceAggregateResponse(BaseModel):
@@ -607,6 +611,8 @@ class MonthlyPlaceAggregateResponse(BaseModel):
     price_min: float
     price_max: float
     n_stations: int
+    n_price_increased: int | None = None
+    n_price_decreased: int | None = None
 
 
 class PlaceDetailAggregateResponse(BaseModel):
@@ -623,8 +629,12 @@ class PlaceDetailAggregateResponse(BaseModel):
     n_price_changes: int
     n_unique_prices: int
     n_days: int
+    n_price_increased: int | None = None
+    n_price_decreased: int | None = None
     price_changes_per_station_day: float
     unique_prices_per_station_day: float
+    price_increased_per_station_day: float | None = None
+    price_decreased_per_station_day: float | None = None
 
 
 class BrandDetailAggregateResponse(BaseModel):
@@ -640,8 +650,12 @@ class BrandDetailAggregateResponse(BaseModel):
     n_price_changes: int
     n_unique_prices: int
     n_days: int
+    n_price_increased: int | None = None
+    n_price_decreased: int | None = None
     price_changes_per_station_day: float
     unique_prices_per_station_day: float
+    price_increased_per_station_day: float | None = None
+    price_decreased_per_station_day: float | None = None
 
 
 class MonthlyStationAggregateResponse(BaseModel):
@@ -657,6 +671,8 @@ class MonthlyStationAggregateResponse(BaseModel):
     price_min: float
     price_max: float
     n_price_changes: int
+    n_price_increased: int | None = None
+    n_price_decreased: int | None = None
 
 
 class StationDetailAggregateResponse(BaseModel):
@@ -675,8 +691,12 @@ class StationDetailAggregateResponse(BaseModel):
     n_price_changes: int
     n_unique_prices: int
     n_days: int
+    n_price_increased: int | None = None
+    n_price_decreased: int | None = None
     price_changes_per_station_day: float
     unique_prices_per_station_day: float
+    price_increased_per_station_day: float | None = None
+    price_decreased_per_station_day: float | None = None
 
 
 class DailyPricePoint(BaseModel):

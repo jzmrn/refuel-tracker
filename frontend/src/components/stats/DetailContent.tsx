@@ -14,15 +14,21 @@ import TimeRangeFuelTypeFilter from "@/components/fuel/TimeRangeFuelTypeFilter";
 import AvgPriceChart from "@/components/stats/AvgPriceChart";
 import VarianceChart from "@/components/stats/VarianceChart";
 import PriceActivityChart from "@/components/stats/PriceActivityChart";
+import PriceDirectionChart, {
+  hasPriceDirectionData,
+} from "@/components/stats/PriceDirectionChart";
 import { DetailAggregate, ChartLegend } from "@/components/stats/chartUtils";
 import PlaceIcon from "@mui/icons-material/Place";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
-import { Legend } from "recharts";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+
 interface ChartLabels {
   avgPrice: string;
   variance: string;
   activity: string;
+  priceIncreased: string;
+  priceDecreased: string;
 }
 
 interface DetailContentProps<T> {
@@ -56,6 +62,12 @@ function DetailCharts<T>({
   const detailData = useMemo(
     () => rawData.map(mapToDetail),
     [rawData, mapToDetail],
+  );
+
+  // Check if all data has price direction values available
+  const showPriceDirectionCharts = useMemo(
+    () => hasPriceDirectionData(detailData),
+    [detailData],
   );
 
   if (detailData.length === 0) {
@@ -92,15 +104,39 @@ function DetailCharts<T>({
         <VarianceChart data={detailData} />
       </StandardCard>
 
-      <StandardCard
-        title={chartLabels.activity}
-        icon={
-          <SwapVertIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-        }
-        iconBackground="indigo"
-      >
-        <PriceActivityChart data={detailData} />
-      </StandardCard>
+      {showPriceDirectionCharts ? (
+        <>
+          <StandardCard
+            title={chartLabels.priceIncreased}
+            icon={
+              <TrendingUpIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
+            }
+            iconBackground="red"
+          >
+            <PriceDirectionChart data={detailData} direction="increased" />
+          </StandardCard>
+
+          <StandardCard
+            title={chartLabels.priceDecreased}
+            icon={
+              <TrendingDownIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+            }
+            iconBackground="green"
+          >
+            <PriceDirectionChart data={detailData} direction="decreased" />
+          </StandardCard>
+        </>
+      ) : (
+        <StandardCard
+          title={chartLabels.activity}
+          icon={
+            <SwapVertIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          }
+          iconBackground="indigo"
+        >
+          <PriceActivityChart data={detailData} />
+        </StandardCard>
+      )}
     </>
   );
 }

@@ -348,6 +348,8 @@ export interface DailyStatsPoint {
   price_mean: number;
   price_min: number;
   price_max: number;
+  n_price_increased?: number;
+  n_price_decreased?: number;
 }
 
 export interface StationDailyStatsResponse {
@@ -395,6 +397,8 @@ export interface PlaceDetailAggregate {
   n_days: number;
   price_changes_per_station_day: number;
   unique_prices_per_station_day: number;
+  price_increased_per_station_day?: number | null;
+  price_decreased_per_station_day?: number | null;
 }
 
 export interface BrandDetailAggregate {
@@ -410,6 +414,8 @@ export interface BrandDetailAggregate {
   n_days: number;
   price_changes_per_station_day: number;
   unique_prices_per_station_day: number;
+  price_increased_per_station_day?: number | null;
+  price_decreased_per_station_day?: number | null;
 }
 
 export interface MonthlyStationAggregate {
@@ -441,6 +447,8 @@ export interface StationDetailAggregate {
   n_days: number;
   price_changes_per_station_day: number;
   unique_prices_per_station_day: number;
+  price_increased_per_station_day?: number | null;
+  price_decreased_per_station_day?: number | null;
 }
 
 export interface DailyPricePoint {

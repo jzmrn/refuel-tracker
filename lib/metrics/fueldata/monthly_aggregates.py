@@ -37,6 +37,8 @@ class MonthlyStationAggregate(BaseModel):
     price_min: float
     price_max: float
     price_std: float | None
+    n_price_increased: int | None = None
+    n_price_decreased: int | None = None
     n_days: int
 
     @field_validator(
@@ -50,6 +52,21 @@ class MonthlyStationAggregate(BaseModel):
     def convert_nan_to_none(cls, v):
         if isinstance(v, float) and np.isnan(v):
             return None
+        return v
+
+    @field_validator(
+        "n_price_increased",
+        "n_price_decreased",
+        mode="before",
+    )
+    @classmethod
+    def convert_price_direction_counts(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, float):
+            if np.isnan(v):
+                return None
+            return int(v)
         return v
 
 
@@ -66,6 +83,8 @@ class MonthlyBrandAggregate(BaseModel):
     price_min: float
     price_max: float
     price_std: float | None
+    n_price_increased: int | None = None
+    n_price_decreased: int | None = None
     n_days: int
 
     @field_validator(
@@ -79,6 +98,21 @@ class MonthlyBrandAggregate(BaseModel):
     def convert_nan_to_none(cls, v):
         if isinstance(v, float) and np.isnan(v):
             return None
+        return v
+
+    @field_validator(
+        "n_price_increased",
+        "n_price_decreased",
+        mode="before",
+    )
+    @classmethod
+    def convert_price_direction_counts(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, float):
+            if np.isnan(v):
+                return None
+            return int(v)
         return v
 
 
@@ -96,6 +130,8 @@ class MonthlyPlaceAggregate(BaseModel):
     price_min: float
     price_max: float
     price_std: float | None
+    n_price_increased: int | None = None
+    n_price_decreased: int | None = None
     n_days: int
 
     @field_validator(
@@ -109,6 +145,21 @@ class MonthlyPlaceAggregate(BaseModel):
     def convert_nan_to_none(cls, v):
         if isinstance(v, float) and np.isnan(v):
             return None
+        return v
+
+    @field_validator(
+        "n_price_increased",
+        "n_price_decreased",
+        mode="before",
+    )
+    @classmethod
+    def convert_price_direction_counts(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, float):
+            if np.isnan(v):
+                return None
+            return int(v)
         return v
 
 
@@ -176,8 +227,9 @@ def _query_parquet(
 
     glob = _parquet_glob(base_path)
     where = f" WHERE {' AND '.join(filters)}" if filters else ""
+    # union_by_name=true handles schema evolution (older files may lack new columns)
     sql = (
-        f"SELECT * FROM read_parquet('{glob}', hive_partitioning=true)"
+        f"SELECT * FROM read_parquet('{glob}', hive_partitioning=true, union_by_name=true)"
         f"{where} ORDER BY {order_by}"
     )
 

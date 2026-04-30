@@ -22,6 +22,8 @@ const mapStationToDetail = (item: StationDetailAggregate): DetailAggregate => ({
   n_days: item.n_days,
   price_changes_per_station_day: item.price_changes_per_station_day,
   unique_prices_per_station_day: item.unique_prices_per_station_day,
+  price_increased_per_station_day: item.price_increased_per_station_day,
+  price_decreased_per_station_day: item.price_decreased_per_station_day,
 });
 
 const StationsContent: React.FC = () => {
@@ -42,6 +44,8 @@ const StationsContent: React.FC = () => {
         avgPrice: t.statistics.avgPriceByStation,
         variance: t.statistics.priceVarianceByStation,
         activity: t.statistics.priceActivityByStation,
+        priceIncreased: t.statistics.priceIncreasedByStation,
+        priceDecreased: t.statistics.priceDecreasedByStation,
       }}
     />
   );
