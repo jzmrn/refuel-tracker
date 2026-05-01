@@ -4,10 +4,8 @@ import { useRouter } from "next/router";
 import { clsx } from "clsx";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { UserProfile } from "@/components/auth";
-import DashboardIcon from "@mui/icons-material/Dashboard";
 import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
-import BarChartIcon from "@mui/icons-material/BarChart";
 import SettingsIcon from "@mui/icons-material/Settings";
 
 interface LayoutProps {
@@ -18,19 +16,10 @@ export default function Layout({ children }: LayoutProps) {
   const router = useRouter();
   const { t } = useTranslation();
 
-  const desktopExclusive = [
-    {
-      name: t.navigation.dashboard,
-      href: "/",
-      shortName: t.navigation.home,
-      icon: <DashboardIcon className="w-5 h-5" />,
-    },
-  ];
-
   const mainNavigation = [
     {
       name: t.navigation.fuelPrices,
-      href: "/stations",
+      href: "/prices",
       shortName: t.navigation.prices,
       icon: <LocalGasStationIcon className="w-5 h-5" />,
     },
@@ -39,12 +28,6 @@ export default function Layout({ children }: LayoutProps) {
       href: "/cars",
       shortName: t.navigation.cars,
       icon: <DirectionsCarIcon className="w-5 h-5" />,
-    },
-    {
-      name: t.navigation.statistics,
-      href: "/stats",
-      shortName: t.navigation.statistics,
-      icon: <BarChartIcon className="w-5 h-5" />,
     },
   ];
 
@@ -57,85 +40,64 @@ export default function Layout({ children }: LayoutProps) {
     },
   ];
 
-  const desktopNavigation = [...desktopExclusive, ...mainNavigation];
   const mobileNavigation = [...mainNavigation, ...bottomNavigation];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:flex">
-      {/* Desktop Sidebar - Hidden on mobile */}
-      <div className="hidden md:flex md:flex-col w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0">
-        <div className="p-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-              {t.layout.appTitle}
-            </h1>
-            <UserProfile />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Desktop Top Navigation - Hidden on mobile */}
+      <header className="hidden md:block fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-md">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center h-16">
+            {/* Left: App Title */}
+            <div className="flex-1">
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                {t.layout.appTitle}
+              </h1>
+            </div>
+
+            {/* Center: Navigation Items */}
+            <nav className="flex items-center gap-2">
+              {mainNavigation.map((item) => {
+                const isActive =
+                  router.pathname === item.href ||
+                  (item.href === "/prices" &&
+                    router.pathname.startsWith("/prices/")) ||
+                  (item.href === "/cars" &&
+                    router.pathname.startsWith("/cars/"));
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={clsx(
+                      "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary-100 text-primary-700 dark:bg-blue-900/30 dark:text-blue-300"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
+                    )}
+                  >
+                    {item.icon}
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Right: Profile Picture */}
+            <div className="flex-1 flex justify-end">
+              <Link
+                href="/settings"
+                className="hover:opacity-80 transition-opacity"
+              >
+                <UserProfile />
+              </Link>
+            </div>
           </div>
         </div>
-
-        {/* Main Navigation */}
-        <nav className="flex-1 px-3">
-          <ul className="space-y-1">
-            {desktopNavigation.map((item) => {
-              const isActive =
-                router.pathname === item.href ||
-                (item.href === "/stations" &&
-                  router.pathname.startsWith("/stations/")) ||
-                (item.href === "/cars" &&
-                  router.pathname.startsWith("/cars/")) ||
-                (item.href === "/stats" &&
-                  router.pathname.startsWith("/stats/"));
-              return (
-                <li key={item.name}>
-                  <Link
-                    href={item.href}
-                    className={clsx(
-                      "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      isActive
-                        ? "bg-primary-50 text-primary-700 border-r-2 border-primary-700 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-300"
-                        : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
-                    )}
-                  >
-                    <span className="mr-3">{item.icon}</span>
-                    {item.name}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-
-        {/* Bottom Navigation */}
-        <nav className="px-3 pb-4">
-          <ul className="space-y-1">
-            {bottomNavigation.map((item) => {
-              const isActive = router.pathname === item.href;
-              return (
-                <li key={item.name}>
-                  <Link
-                    href={item.href}
-                    className={clsx(
-                      "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      isActive
-                        ? "bg-primary-50 text-primary-700 border-r-2 border-primary-700 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-300"
-                        : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100",
-                    )}
-                  >
-                    <span className="mr-3">{item.icon}</span>
-                    {item.name}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-      </div>
+      </header>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col md:overflow-hidden">
-        <main className="flex-1 p-1 md:p-6 pb-20 md:pb-8 md:overflow-y-auto">
-          {children}
-        </main>
+      <div className="flex-1 flex flex-col md:pt-16">
+        <main className="flex-1 p-1 md:p-0 pb-20 md:pb-8">{children}</main>
       </div>
 
       {/* Mobile Bottom Navigation - Visible only on mobile */}
@@ -144,10 +106,9 @@ export default function Layout({ children }: LayoutProps) {
           {mobileNavigation.map((item) => {
             const isActive =
               router.pathname === item.href ||
-              (item.href === "/stations" &&
-                router.pathname.startsWith("/stations/")) ||
-              (item.href === "/cars" && router.pathname.startsWith("/cars/")) ||
-              (item.href === "/stats" && router.pathname.startsWith("/stats/"));
+              (item.href === "/prices" &&
+                router.pathname.startsWith("/prices/")) ||
+              (item.href === "/cars" && router.pathname.startsWith("/cars/"));
             return (
               <Link
                 key={item.name}

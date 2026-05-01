@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { useRouter } from "next/router";
 import FavoriteStationsList from "@/components/fuel-prices/FavoriteStationsList";
 import FuelTypeFilter from "@/components/fuel/FuelTypeFilter";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
@@ -29,11 +30,15 @@ export default function FuelPrices() {
   };
 
   const handleSearchClick = () => {
-    router.push("/stations/search");
+    router.push("/prices/stations/search");
+  };
+
+  const handleStatsClick = () => {
+    router.push("/prices/stats");
   };
 
   const handleNavigateToDetail = (stationId: string) => {
-    router.push(`/stations/${encodeURIComponent(stationId)}`);
+    router.push(`/prices/stations/${encodeURIComponent(stationId)}`);
   };
 
   return (
@@ -42,6 +47,13 @@ export default function FuelPrices() {
         title={t.fuelPrices.title}
         actions={
           <>
+            <IconButton
+              onClick={handleStatsClick}
+              icon={
+                <BarChartIcon className="icon text-gray-600 dark:text-gray-400" />
+              }
+              ariaLabel={t.navigation.statistics}
+            />
             <IconButton
               onClick={() => refreshFavorites()}
               icon={

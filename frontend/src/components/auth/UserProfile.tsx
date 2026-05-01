@@ -16,7 +16,7 @@ export default function UserProfile() {
   }
 
   return (
-    <div className="relative ml-3 flex-shrink-0" title={user.name}>
+    <div className="relative flex-shrink-0" title={user.name}>
       {user.picture ? (
         <img
           className="h-8 w-8 rounded-full object-cover"

@@ -1,4 +1,6 @@
 import CircularProgress from "@mui/material/CircularProgress";
+import StarIcon from "@mui/icons-material/Star";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 interface FavoriteToggleButtonProps {
@@ -56,9 +58,9 @@ export default function FavoriteToggleButton({
           sx={{ color: "currentColor" }}
         />
       ) : isFavorite ? (
-        "★"
+        <StarIcon className={size === "md" ? "icon" : ""} />
       ) : (
-        "☆"
+        <StarBorderIcon className={size === "md" ? "icon" : ""} />
       )}
     </button>
   );

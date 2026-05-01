@@ -38,7 +38,7 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
         iconBackground="purple"
         headerAction={
           <button
-            onClick={() => router.push("/stats/stations")}
+            onClick={() => router.push("/prices/stations/stats")}
             className="btn-icon"
             aria-label={t.statistics.stationsDetails}
           >
@@ -75,7 +75,7 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
                     key={s.station_id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                     onClick={() =>
-                      router.push(`/stats/stations/${s.station_id}`)
+                      router.push(`/prices/stations/${s.station_id}/stats`)
                     }
                   >
                     <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-primary">
@@ -116,7 +116,7 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
         iconBackground="orange"
         headerAction={
           <button
-            onClick={() => router.push("/stats/places")}
+            onClick={() => router.push("/prices/places/stats")}
             className="btn-icon"
             aria-label={t.statistics.placesDetails}
           >
@@ -186,7 +186,7 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
         iconBackground="indigo"
         headerAction={
           <button
-            onClick={() => router.push("/stats/brands")}
+            onClick={() => router.push("/prices/brands/stats")}
             className="btn-icon"
             aria-label={t.statistics.brandsDetails}
           >

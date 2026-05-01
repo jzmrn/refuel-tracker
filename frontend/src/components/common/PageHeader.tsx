@@ -32,17 +32,15 @@ export default function PageHeader({
             ariaLabel={backLabel ?? t.common.back}
           />
         )}
-        <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <h1 className="heading-1">{title}</h1>
-            {actions && <div className="flex gap-2">{actions}</div>}
-          </div>
+        <div className="flex-1 min-w-0">
+          <h1 className="heading-1 truncate">{title}</h1>
           {subtitle && (
             <p className="text-secondary mt-1 text-sm md:text-base">
               {subtitle}
             </p>
           )}
         </div>
+        {actions && <div className="flex gap-2 shrink-0">{actions}</div>}
       </div>
     </div>
   );

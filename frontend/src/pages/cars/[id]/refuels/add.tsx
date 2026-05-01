@@ -414,7 +414,7 @@ function AddRefuelContent({ carId }: { carId: string }) {
                     {t.refuels.favoriteStationsCanBeSelected}{" "}
                     <button
                       type="button"
-                      onClick={() => router.push("/stations")}
+                      onClick={() => router.push("/prices//stations")}
                       className="text-primary-600 dark:text-blue-400 hover:underline"
                     >
                       {t.refuels.here}

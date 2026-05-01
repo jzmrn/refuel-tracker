@@ -113,7 +113,7 @@ export default function StationMetaInfo({
 
   const statsButton = (
     <button
-      onClick={() => router.push(`/stats/stations/${stationId}`)}
+      onClick={() => router.push(`/prices/stations/${stationId}/stats`)}
       className="btn-icon"
       title={t.statistics.viewStationStats}
     >

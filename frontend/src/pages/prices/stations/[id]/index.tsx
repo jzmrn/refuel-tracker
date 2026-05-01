@@ -4,25 +4,19 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useFuelType } from "@/lib/fuelType";
 import Snackbar from "@/components/common/Snackbar";
 import { useSnackbar } from "@/lib/useSnackbar";
-import {
-  useAddFavoriteStation,
-  useFavoriteStations,
-  useRemoveFavoriteStation,
-  useStationMeta,
-} from "@/lib/hooks/useFuelPrices";
+import { useStationMeta } from "@/lib/hooks/useFuelPrices";
 import { FuelType } from "@/lib/api";
 import FuelTypeFilter from "@/components/fuel/FuelTypeFilter";
 import StationMetaInfo from "@/components/fuel/StationMetaInfo";
 import StationPriceChart from "@/components/fuel/StationPriceChart";
 import StationDailyStatsChart from "@/components/fuel/StationDailyStatsChart";
-import StationSubtitle from "@/components/fuel/StationSubtitle";
 import {
-  FavoriteToggleButton,
   LoadingSpinner,
   PageContainer,
   PageHeader,
   StackLayout,
 } from "@/components/common";
+import { StationPageHeader } from "@/components/station";
 
 function StationDetailsContent({ stationId }: { stationId: string }) {
   const router = useRouter();
@@ -35,7 +29,7 @@ function StationDetailsContent({ stationId }: { stationId: string }) {
     setSelectedFuelType(fuelType);
   };
 
-  const { snackbar, showError, showSuccess, hideSnackbar } = useSnackbar();
+  const { snackbar, showSuccess, hideSnackbar } = useSnackbar();
 
   // Get station meta
   const { data: stationMeta } = useStationMeta(stationId);
@@ -112,7 +106,11 @@ export default function StationDetails() {
         }
       >
         {stationId ? (
-          <StationDetailsHeader stationId={stationId} onBack={handleBack} />
+          <StationPageHeader
+            stationId={stationId}
+            title={t.fuelPrices.stationDetails}
+            onBack={handleBack}
+          />
         ) : (
           <PageHeader title={t.fuelPrices.stationDetails} onBack={handleBack} />
         )}
@@ -126,49 +124,5 @@ export default function StationDetails() {
         )}
       </Suspense>
     </PageContainer>
-  );
-}
-
-function StationFavoriteButton({ stationId }: { stationId: string }) {
-  const { data: favoritesResponse } = useFavoriteStations();
-  const addFavorite = useAddFavoriteStation();
-  const removeFavorite = useRemoveFavoriteStation();
-
-  const isFavorite = favoritesResponse.stations.some(
-    (f) => f.station_id === stationId,
-  );
-
-  return (
-    <FavoriteToggleButton
-      isFavorite={isFavorite}
-      onAdd={() => addFavorite.mutateAsync(stationId)}
-      onRemove={() => removeFavorite.mutateAsync(stationId)}
-      isLoading={addFavorite.isPending || removeFavorite.isPending}
-      size="md"
-    />
-  );
-}
-
-function StationDetailsHeader({
-  stationId,
-  onBack,
-}: {
-  stationId: string;
-  onBack: () => void;
-}) {
-  const { t } = useTranslation();
-  const { data: stationMeta } = useStationMeta(stationId);
-
-  return (
-    <PageHeader
-      title={t.fuelPrices.stationDetails}
-      subtitle={<StationSubtitle station={stationMeta} />}
-      onBack={onBack}
-      actions={
-        <Suspense fallback={null}>
-          <StationFavoriteButton stationId={stationId} />
-        </Suspense>
-      }
-    />
   );
 }

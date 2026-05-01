@@ -131,7 +131,7 @@ export default function SearchStations() {
   ]);
 
   const handleBack = () => {
-    router.push("/stations");
+    router.push("/prices");
   };
 
   const handleSearch = (
@@ -163,7 +163,7 @@ export default function SearchStations() {
     // Update URL with search params to preserve state on navigation
     router.push(
       {
-        pathname: "/stations/search",
+        pathname: "/prices/stations/search",
         query: {
           lat: searchParams.lat,
           lng: searchParams.lng,
@@ -226,7 +226,7 @@ export default function SearchStations() {
   };
 
   const handleNavigateToDetail = (stationId: string) => {
-    router.push(`/stations/${encodeURIComponent(stationId)}`);
+    router.push(`/prices/stations/${encodeURIComponent(stationId)}`);
   };
 
   const favoriteIds = new Set(
