@@ -31,7 +31,7 @@ const RecentRefuelsPanel: React.FC<RecentRefuelsPanelProps> = ({
     <Panel
       title={t.refuels.recentRefuels}
       actions={
-        <div className="flex gap-2">
+        <div className="action-group">
           <IconButton
             onClick={onViewAll}
             icon={

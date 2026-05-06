@@ -40,7 +40,7 @@ export default function PageHeader({
             </p>
           )}
         </div>
-        {actions && <div className="flex gap-2 shrink-0">{actions}</div>}
+        {actions && <div className="action-group shrink-0">{actions}</div>}
       </div>
     </div>
   );

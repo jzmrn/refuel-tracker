@@ -249,6 +249,11 @@
     @apply flex items-center;
   }
 
+  /* Action group - for grouping icon buttons in panel headers, etc. */
+  .action-group {
+    @apply flex gap-2;
+  }
+
   /* Text Utilities */
   .text-highlight {
     @apply font-semibold text-blue-600 dark:text-blue-400;

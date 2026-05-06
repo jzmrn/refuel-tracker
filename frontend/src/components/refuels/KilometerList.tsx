@@ -60,10 +60,10 @@ export default function KilometerList({
       <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead className="bg-gray-50 dark:bg-gray-700">
           <tr>
-            <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
+            <th className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
               {t.refuels.dateHeader}
             </th>
-            <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-secondary uppercase tracking-wider">
+            <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-right text-xs font-medium text-secondary uppercase tracking-wider">
               {t.kilometers.totalKilometers}
             </th>
           </tr>
@@ -81,7 +81,7 @@ export default function KilometerList({
                   isToday ? "bg-blue-50/30 dark:bg-blue-900/20" : ""
                 }`}
               >
-                <td className="px-3 sm:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-primary">
+                <td className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-primary">
                   <div className="font-medium">
                     <div className="sm:hidden">
                       {formatDateLocalized(new Date(entry.timestamp), {
@@ -94,7 +94,7 @@ export default function KilometerList({
                     </div>
                   </div>
                 </td>
-                <td className="px-3 sm:px-6 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium text-right">
+                <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium text-right">
                   {formatKilometers(entry.total_kilometers)}
                 </td>
               </tr>

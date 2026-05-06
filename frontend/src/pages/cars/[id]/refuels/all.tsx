@@ -326,14 +326,8 @@ function AllRefuelsContent({ carId }: { carId: string }) {
                   <th className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
                     {t.refuels.dateHeader}
                   </th>
-                  <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                    €/L
-                  </th>
-                  <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                    {t.refuels.litersHeader}
-                  </th>
-                  <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                    {t.refuels.totalHeader}
+                  <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden xl:table-cell">
+                    {t.refuels.station}
                   </th>
                   <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden lg:table-cell">
                     {t.refuels.kmHeader}
@@ -341,8 +335,14 @@ function AllRefuelsContent({ carId }: { carId: string }) {
                   <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden md:table-cell">
                     L/100km
                   </th>
-                  <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden xl:table-cell">
-                    {t.refuels.station}
+                  <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
+                    €/L
+                  </th>
+                  <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
+                    {t.refuels.litersHeader}
+                  </th>
+                  <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-right text-xs font-medium text-secondary uppercase tracking-wider">
+                    {t.refuels.totalHeader}
                   </th>
                 </tr>
               </thead>
@@ -377,16 +377,8 @@ function AllRefuelsContent({ carId }: { carId: string }) {
                           })}
                         </div>
                       </td>
-                      <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
-                        {renderSvgFuelPrice(refuel.price, {
-                          showCurrency: false,
-                        })}
-                      </td>
-                      <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
-                        {formatLiters(refuel.amount)}
-                      </td>
-                      <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm font-bold text-primary">
-                        {formatCurrency(totalCost)}
+                      <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-secondary hidden xl:table-cell">
+                        {refuel.station_brand || "—"}
                       </td>
                       <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary hidden lg:table-cell">
                         {refuel.kilometers_since_last_refuel.toFixed(0)}
@@ -396,8 +388,16 @@ function AllRefuelsContent({ carId }: { carId: string }) {
                           {consumption.toFixed(1)}
                         </div>
                       </td>
-                      <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-secondary hidden xl:table-cell">
-                        {refuel.station_brand || "—"}
+                      <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
+                        {renderSvgFuelPrice(refuel.price, {
+                          showCurrency: false,
+                        })}
+                      </td>
+                      <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
+                        {formatLiters(refuel.amount)}
+                      </td>
+                      <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm font-bold text-primary text-right">
+                        {formatCurrency(totalCost)}
                       </td>
                     </tr>
                   );

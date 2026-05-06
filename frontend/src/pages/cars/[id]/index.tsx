@@ -6,7 +6,7 @@ import { LoadingSpinner, PageContainer, PageHeader } from "@/components/common";
 import CarDetailsContent from "@/components/cars/CarDetailsContent";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { useRevokeCarAccess, useDeleteCar } from "@/lib/hooks/useCars";
+import { useRevokeCarAccess, useDeleteCar, useCar } from "@/lib/hooks/useCars";
 import { RefuelMetric } from "@/lib/api";
 
 export default function CarDetails() {
@@ -18,6 +18,7 @@ export default function CarDetails() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const { data: car } = useCar(carId ?? "");
   const revokeAccess = useRevokeCarAccess();
   const deleteCar = useDeleteCar();
   const { snackbar, showError, showSuccess, hideSnackbar } = useSnackbar();
@@ -88,7 +89,11 @@ export default function CarDetails() {
 
   return (
     <PageContainer>
-      <PageHeader title={t.cars.carDetails} onBack={handleBack} />
+      <PageHeader
+        title={t.cars.carDetails}
+        subtitle={car ? `${car.name} (${car.year})` : undefined}
+        onBack={handleBack}
+      />
 
       <Suspense fallback={<LoadingSpinner />}>
         {/* This ternary avoids rendering an empty page since the carId is loaded from the path */}

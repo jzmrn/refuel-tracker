@@ -25,7 +25,7 @@ const CarDetailsPanel: React.FC<CarDetailsPanelProps> = ({
     <Panel
       title={car.name}
       actions={
-        <div className="flex gap-1">
+        <div className="action-group">
           <IconButton
             onClick={onEdit}
             disabled={!car.is_owner}

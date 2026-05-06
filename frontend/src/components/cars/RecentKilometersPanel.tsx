@@ -26,7 +26,7 @@ const RecentKilometersPanel: React.FC<RecentKilometersPanelProps> = ({
     <Panel
       title={t.kilometers.recentEntries}
       actions={
-        <div className="flex gap-2">
+        <div className="action-group">
           <IconButton
             onClick={onViewChart}
             icon={
