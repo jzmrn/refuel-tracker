@@ -150,6 +150,200 @@ class RefuelDataClient:
             )
             return cursor.rowcount > 0
 
+    def update_metric(
+        self,
+        user_id: str,
+        timestamp: datetime,
+        updates: dict[str, Any],
+    ) -> RefuelMetric | None:
+        """Update a specific refuel metric by timestamp.
+
+        Args:
+            user_id: The user ID who owns the metric
+            timestamp: The timestamp of the metric to update
+            updates: Dictionary of fields to update (only non-None values)
+
+        Returns:
+            The updated RefuelMetric if found and updated, None otherwise
+        """
+        # Only allow updating these fields (not primary key fields or station_id)
+        allowed_fields = {
+            "price",
+            "amount",
+            "kilometers_since_last_refuel",
+            "estimated_fuel_consumption",
+            "notes",
+            "fuel_type",
+        }
+
+        # Filter to only allowed fields with non-None values
+        filtered_updates = {
+            k: v for k, v in updates.items() if k in allowed_fields and v is not None
+        }
+
+        if not filtered_updates:
+            # No valid updates, just return the existing metric
+            metrics = self.get_metrics(user_id=user_id)
+            for m in metrics:
+                if to_utc_iso(m.timestamp) == to_utc_iso(timestamp):
+                    return m
+            return None
+
+        # Build the SET clause
+        set_clause = ", ".join(f"{k} = ?" for k in filtered_updates.keys())
+        params = list(filtered_updates.values()) + [user_id, to_utc_iso(timestamp)]
+
+        with self._db.get_connection() as con:
+            cursor = con.execute(
+                f"""
+                UPDATE refuel_metrics
+                SET {set_clause}
+                WHERE user_id = ? AND timestamp = ?
+                """,
+                params,
+            )
+
+            if cursor.rowcount == 0:
+                return None
+
+            # Fetch and return the updated metric
+            cursor = con.execute(
+                "SELECT * FROM refuel_metrics WHERE user_id = ? AND timestamp = ?",
+                [user_id, to_utc_iso(timestamp)],
+            )
+            columns = [desc[0] for desc in cursor.description]
+            row = cursor.fetchone()
+
+            if row:
+                return RefuelMetric(**dict(zip(columns, row)))
+            return None
+
+    def get_filter_options(self, car_id: str) -> dict[str, Any]:
+        """Get available filter options for refuel entries of a car.
+
+        Returns:
+            Dictionary with:
+            - stations: List of unique stations used for this car
+            - years: List of years with refuel entries
+            - fuel_types: List of fuel types used
+        """
+        with self._db.get_connection() as con:
+            # Get unique station IDs
+            stations_cursor = con.execute(
+                """
+                SELECT DISTINCT station_id
+                FROM refuel_metrics
+                WHERE car_id = ? AND station_id IS NOT NULL
+                """,
+                [car_id],
+            )
+            station_ids = [row[0] for row in stations_cursor.fetchall()]
+
+            # Get unique years
+            years_cursor = con.execute(
+                """
+                SELECT DISTINCT strftime('%Y', timestamp) as year
+                FROM refuel_metrics
+                WHERE car_id = ?
+                ORDER BY year DESC
+                """,
+                [car_id],
+            )
+            years = [int(row[0]) for row in years_cursor.fetchall()]
+
+            # Get unique fuel types
+            fuel_types_cursor = con.execute(
+                """
+                SELECT DISTINCT fuel_type
+                FROM refuel_metrics
+                WHERE car_id = ? AND fuel_type IS NOT NULL
+                """,
+                [car_id],
+            )
+            fuel_types = [row[0] for row in fuel_types_cursor.fetchall()]
+
+        return {
+            "station_ids": station_ids,
+            "years": years,
+            "fuel_types": fuel_types,
+        }
+
+    def get_metrics_paginated(
+        self,
+        car_id: str,
+        offset: int = 0,
+        limit: int = 20,
+        sort_by: str = "timestamp",
+        sort_order: str = "desc",
+        station_id: str | None = None,
+        fuel_type: str | None = None,
+        year: int | None = None,
+    ) -> tuple[list[RefuelMetric], int]:
+        """Get refuel metrics with pagination, sorting, and filtering.
+
+        Args:
+            car_id: The car ID to filter by
+            offset: Number of records to skip
+            limit: Maximum number of records to return
+            sort_by: Field to sort by (timestamp, price, amount, consumption, total_cost)
+            sort_order: Sort order (asc or desc)
+            station_id: Optional station ID filter
+            fuel_type: Optional fuel type filter
+            year: Optional year filter
+
+        Returns:
+            Tuple of (list of metrics, total count)
+        """
+        # Map sort_by to actual columns/expressions
+        sort_mapping = {
+            "timestamp": "timestamp",
+            "price": "price",
+            "amount": "amount",
+            "consumption": "(amount / kilometers_since_last_refuel) * 100",
+            "total_cost": "price * amount",
+            "kilometers": "kilometers_since_last_refuel",
+        }
+
+        sort_column = sort_mapping.get(sort_by, "timestamp")
+        sort_dir = "ASC" if sort_order.lower() == "asc" else "DESC"
+
+        conditions = ["car_id = ?"]
+        params: list[Any] = [car_id]
+
+        if station_id:
+            conditions.append("station_id = ?")
+            params.append(station_id)
+
+        if fuel_type:
+            conditions.append("fuel_type = ?")
+            params.append(fuel_type)
+
+        if year:
+            conditions.append("strftime('%Y', timestamp) = ?")
+            params.append(str(year))
+
+        where_clause = " AND ".join(conditions)
+
+        # Get total count
+        count_query = f"SELECT COUNT(*) FROM refuel_metrics WHERE {where_clause}"
+        with self._db.get_connection() as con:
+            total_count = con.execute(count_query, params).fetchone()[0]
+
+            # Get paginated results
+            query = f"""
+                SELECT *
+                FROM refuel_metrics
+                WHERE {where_clause}
+                ORDER BY {sort_column} {sort_dir}
+                LIMIT ? OFFSET ?
+            """
+            cursor = con.execute(query, params + [limit, offset])
+            columns = [desc[0] for desc in cursor.description]
+            results = cursor.fetchall()
+
+        metrics = [RefuelMetric(**dict(zip(columns, row))) for row in results]
+        return metrics, total_count
+
     def get_total_cost_by_period(
         self,
         user_id: str | None = None,

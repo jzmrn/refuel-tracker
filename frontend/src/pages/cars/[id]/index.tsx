@@ -7,6 +7,7 @@ import CarDetailsContent from "@/components/cars/CarDetailsContent";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useRevokeCarAccess, useDeleteCar } from "@/lib/hooks/useCars";
+import { RefuelMetric } from "@/lib/api";
 
 export default function CarDetails() {
   const { t } = useTranslation();
@@ -32,6 +33,15 @@ export default function CarDetails() {
 
   const handleAddRefuel = () => {
     router.push(`/cars/${carId}/refuels/add`);
+  };
+
+  const handleViewAllRefuels = () => {
+    router.push(`/cars/${carId}/refuels/all`);
+  };
+
+  const handleEditRefuel = (refuel: RefuelMetric) => {
+    const encodedTimestamp = encodeURIComponent(refuel.timestamp);
+    router.push(`/cars/${carId}/refuels/edit/${encodedTimestamp}`);
   };
 
   const handleAddSharedUsers = () => {
@@ -91,6 +101,8 @@ export default function CarDetails() {
             onDeleteCar={() => setIsDeleteDialogOpen(true)}
             onViewStats={handleViewStats}
             onAddRefuel={handleAddRefuel}
+            onViewAllRefuels={handleViewAllRefuels}
+            onEditRefuel={handleEditRefuel}
             onViewKilometerChart={handleViewKilometerChart}
             onAddKilometer={handleAddKilometer}
             onAddSharedUsers={handleAddSharedUsers}

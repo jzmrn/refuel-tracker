@@ -10,9 +10,14 @@ import { renderSvgFuelPrice } from "../../lib/formatPrice";
 interface RefuelListProps {
   refuels: RefuelMetric[];
   loading?: boolean;
+  onRowClick?: (refuel: RefuelMetric) => void;
 }
 
-export default function RefuelList({ refuels, loading }: RefuelListProps) {
+export default function RefuelList({
+  refuels,
+  loading,
+  onRowClick,
+}: RefuelListProps) {
   const { t } = useTranslation();
   const { formatDate: formatDateLocalized } = useLocalization();
   if (loading) {
@@ -35,6 +40,8 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
   const formatLiters = (liters: number) => {
     return `${liters.toFixed(2)} L`;
   };
+
+  const isClickable = !!onRowClick;
 
   return (
     <div className="overflow-x-auto">
@@ -62,7 +69,7 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
           </tr>
         </thead>
         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-          {refuels?.map((refuel, index) => {
+          {refuels?.map((refuel) => {
             const totalCost = refuel.price * refuel.amount;
             const refuelDate = new Date(refuel.timestamp);
             const now = new Date();
@@ -70,10 +77,11 @@ export default function RefuelList({ refuels, loading }: RefuelListProps) {
 
             return (
               <tr
-                key={index}
+                key={refuel.timestamp}
+                onClick={isClickable ? () => onRowClick(refuel) : undefined}
                 className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${
                   isToday ? "bg-blue-50/30 dark:bg-blue-900/20" : ""
-                }`}
+                } ${isClickable ? "cursor-pointer" : ""}`}
               >
                 <td className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-primary">
                   <div className="font-medium">

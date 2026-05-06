@@ -104,6 +104,7 @@ export interface RefuelMetric {
   estimated_fuel_consumption: number;
   notes?: string;
   station_id?: string;
+  fuel_type?: string;
   remaining_range_km?: number | null;
   // Station metadata
   station_brand?: string;
@@ -123,6 +124,37 @@ export interface RefuelMetricCreate {
   notes?: string;
   station_id?: string;
   fuel_type?: string; // e5, e10, diesel - optional for backward compatibility
+}
+
+export interface RefuelMetricUpdate {
+  timestamp: string; // Required to identify the record
+  car_id: string; // Required for access check
+  price?: number;
+  amount?: number;
+  kilometers_since_last_refuel?: number;
+  estimated_fuel_consumption?: number;
+  notes?: string;
+  fuel_type?: FuelType;
+}
+
+export interface RefuelFilterStation {
+  station_id: string;
+  brand?: string;
+  place?: string;
+}
+
+export interface RefuelFilterOptions {
+  stations: RefuelFilterStation[];
+  years: number[];
+  fuel_types: string[];
+}
+
+export interface RefuelPaginatedResponse {
+  items: RefuelMetric[];
+  total: number;
+  offset: number;
+  limit: number;
+  has_more: boolean;
 }
 
 export interface RefuelStatistics {
@@ -796,6 +828,34 @@ class ApiService {
       "/api/metrics/refuel/favorite-stations",
       { params },
     );
+    return response.data;
+  }
+
+  async updateRefuelMetric(data: RefuelMetricUpdate): Promise<RefuelMetric> {
+    const response = await this.api.put("/api/metrics/refuel", data);
+    return response.data;
+  }
+
+  async getRefuelFilterOptions(carId: string): Promise<RefuelFilterOptions> {
+    const response = await this.api.get("/api/metrics/refuel/filter-options", {
+      params: { car_id: carId },
+    });
+    return response.data;
+  }
+
+  async getRefuelMetricsPaginated(params: {
+    car_id: string;
+    offset?: number;
+    limit?: number;
+    sort_by?: string;
+    sort_order?: string;
+    station_id?: string;
+    fuel_type?: string;
+    year?: number;
+  }): Promise<RefuelPaginatedResponse> {
+    const response = await this.api.get("/api/metrics/refuel/paginated", {
+      params,
+    });
     return response.data;
   }
 

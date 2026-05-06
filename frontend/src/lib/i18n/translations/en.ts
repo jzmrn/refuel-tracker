@@ -137,6 +137,15 @@ export const en: TranslationStructure = {
     kmHeader: "Km",
     notesHeader: "Notes",
 
+    // Edit refuel
+    editRefuel: "Edit Refuel",
+    allRefuels: "All Refuels",
+    refuelNotFound: "Refuel entry not found",
+    errorUpdatingRefuel: "Error updating refuel entry.",
+    noChanges: "No changes",
+    year: "Year",
+    sortBy: "Sort by",
+
     // RefuelConsumptionChart labels
     fuelConsumptionEstimatedVsActual: "Fuel Consumption: Estimated vs Actual",
     noConsumptionDataAvailable: "No consumption data available",

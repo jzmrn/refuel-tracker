@@ -2,11 +2,14 @@ import {
   useSuspenseQuery,
   useMutation,
   useQueryClient,
+  useInfiniteQuery,
+  useQuery,
 } from "@tanstack/react-query";
 import apiService, {
   CarCreate,
   CarUpdate,
   RefuelMetricCreate,
+  RefuelMetricUpdate,
   KilometerEntryCreate,
 } from "@/lib/api";
 
@@ -19,6 +22,10 @@ export const carsKeys = {
   details: () => [...carsKeys.all, "detail"] as const,
   detail: (id: string) => [...carsKeys.details(), id] as const,
   refuels: (carId: string) => [...carsKeys.detail(carId), "refuels"] as const,
+  refuelsPaginated: (carId: string, filters: Record<string, any>) =>
+    [...carsKeys.refuels(carId), "paginated", filters] as const,
+  refuelsFilterOptions: (carId: string) =>
+    [...carsKeys.refuels(carId), "filterOptions"] as const,
   refuelStatistics: (carId: string) =>
     [...carsKeys.detail(carId), "statistics"] as const,
   kilometers: (carId: string) =>
@@ -211,6 +218,80 @@ export function useCreateRefuelMetric() {
         queryKey: carsKeys.refuelStatistics(variables.car_id),
       });
     },
+  });
+}
+
+/**
+ * Hook to update a refuel metric
+ * Automatically invalidates refuel metrics and statistics
+ */
+export function useUpdateRefuelMetric() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (update: RefuelMetricUpdate) => {
+      return await apiService.updateRefuelMetric(update);
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate refuel metrics for this car
+      queryClient.invalidateQueries({
+        queryKey: carsKeys.refuels(variables.car_id),
+      });
+      // Invalidate refuel statistics for this car
+      queryClient.invalidateQueries({
+        queryKey: carsKeys.refuelStatistics(variables.car_id),
+      });
+    },
+  });
+}
+
+/**
+ * Hook to fetch refuel filter options for a car
+ */
+export function useRefuelFilterOptions(carId: string) {
+  return useQuery({
+    queryKey: carsKeys.refuelsFilterOptions(carId),
+    queryFn: () => apiService.getRefuelFilterOptions(carId),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!carId,
+  });
+}
+
+/**
+ * Infinite query hook to fetch paginated refuel metrics with filtering and sorting
+ * Supports infinite scroll
+ */
+export function useInfiniteRefuelMetrics(
+  carId: string,
+  params?: {
+    sort_by?: string;
+    sort_order?: string;
+    station_id?: string;
+    fuel_type?: string;
+    year?: number;
+  },
+) {
+  const limit = 20;
+
+  return useInfiniteQuery({
+    queryKey: carsKeys.refuelsPaginated(carId, params || {}),
+    queryFn: async ({ pageParam = 0 }) => {
+      return await apiService.getRefuelMetricsPaginated({
+        car_id: carId,
+        offset: pageParam,
+        limit,
+        ...params,
+      });
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.has_more) {
+        return lastPage.offset + lastPage.limit;
+      }
+      return undefined;
+    },
+    enabled: !!carId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
 

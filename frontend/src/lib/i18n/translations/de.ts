@@ -138,6 +138,15 @@ export const de: TranslationStructure = {
     kmHeader: "Km",
     notesHeader: "Notizen",
 
+    // Edit refuel
+    editRefuel: "Tankeintrag bearbeiten",
+    allRefuels: "Alle Tankungen",
+    refuelNotFound: "Tankeintrag nicht gefunden",
+    errorUpdatingRefuel: "Fehler beim Aktualisieren des Tankeintrags.",
+    noChanges: "Keine Änderungen",
+    year: "Jahr",
+    sortBy: "Sortieren nach",
+
     // RefuelConsumptionChart labels
     fuelConsumptionEstimatedVsActual:
       "Kraftstoffverbrauch: Geschätzt vs Tatsächlich",

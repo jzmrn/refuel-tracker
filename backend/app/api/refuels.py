@@ -12,9 +12,13 @@ from ..models import (
     FuelPrice,
     FuelPrices,
     RefuelCostStatistics,
+    RefuelFilterOptionsResponse,
+    RefuelFilterStation,
     RefuelMetricCreate,
     RefuelMetricResponse,
+    RefuelMetricUpdate,
     RefuelMonthlySummaryResponse,
+    RefuelPaginatedResponse,
     RefuelPriceTrend,
     RefuelStatisticsResponse,
     StationDropdownItem,
@@ -98,6 +102,105 @@ async def create_refuel_metric(
         }
     else:
         raise HTTPException(status_code=500, detail="Failed to create refuel metric")
+
+
+@router.put("/refuel", response_model=RefuelMetricResponse)
+async def update_refuel_metric(
+    update_data: RefuelMetricUpdate,
+    user: CurrentUser,
+    client: RefuelDataClient = Depends(get_refuel_client),
+    car_client: CarClient = Depends(get_car_client),
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+):
+    """Update an existing refuel entry.
+
+    The timestamp is used to identify the record (part of the composite primary key).
+    Only editable fields can be updated (price, amount, km, consumption, notes, fuel_type).
+    station_id cannot be changed after creation.
+    """
+    logger.info(
+        "Updating refuel metric",
+        extra={
+            "user_id": user.id,
+            "car_id": update_data.car_id,
+            "timestamp": update_data.timestamp.isoformat(),
+        },
+    )
+
+    # Verify user has access to the car
+    if not car_client.user_has_car_access(update_data.car_id, user.id):
+        raise HTTPException(status_code=403, detail="You don't have access to this car")
+
+    # Prepare updates dictionary (only non-None fields)
+    updates = {}
+    if update_data.price is not None:
+        updates["price"] = update_data.price
+    if update_data.amount is not None:
+        updates["amount"] = update_data.amount
+    if update_data.kilometers_since_last_refuel is not None:
+        updates[
+            "kilometers_since_last_refuel"
+        ] = update_data.kilometers_since_last_refuel
+    if update_data.estimated_fuel_consumption is not None:
+        updates["estimated_fuel_consumption"] = update_data.estimated_fuel_consumption
+    if update_data.notes is not None:
+        updates["notes"] = update_data.notes
+    if update_data.fuel_type is not None:
+        updates["fuel_type"] = update_data.fuel_type.value
+
+    # Update the metric
+    updated_metric = client.update_metric(user.id, update_data.timestamp, updates)
+
+    if updated_metric is None:
+        raise HTTPException(status_code=404, detail="Refuel entry not found")
+
+    # Look up fuel tank size for remaining range calculation
+    fuel_tank_size: float | None = None
+    car = car_client.get_car(update_data.car_id, user.id)
+    if car is not None:
+        fuel_tank_size = car.fuel_tank_size
+
+    # Calculate remaining range
+    remaining_range_km: float | None = None
+    if (
+        fuel_tank_size is not None
+        and updated_metric.amount > 0
+        and updated_metric.kilometers_since_last_refuel > 0
+        and updated_metric.amount < fuel_tank_size
+    ):
+        remaining_range_km = round(
+            (fuel_tank_size - updated_metric.amount)
+            / updated_metric.amount
+            * updated_metric.kilometers_since_last_refuel,
+            1,
+        )
+
+    # Get station info if available
+    station_info = None
+    if updated_metric.station_id:
+        stations_map = fuel_station_client.get_gas_stations_by_ids(
+            [updated_metric.station_id]
+        )
+        station_info = stations_map.get(updated_metric.station_id)
+
+    return RefuelMetricResponse(
+        timestamp=updated_metric.timestamp,
+        user_id=updated_metric.user_id,
+        car_id=updated_metric.car_id,
+        price=updated_metric.price,
+        amount=updated_metric.amount,
+        kilometers_since_last_refuel=updated_metric.kilometers_since_last_refuel,
+        estimated_fuel_consumption=updated_metric.estimated_fuel_consumption,
+        notes=updated_metric.notes,
+        station_id=updated_metric.station_id,
+        fuel_type=updated_metric.fuel_type,
+        remaining_range_km=remaining_range_km,
+        station_brand=station_info.brand if station_info else None,
+        station_place=station_info.place if station_info else None,
+        station_street=station_info.street if station_info else None,
+        station_house_number=station_info.house_number if station_info else None,
+        station_post_code=station_info.post_code if station_info else None,
+    )
 
 
 @router.get("/refuel", response_model=list[RefuelMetricResponse])
@@ -201,6 +304,117 @@ async def get_refuel_metrics(
         )
 
     return result
+
+
+@router.get("/refuel/paginated", response_model=RefuelPaginatedResponse)
+async def get_refuel_metrics_paginated(
+    car_id: str,
+    user: CurrentUser,
+    client: RefuelDataClient = Depends(get_refuel_client),
+    car_client: CarClient = Depends(get_car_client),
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+    offset: int = 0,
+    limit: int = 20,
+    sort_by: str = "timestamp",
+    sort_order: str = "desc",
+    station_id: str | None = None,
+    fuel_type: str | None = None,
+    year: int | None = None,
+):
+    """Get refuel metrics with pagination, sorting, and filtering.
+
+    Supports infinite scroll with offset/limit pagination.
+    Sorting options: timestamp, price, amount, consumption, total_cost, kilometers
+    Filter options: station_id, fuel_type, year
+    """
+    logger.info(
+        "Getting paginated refuel metrics",
+        extra={
+            "user_id": user.id,
+            "car_id": car_id,
+            "offset": offset,
+            "limit": limit,
+            "sort_by": sort_by,
+        },
+    )
+
+    # Verify user has access to the car
+    if not car_client.user_has_car_access(car_id, user.id):
+        raise HTTPException(status_code=403, detail="You don't have access to this car")
+
+    # Get paginated metrics
+    metrics, total = client.get_metrics_paginated(
+        car_id=car_id,
+        offset=offset,
+        limit=limit,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        station_id=station_id,
+        fuel_type=fuel_type,
+        year=year,
+    )
+
+    # Look up fuel tank size for remaining range calculation
+    fuel_tank_size: float | None = None
+    car = car_client.get_car(car_id, user.id)
+    if car is not None:
+        fuel_tank_size = car.fuel_tank_size
+
+    # Collect unique station IDs and fetch station info in bulk
+    station_ids = [m.station_id for m in metrics if m.station_id]
+    stations_map = fuel_station_client.get_gas_stations_by_ids(station_ids)
+
+    # Convert to response models
+    items = []
+    for metric in metrics:
+        remaining_range_km: float | None = None
+        if (
+            fuel_tank_size is not None
+            and metric.amount > 0
+            and metric.kilometers_since_last_refuel > 0
+            and metric.amount < fuel_tank_size
+        ):
+            remaining_range_km = round(
+                (fuel_tank_size - metric.amount)
+                / metric.amount
+                * metric.kilometers_since_last_refuel,
+                1,
+            )
+
+        station_info = (
+            stations_map.get(metric.station_id) if metric.station_id else None
+        )
+
+        items.append(
+            RefuelMetricResponse(
+                timestamp=metric.timestamp,
+                user_id=metric.user_id,
+                car_id=metric.car_id,
+                price=metric.price,
+                amount=metric.amount,
+                kilometers_since_last_refuel=metric.kilometers_since_last_refuel,
+                estimated_fuel_consumption=metric.estimated_fuel_consumption,
+                notes=metric.notes,
+                station_id=metric.station_id,
+                fuel_type=metric.fuel_type,
+                remaining_range_km=remaining_range_km,
+                station_brand=station_info.brand if station_info else None,
+                station_place=station_info.place if station_info else None,
+                station_street=station_info.street if station_info else None,
+                station_house_number=station_info.house_number
+                if station_info
+                else None,
+                station_post_code=station_info.post_code if station_info else None,
+            )
+        )
+
+    return RefuelPaginatedResponse(
+        items=items,
+        total=total,
+        offset=offset,
+        limit=limit,
+        has_more=offset + len(items) < total,
+    )
 
 
 @router.get("/refuel/statistics", response_model=RefuelStatisticsResponse)
@@ -394,4 +608,48 @@ async def get_favorite_stations_for_dropdown(
     return FavoriteStationsDropdownResponse(
         favorites=favorites_with_prices,
         closest=closest_with_prices,
+    )
+
+
+@router.get("/refuel/filter-options", response_model=RefuelFilterOptionsResponse)
+async def get_refuel_filter_options(
+    car_id: str,
+    user: CurrentUser,
+    refuel_client: RefuelDataClient = Depends(get_refuel_client),
+    car_client: CarClient = Depends(get_car_client),
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+):
+    """Get available filter options for refuel entries of a car.
+
+    Returns unique stations, years, and fuel types that have been used for this car.
+    """
+    logger.info(f"Getting refuel filter options for car {car_id}")
+
+    # Verify user has access to the car
+    if not car_client.user_has_car_access(car_id, user.id):
+        raise HTTPException(status_code=403, detail="You don't have access to this car")
+
+    # Get filter options from storage
+    options = refuel_client.get_filter_options(car_id)
+
+    # Fetch station info for the station IDs
+    stations: list[RefuelFilterStation] = []
+    if options["station_ids"]:
+        stations_map = fuel_station_client.get_gas_stations_by_ids(
+            options["station_ids"]
+        )
+        for station_id in options["station_ids"]:
+            info = stations_map.get(station_id)
+            stations.append(
+                RefuelFilterStation(
+                    station_id=station_id,
+                    brand=info.brand if info else None,
+                    place=info.place if info else None,
+                )
+            )
+
+    return RefuelFilterOptionsResponse(
+        stations=stations,
+        years=options["years"],
+        fuel_types=options["fuel_types"],
     )

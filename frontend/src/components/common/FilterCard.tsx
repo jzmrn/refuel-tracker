@@ -96,7 +96,8 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
     }
 
     if (collapsed) {
-      // Collapsing: snapshot current expanded state, force reflow, then animate to 0
+      // Collapsing: restore overflow-hidden, snapshot current expanded state, force reflow, then animate to 0
+      el.style.overflow = "hidden";
       el.style.maxHeight = `${el.scrollHeight}px`;
       el.style.opacity = "1";
       el.style.marginTop = "16px";
@@ -115,6 +116,8 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
   const handleTransitionEnd = () => {
     if (!collapsed && contentRef.current) {
       contentRef.current.style.maxHeight = "none";
+      // Allow dropdowns to overflow after expand animation completes
+      contentRef.current.style.overflow = "visible";
     }
   };
 

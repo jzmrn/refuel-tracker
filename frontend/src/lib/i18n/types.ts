@@ -145,6 +145,15 @@ export interface TranslationStructure {
     kmHeader: string;
     notesHeader: string;
 
+    // Edit refuel
+    editRefuel: string;
+    allRefuels: string;
+    refuelNotFound: string;
+    errorUpdatingRefuel: string;
+    noChanges: string;
+    year: string;
+    sortBy: string;
+
     // RefuelConsumptionChart labels
     fuelConsumptionEstimatedVsActual: string;
     noConsumptionDataAvailable: string;

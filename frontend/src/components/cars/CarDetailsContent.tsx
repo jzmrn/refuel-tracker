@@ -11,6 +11,7 @@ import {
 } from "@/lib/hooks/useCars";
 import { EmptyPanel, StackLayout } from "@/components/common";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { RefuelMetric } from "@/lib/api";
 
 interface CarDetailsContentProps {
   carId: string;
@@ -20,6 +21,8 @@ interface CarDetailsContentProps {
   onDeleteCar: () => void;
   onViewStats: () => void;
   onAddRefuel: () => void;
+  onViewAllRefuels: () => void;
+  onEditRefuel: (refuel: RefuelMetric) => void;
   onViewKilometerChart: () => void;
   onAddKilometer: () => void;
   onAddSharedUsers: () => void;
@@ -34,6 +37,8 @@ const CarDetailsContent: React.FC<CarDetailsContentProps> = ({
   onDeleteCar,
   onViewStats,
   onAddRefuel,
+  onViewAllRefuels,
+  onEditRefuel,
   onViewKilometerChart,
   onAddKilometer,
   onAddSharedUsers,
@@ -72,6 +77,8 @@ const CarDetailsContent: React.FC<CarDetailsContentProps> = ({
         loading={false}
         onViewStats={onViewStats}
         onAddRefuel={onAddRefuel}
+        onViewAll={onViewAllRefuels}
+        onEditRefuel={onEditRefuel}
       />
 
       <RecentKilometersPanel

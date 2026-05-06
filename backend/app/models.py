@@ -132,6 +132,40 @@ class RefuelMetricCreate(BaseModel):
         return v
 
 
+class RefuelMetricUpdate(BaseModel):
+    """Request model for updating a refuel entry.
+
+    The timestamp and car_id are required to identify the record.
+    All other fields are optional - only provided fields will be updated.
+    station_id cannot be changed after creation.
+    """
+
+    timestamp: datetime = Field(
+        ..., description="Timestamp of the refuel entry to update"
+    )
+    car_id: str = Field(..., description="ID of the car (required for access check)")
+    price: float | None = Field(
+        None, gt=0, le=10, description="Price per liter in euros (max 10€/L)"
+    )
+    amount: float | None = Field(
+        None, gt=0, le=100, description="Amount in liters (max 100L)"
+    )
+    kilometers_since_last_refuel: float | None = Field(
+        None, gt=0, description="Kilometers driven since last refuel"
+    )
+    estimated_fuel_consumption: float | None = Field(
+        None,
+        gt=0,
+        le=20,
+        description="Car's estimated fuel consumption in L/100km (max 20L/100km)",
+    )
+    notes: str | None = Field(None, description="Optional notes")
+    fuel_type: RefuelFuelType | None = Field(
+        None,
+        description="Fuel type used (e5, e10, diesel)",
+    )
+
+
 class RefuelMetricResponse(BaseModel):
     """Response model for refuel entries"""
 
@@ -206,6 +240,32 @@ class RefuelMonthlySummaryResponse(BaseModel):
     min_price: float
     largest_fillup: float
     smallest_fillup: float
+
+
+class RefuelFilterStation(BaseModel):
+    """Station info for filter options"""
+
+    station_id: str
+    brand: str | None = None
+    place: str | None = None
+
+
+class RefuelFilterOptionsResponse(BaseModel):
+    """Available filter options for refuel list"""
+
+    stations: list[RefuelFilterStation]
+    years: list[int]
+    fuel_types: list[str]
+
+
+class RefuelPaginatedResponse(BaseModel):
+    """Paginated response for refuel entries"""
+
+    items: list["RefuelMetricResponse"]
+    total: int
+    offset: int
+    limit: int
+    has_more: bool
 
 
 # Fuel Prices Models
