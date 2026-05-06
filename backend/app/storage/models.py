@@ -19,6 +19,9 @@ class RefuelMetric(BaseModel):
     estimated_fuel_consumption: float
     notes: str | None = None
     station_id: str | None = None
+    fuel_type: str | None = (
+        None  # e5, e10, diesel - optional for backward compatibility
+    )
 
 
 class KilometerEntry(BaseModel):

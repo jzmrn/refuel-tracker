@@ -39,6 +39,7 @@ class RefuelDataClient:
                     estimated_fuel_consumption REAL NOT NULL,
                     notes TEXT,
                     station_id TEXT,
+                    fuel_type TEXT,
                     PRIMARY KEY (user_id, timestamp)
                 )
             """
@@ -50,6 +51,13 @@ class RefuelDataClient:
                 ON refuel_metrics(user_id, timestamp DESC)
             """
             )
+            # Add fuel_type column if it doesn't exist (migration for existing databases)
+            columns = {
+                row[1] for row in con.execute("PRAGMA table_info(refuel_metrics)")
+            }
+            if "fuel_type" not in columns:
+                logger.info("Migrating refuel_metrics: adding fuel_type column")
+                con.execute("ALTER TABLE refuel_metrics ADD COLUMN fuel_type TEXT")
 
     def add_metric(self, metric: RefuelMetric, user_id: str) -> bool:
         """Add a single refuel metric."""
@@ -65,8 +73,8 @@ class RefuelDataClient:
                 con.execute(
                     """
                     INSERT INTO refuel_metrics (timestamp, user_id, car_id, price, amount,
-                    kilometers_since_last_refuel, estimated_fuel_consumption, notes, station_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    kilometers_since_last_refuel, estimated_fuel_consumption, notes, station_id, fuel_type)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     [
                         to_utc_iso(metric.timestamp),
@@ -78,6 +86,7 @@ class RefuelDataClient:
                         metric.estimated_fuel_consumption,
                         metric.notes,
                         metric.station_id,
+                        metric.fuel_type,
                     ],
                 )
         return True

@@ -73,6 +73,12 @@ export const de: TranslationStructure = {
     errorAddingRefuel: "Fehler beim Hinzufügen des Tankeintrags",
     errorLoadingData: "Fehler beim Laden der Tankdaten",
 
+    // Form section headings
+    metadata: "Metadaten",
+    refuelData: "Tankdaten",
+    carData: "Fahrzeugdaten",
+    overview: "Übersicht",
+
     // Form labels and validation
     pricePerLiterForm: "Preis pro Liter (€)",
     amountLiters: "Menge (Liter)",

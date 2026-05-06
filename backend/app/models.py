@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from enum import Enum
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -78,6 +79,14 @@ class MonthlySummaryResponse(BaseModel):
     transaction_count: int
 
 
+class RefuelFuelType(str, Enum):
+    """Supported fuel types for refuel entries."""
+
+    E5 = "e5"
+    E10 = "e10"
+    DIESEL = "diesel"
+
+
 class RefuelMetricCreate(BaseModel):
     """Request model for creating a refuel entry"""
 
@@ -101,6 +110,10 @@ class RefuelMetricCreate(BaseModel):
     notes: str | None = Field(None, description="Optional notes")
     station_id: str | None = Field(
         None, description="Optional ID of the gas station where refuel occurred"
+    )
+    fuel_type: RefuelFuelType | None = Field(
+        None,
+        description="Fuel type used (e5, e10, diesel) - optional for backward compatibility",
     )
 
     @field_validator("timestamp")
@@ -133,6 +146,7 @@ class RefuelMetricResponse(BaseModel):
     station_id: str | None = Field(
         None, description="ID of the gas station where refuel occurred"
     )
+    fuel_type: str | None = Field(None, description="Fuel type used (e5, e10, diesel)")
     remaining_range_km: float | None = Field(
         None,
         description="Estimated remaining range (km) based on fuel left in tank and per-entry consumption",
@@ -252,13 +266,14 @@ class GasStationResponse(BaseModel):
 
 
 class StationDropdownItem(BaseModel):
-    """Minimal station info for dropdown selection."""
+    """Minimal station info for dropdown selection with optional prices."""
 
     station_id: str
     brand: str | None = None
     street: str | None = None
     house_number: str | None = None
     place: str | None = None
+    prices: "FuelPrices | None" = None  # Current prices, None if unavailable or stale
 
 
 class FavoriteStationsDropdownResponse(BaseModel):

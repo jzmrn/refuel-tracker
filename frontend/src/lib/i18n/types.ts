@@ -82,6 +82,12 @@ export interface TranslationStructure {
     errorAddingRefuel: string;
     errorLoadingData: string;
 
+    // Form section headings
+    metadata: string;
+    refuelData: string;
+    carData: string;
+    overview: string;
+
     // Form labels and validation
     pricePerLiterForm: string;
     amountLiters: string;

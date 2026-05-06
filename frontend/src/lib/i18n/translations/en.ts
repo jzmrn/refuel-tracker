@@ -73,6 +73,12 @@ export const en: TranslationStructure = {
     errorAddingRefuel: "Error adding refuel entry.",
     errorLoadingData: "Error loading refuel data.",
 
+    // Form section headings
+    metadata: "Metadata",
+    refuelData: "Refuel Data",
+    carData: "Car Data",
+    overview: "Overview",
+
     // Form labels and validation
     pricePerLiterForm: "Price per Liter (€)",
     amountLiters: "Amount (Liters)",

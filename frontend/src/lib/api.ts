@@ -122,6 +122,7 @@ export interface RefuelMetricCreate {
   timestamp?: string;
   notes?: string;
   station_id?: string;
+  fuel_type?: string; // e5, e10, diesel - optional for backward compatibility
 }
 
 export interface RefuelStatistics {
@@ -157,6 +158,7 @@ export interface FavoriteStationDropdown {
   street: string;
   house_number: string;
   place: string;
+  prices?: FuelPrices | null; // Current prices, null if unavailable or stale
 }
 
 export interface FavoriteStationsDropdownResponse {
