@@ -13,6 +13,17 @@ export default function DynamicPage({
   children,
 }: DynamicPageProps) {
   const router = useRouter();
+
+  // Don't render children until router is ready on client
+  // This prevents hydration mismatches with useSuspenseQuery hooks
+  if (!router.isReady) {
+    return (
+      <PageContainer>
+        <LoadingSpinner />
+      </PageContainer>
+    );
+  }
+
   const rawValue = router.query[paramName];
   const id = typeof rawValue === "string" ? rawValue : undefined;
 

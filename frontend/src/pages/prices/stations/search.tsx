@@ -23,6 +23,7 @@ import {
   GasStationResponse,
   GasStationSearchRequest,
 } from "@/lib/api";
+import { getFuelTypeLabel } from "@/lib/fuelType";
 import {
   FilterPanel,
   FilterRow,
@@ -185,9 +186,9 @@ export default function SearchStations() {
   };
 
   const fuelTypeLabels: Record<string, string> = {
-    e5: t.fuelPrices.e5,
-    e10: t.fuelPrices.e10,
-    diesel: t.fuelPrices.diesel,
+    e5: getFuelTypeLabel("e5", t),
+    e10: getFuelTypeLabel("e10", t),
+    diesel: getFuelTypeLabel("diesel", t),
     dist: t.fuelPrices.distance,
   };
 

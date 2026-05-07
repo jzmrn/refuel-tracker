@@ -202,6 +202,7 @@ export const de: TranslationStructure = {
     byStation: "Nach Tankstelle",
     byBrand: "Nach Marke",
     byPlace: "Nach Ort",
+    byFuelType: "Nach Kraftstoffart",
     unknownStation: "Unbekannt",
     noDistributionDataAvailable: "Keine Verteilungsdaten verfügbar",
 

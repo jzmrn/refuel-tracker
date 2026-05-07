@@ -28,6 +28,7 @@ import {
   buildColorMap,
 } from "./chartUtils";
 import type { DailyPricePoint } from "@/lib/api";
+import { getFuelTypeLabel } from "@/lib/fuelType";
 
 interface StationAllFuelsDailyChartProps {
   data: DailyPricePoint[];
@@ -44,11 +45,11 @@ export default function StationAllFuelsDailyChart({
   const chartKey = useChartKey(data);
   const { formatAxisDate, formatTooltipDate } = useChartDateFormatters();
 
-  const fuelLabels: Record<string, string> = useMemo(
+  const fuelLabels = useMemo(
     () => ({
-      e5: t.fuelPrices.e5,
-      e10: t.fuelPrices.e10,
-      diesel: t.fuelPrices.diesel,
+      e5: getFuelTypeLabel("e5", t),
+      e10: getFuelTypeLabel("e10", t),
+      diesel: getFuelTypeLabel("diesel", t),
     }),
     [t],
   );

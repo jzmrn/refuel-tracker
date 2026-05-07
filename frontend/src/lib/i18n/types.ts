@@ -202,6 +202,7 @@ export interface TranslationStructure {
     byStation: string;
     byBrand: string;
     byPlace: string;
+    byFuelType: string;
     unknownStation: string;
     noDistributionDataAvailable: string;
 

@@ -4,6 +4,7 @@ import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { FilterPanel, FilterRow } from "@/components/common";
 import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
+import { getFuelTypeLabel } from "@/lib/fuelType";
 
 interface FuelTypeFilterProps {
   selectedFuelType: FuelType;
@@ -20,13 +21,7 @@ const FuelTypeFilter: React.FC<FuelTypeFilterProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const fuelTypeLabels: Record<FuelType, string> = {
-    e5: t.fuelPrices.e5,
-    e10: t.fuelPrices.e10,
-    diesel: t.fuelPrices.diesel,
-  };
-
-  const summary = [fuelTypeLabels[selectedFuelType]];
+  const summary = [getFuelTypeLabel(selectedFuelType, t)];
 
   return (
     <FilterPanel

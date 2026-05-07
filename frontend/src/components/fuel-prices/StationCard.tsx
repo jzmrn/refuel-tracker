@@ -2,6 +2,7 @@ import { useLocalization, useTranslation } from "@/lib/i18n/LanguageContext";
 import { GasStationResponse, FavoriteStation } from "@/lib/api";
 import { renderSvgFuelPrice } from "@/lib/formatPrice";
 import FavoriteToggleButton from "@/components/common/FavoriteToggleButton";
+import { getFuelTypeLabel } from "@/lib/fuelType";
 
 interface StationCardProps {
   station: GasStationResponse | FavoriteStation;
@@ -162,9 +163,13 @@ export default function StationCard({
         {isOpen && (
           <div className="flex-shrink-0">
             <div className="flex gap-6">
-              {renderPriceColumn(priceE5, "e5", t.fuelPrices.e5)}
-              {renderPriceColumn(priceE10, "e10", t.fuelPrices.e10)}
-              {renderPriceColumn(priceDiesel, "diesel", t.fuelPrices.diesel)}
+              {renderPriceColumn(priceE5, "e5", getFuelTypeLabel("e5", t))}
+              {renderPriceColumn(priceE10, "e10", getFuelTypeLabel("e10", t))}
+              {renderPriceColumn(
+                priceDiesel,
+                "diesel",
+                getFuelTypeLabel("diesel", t),
+              )}
             </div>
           </div>
         )}
@@ -189,9 +194,13 @@ export default function StationCard({
           {isOpen &&
             (sortBy === "e5" || sortBy === "e10" || sortBy === "diesel") && (
               <div className="flex-shrink-0 w-16">
-                {renderMobilePrice(priceE5, "e5", t.fuelPrices.e5)}
-                {renderMobilePrice(priceE10, "e10", t.fuelPrices.e10)}
-                {renderMobilePrice(priceDiesel, "diesel", t.fuelPrices.diesel)}
+                {renderMobilePrice(priceE5, "e5", getFuelTypeLabel("e5", t))}
+                {renderMobilePrice(priceE10, "e10", getFuelTypeLabel("e10", t))}
+                {renderMobilePrice(
+                  priceDiesel,
+                  "diesel",
+                  getFuelTypeLabel("diesel", t),
+                )}
               </div>
             )}
 

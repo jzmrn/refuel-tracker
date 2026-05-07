@@ -6,6 +6,7 @@ import { FilterPanel, FilterRow } from "@/components/common";
 import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
 import MonthSelector from "@/components/stats/MonthSelector";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
+import { getFuelTypeLabel } from "@/lib/fuelType";
 
 interface StatsFiltersProps {
   selectedMonth: string | null;
@@ -25,19 +26,13 @@ const StatsFilters: React.FC<StatsFiltersProps> = ({
   const { t } = useTranslation();
   const { formatDate } = useLocalization();
 
-  const fuelTypeLabels: Record<FuelType, string> = {
-    e5: t.fuelPrices.e5,
-    e10: t.fuelPrices.e10,
-    diesel: t.fuelPrices.diesel,
-  };
-
   const summary = [
     selectedMonth
       ? formatDate(new Date(selectedMonth + "T00:00:00"), {
           month: "long",
         })
       : "",
-    fuelTypeLabels[selectedFuelType],
+    getFuelTypeLabel(selectedFuelType, t),
   ].filter(Boolean);
 
   return (

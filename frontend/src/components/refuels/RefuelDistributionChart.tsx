@@ -1,8 +1,9 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import Panel from "../common/Panel";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
 import { RefuelMetric } from "@/lib/api";
+import { getFuelTypeLabel } from "@/lib/fuelType";
 
 interface RefuelDistributionChartProps {
   refuelData: RefuelMetric[];
@@ -202,7 +203,7 @@ function PieChartSection({
   }
 
   const Legend = () => (
-    <div className="flex flex-col gap-1 text-xs overflow-hidden w-full">
+    <div className="flex flex-col gap-1.5 text-sm overflow-hidden w-full">
       {data.map((entry, index) => (
         <div
           key={entry.name}
@@ -239,8 +240,8 @@ function PieChartSection({
           <DistributionPie
             data={data}
             unknownLabel={unknownLabel}
-            outerRadius={75}
-            size={180}
+            outerRadius={85}
+            size={200}
           />
         </div>
         <div className="mt-3">
@@ -253,8 +254,8 @@ function PieChartSection({
           <DistributionPie
             data={data}
             unknownLabel={unknownLabel}
-            outerRadius={80}
-            size={180}
+            outerRadius={90}
+            size={200}
           />
         </div>
         <div className="flex-1 min-w-0 flex items-center">
@@ -267,8 +268,8 @@ function PieChartSection({
           <DistributionPie
             data={data}
             unknownLabel={unknownLabel}
-            outerRadius={85}
-            size={200}
+            outerRadius={100}
+            size={240}
           />
         </div>
         <div className="mt-3">
@@ -287,9 +288,9 @@ export default function RefuelDistributionChart({
   const unknownLabel = t.refuels.unknownStation || "Unknown";
   const noDataLabel = t.fuelPrices.noDataAvailable;
 
-  const { byStation, byBrand, byPlace } = useMemo(() => {
+  const { byStation, byBrand, byPlace, byFuelType } = useMemo(() => {
     if (!refuelData || refuelData.length === 0) {
-      return { byStation: [], byBrand: [], byPlace: [] };
+      return { byStation: [], byBrand: [], byPlace: [], byFuelType: [] };
     }
 
     return {
@@ -308,8 +309,14 @@ export default function RefuelDistributionChart({
         (item) => item.station_place,
         unknownLabel,
       ),
+      byFuelType: aggregateByKey(
+        refuelData,
+        (item) =>
+          item.fuel_type ? getFuelTypeLabel(item.fuel_type, t) : undefined,
+        unknownLabel,
+      ),
     };
-  }, [refuelData, unknownLabel]);
+  }, [refuelData, unknownLabel, t]);
 
   if (!refuelData || refuelData.length === 0) {
     return (
@@ -324,7 +331,7 @@ export default function RefuelDistributionChart({
 
   return (
     <Panel title={t.refuels.refuelDistribution}>
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         <PieChartSection
           title={t.refuels.byStation}
           data={byStation}
@@ -340,6 +347,12 @@ export default function RefuelDistributionChart({
         <PieChartSection
           title={t.refuels.byPlace}
           data={byPlace}
+          unknownLabel={unknownLabel}
+          noDataLabel={noDataLabel}
+        />
+        <PieChartSection
+          title={t.refuels.byFuelType}
+          data={byFuelType}
           unknownLabel={unknownLabel}
           noDataLabel={noDataLabel}
         />

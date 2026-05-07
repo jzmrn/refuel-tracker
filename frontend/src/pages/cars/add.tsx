@@ -7,6 +7,7 @@ import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useCreateCar } from "@/lib/hooks/useCars";
 import { CarCreate } from "@/lib/api";
+import { getFuelTypeLabel } from "@/lib/fuelType";
 
 export default function AddCar() {
   const { t } = useTranslation();
@@ -160,9 +161,9 @@ export default function AddCar() {
               required
             >
               <option value="">{t.cars.selectFuelType}</option>
-              <option value="e5">{t.fuelPrices.e5}</option>
-              <option value="e10">{t.fuelPrices.e10}</option>
-              <option value="diesel">{t.fuelPrices.diesel}</option>
+              <option value="e5">{getFuelTypeLabel("e5", t)}</option>
+              <option value="e10">{getFuelTypeLabel("e10", t)}</option>
+              <option value="diesel">{getFuelTypeLabel("diesel", t)}</option>
             </select>
           </div>
         </StandardForm>

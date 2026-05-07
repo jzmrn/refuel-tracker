@@ -1,5 +1,6 @@
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { FuelType } from "@/lib/api";
+import { getFuelTypeLabel } from "@/lib/fuelType";
 
 interface FuelTypeSelectorProps {
   selectedFuelType: FuelType | null;
@@ -19,12 +20,6 @@ export default function FuelTypeSelector({
   className = "",
 }: FuelTypeSelectorProps) {
   const { t } = useTranslation();
-
-  const fuelTypeLabels: Record<FuelType, string> = {
-    e5: includeDistance ? t.fuelPrices.e5Short : t.fuelPrices.e5,
-    e10: includeDistance ? t.fuelPrices.e10Short : t.fuelPrices.e10,
-    diesel: t.fuelPrices.diesel,
-  };
 
   const isDistanceSelected = includeDistance && selectedFuelType === null;
   const cols = includeDistance ? "xs:grid-cols-4" : "xs:grid-cols-3";
@@ -51,7 +46,7 @@ export default function FuelTypeSelector({
               : "btn-toggle-inactive"
           }
         >
-          {fuelTypeLabels[fuelType]}
+          {getFuelTypeLabel(fuelType, t, includeDistance)}
         </button>
       ))}
     </div>

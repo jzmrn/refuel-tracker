@@ -200,6 +200,7 @@ export const en: TranslationStructure = {
     byStation: "By Station",
     byBrand: "By Brand",
     byPlace: "By Place",
+    byFuelType: "By Fuel Type",
     unknownStation: "Unknown",
     noDistributionDataAvailable: "No distribution data available",
 
