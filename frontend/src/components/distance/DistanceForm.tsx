@@ -34,12 +34,14 @@ interface DistanceFormAddProps extends DistanceFormBaseProps {
   mode: "add";
   initialData?: undefined;
   onSubmit: (data: KilometerEntryCreate) => Promise<void>;
+  onDelete?: never;
 }
 
 interface DistanceFormEditProps extends DistanceFormBaseProps {
   mode: "edit";
   initialData: KilometerEntry;
   onSubmit: (data: KilometerEntryUpdate) => Promise<void>;
+  onDelete?: () => void;
 }
 
 type DistanceFormProps = DistanceFormAddProps | DistanceFormEditProps;
@@ -52,7 +54,10 @@ export default function DistanceForm({
   isSubmitting,
   onSubmit,
   onCancel,
+  ...rest
 }: DistanceFormProps) {
+  const onDelete =
+    mode === "edit" ? (rest as DistanceFormEditProps).onDelete : undefined;
   const { t } = useTranslation();
 
   const isEditMode = mode === "edit";
@@ -232,39 +237,55 @@ export default function DistanceForm({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 justify-end">
-              <button
-                type="button"
-                onClick={onCancel}
-                className="btn-secondary w-full sm:w-auto"
-                disabled={isSubmitting}
-              >
-                {t.common.cancel}
-              </button>
-              <button
-                type="submit"
-                className={`btn-primary w-full sm:w-auto ${
-                  isEditMode && !hasChanges
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }`}
-                disabled={isSubmitting || (isEditMode && !hasChanges)}
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <CircularProgress size={16} color="inherit" />
-                    {t.common.saving}
-                  </div>
-                ) : isEditMode ? (
-                  hasChanges ? (
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              {/* Delete button - only in edit mode with onDelete handler */}
+              {isEditMode && onDelete && (
+                <div className="order-3 sm:order-1 mt-3 sm:mt-0">
+                  <button
+                    type="button"
+                    onClick={onDelete}
+                    className="btn-danger w-full sm:w-auto"
+                    disabled={isSubmitting}
+                  >
+                    {t.common.delete}
+                  </button>
+                </div>
+              )}
+
+              {/* Spacer for desktop - pushes cancel and save to the right */}
+              <div className="hidden sm:flex sm:flex-1 sm:order-2" />
+
+              {/* Cancel and Save buttons - right aligned on desktop */}
+              <div className="flex flex-col sm:flex-row gap-3 order-1 sm:order-3">
+                <button
+                  type="submit"
+                  className={`btn-primary w-full sm:w-auto order-1 sm:order-2 ${
+                    isEditMode && !hasChanges
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                  disabled={isSubmitting || (isEditMode && !hasChanges)}
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <CircularProgress size={16} color="inherit" />
+                      {t.common.saving}
+                    </div>
+                  ) : isEditMode ? (
                     t.common.save
                   ) : (
-                    t.refuels.noChanges
-                  )
-                ) : (
-                  t.navigation.addEntry
-                )}
-              </button>
+                    t.navigation.addEntry
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="btn-secondary w-full sm:w-auto order-2 sm:order-1"
+                  disabled={isSubmitting}
+                >
+                  {t.common.cancel}
+                </button>
+              </div>
             </div>
           </div>
         </Panel>

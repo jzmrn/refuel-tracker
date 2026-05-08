@@ -267,6 +267,36 @@ export function useUpdateRefuelMetric() {
 }
 
 /**
+ * Hook to delete a refuel metric
+ * Automatically invalidates refuel metrics and statistics
+ */
+export function useDeleteRefuelMetric() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      timestamp,
+      carId,
+    }: {
+      timestamp: string;
+      carId: string;
+    }) => {
+      return await apiService.deleteRefuelMetric(timestamp, carId);
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate refuel metrics for this car
+      queryClient.invalidateQueries({
+        queryKey: carsKeys.refuels(variables.carId),
+      });
+      // Invalidate refuel statistics for this car
+      queryClient.invalidateQueries({
+        queryKey: carsKeys.refuelStatistics(variables.carId),
+      });
+    },
+  });
+}
+
+/**
  * Hook to fetch refuel filter options for a car
  */
 export function useRefuelFilterOptions(carId: string) {

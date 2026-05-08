@@ -105,12 +105,14 @@ interface RefuelFormAddProps extends RefuelFormBaseProps {
   mode: "add";
   initialData?: undefined;
   onSubmit: (data: RefuelMetricCreate) => Promise<void>;
+  onDelete?: never;
 }
 
 interface RefuelFormEditProps extends RefuelFormBaseProps {
   mode: "edit";
   initialData: RefuelMetric;
   onSubmit: (data: RefuelMetricUpdate) => Promise<void>;
+  onDelete?: () => void;
 }
 
 type RefuelFormProps = RefuelFormAddProps | RefuelFormEditProps;
@@ -123,7 +125,10 @@ export default function RefuelForm({
   isSubmitting,
   onSubmit,
   onCancel,
+  ...rest
 }: RefuelFormProps) {
+  const onDelete =
+    mode === "edit" ? (rest as RefuelFormEditProps).onDelete : undefined;
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -789,31 +794,51 @@ export default function RefuelForm({
               </div>
             )}
 
-            {/* Submit Button */}
-            <div className="form-actions">
-              {isEditMode ? (
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              {/* Delete button - only in edit mode with onDelete handler */}
+              {isEditMode && onDelete && (
+                <div className="order-3 sm:order-1 mt-3 sm:mt-0">
+                  <button
+                    type="button"
+                    onClick={onDelete}
+                    className="btn-danger w-full sm:w-auto"
+                    disabled={isSubmitting}
+                  >
+                    {t.common.delete}
+                  </button>
+                </div>
+              )}
+
+              {/* Spacer for desktop - pushes cancel and save to the right */}
+              <div className="hidden sm:flex sm:flex-1 sm:order-2" />
+
+              {/* Cancel and Save buttons - right aligned on desktop */}
+              <div className="flex flex-col sm:flex-row gap-3 order-1 sm:order-3">
                 <button
                   type="submit"
-                  disabled={isSubmitting || !hasChanges}
-                  className={`btn-primary w-full ${
-                    !hasChanges ? "opacity-50 cursor-not-allowed" : ""
+                  className={`btn-primary w-full sm:w-auto order-1 sm:order-2 ${
+                    isEditMode && !hasChanges
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                   }`}
+                  disabled={isSubmitting || (isEditMode && !hasChanges)}
                 >
                   {isSubmitting
                     ? t.common.saving
-                    : hasChanges
+                    : isEditMode
                     ? t.common.save
-                    : t.refuels.noChanges || "No changes"}
+                    : t.navigation.addEntry}
                 </button>
-              ) : (
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={onCancel}
+                  className="btn-secondary w-full sm:w-auto order-2 sm:order-1"
                   disabled={isSubmitting}
-                  className="btn-primary w-full"
                 >
-                  {isSubmitting ? t.common.saving : t.navigation.addEntry}
+                  {t.common.cancel}
                 </button>
-              )}
+              </div>
             </div>
           </div>
         </Panel>

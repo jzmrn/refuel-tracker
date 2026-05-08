@@ -150,7 +150,9 @@ export interface TranslationStructure {
     allRefuels: string;
     refuelNotFound: string;
     errorUpdatingRefuel: string;
-    noChanges: string;
+    errorDeletingRefuel: string;
+    deleteRefuelTitle: string;
+    deleteRefuelMessage: string;
     year: string;
     sortBy: string;
 
@@ -230,6 +232,8 @@ export interface TranslationStructure {
     errorAddingEntry: string;
     errorUpdatingEntry: string;
     errorDeletingEntry: string;
+    deleteEntryTitle: string;
+    deleteEntryMessage: string;
     errorLoadingData: string;
     errorLoadingEntries: string;
     viewChart: string;

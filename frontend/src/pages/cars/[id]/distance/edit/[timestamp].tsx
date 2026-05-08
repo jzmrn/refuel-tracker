@@ -1,12 +1,14 @@
 import { useState, useMemo, Suspense } from "react";
 import { useRouter } from "next/router";
 import Snackbar from "@/components/common/Snackbar";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import {
   useCar,
   useKilometerEntries,
   useUpdateKilometerEntry,
+  useDeleteKilometerEntry,
 } from "@/lib/hooks/useCars";
 import { KilometerEntryUpdate } from "@/lib/api";
 import {
@@ -31,8 +33,10 @@ function EditDistanceContent({
   const { data: car } = useCar(carId);
   const { data: entriesData } = useKilometerEntries(carId, { limit: 1000 });
   const updateEntry = useUpdateKilometerEntry();
+  const deleteEntry = useDeleteKilometerEntry();
   const { snackbar, showError, hideSnackbar } = useSnackbar();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Decode the timestamp from URL and find the matching entry
   const decodedTimestamp = useMemo(() => {
@@ -70,6 +74,25 @@ function EditDistanceContent({
     }
   };
 
+  const handleDelete = async () => {
+    if (!entry) return;
+    setIsDeleteDialogOpen(false);
+    try {
+      setIsSubmitting(true);
+      await deleteEntry.mutateAsync({ entryId: entry.id, carId });
+      router.back();
+    } catch (error: any) {
+      console.error("Error deleting kilometer entry:", error);
+      showError(
+        error.response?.data?.detail ||
+          t.kilometers.errorDeletingEntry ||
+          "Error deleting entry.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Handle case where entry is not found
   if (!entry) {
     return (
@@ -92,6 +115,18 @@ function EditDistanceContent({
         isSubmitting={isSubmitting}
         onSubmit={handleSubmit}
         onCancel={handleBack}
+        onDelete={() => setIsDeleteDialogOpen(true)}
+      />
+
+      <ConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        title={t.kilometers.deleteEntryTitle}
+        message={t.kilometers.deleteEntryMessage}
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
+        onConfirm={handleDelete}
+        onCancel={() => setIsDeleteDialogOpen(false)}
+        variant="danger"
       />
 
       {snackbar.isVisible && (

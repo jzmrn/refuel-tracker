@@ -854,6 +854,12 @@ class ApiService {
     return response.data;
   }
 
+  async deleteRefuelMetric(timestamp: string, carId: string): Promise<void> {
+    await this.api.delete("/api/metrics/refuel", {
+      params: { timestamp, car_id: carId },
+    });
+  }
+
   async getRefuelFilterOptions(carId: string): Promise<RefuelFilterOptions> {
     const response = await this.api.get("/api/metrics/refuel/filter-options", {
       params: { car_id: carId },

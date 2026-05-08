@@ -143,7 +143,10 @@ export const de: TranslationStructure = {
     allRefuels: "Alle Tankungen",
     refuelNotFound: "Tankeintrag nicht gefunden",
     errorUpdatingRefuel: "Fehler beim Aktualisieren des Tankeintrags.",
-    noChanges: "Keine Änderungen",
+    errorDeletingRefuel: "Fehler beim Löschen des Tankeintrags.",
+    deleteRefuelTitle: "Tankeintrag löschen",
+    deleteRefuelMessage:
+      "Möchten Sie diesen Tankeintrag wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
     year: "Jahr",
     sortBy: "Sortieren nach",
 
@@ -230,6 +233,9 @@ export const de: TranslationStructure = {
     errorAddingEntry: "Fehler beim Hinzufügen des Kilometereintrags",
     errorDeletingEntry: "Fehler beim Löschen des Kilometereintrags",
     errorUpdatingEntry: "Fehler beim Aktualisieren des Kilometereintrags",
+    deleteEntryTitle: "Kilometereintrag löschen",
+    deleteEntryMessage:
+      "Möchten Sie diesen Kilometereintrag wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
     errorLoadingData: "Fehler beim Laden der Kilometerdaten",
     errorLoadingEntries: "Fehler beim Laden der Kilometereinträge",
     viewChart: "Diagramm anzeigen",

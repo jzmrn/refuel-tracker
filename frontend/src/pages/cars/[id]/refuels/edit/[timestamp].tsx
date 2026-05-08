@@ -1,12 +1,14 @@
 import { useState, useMemo, Suspense } from "react";
 import { useRouter } from "next/router";
 import Snackbar from "@/components/common/Snackbar";
+import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import {
   useCar,
   useRefuelMetrics,
   useUpdateRefuelMetric,
+  useDeleteRefuelMetric,
 } from "@/lib/hooks/useCars";
 import { RefuelMetricUpdate } from "@/lib/api";
 import {
@@ -31,8 +33,10 @@ function EditRefuelContent({
   const { data: car } = useCar(carId);
   const { data: refuels } = useRefuelMetrics(carId);
   const updateRefuel = useUpdateRefuelMetric();
+  const deleteRefuel = useDeleteRefuelMetric();
   const { snackbar, showError, hideSnackbar } = useSnackbar();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Decode the timestamp from URL and find the matching refuel
   const decodedTimestamp = useMemo(() => {
@@ -70,6 +74,24 @@ function EditRefuelContent({
     }
   };
 
+  const handleDelete = async () => {
+    setIsDeleteDialogOpen(false);
+    try {
+      setIsSubmitting(true);
+      await deleteRefuel.mutateAsync({ timestamp: decodedTimestamp, carId });
+      router.back();
+    } catch (error: any) {
+      console.error("Error deleting refuel:", error);
+      showError(
+        error.response?.data?.detail ||
+          t.refuels.errorDeletingRefuel ||
+          "Error deleting refuel entry.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Handle case where refuel entry is not found
   if (!refuelEntry) {
     return (
@@ -92,6 +114,18 @@ function EditRefuelContent({
         isSubmitting={isSubmitting}
         onSubmit={handleSubmit}
         onCancel={handleBack}
+        onDelete={() => setIsDeleteDialogOpen(true)}
+      />
+
+      <ConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        title={t.refuels.deleteRefuelTitle}
+        message={t.refuels.deleteRefuelMessage}
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
+        onConfirm={handleDelete}
+        onCancel={() => setIsDeleteDialogOpen(false)}
+        variant="danger"
       />
 
       {snackbar.isVisible && (

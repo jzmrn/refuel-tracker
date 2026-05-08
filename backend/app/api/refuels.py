@@ -203,6 +203,41 @@ async def update_refuel_metric(
     )
 
 
+@router.delete("/refuel", status_code=204)
+async def delete_refuel_metric(
+    timestamp: str,
+    car_id: str,
+    user: CurrentUser,
+    client: RefuelDataClient = Depends(get_refuel_client),
+    car_client: CarClient = Depends(get_car_client),
+):
+    """Delete a refuel entry identified by timestamp and car_id"""
+    logger.info(
+        "Deleting refuel metric",
+        extra={
+            "user_id": user.id,
+            "timestamp": timestamp,
+            "car_id": car_id,
+        },
+    )
+
+    # Verify user has access to the car
+    if not car_client.user_has_car_access(car_id, user.id):
+        raise HTTPException(status_code=403, detail="You don't have access to this car")
+
+    # Parse the timestamp
+    try:
+        timestamp_dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid timestamp format")
+
+    success = client.delete_metric(user.id, timestamp_dt)
+    if not success:
+        raise HTTPException(status_code=404, detail="Refuel entry not found")
+
+    return None
+
+
 @router.get("/refuel", response_model=list[RefuelMetricResponse])
 async def get_refuel_metrics(
     user: CurrentUser,

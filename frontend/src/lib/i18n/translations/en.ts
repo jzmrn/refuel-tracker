@@ -142,7 +142,10 @@ export const en: TranslationStructure = {
     allRefuels: "All Refuels",
     refuelNotFound: "Refuel entry not found",
     errorUpdatingRefuel: "Error updating refuel entry.",
-    noChanges: "No changes",
+    errorDeletingRefuel: "Error deleting refuel entry.",
+    deleteRefuelTitle: "Delete Refuel Entry",
+    deleteRefuelMessage:
+      "Are you sure you want to delete this refuel entry? This action cannot be undone.",
     year: "Year",
     sortBy: "Sort by",
 
@@ -226,6 +229,9 @@ export const en: TranslationStructure = {
     errorAddingEntry: "Error adding kilometer entry",
     errorDeletingEntry: "Error deleting kilometer entry",
     errorUpdatingEntry: "Error updating kilometer entry",
+    deleteEntryTitle: "Delete Distance Entry",
+    deleteEntryMessage:
+      "Are you sure you want to delete this distance entry? This action cannot be undone.",
     errorLoadingData: "Error loading kilometer data",
     errorLoadingEntries: "Error loading distance entries",
     viewChart: "View Chart",
