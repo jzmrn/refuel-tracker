@@ -282,6 +282,24 @@ export interface KilometerEntriesResponse {
   aggregates: KilometerPeriodAggregate[] | null;
 }
 
+export interface KilometerEntryUpdate {
+  timestamp: string;
+  car_id: string;
+  total_kilometers?: number;
+}
+
+export interface KilometerEntriesPaginatedResponse {
+  items: KilometerEntry[];
+  total: number;
+  offset: number;
+  limit: number;
+  has_more: boolean;
+}
+
+export interface KilometerFilterOptions {
+  years: number[];
+}
+
 // Fuel Prices interfaces
 export interface GasStationSearchRequest {
   lat: number;
@@ -993,6 +1011,34 @@ class ApiService {
     await this.api.delete(`/api/kilometers/${entryId}`, {
       params: { car_id: carId },
     });
+  }
+
+  async updateKilometerEntry(
+    entry: KilometerEntryUpdate,
+  ): Promise<KilometerEntry> {
+    const response = await this.api.put("/api/kilometers", entry);
+    return response.data;
+  }
+
+  async getKilometerEntriesPaginated(params: {
+    car_id: string;
+    offset?: number;
+    limit?: number;
+    year?: number;
+  }): Promise<KilometerEntriesPaginatedResponse> {
+    const response = await this.api.get("/api/kilometers/paginated", {
+      params,
+    });
+    return response.data;
+  }
+
+  async getKilometerFilterOptions(
+    carId: string,
+  ): Promise<KilometerFilterOptions> {
+    const response = await this.api.get("/api/kilometers/filter-options", {
+      params: { car_id: carId },
+    });
+    return response.data;
   }
 
   // Statistics endpoints

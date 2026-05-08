@@ -98,6 +98,16 @@ export default function StationDetails() {
     router.back();
   };
 
+  // Wait for router to be ready to avoid hydration mismatch
+  if (!router.isReady || !stationId) {
+    return (
+      <PageContainer>
+        <PageHeader title={t.fuelPrices.stationDetails} onBack={handleBack} />
+        <LoadingSpinner />
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer>
       <Suspense
@@ -105,23 +115,15 @@ export default function StationDetails() {
           <PageHeader title={t.fuelPrices.stationDetails} onBack={handleBack} />
         }
       >
-        {stationId ? (
-          <StationPageHeader
-            stationId={stationId}
-            title={t.fuelPrices.stationDetails}
-            onBack={handleBack}
-          />
-        ) : (
-          <PageHeader title={t.fuelPrices.stationDetails} onBack={handleBack} />
-        )}
+        <StationPageHeader
+          stationId={stationId}
+          title={t.fuelPrices.stationDetails}
+          onBack={handleBack}
+        />
       </Suspense>
 
       <Suspense fallback={<LoadingSpinner />}>
-        {stationId ? (
-          <StationDetailsContent stationId={stationId} />
-        ) : (
-          <LoadingSpinner />
-        )}
+        <StationDetailsContent stationId={stationId} />
       </Suspense>
     </PageContainer>
   );

@@ -11,6 +11,7 @@ import apiService, {
   RefuelMetricCreate,
   RefuelMetricUpdate,
   KilometerEntryCreate,
+  KilometerEntryUpdate,
 } from "@/lib/api";
 
 // Query Keys - centralized for consistency
@@ -30,6 +31,10 @@ export const carsKeys = {
     [...carsKeys.detail(carId), "statistics"] as const,
   kilometers: (carId: string) =>
     [...carsKeys.detail(carId), "kilometers"] as const,
+  kilometersPaginated: (carId: string, filters: Record<string, any>) =>
+    [...carsKeys.kilometers(carId), "paginated", filters] as const,
+  kilometersFilterOptions: (carId: string) =>
+    [...carsKeys.kilometers(carId), "filterOptions"] as const,
 };
 
 /**
@@ -70,6 +75,22 @@ export function useCar(carId: string) {
       ]);
       return car;
     },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Non-suspense hook to fetch a car. Use this outside Suspense boundaries
+ * (e.g., for page headers). Returns { data, isLoading } instead of suspending.
+ */
+export function useCarOptional(carId: string | undefined) {
+  return useQuery({
+    queryKey: carsKeys.detail(carId ?? ""),
+    queryFn: async () => {
+      if (!carId) return null;
+      return apiService.getCar(carId).catch(() => null);
+    },
+    enabled: !!carId,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -425,5 +446,71 @@ export function useDeleteKilometerEntry() {
         queryKey: carsKeys.kilometers(variables.carId),
       });
     },
+  });
+}
+
+/**
+ * Hook to update a kilometer entry
+ * Automatically invalidates kilometer entries
+ */
+export function useUpdateKilometerEntry() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (entry: KilometerEntryUpdate) => {
+      return await apiService.updateKilometerEntry(entry);
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate kilometer entries for this car
+      queryClient.invalidateQueries({
+        queryKey: carsKeys.kilometers(variables.car_id),
+      });
+    },
+  });
+}
+
+/**
+ * Hook to fetch kilometer filter options
+ */
+export function useKilometerFilterOptions(carId: string) {
+  return useQuery({
+    queryKey: carsKeys.kilometersFilterOptions(carId),
+    queryFn: () => apiService.getKilometerFilterOptions(carId),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!carId,
+  });
+}
+
+/**
+ * Infinite query hook to fetch paginated kilometer entries with optional year filter
+ * Supports infinite scroll
+ */
+export function useInfiniteKilometerEntries(
+  carId: string,
+  params?: {
+    year?: number;
+  },
+) {
+  const limit = 20;
+
+  return useInfiniteQuery({
+    queryKey: carsKeys.kilometersPaginated(carId, params || {}),
+    queryFn: async ({ pageParam = 0 }) => {
+      return await apiService.getKilometerEntriesPaginated({
+        car_id: carId,
+        offset: pageParam,
+        limit,
+        ...params,
+      });
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.has_more) {
+        return lastPage.offset + lastPage.limit;
+      }
+      return undefined;
+    },
+    enabled: !!carId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }

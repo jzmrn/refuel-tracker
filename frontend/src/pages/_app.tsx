@@ -13,6 +13,8 @@ import {
   getInitialTheme,
   resolveTheme,
   applyTheme,
+  parseThemeCookie,
+  Theme,
 } from "@/lib/theme";
 import { FuelTypeProvider, parseFuelTypeCookie } from "@/lib/fuelType";
 import {
@@ -49,12 +51,14 @@ export default function MyApp(
     initialLanguage: Language;
     initialFuelType: FuelType;
     initialFilterCollapse: Record<string, boolean>;
+    initialTheme: Theme;
   },
 ) {
   const {
     initialLanguage,
     initialFuelType,
     initialFilterCollapse,
+    initialTheme,
     ...appProps
   } = props;
   // Create QueryClient instance - using useState ensures it's stable across renders
@@ -129,7 +133,7 @@ export default function MyApp(
         />
       </Head>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
+        <ThemeProvider initialTheme={initialTheme}>
           <LanguageProvider initialLanguage={initialLanguage}>
             <FuelTypeProvider initialFuelType={initialFuelType}>
               <FilterCollapseProvider initialState={initialFilterCollapse}>
@@ -151,10 +155,12 @@ MyApp.getInitialProps = async (appContext: AppContext) => {
   const initialLanguage = parseLanguageCookie(cookies);
   const initialFuelType = parseFuelTypeCookie(cookies);
   const initialFilterCollapse = parseFilterCookies(cookies);
+  const initialTheme = parseThemeCookie(cookies);
   return {
     ...appProps,
     initialLanguage,
     initialFuelType,
     initialFilterCollapse,
+    initialTheme,
   };
 };

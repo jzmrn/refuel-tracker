@@ -140,6 +140,107 @@ class KilometerClient:
             )
             return cursor.rowcount
 
+    def update_entry(
+        self,
+        car_id: str,
+        timestamp: datetime,
+        total_kilometers: float | None = None,
+    ) -> KilometerEntry | None:
+        """Update a kilometer entry identified by car_id and timestamp."""
+        if total_kilometers is None:
+            # Nothing to update
+            return self.get_entry_by_timestamp(car_id, timestamp)
+
+        with self._db.get_connection() as con:
+            cursor = con.execute(
+                """
+                UPDATE kilometer_entries
+                SET total_kilometers = ?
+                WHERE car_id = ? AND timestamp = ?
+                """,
+                [total_kilometers, car_id, to_utc_iso(timestamp)],
+            )
+            if cursor.rowcount == 0:
+                return None
+
+        return self.get_entry_by_timestamp(car_id, timestamp)
+
+    def get_entry_by_timestamp(
+        self, car_id: str, timestamp: datetime
+    ) -> KilometerEntry | None:
+        """Get a single kilometer entry by car_id and timestamp."""
+        with self._db.get_connection() as con:
+            cursor = con.execute(
+                """
+                SELECT * FROM kilometer_entries
+                WHERE car_id = ? AND timestamp = ?
+                """,
+                [car_id, to_utc_iso(timestamp)],
+            )
+            columns = [desc[0] for desc in cursor.description]
+            row = cursor.fetchone()
+
+        if row is None:
+            return None
+        return KilometerEntry(**dict(zip(columns, row)))
+
+    def get_entries_paginated(
+        self,
+        car_id: str,
+        offset: int = 0,
+        limit: int = 20,
+        year: int | None = None,
+    ) -> tuple[list[KilometerEntry], int]:
+        """Get paginated kilometer entries with optional year filter."""
+        conditions = ["car_id = ?"]
+        params: list = [car_id]
+
+        if year is not None:
+            # Filter by year based on timestamp
+            conditions.append("strftime('%Y', timestamp) = ?")
+            params.append(str(year))
+
+        where_clause = " WHERE " + " AND ".join(conditions)
+
+        # Get total count
+        with self._db.get_connection() as con:
+            count_cursor = con.execute(
+                f"SELECT COUNT(*) FROM kilometer_entries{where_clause}",
+                params,
+            )
+            total = count_cursor.fetchone()[0]
+
+            # Get paginated results
+            query = f"""
+                SELECT * FROM kilometer_entries
+                {where_clause}
+                ORDER BY timestamp DESC
+                LIMIT ? OFFSET ?
+            """
+            cursor = con.execute(query, params + [limit, offset])
+            columns = [desc[0] for desc in cursor.description]
+            results = cursor.fetchall()
+
+        entries = [KilometerEntry(**dict(zip(columns, row))) for row in results]
+        return entries, total
+
+    def get_filter_options(self, car_id: str) -> dict:
+        """Get available filter options for kilometer entries."""
+        with self._db.get_connection() as con:
+            # Get distinct years
+            cursor = con.execute(
+                """
+                SELECT DISTINCT CAST(strftime('%Y', timestamp) AS INTEGER) as year
+                FROM kilometer_entries
+                WHERE car_id = ?
+                ORDER BY year DESC
+                """,
+                [car_id],
+            )
+            years = [row[0] for row in cursor.fetchall()]
+
+        return {"years": years}
+
     @staticmethod
     def _add_months(dt: datetime, months: int) -> datetime:
         """Add months to a datetime, clamping the day to the valid range."""

@@ -5,10 +5,10 @@ import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import {
   useCar,
-  useRefuelMetrics,
-  useUpdateRefuelMetric,
+  useKilometerEntries,
+  useUpdateKilometerEntry,
 } from "@/lib/hooks/useCars";
-import { RefuelMetricUpdate } from "@/lib/api";
+import { KilometerEntryUpdate } from "@/lib/api";
 import {
   PageHeader,
   EmptyPanel,
@@ -16,10 +16,10 @@ import {
   PageContainer,
 } from "@/components/common";
 import CarPageHeader from "@/components/cars/CarPageHeader";
-import RefuelForm from "@/components/refuels/RefuelForm";
+import DistanceForm from "@/components/distance/DistanceForm";
 import CloseIcon from "@mui/icons-material/Close";
 
-function EditRefuelContent({
+function EditDistanceContent({
   carId,
   timestamp,
 }: {
@@ -29,12 +29,12 @@ function EditRefuelContent({
   const { t } = useTranslation();
   const router = useRouter();
   const { data: car } = useCar(carId);
-  const { data: refuels } = useRefuelMetrics(carId);
-  const updateRefuel = useUpdateRefuelMetric();
+  const { data: entriesData } = useKilometerEntries(carId, { limit: 1000 });
+  const updateEntry = useUpdateKilometerEntry();
   const { snackbar, showError, hideSnackbar } = useSnackbar();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Decode the timestamp from URL and find the matching refuel
+  // Decode the timestamp from URL and find the matching entry
   const decodedTimestamp = useMemo(() => {
     try {
       return decodeURIComponent(timestamp);
@@ -43,52 +43,52 @@ function EditRefuelContent({
     }
   }, [timestamp]);
 
-  // Find the refuel entry by timestamp
-  const refuelEntry = useMemo(() => {
-    if (!refuels) return null;
-    return refuels.find((r) => r.timestamp === decodedTimestamp);
-  }, [refuels, decodedTimestamp]);
+  // Find the kilometer entry by timestamp
+  const entry = useMemo(() => {
+    if (!entriesData?.entries) return null;
+    return entriesData.entries.find((e) => e.timestamp === decodedTimestamp);
+  }, [entriesData?.entries, decodedTimestamp]);
 
   const handleBack = () => {
     router.back();
   };
 
-  const handleSubmit = async (data: RefuelMetricUpdate) => {
+  const handleSubmit = async (data: KilometerEntryUpdate) => {
     try {
       setIsSubmitting(true);
-      await updateRefuel.mutateAsync(data as RefuelMetricUpdate);
+      await updateEntry.mutateAsync(data);
       router.back();
     } catch (error: any) {
-      console.error("Error updating refuel:", error);
+      console.error("Error updating kilometer entry:", error);
       showError(
         error.response?.data?.detail ||
-          t.refuels.errorUpdatingRefuel ||
-          "Error updating refuel entry.",
+          t.kilometers.errorUpdatingEntry ||
+          "Error updating entry.",
       );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle case where refuel entry is not found
-  if (!refuelEntry) {
+  // Handle case where entry is not found
+  if (!entry) {
     return (
       <EmptyPanel
         icon={
           <CloseIcon className="icon-xl text-gray-400 dark:text-gray-500 mb-3" />
         }
-        title={t.refuels.refuelNotFound}
+        title={t.kilometers.entryNotFound}
       />
     );
   }
 
   return (
     <>
-      <RefuelForm
+      <DistanceForm
         mode="edit"
         carId={carId}
         car={car}
-        initialData={refuelEntry}
+        initialData={entry}
         isSubmitting={isSubmitting}
         onSubmit={handleSubmit}
         onCancel={handleBack}
@@ -106,8 +106,8 @@ function EditRefuelContent({
   );
 }
 
-// Inner component that receives carId and timestamp - hooks only called when params are available
-function EditRefuelPageContent({
+// Inner component that handles routing after router is ready
+function EditDistancePageContent({
   carId,
   timestampStr,
 }: {
@@ -126,26 +126,26 @@ function EditRefuelPageContent({
       {/* Header with car data - inside Suspense */}
       <Suspense
         fallback={
-          <PageHeader title={t.refuels.editRefuel} onBack={handleBack} />
+          <PageHeader title={t.kilometers.editKilometer} onBack={handleBack} />
         }
       >
         <CarPageHeader
           carId={carId}
-          title={t.refuels.editRefuel}
+          title={t.kilometers.editKilometer}
           onBack={handleBack}
         />
       </Suspense>
 
       {/* Content - inside separate Suspense */}
       <Suspense fallback={<LoadingSpinner />}>
-        <EditRefuelContent carId={carId} timestamp={timestampStr} />
+        <EditDistanceContent carId={carId} timestamp={timestampStr} />
       </Suspense>
     </>
   );
 }
 
 // Outer wrapper that waits for router to be ready
-export default function EditRefuel() {
+export default function EditDistance() {
   const { t } = useTranslation();
   const router = useRouter();
   const { id, timestamp } = router.query;
@@ -155,7 +155,10 @@ export default function EditRefuel() {
   if (!router.isReady || !carId || !timestampStr) {
     return (
       <PageContainer>
-        <PageHeader title={t.refuels.editRefuel} onBack={() => router.back()} />
+        <PageHeader
+          title={t.kilometers.editKilometer}
+          onBack={() => router.back()}
+        />
         <LoadingSpinner />
       </PageContainer>
     );
@@ -163,7 +166,7 @@ export default function EditRefuel() {
 
   return (
     <PageContainer>
-      <EditRefuelPageContent carId={carId} timestampStr={timestampStr} />
+      <EditDistancePageContent carId={carId} timestampStr={timestampStr} />
     </PageContainer>
   );
 }

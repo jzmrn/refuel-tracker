@@ -1,8 +1,7 @@
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, Suspense } from "react";
 import { useRouter } from "next/router";
-import { useTranslation, useLocalization } from "@/lib/i18n/LanguageContext";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 import {
-  useCar,
   useInfiniteRefuelMetrics,
   useRefuelFilterOptions,
 } from "@/lib/hooks/useCars";
@@ -14,10 +13,11 @@ import {
   PageContainer,
   StandardCard,
 } from "@/components/common";
+import CarPageHeader from "@/components/cars/CarPageHeader";
 import { FilterPanel, FilterRow } from "@/components/common/FilterCard";
 import FilterSelect from "@/components/common/FilterSelect";
 import YearSelector from "@/components/common/YearSelector";
-import { renderSvgFuelPrice } from "@/lib/formatPrice";
+import RefuelList from "@/components/refuels/RefuelList";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import SortIcon from "@mui/icons-material/Sort";
 import AddIcon from "@mui/icons-material/Add";
@@ -41,9 +41,7 @@ interface SortConfig {
 
 function AllRefuelsContent({ carId }: { carId: string }) {
   const { t } = useTranslation();
-  const { formatDate: formatDateLocalized } = useLocalization();
   const router = useRouter();
-  const { data: car } = useCar(carId);
   const { data: filterOptions, isLoading: loadingFilterOptions } =
     useRefuelFilterOptions(carId);
 
@@ -112,10 +110,6 @@ function AllRefuelsContent({ carId }: { carId: string }) {
     [isFetchingNextPage, hasNextPage, fetchNextPage],
   );
 
-  const handleBack = () => {
-    router.push(`/cars/${carId}`);
-  };
-
   const handleAddRefuel = () => {
     router.push(`/cars/${carId}/refuels/add`);
   };
@@ -131,18 +125,6 @@ function AllRefuelsContent({ carId }: { carId: string }) {
       // Toggle order if same field, otherwise default to desc
       order: prev.field === field && prev.order === "desc" ? "asc" : "desc",
     }));
-  };
-
-  // Format helpers
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("de-DE", {
-      style: "currency",
-      currency: "EUR",
-    }).format(amount);
-  };
-
-  const formatLiters = (liters: number) => {
-    return `${liters.toFixed(2)} L`;
   };
 
   // Build filter options for dropdowns
@@ -206,21 +188,6 @@ function AllRefuelsContent({ carId }: { carId: string }) {
 
   return (
     <>
-      <PageHeader
-        title={t.refuels.allRefuels || "All Refuels"}
-        subtitle={car ? `${car.name} (${car.year})` : undefined}
-        onBack={handleBack}
-        actions={
-          <button
-            onClick={handleAddRefuel}
-            className="btn-icon"
-            title={t.refuels.addRefuel}
-          >
-            <AddIcon />
-          </button>
-        }
-      />
-
       {/* Filters */}
       <FilterPanel
         title={t.common.filter}
@@ -252,7 +219,7 @@ function AllRefuelsContent({ carId }: { carId: string }) {
         </FilterRow>
 
         {/* Year filter */}
-        <FilterRow label={t.refuels.year || "Year"}>
+        <FilterRow label={t.refuels.year}>
           <YearSelector
             selectedYear={yearFilter}
             onYearChange={setYearFilter}
@@ -263,7 +230,7 @@ function AllRefuelsContent({ carId }: { carId: string }) {
 
       {/* Sort controls */}
       <FilterPanel
-        title={t.refuels.sortBy || "Sort by"}
+        title={t.refuels.sortBy}
         icon={<SortIcon className="icon-sm" />}
         collapsedSummary={[
           sortOptions.find((o) => o.value === sort.field)?.label || "",
@@ -319,92 +286,11 @@ function AllRefuelsContent({ carId }: { carId: string }) {
           icon={<ListIcon className="icon-sm" />}
           headerAction={<span className="heading-3">{totalCount}</span>}
         >
-          <div className="overflow-x-auto">
-            <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                    {t.refuels.dateHeader}
-                  </th>
-                  <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden xl:table-cell">
-                    {t.refuels.station}
-                  </th>
-                  <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden lg:table-cell">
-                    {t.refuels.kmHeader}
-                  </th>
-                  <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden md:table-cell">
-                    L/100km
-                  </th>
-                  <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                    €/L
-                  </th>
-                  <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
-                    {t.refuels.litersHeader}
-                  </th>
-                  <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-right text-xs font-medium text-secondary uppercase tracking-wider">
-                    {t.refuels.totalHeader}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {refuels.map((refuel) => {
-                  const totalCost = refuel.price * refuel.amount;
-                  const consumption =
-                    (refuel.amount / refuel.kilometers_since_last_refuel) * 100;
-                  const refuelDate = new Date(refuel.timestamp);
-                  const now = new Date();
-                  const isToday =
-                    refuelDate.toDateString() === now.toDateString();
-
-                  return (
-                    <tr
-                      key={refuel.timestamp}
-                      onClick={() => handleEditRefuel(refuel)}
-                      className={`hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${
-                        isToday ? "bg-blue-50/30 dark:bg-blue-900/20" : ""
-                      }`}
-                    >
-                      <td className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-primary">
-                        <div className="font-medium">
-                          {formatDateLocalized(new Date(refuel.timestamp), {
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {formatDateLocalized(new Date(refuel.timestamp), {
-                            year: "numeric",
-                          })}
-                        </div>
-                      </td>
-                      <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-secondary hidden xl:table-cell">
-                        {refuel.station_brand || "—"}
-                      </td>
-                      <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary hidden lg:table-cell">
-                        {refuel.kilometers_since_last_refuel.toFixed(0)}
-                      </td>
-                      <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary hidden md:table-cell">
-                        <div className="font-medium">
-                          {consumption.toFixed(1)}
-                        </div>
-                      </td>
-                      <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
-                        {renderSvgFuelPrice(refuel.price, {
-                          showCurrency: false,
-                        })}
-                      </td>
-                      <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">
-                        {formatLiters(refuel.amount)}
-                      </td>
-                      <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm font-bold text-primary text-right">
-                        {formatCurrency(totalCost)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <RefuelList
+            refuels={refuels}
+            onRowClick={handleEditRefuel}
+            hideEmptyState
+          />
 
           {/* Load more trigger element */}
           {hasNextPage && (
@@ -413,7 +299,7 @@ function AllRefuelsContent({ carId }: { carId: string }) {
                 <LoadingSpinner text={t.common.loading} />
               ) : (
                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {t.navigation.showAll || "Scroll for more"}
+                  {t.navigation.showAll}
                 </span>
               )}
             </div>
@@ -424,23 +310,82 @@ function AllRefuelsContent({ carId }: { carId: string }) {
   );
 }
 
-export default function AllRefuels() {
+// Page content component
+function AllRefuelsPageContent({ carId }: { carId: string }) {
+  const { t } = useTranslation();
   const router = useRouter();
-  const { id: carId } = router.query;
 
-  if (!carId || typeof carId !== "string") {
+  const handleBack = () => {
+    router.push(`/cars/${carId}`);
+  };
+
+  const handleAddRefuel = () => {
+    router.push(`/cars/${carId}/refuels/add`);
+  };
+
+  return (
+    <>
+      {/* Header with car data - inside Suspense */}
+      <Suspense
+        fallback={
+          <PageHeader
+            title={t.refuels.allRefuels}
+            onBack={handleBack}
+            actions={
+              <button
+                onClick={handleAddRefuel}
+                className="btn-icon"
+                title={t.refuels.addRefuel}
+              >
+                <AddIcon />
+              </button>
+            }
+          />
+        }
+      >
+        <CarPageHeader
+          carId={carId}
+          title={t.refuels.allRefuels}
+          onBack={handleBack}
+          actions={
+            <button
+              onClick={handleAddRefuel}
+              className="btn-icon"
+              title={t.refuels.addRefuel}
+            >
+              <AddIcon />
+            </button>
+          }
+        />
+      </Suspense>
+
+      {/* Content - inside separate Suspense */}
+      <Suspense fallback={<LoadingSpinner />}>
+        <AllRefuelsContent carId={carId} />
+      </Suspense>
+    </>
+  );
+}
+
+// Outer wrapper that waits for router to be ready
+export default function AllRefuels() {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const { id } = router.query;
+  const carId = typeof id === "string" ? id : undefined;
+
+  if (!router.isReady || !carId) {
     return (
       <PageContainer>
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <LoadingSpinner />
-        </div>
+        <PageHeader title={t.refuels.allRefuels} onBack={() => router.back()} />
+        <LoadingSpinner />
       </PageContainer>
     );
   }
 
   return (
     <PageContainer>
-      <AllRefuelsContent carId={carId} />
+      <AllRefuelsPageContent carId={carId} />
     </PageContainer>
   );
 }

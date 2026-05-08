@@ -1,30 +1,31 @@
 import React from "react";
 import { RefuelMetric } from "../../lib/api";
 import LoadingSpinner from "../common/LoadingSpinner";
-import {
-  useTranslation,
-  useLocalization,
-} from "../../lib/i18n/LanguageContext";
+import ResponsiveDate from "../common/ResponsiveDate";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 import { renderSvgFuelPrice } from "../../lib/formatPrice";
 
 interface RefuelListProps {
   refuels: RefuelMetric[];
   loading?: boolean;
   onRowClick?: (refuel: RefuelMetric) => void;
+  hideEmptyState?: boolean;
 }
 
 export default function RefuelList({
   refuels,
   loading,
   onRowClick,
+  hideEmptyState = false,
 }: RefuelListProps) {
   const { t } = useTranslation();
-  const { formatDate: formatDateLocalized } = useLocalization();
+
   if (loading) {
     return <LoadingSpinner text={t.common.loading} />;
   }
 
   if (!refuels || refuels.length === 0) {
+    if (hideEmptyState) return null;
     return (
       <p className="text-secondary text-sm">{t.refuels.noRefuelEntriesYet}</p>
     );
@@ -52,9 +53,12 @@ export default function RefuelList({
               {t.refuels.dateHeader}
             </th>
             <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden lg:table-cell">
-              {t.refuels.kmHeader}
+              {t.refuels.station}
             </th>
             <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden md:table-cell">
+              {t.refuels.kmHeader}
+            </th>
+            <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider hidden sm:table-cell">
               L/100km
             </th>
             <th className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
@@ -84,17 +88,15 @@ export default function RefuelList({
                 } ${isClickable ? "cursor-pointer" : ""}`}
               >
                 <td className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-primary">
-                  <div className="font-medium">
-                    {formatDateLocalized(new Date(refuel.timestamp), {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </div>
+                  <ResponsiveDate date={new Date(refuel.timestamp)} />
                 </td>
-                <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary hidden lg:table-cell">
-                  {refuel.kilometers_since_last_refuel.toFixed(0)}
+                <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-secondary hidden lg:table-cell">
+                  {refuel.station_brand || "—"}
                 </td>
                 <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary hidden md:table-cell">
+                  {refuel.kilometers_since_last_refuel.toFixed(0)}
+                </td>
+                <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary hidden sm:table-cell">
                   <div className="font-medium">
                     {(
                       (refuel.amount / refuel.kilometers_since_last_refuel) *

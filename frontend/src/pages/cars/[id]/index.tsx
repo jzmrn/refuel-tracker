@@ -4,27 +4,25 @@ import Snackbar from "@/components/common/Snackbar";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import { LoadingSpinner, PageContainer, PageHeader } from "@/components/common";
 import CarDetailsContent from "@/components/cars/CarDetailsContent";
+import CarPageHeader from "@/components/cars/CarPageHeader";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { useRevokeCarAccess, useDeleteCar, useCar } from "@/lib/hooks/useCars";
-import { RefuelMetric } from "@/lib/api";
+import { useRevokeCarAccess, useDeleteCar } from "@/lib/hooks/useCars";
+import { RefuelMetric, KilometerEntry } from "@/lib/api";
 
-export default function CarDetails() {
+// Content component that handles all the car details logic
+function CarDetailsPageContent({ carId }: { carId: string }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const { id } = router.query;
-  const carId = typeof id === "string" ? id : undefined;
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { data: car } = useCar(carId ?? "");
   const revokeAccess = useRevokeCarAccess();
   const deleteCar = useDeleteCar();
   const { snackbar, showError, showSuccess, hideSnackbar } = useSnackbar();
 
   const handleBack = () => {
-    // Navigate explicitly to cars list to avoid history stack issues
     router.push("/cars");
   };
 
@@ -61,8 +59,16 @@ export default function CarDetails() {
     router.push(`/cars/${carId}/distance`);
   };
 
+  const handleViewAllKilometers = () => {
+    router.push(`/cars/${carId}/distance/all`);
+  };
+
+  const handleEditKilometer = (entry: KilometerEntry) => {
+    const encodedTimestamp = encodeURIComponent(entry.timestamp);
+    router.push(`/cars/${carId}/distance/edit/${encodedTimestamp}`);
+  };
+
   const handleRemoveSharedUser = async (userId: string) => {
-    if (!carId) return;
     try {
       await revokeAccess.mutateAsync({ carId, userId });
       showSuccess(t.cars.accessRevokedSuccess);
@@ -73,12 +79,10 @@ export default function CarDetails() {
   };
 
   const handleDeleteCar = async () => {
-    if (!carId) return;
     setIsDeleteDialogOpen(false);
     setIsDeleting(true);
     try {
       await deleteCar.mutateAsync(carId);
-      // Navigate back immediately after successful deletion
       router.push("/cars");
     } catch (error: any) {
       console.error("Error deleting car:", error);
@@ -88,37 +92,39 @@ export default function CarDetails() {
   };
 
   return (
-    <PageContainer>
-      <PageHeader
-        title={t.cars.carDetails}
-        subtitle={car ? `${car.name} (${car.year})` : undefined}
-        onBack={handleBack}
-      />
-
-      <Suspense fallback={<LoadingSpinner />}>
-        {/* This ternary avoids rendering an empty page since the carId is loaded from the path */}
-        {carId ? (
-          <CarDetailsContent
-            carId={carId}
-            isDeleting={isDeleting}
-            isRevoking={revokeAccess.isPending}
-            onEditCar={handleEditCar}
-            onDeleteCar={() => setIsDeleteDialogOpen(true)}
-            onViewStats={handleViewStats}
-            onAddRefuel={handleAddRefuel}
-            onViewAllRefuels={handleViewAllRefuels}
-            onEditRefuel={handleEditRefuel}
-            onViewKilometerChart={handleViewKilometerChart}
-            onAddKilometer={handleAddKilometer}
-            onAddSharedUsers={handleAddSharedUsers}
-            onRemoveSharedUser={handleRemoveSharedUser}
-          />
-        ) : (
-          <LoadingSpinner />
-        )}
+    <>
+      {/* Header with car data - inside Suspense */}
+      <Suspense
+        fallback={<PageHeader title={t.cars.carDetails} onBack={handleBack} />}
+      >
+        <CarPageHeader
+          carId={carId}
+          title={t.cars.carDetails}
+          onBack={handleBack}
+        />
       </Suspense>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Content - inside separate Suspense */}
+      <Suspense fallback={<LoadingSpinner />}>
+        <CarDetailsContent
+          carId={carId}
+          isDeleting={isDeleting}
+          isRevoking={revokeAccess.isPending}
+          onEditCar={handleEditCar}
+          onDeleteCar={() => setIsDeleteDialogOpen(true)}
+          onViewStats={handleViewStats}
+          onAddRefuel={handleAddRefuel}
+          onViewAllRefuels={handleViewAllRefuels}
+          onEditRefuel={handleEditRefuel}
+          onViewKilometerChart={handleViewKilometerChart}
+          onViewAllKilometers={handleViewAllKilometers}
+          onAddKilometer={handleAddKilometer}
+          onEditKilometer={handleEditKilometer}
+          onAddSharedUsers={handleAddSharedUsers}
+          onRemoveSharedUser={handleRemoveSharedUser}
+        />
+      </Suspense>
+
       <ConfirmationDialog
         isOpen={isDeleteDialogOpen}
         title={t.cars.deleteCarTitle}
@@ -130,7 +136,6 @@ export default function CarDetails() {
         variant="danger"
       />
 
-      {/* Snackbar */}
       {snackbar.isVisible && (
         <Snackbar
           message={snackbar.message}
@@ -139,6 +144,33 @@ export default function CarDetails() {
           isVisible={true}
         />
       )}
+    </>
+  );
+}
+
+export default function CarDetails() {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const { id } = router.query;
+  const carId = typeof id === "string" ? id : undefined;
+
+  // Wait for router to be ready - this prevents hydration mismatch
+  // because router.query is empty on server but populated on client
+  if (!router.isReady || !carId) {
+    return (
+      <PageContainer>
+        <PageHeader
+          title={t.cars.carDetails}
+          onBack={() => router.push("/cars")}
+        />
+        <LoadingSpinner />
+      </PageContainer>
+    );
+  }
+
+  return (
+    <PageContainer>
+      <CarDetailsPageContent carId={carId} />
     </PageContainer>
   );
 }

@@ -67,39 +67,35 @@ export function applyTheme(currentTheme: ResolvedTheme) {
 
 interface ThemeProviderProps {
   children: ReactNode;
+  initialTheme?: Theme;
 }
 
-export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>("system");
-  const [currentTheme, setCurrentTheme] = useState<ResolvedTheme>(() =>
-    resolveTheme("system"),
-  );
+export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
+  // Use server-provided initial theme to avoid hydration mismatch
+  const [theme, setTheme] = useState<Theme>(initialTheme ?? "system");
+  const [currentTheme, setCurrentTheme] = useState<ResolvedTheme>(() => {
+    // On server, resolve to "light" as fallback
+    // On client during hydration, this matches the server value
+    if (typeof window === "undefined") return "light";
+    return resolveTheme(initialTheme ?? "system");
+  });
 
-  // On mount: resolve theme from cookie or localStorage
+  // Sync with localStorage on mount (in case it differs from cookie)
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    const fromCookie = parseThemeCookie(document.cookie);
-
     const isValidTheme = (v: string): v is Theme =>
       ["light", "dark", "system"].includes(v);
-    const resolved = stored && isValidTheme(stored) ? stored : fromCookie;
 
-    // Sync cookie if needed
-    if (
-      stored &&
-      isValidTheme(stored) &&
-      !document.cookie.includes(THEME_COOKIE_KEY)
-    ) {
-      setThemeCookie(resolved);
+    // Only update if localStorage has a different valid theme
+    if (stored && isValidTheme(stored) && stored !== theme) {
+      setTheme(stored);
+      setCurrentTheme(resolveTheme(stored));
+      // Sync cookie with localStorage
+      if (!document.cookie.includes(THEME_COOKIE_KEY)) {
+        setThemeCookie(stored);
+      }
     }
-
-    if (resolved !== "system") {
-      startTransition(() => {
-        setTheme(resolved);
-        setCurrentTheme(resolveTheme(resolved));
-      });
-    }
-  }, []);
+  }, [theme]);
 
   // Update current theme when theme or system preference changes
   useEffect(() => {

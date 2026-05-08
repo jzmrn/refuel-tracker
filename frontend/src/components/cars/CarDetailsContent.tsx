@@ -11,7 +11,7 @@ import {
 } from "@/lib/hooks/useCars";
 import { EmptyPanel, StackLayout } from "@/components/common";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { RefuelMetric } from "@/lib/api";
+import { RefuelMetric, KilometerEntry } from "@/lib/api";
 
 interface CarDetailsContentProps {
   carId: string;
@@ -24,7 +24,9 @@ interface CarDetailsContentProps {
   onViewAllRefuels: () => void;
   onEditRefuel: (refuel: RefuelMetric) => void;
   onViewKilometerChart: () => void;
+  onViewAllKilometers: () => void;
   onAddKilometer: () => void;
+  onEditKilometer: (entry: KilometerEntry) => void;
   onAddSharedUsers: () => void;
   onRemoveSharedUser: (userId: string) => void;
 }
@@ -40,12 +42,18 @@ const CarDetailsContent: React.FC<CarDetailsContentProps> = ({
   onViewAllRefuels,
   onEditRefuel,
   onViewKilometerChart,
+  onViewAllKilometers,
   onAddKilometer,
+  onEditKilometer,
   onAddSharedUsers,
   onRemoveSharedUser,
 }) => {
   const { t } = useTranslation();
   const { data: car } = useCar(carId);
+  const { data: refuels } = useRefuelMetrics(carId, { limit: 5 });
+  const { data: kilometerData } = useKilometerEntries(carId, {
+    limit: 5,
+  });
 
   if (!car) {
     return (
@@ -57,11 +65,6 @@ const CarDetailsContent: React.FC<CarDetailsContentProps> = ({
       />
     );
   }
-
-  const { data: refuels } = useRefuelMetrics(carId, { limit: 5 });
-  const { data: kilometerData } = useKilometerEntries(carId, {
-    limit: 5,
-  });
 
   return (
     <StackLayout>
@@ -85,7 +88,9 @@ const CarDetailsContent: React.FC<CarDetailsContentProps> = ({
         entries={kilometerData.entries}
         loading={false}
         onViewChart={onViewKilometerChart}
+        onViewAll={onViewAllKilometers}
         onAddEntry={onAddKilometer}
+        onEditEntry={onEditKilometer}
       />
 
       {car.is_owner && (

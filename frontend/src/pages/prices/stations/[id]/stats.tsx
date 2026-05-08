@@ -39,11 +39,18 @@ function StationStatsPageContent({ stationId }: { stationId: string }) {
 
 export default function StationStatsPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { id } = router.query;
 
-  if (!id || typeof id !== "string") {
+  // Wait for router to be ready to avoid hydration mismatch
+  if (!router.isReady || !id || typeof id !== "string") {
     return (
       <PageContainer>
+        <PageHeader
+          title={t.statistics.stationStatsTitle}
+          onBack={() => router.back()}
+          backLabel={t.statistics.back}
+        />
         <LoadingSpinner />
       </PageContainer>
     );

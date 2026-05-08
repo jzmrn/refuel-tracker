@@ -66,7 +66,7 @@ export default function Layout({ children }: LayoutProps) {
                     router.pathname.startsWith("/cars/"));
                 return (
                   <Link
-                    key={item.name}
+                    key={item.href}
                     href={item.href}
                     className={clsx(
                       "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors",
@@ -111,7 +111,7 @@ export default function Layout({ children }: LayoutProps) {
               (item.href === "/cars" && router.pathname.startsWith("/cars/"));
             return (
               <Link
-                key={item.name}
+                key={item.href}
                 href={item.href}
                 className="flex flex-1 flex-col items-center py-2 px-1 min-w-0"
               >

@@ -657,6 +657,32 @@ class KilometerEntriesResponse(BaseModel):
     aggregates: list[KilometerPeriodAggregate] | None = None
 
 
+class KilometerEntryUpdate(BaseModel):
+    """Request model for updating a kilometer entry"""
+
+    timestamp: datetime = Field(..., description="Original timestamp to identify entry")
+    car_id: str = Field(..., description="ID of the car")
+    total_kilometers: float | None = Field(
+        None, gt=0, description="Updated total kilometers on the odometer"
+    )
+
+
+class KilometerEntriesPaginatedResponse(BaseModel):
+    """Paginated response for kilometer entries"""
+
+    items: list[KilometerEntryResponse]
+    total: int
+    offset: int
+    limit: int
+    has_more: bool
+
+
+class KilometerFilterOptionsResponse(BaseModel):
+    """Filter options for kilometer entries"""
+
+    years: list[int] = Field(default_factory=list)
+
+
 # Monthly Statistics Models
 class AvailableMonth(BaseModel):
     """A single available month for statistics"""

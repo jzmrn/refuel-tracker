@@ -215,17 +215,23 @@ export interface TranslationStructure {
   // Kilometers
   kilometers: {
     title: string;
+    allEntries: string;
     addKilometer: string;
+    editKilometer: string;
     totalKilometers: string;
     recentEntries: string;
     kilometerHistory: string;
     noEntriesYet: string;
     addFirstEntry: string;
     entryAdded: string;
+    entryUpdated: string;
     entryDeleted: string;
+    entryNotFound: string;
     errorAddingEntry: string;
+    errorUpdatingEntry: string;
     errorDeletingEntry: string;
     errorLoadingData: string;
+    errorLoadingEntries: string;
     viewChart: string;
     totalKilometersForm: string;
     kilometersRequired: string;

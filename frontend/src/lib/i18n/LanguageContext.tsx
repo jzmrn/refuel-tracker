@@ -4,7 +4,6 @@ import React, {
   useState,
   useEffect,
   ReactNode,
-  startTransition,
 } from "react";
 import { Language, TranslationStructure, isLanguage } from "./types";
 import {
@@ -46,30 +45,20 @@ export function LanguageProvider({
     getTranslations(initial),
   );
 
-  // On mount: resolve language from cookie or localStorage
+  // Sync with localStorage on mount (in case it differs from cookie)
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    const fromCookie = parseLanguageCookie(document.cookie);
 
-    // localStorage wins over cookie (migration path), cookie wins over default
-    const resolved = stored && isLanguage(stored) ? stored : fromCookie;
-
-    // Sync cookie if needed
-    if (
-      stored &&
-      isLanguage(stored) &&
-      !document.cookie.includes(LANGUAGE_COOKIE_KEY)
-    ) {
-      setLanguageCookie(stored);
+    // Only update if localStorage has a different valid language
+    if (stored && isLanguage(stored) && stored !== language) {
+      setLanguageState(stored);
+      setTranslations(getTranslations(stored));
+      // Sync cookie with localStorage
+      if (!document.cookie.includes(LANGUAGE_COOKIE_KEY)) {
+        setLanguageCookie(stored);
+      }
     }
-
-    if (resolved !== language) {
-      startTransition(() => {
-        setLanguageState(resolved);
-        setTranslations(getTranslations(resolved));
-      });
-    }
-  }, []);
+  }, [language]);
 
   const setLanguage = (newLanguage: Language) => {
     setLanguageState(newLanguage);
