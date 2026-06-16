@@ -8,12 +8,11 @@ import {
   useStationComparison,
   useStationDailyStatsByDays,
 } from "@/lib/hooks/useStats";
-import { StandardCard, StackLayout } from "@/components/common";
+import { Panel, StackLayout } from "@/components/common";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { FilterPanel, FilterRow } from "@/components/common";
 import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
 import DailyPriceChangesChart from "@/components/fuel/DailyPriceChangesChart";
-import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import TimelineIcon from "@mui/icons-material/Timeline";
@@ -143,38 +142,35 @@ function StationStatsCharts({
 
   return (
     <>
-      <StandardCard
+      <Panel
+        variant="compact"
         title={t.statistics.dailyPriceAllFuels}
-        icon={
-          <LocalGasStationIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-        }
+        icon={LocalGasStationIcon}
         iconBackground="purple"
       >
         <StationAllFuelsDailyChart data={dailyPrices.days} />
-      </StandardCard>
+      </Panel>
 
-      <StandardCard
+      <Panel
+        variant="compact"
         title={t.statistics.stationVsPlaceVsBrand}
-        icon={
-          <CompareArrowsIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-        }
+        icon={CompareArrowsIcon}
         iconBackground="orange"
       >
         <StationComparisonChart data={comparison} labelMap={labelMap} />
         {legendEntries.length > 0 && (
           <ComparisonLegend entries={legendEntries} />
         )}
-      </StandardCard>
+      </Panel>
 
-      <StandardCard
+      <Panel
+        variant="compact"
         title={t.fuelPrices.priceActivity}
-        icon={
-          <TimelineIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-        }
+        icon={TimelineIcon}
         iconBackground="indigo"
       >
         <DailyPriceChangesChart data={dailyStats?.daily_stats ?? []} />
-      </StandardCard>
+      </Panel>
     </>
   );
 }
@@ -217,9 +213,6 @@ const StationStatsContent: React.FC<StationStatsContentProps> = ({
   return (
     <StackLayout>
       <FilterPanel
-        icon={
-          <FilterAltIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-        }
         title={t.statistics.filters}
         collapsedSummary={collapsedSummary}
       >

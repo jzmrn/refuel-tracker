@@ -5,7 +5,6 @@ import { useLocalization } from "@/lib/i18n/LanguageContext";
 import { FilterPanel, FilterRow } from "@/components/common";
 import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
 import MonthSelector from "@/components/stats/MonthSelector";
-import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import { getFuelTypeLabel } from "@/lib/fuelType";
 
 interface StatsFiltersProps {
@@ -38,9 +37,6 @@ const StatsFilters: React.FC<StatsFiltersProps> = ({
   return (
     <FilterPanel
       title={t.statistics.filters}
-      icon={
-        <FilterAltIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-      }
       collapsedSummary={summary}
       storageKey="stats-filters"
     >

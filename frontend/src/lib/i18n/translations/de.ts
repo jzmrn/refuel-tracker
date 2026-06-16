@@ -181,7 +181,7 @@ export const de: TranslationStructure = {
     makeSureEntriesHaveKilometersData:
       "Stellen Sie sicher, dass Ihre Einträge Kilometerdaten enthalten",
     remainingRange: "Verbleibende Reichweite",
-    theoreticalMaxRange: "Theoretische Maximalreichweite",
+    theoreticalMaxRange: "Maximale Reichweite",
     minDistance: "Min. Strecke",
     maxDistance: "Max. Strecke",
     avgDistance: "Ø Strecke",

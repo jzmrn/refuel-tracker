@@ -7,7 +7,6 @@ import StationsList, {
   SortByType,
 } from "@/components/fuel-prices/StationsList";
 import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
-import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import Snackbar from "@/components/common/Snackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useSnackbar } from "@/lib/useSnackbar";
@@ -288,9 +287,6 @@ export default function SearchStations() {
             {/* Sort Control */}
             <FilterPanel
               title={t.fuelPrices.sortBy}
-              icon={
-                <FilterAltIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              }
               collapsedSummary={[fuelTypeLabels[searchSortBy]]}
               storageKey="search-sort-filter"
               className="mb-6"

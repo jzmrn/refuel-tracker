@@ -8,7 +8,7 @@ import React, {
 import { FuelType } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { useFuelType } from "@/lib/fuelType";
-import { StandardCard, StackLayout } from "@/components/common";
+import { Panel, StackLayout } from "@/components/common";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import TimeRangeFuelTypeFilter from "@/components/fuel/TimeRangeFuelTypeFilter";
 import AvgPriceChart from "@/components/stats/AvgPriceChart";
@@ -80,62 +80,57 @@ function DetailCharts<T>({
 
   return (
     <>
-      <StandardCard>
+      <Panel variant="compact">
         <ChartLegend data={detailData} />
-      </StandardCard>
+      </Panel>
 
-      <StandardCard
+      <Panel
+        variant="compact"
         title={chartLabels.avgPrice}
-        icon={
-          <PlaceIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-        }
+        icon={PlaceIcon}
         iconBackground="orange"
       >
         <AvgPriceChart data={detailData} />
-      </StandardCard>
+      </Panel>
 
-      <StandardCard
+      <Panel
+        variant="compact"
         title={chartLabels.variance}
-        icon={
-          <TrendingDownIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-        }
+        icon={TrendingDownIcon}
         iconBackground="purple"
       >
         <VarianceChart data={detailData} />
-      </StandardCard>
+      </Panel>
 
       {showPriceDirectionCharts ? (
         <>
-          <StandardCard
+          <Panel
+            variant="compact"
             title={chartLabels.priceIncreased}
-            icon={
-              <TrendingUpIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
-            }
+            icon={TrendingUpIcon}
             iconBackground="red"
           >
             <PriceDirectionChart data={detailData} direction="increased" />
-          </StandardCard>
+          </Panel>
 
-          <StandardCard
+          <Panel
+            variant="compact"
             title={chartLabels.priceDecreased}
-            icon={
-              <TrendingDownIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
-            }
+            icon={TrendingDownIcon}
             iconBackground="green"
           >
             <PriceDirectionChart data={detailData} direction="decreased" />
-          </StandardCard>
+          </Panel>
         </>
       ) : (
-        <StandardCard
+        <Panel
+          variant="compact"
           title={chartLabels.activity}
-          icon={
-            <SwapVertIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-          }
+          icon={SwapVertIcon}
           iconBackground="indigo"
         >
           <PriceActivityChart data={detailData} />
-        </StandardCard>
+        </Panel>
       )}
     </>
   );

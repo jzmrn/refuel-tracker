@@ -7,7 +7,7 @@ import {
 } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import { renderSvgFuelPrice } from "@/lib/formatPrice";
-import { StandardCard } from "@/components/common";
+import { Panel } from "@/components/common";
 import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
 import PlaceIcon from "@mui/icons-material/Place";
 import BusinessIcon from "@mui/icons-material/Business";
@@ -30,13 +30,12 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
   return (
     <>
       {/* Cheapest Stations */}
-      <StandardCard
+      <Panel
+        variant="compact"
         title={t.statistics.cheapestStations}
-        icon={
-          <LocalGasStationIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-        }
+        icon={LocalGasStationIcon}
         iconBackground="purple"
-        headerAction={
+        actions={
           <button
             onClick={() => router.push("/prices/stations/stats")}
             className="btn-icon"
@@ -105,16 +104,15 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
             </table>
           </div>
         )}
-      </StandardCard>
+      </Panel>
 
       {/* Cheapest Places */}
-      <StandardCard
+      <Panel
+        variant="compact"
         title={t.statistics.cheapestPlaces}
-        icon={
-          <PlaceIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-        }
+        icon={PlaceIcon}
         iconBackground="orange"
-        headerAction={
+        actions={
           <button
             onClick={() => router.push("/prices/places/stats")}
             className="btn-icon"
@@ -175,16 +173,15 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
             </table>
           </div>
         )}
-      </StandardCard>
+      </Panel>
 
       {/* Cheapest Brands */}
-      <StandardCard
+      <Panel
+        variant="compact"
         title={t.statistics.cheapestBrands}
-        icon={
-          <BusinessIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-        }
+        icon={BusinessIcon}
         iconBackground="indigo"
-        headerAction={
+        actions={
           <button
             onClick={() => router.push("/prices/brands/stats")}
             className="btn-icon"
@@ -238,7 +235,7 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
             </table>
           </div>
         )}
-      </StandardCard>
+      </Panel>
     </>
   );
 };

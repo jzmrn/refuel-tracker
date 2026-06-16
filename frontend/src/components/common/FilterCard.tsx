@@ -1,7 +1,9 @@
 import React, { useState, useRef, useLayoutEffect } from "react";
-import { StandardCard } from "./StandardCard";
+import Panel from "./Panel";
+import IconButton from "./IconButton";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
 
 interface FilterCardProps {
   label: string;
@@ -39,7 +41,7 @@ export const FilterRow: React.FC<FilterRowProps> = ({ label, children }) => {
 
 interface FilterPanelProps {
   title: string;
-  icon?: React.ReactNode;
+  icon?: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   className?: string;
   collapsedSummary?: string[];
@@ -57,7 +59,7 @@ const useIsomorphicLayoutEffect =
 
 export const FilterPanel: React.FC<FilterPanelProps> = ({
   title,
-  icon,
+  icon: Icon = FilterAltIcon,
   children,
   className = "",
   collapsedSummary = [],
@@ -133,31 +135,31 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
     : null;
 
   const collapseButton = (
-    <div className="flex items-center gap-2">
+    <div className="action-group items-center">
       {summaryLabels && (
         <div className="hidden xs:flex items-center gap-2">{summaryLabels}</div>
       )}
-      <button
+      <IconButton
         onClick={handleToggle}
-        className="btn-icon !p-1"
-        aria-label={collapsed ? "Expand filters" : "Collapse filters"}
-      >
-        {collapsed ? (
-          <ExpandMoreIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-        ) : (
-          <ExpandLessIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-        )}
-      </button>
+        ariaLabel={collapsed ? "Expand filters" : "Collapse filters"}
+        icon={
+          collapsed ? (
+            <ExpandMoreIcon className="icon text-gray-500 dark:text-gray-400" />
+          ) : (
+            <ExpandLessIcon className="icon text-gray-500 dark:text-gray-400" />
+          )
+        }
+      />
     </div>
   );
 
   return (
-    <StandardCard
+    <Panel
       title={title}
-      icon={icon}
+      icon={Icon}
       iconBackground="gray"
       className={className}
-      headerAction={collapseButton}
+      actions={collapseButton}
       noHeaderMargin
     >
       {summaryLabels && (
@@ -174,6 +176,6 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
       >
         <div className="space-y-3">{children}</div>
       </div>
-    </StandardCard>
+    </Panel>
   );
 };

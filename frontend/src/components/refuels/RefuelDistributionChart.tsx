@@ -195,7 +195,7 @@ function PieChartSection({
         <h3 className="text-sm font-medium text-center mb-2 text-gray-600 dark:text-gray-400">
           {title}
         </h3>
-        <div className="h-[220px] flex items-center justify-center text-sm text-gray-400">
+        <div className="h-[260px] flex items-center justify-center text-sm text-gray-400">
           {noDataLabel}
         </div>
       </div>
@@ -240,8 +240,8 @@ function PieChartSection({
           <DistributionPie
             data={data}
             unknownLabel={unknownLabel}
-            outerRadius={85}
-            size={200}
+            outerRadius={110}
+            size={250}
           />
         </div>
         <div className="mt-3">
@@ -254,8 +254,8 @@ function PieChartSection({
           <DistributionPie
             data={data}
             unknownLabel={unknownLabel}
-            outerRadius={90}
-            size={200}
+            outerRadius={115}
+            size={250}
           />
         </div>
         <div className="flex-1 min-w-0 flex items-center">
@@ -268,8 +268,8 @@ function PieChartSection({
           <DistributionPie
             data={data}
             unknownLabel={unknownLabel}
-            outerRadius={100}
-            size={240}
+            outerRadius={130}
+            size={310}
           />
         </div>
         <div className="mt-3">

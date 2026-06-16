@@ -10,7 +10,7 @@ export const StackLayout: React.FC<StackLayoutProps> = ({
   className = "",
 }) => {
   return (
-    <div className={`space-y-3 xs:space-y-4 md:space-y-5 ${className}`}>
+    <div className={`space-y-2 xs:space-y-3 md:space-y-4 ${className}`}>
       {children}
     </div>
   );

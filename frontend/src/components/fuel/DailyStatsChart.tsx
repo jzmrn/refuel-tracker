@@ -121,6 +121,12 @@ export default function DailyStatsChart({
                       })}
                     </p>
                     <div className="space-y-1 text-sm">
+                      <p className="text-red-400 flex justify-between gap-4">
+                        <span className="text-gray-400">Max</span>
+                        <span className="font-semibold">
+                          {renderSvgFuelPrice(dataPoint.price_max)}
+                        </span>
+                      </p>
                       <p className="text-white flex justify-between gap-4">
                         <span className="text-gray-400">Ø</span>
                         <span className="font-semibold">
@@ -131,12 +137,6 @@ export default function DailyStatsChart({
                         <span className="text-gray-400">Min</span>
                         <span className="font-semibold">
                           {renderSvgFuelPrice(dataPoint.price_min)}
-                        </span>
-                      </p>
-                      <p className="text-red-400 flex justify-between gap-4">
-                        <span className="text-gray-400">Max</span>
-                        <span className="font-semibold">
-                          {renderSvgFuelPrice(dataPoint.price_max)}
                         </span>
                       </p>
                     </div>

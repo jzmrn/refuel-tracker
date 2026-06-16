@@ -179,7 +179,7 @@ export const en: TranslationStructure = {
     makeSureEntriesHaveKilometersData:
       "Make sure your entries have kilometers data",
     remainingRange: "Remaining Range",
-    theoreticalMaxRange: "Theoretical Max Range",
+    theoreticalMaxRange: "Max Range",
     minDistance: "Min Distance",
     maxDistance: "Max Distance",
     avgDistance: "Avg Distance",

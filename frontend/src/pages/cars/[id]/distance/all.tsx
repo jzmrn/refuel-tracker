@@ -11,16 +11,14 @@ import {
   EmptyPanel,
   LoadingSpinner,
   PageContainer,
-  StandardCard,
+  Panel,
 } from "@/components/common";
 import CarPageHeader from "@/components/cars/CarPageHeader";
 import { FilterPanel, FilterRow } from "@/components/common/FilterCard";
 import YearSelector from "@/components/common/YearSelector";
 import KilometerList from "@/components/refuels/KilometerList";
-import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import AddIcon from "@mui/icons-material/Add";
 import SpeedIcon from "@mui/icons-material/Speed";
-import ListIcon from "@mui/icons-material/List";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 function AllDistanceContent({ carId }: { carId: string }) {
@@ -105,7 +103,6 @@ function AllDistanceContent({ carId }: { carId: string }) {
       {/* Filters */}
       <FilterPanel
         title={t.common.filter}
-        icon={<FilterAltIcon className="icon-sm" />}
         collapsedSummary={collapsedSummary}
         storageKey="distance-all-filters"
         className="mb-4"
@@ -143,10 +140,9 @@ function AllDistanceContent({ carId }: { carId: string }) {
           }
         />
       ) : (
-        <StandardCard
+        <Panel
           title={t.common.entries}
-          icon={<ListIcon className="icon-sm" />}
-          headerAction={<span className="heading-3">{totalCount}</span>}
+          actions={<span className="heading-3">{totalCount}</span>}
         >
           <KilometerList
             entries={entries}
@@ -166,7 +162,7 @@ function AllDistanceContent({ carId }: { carId: string }) {
               )}
             </div>
           )}
-        </StandardCard>
+        </Panel>
       )}
     </>
   );

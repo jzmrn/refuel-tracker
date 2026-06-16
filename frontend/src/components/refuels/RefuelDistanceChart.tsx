@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  Rectangle,
 } from "recharts";
 import SummaryCard from "../common/SummaryCard";
 import Panel from "../common/Panel";
@@ -36,6 +37,17 @@ interface RefuelDataForChart {
 interface RefuelDistanceChartProps {
   refuelData: RefuelDataForChart[];
   fuelTankSize?: number;
+}
+
+// Custom shape for the distance bar so the rounded top corners are decided
+// per data point. When an entry has a remaining range stacked on top, the
+// distance segment is the bottom of the stack and stays flat; when the
+// remaining range is zero, the distance segment is the topmost visible part
+// and should carry the rounded corners.
+function DistanceBarShape(props: any) {
+  const radius: [number, number, number, number] =
+    props.payload?.remainingRange > 0 ? [0, 0, 0, 0] : [4, 4, 0, 0];
+  return <Rectangle {...props} radius={radius} />;
 }
 
 export default function RefuelDistanceChart({
@@ -112,6 +124,10 @@ export default function RefuelDistanceChart({
         minute: "2-digit",
       });
       const totalRange = data.distance + data.remainingRange;
+      const remainingRangeClassName =
+        data.remainingRange > 0
+          ? "text-emerald-600 dark:text-emerald-400"
+          : "text-red-600 dark:text-red-400";
       return (
         <div className="panel">
           <div className="mb-2">
@@ -125,27 +141,21 @@ export default function RefuelDistanceChart({
                 {formatDistance(data.distance)} km
               </span>
             </p>
-            {data.remainingRange > 0 && (
-              <>
-                <p className="flex justify-between gap-4">
-                  <span className="text-gray-400">
-                    {t.refuels.remainingRange}:
-                  </span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                    {formatDistance(data.remainingRange)} km
-                  </span>
-                </p>
-                <hr className="border-gray-200 dark:border-gray-600 my-1" />
-                <p className="flex justify-between gap-4">
-                  <span className="text-gray-400">
-                    {t.refuels.theoreticalMaxRange}:
-                  </span>
-                  <span className="font-semibold">
-                    {formatDistance(totalRange)} km
-                  </span>
-                </p>
-              </>
-            )}
+            <p className="flex justify-between gap-4">
+              <span className="text-gray-400">{t.refuels.remainingRange}:</span>
+              <span className={`${remainingRangeClassName} font-semibold`}>
+                {formatDistance(data.remainingRange)} km
+              </span>
+            </p>
+            <hr className="border-gray-200 dark:border-gray-600 my-1" />
+            <p className="flex justify-between gap-4">
+              <span className="text-gray-400">
+                {t.refuels.theoreticalMaxRange}:
+              </span>
+              <span className="font-semibold">
+                {formatDistance(totalRange)} km
+              </span>
+            </p>
           </div>
         </div>
       );
@@ -205,7 +215,7 @@ export default function RefuelDistanceChart({
             stackId="range"
             fill={chartTheme.primaryLine}
             name={t.refuels.distance}
-            radius={hasRemainingRange ? [0, 0, 0, 0] : [4, 4, 0, 0]}
+            shape={<DistanceBarShape />}
           />
           {hasRemainingRange && (
             <Bar

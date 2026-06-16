@@ -11,18 +11,16 @@ import {
   EmptyPanel,
   LoadingSpinner,
   PageContainer,
-  StandardCard,
+  Panel,
 } from "@/components/common";
 import CarPageHeader from "@/components/cars/CarPageHeader";
 import { FilterPanel, FilterRow } from "@/components/common/FilterCard";
 import FilterSelect from "@/components/common/FilterSelect";
 import YearSelector from "@/components/common/YearSelector";
 import RefuelList from "@/components/refuels/RefuelList";
-import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import SortIcon from "@mui/icons-material/Sort";
 import AddIcon from "@mui/icons-material/Add";
 import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
-import ListIcon from "@mui/icons-material/List";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 // Sort options
@@ -191,7 +189,6 @@ function AllRefuelsContent({ carId }: { carId: string }) {
       {/* Filters */}
       <FilterPanel
         title={t.common.filter}
-        icon={<FilterAltIcon className="icon-sm" />}
         collapsedSummary={collapsedSummary}
         storageKey="refuels-all-filters"
         className="mb-4"
@@ -231,7 +228,7 @@ function AllRefuelsContent({ carId }: { carId: string }) {
       {/* Sort controls */}
       <FilterPanel
         title={t.refuels.sortBy}
-        icon={<SortIcon className="icon-sm" />}
+        icon={SortIcon}
         collapsedSummary={[
           sortOptions.find((o) => o.value === sort.field)?.label || "",
         ]}
@@ -281,10 +278,9 @@ function AllRefuelsContent({ carId }: { carId: string }) {
           }
         />
       ) : (
-        <StandardCard
+        <Panel
           title={t.common.entries}
-          icon={<ListIcon className="icon-sm" />}
-          headerAction={<span className="heading-3">{totalCount}</span>}
+          actions={<span className="heading-3">{totalCount}</span>}
         >
           <RefuelList
             refuels={refuels}
@@ -304,7 +300,7 @@ function AllRefuelsContent({ carId }: { carId: string }) {
               )}
             </div>
           )}
-        </StandardCard>
+        </Panel>
       )}
     </>
   );
