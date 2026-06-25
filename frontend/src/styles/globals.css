@@ -7,11 +7,12 @@
     font-family: "Inter", system-ui, sans-serif;
   }
 
-  /* Dark mode color scheme */
-  @media (prefers-color-scheme: dark) {
-    html {
-      color-scheme: dark;
-    }
+  /* Color scheme follows the class-based dark mode toggle, not the OS preference */
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
   }
 }
 

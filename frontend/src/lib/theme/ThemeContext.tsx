@@ -63,6 +63,12 @@ export function applyTheme(currentTheme: ResolvedTheme) {
   } else {
     root.classList.remove("dark");
   }
+  // Keep the color-scheme meta tag in sync so the browser uses the correct
+  // canvas color if the user refreshes before a full page navigation.
+  const meta = document.querySelector('meta[name="color-scheme"]');
+  if (meta) {
+    meta.setAttribute("content", currentTheme);
+  }
 }
 
 interface ThemeProviderProps {
@@ -74,9 +80,10 @@ export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
   // Use server-provided initial theme to avoid hydration mismatch
   const [theme, setTheme] = useState<Theme>(initialTheme ?? "system");
   const [currentTheme, setCurrentTheme] = useState<ResolvedTheme>(() => {
-    // On server, resolve to "light" as fallback
-    // On client during hydration, this matches the server value
-    if (typeof window === "undefined") return "light";
+    // resolveTheme handles both server and client correctly:
+    // - "dark" → "dark" (both environments)
+    // - "light" → "light" (both environments)
+    // - "system" → "light" on server (no window), OS preference on client
     return resolveTheme(initialTheme ?? "system");
   });
 

@@ -10,9 +10,12 @@ export default function Document({
   lang: string;
   themeClass: string;
 }) {
+  const colorScheme = themeClass === "dark" ? "dark" : "light";
+
   return (
     <Html lang={lang || "en"} className={themeClass}>
       <Head>
+        <meta name="color-scheme" content={colorScheme} />
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
@@ -298,7 +301,7 @@ export default function Document({
           href="/icons/8.3__iPad_Mini_portrait.png"
         />
       </Head>
-      <body>
+      <body className="bg-gray-50 dark:bg-gray-900">
         <Main />
         <NextScript />
       </body>
