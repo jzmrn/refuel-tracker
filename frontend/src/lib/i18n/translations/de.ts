@@ -543,5 +543,21 @@ export const de: TranslationStructure = {
     last30Days: "30 Tage",
     last60Days: "60 Tage",
     last90Days: "90 Tage",
+    dataSource: {
+      label: "Datenquelle",
+      favourites: "Favoriten",
+      manual: "Manuell",
+      all: "Alle",
+      top10: "Top 10",
+      selectEntities: "Auswählen...",
+      selectAll: "Alle auswählen",
+      deselectAll: "Alle abwählen",
+      nSelected: (n: number) => `${n} ausgewählt`,
+      noFavourites:
+        "Keine Favoriten gesetzt. Füge zuerst Tankstellen zu Favoriten hinzu.",
+      stations: "Tankstellen",
+      brands: "Marken",
+      places: "Orte",
+    },
   },
 };

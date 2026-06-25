@@ -533,6 +533,32 @@ export interface StationComparisonResponse {
   brand: StationComparisonSeries;
 }
 
+// ---------------------------------------------------------------------------
+// Available Entities (for multi-select dropdowns in stats views)
+// ---------------------------------------------------------------------------
+
+export interface AvailableStation {
+  station_id: string;
+  name?: string | null;
+  brand?: string | null;
+  place?: string | null;
+}
+
+export interface AvailableBrand {
+  brand: string;
+}
+
+export interface AvailablePlace {
+  place: string;
+  post_code: number;
+}
+
+export interface FavoriteEntities {
+  station_ids: string[];
+  brands: string[];
+  places: string[];
+}
+
 /**
  * Time range options for price history
  */
@@ -1053,13 +1079,35 @@ class ApiService {
     return response.data;
   }
 
+  async getAvailableStations(): Promise<AvailableStation[]> {
+    const response = await this.api.get("/api/stats/available-stations");
+    return response.data;
+  }
+
+  async getAvailableBrands(): Promise<AvailableBrand[]> {
+    const response = await this.api.get("/api/stats/available-brands");
+    return response.data;
+  }
+
+  async getAvailablePlaces(): Promise<AvailablePlace[]> {
+    const response = await this.api.get("/api/stats/available-places");
+    return response.data;
+  }
+
+  async getFavoriteEntities(): Promise<FavoriteEntities> {
+    const response = await this.api.get("/api/stats/favorites/entities");
+    return response.data;
+  }
+
   async getMonthlyBrandAggregates(
     fuelType: FuelType,
     date: string,
     limit: number = 10,
+    brands?: string[],
   ): Promise<MonthlyBrandAggregate[]> {
     const response = await this.api.get(`/api/stats/brands/${fuelType}`, {
-      params: { date, limit },
+      params: { date, limit, brands },
+      paramsSerializer: { indexes: null },
     });
     return response.data;
   }
@@ -1068,9 +1116,11 @@ class ApiService {
     fuelType: FuelType,
     date: string,
     limit: number = 10,
+    places?: string[],
   ): Promise<MonthlyPlaceAggregate[]> {
     const response = await this.api.get(`/api/stats/places/${fuelType}`, {
-      params: { date, limit },
+      params: { date, limit, places },
+      paramsSerializer: { indexes: null },
     });
     return response.data;
   }
@@ -1079,9 +1129,11 @@ class ApiService {
     fuelType: FuelType,
     date: string,
     limit: number = 10,
+    station_ids?: string[],
   ): Promise<MonthlyStationAggregate[]> {
     const response = await this.api.get(`/api/stats/stations/${fuelType}`, {
-      params: { date, limit },
+      params: { date, limit, station_ids },
+      paramsSerializer: { indexes: null },
     });
     return response.data;
   }
@@ -1090,11 +1142,13 @@ class ApiService {
     fuelType: FuelType,
     months: number = 3,
     limit: number = 10,
+    places?: string[],
   ): Promise<PlaceDetailAggregate[]> {
     const response = await this.api.get(
       `/api/stats/places/${fuelType}/details`,
       {
-        params: { months, limit },
+        params: { months, limit, places },
+        paramsSerializer: { indexes: null },
       },
     );
     return response.data;
@@ -1104,11 +1158,13 @@ class ApiService {
     fuelType: FuelType,
     months: number = 3,
     limit: number = 10,
+    brands?: string[],
   ): Promise<BrandDetailAggregate[]> {
     const response = await this.api.get(
       `/api/stats/brands/${fuelType}/details`,
       {
-        params: { months, limit },
+        params: { months, limit, brands },
+        paramsSerializer: { indexes: null },
       },
     );
     return response.data;
@@ -1118,11 +1174,13 @@ class ApiService {
     fuelType: FuelType,
     months: number = 3,
     limit: number = 10,
+    station_ids?: string[],
   ): Promise<StationDetailAggregate[]> {
     const response = await this.api.get(
       `/api/stats/stations/${fuelType}/details`,
       {
-        params: { months, limit },
+        params: { months, limit, station_ids },
+        paramsSerializer: { indexes: null },
       },
     );
     return response.data;

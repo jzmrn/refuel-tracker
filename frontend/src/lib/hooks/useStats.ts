@@ -7,18 +7,22 @@ const MIN_LOAD_TIME_MS = 500;
 export const statsKeys = {
   all: ["stats"] as const,
   availableMonths: () => [...statsKeys.all, "availableMonths"] as const,
-  brands: (date: string, fuelType: FuelType, limit: number) =>
-    [...statsKeys.all, "brands", date, fuelType, limit] as const,
-  places: (date: string, fuelType: FuelType, limit: number) =>
-    [...statsKeys.all, "places", date, fuelType, limit] as const,
-  stations: (date: string, fuelType: FuelType, limit: number) =>
-    [...statsKeys.all, "stations", date, fuelType, limit] as const,
-  placeDetails: (fuelType: FuelType, months: number, limit: number) =>
-    [...statsKeys.all, "placeDetails", fuelType, months, limit] as const,
-  brandDetails: (fuelType: FuelType, months: number, limit: number) =>
-    [...statsKeys.all, "brandDetails", fuelType, months, limit] as const,
-  stationDetails: (fuelType: FuelType, months: number, limit: number) =>
-    [...statsKeys.all, "stationDetails", fuelType, months, limit] as const,
+  availableStations: () => [...statsKeys.all, "availableStations"] as const,
+  availableBrands: () => [...statsKeys.all, "availableBrands"] as const,
+  availablePlaces: () => [...statsKeys.all, "availablePlaces"] as const,
+  favoriteEntities: () => [...statsKeys.all, "favoriteEntities"] as const,
+  brands: (date: string, fuelType: FuelType, limit: number, brands?: string[]) =>
+    [...statsKeys.all, "brands", date, fuelType, limit, brands ?? null] as const,
+  places: (date: string, fuelType: FuelType, limit: number, places?: string[]) =>
+    [...statsKeys.all, "places", date, fuelType, limit, places ?? null] as const,
+  stations: (date: string, fuelType: FuelType, limit: number, stationIds?: string[]) =>
+    [...statsKeys.all, "stations", date, fuelType, limit, stationIds ?? null] as const,
+  placeDetails: (fuelType: FuelType, months: number, limit: number, places?: string[]) =>
+    [...statsKeys.all, "placeDetails", fuelType, months, limit, places ?? null] as const,
+  brandDetails: (fuelType: FuelType, months: number, limit: number, brands?: string[]) =>
+    [...statsKeys.all, "brandDetails", fuelType, months, limit, brands ?? null] as const,
+  stationDetails: (fuelType: FuelType, months: number, limit: number, stationIds?: string[]) =>
+    [...statsKeys.all, "stationDetails", fuelType, months, limit, stationIds ?? null] as const,
   stationDailyPrices: (stationId: string, days: number) =>
     [...statsKeys.all, "stationDailyPrices", stationId, days] as const,
   stationComparison: (stationId: string, fuelType: FuelType, days: number) =>
@@ -47,6 +51,58 @@ export function useAvailableMonths() {
 }
 
 /**
+ * Suspense-based hook to fetch all available stations for the multi-select dropdown.
+ */
+export function useAvailableStations() {
+  return useSuspenseQuery({
+    queryKey: statsKeys.availableStations(),
+    queryFn: async () => {
+      return apiService.getAvailableStations();
+    },
+    staleTime: 60 * 60 * 1000, // 1 hour (rarely changes)
+  });
+}
+
+/**
+ * Suspense-based hook to fetch all available brands for the multi-select dropdown.
+ */
+export function useAvailableBrands() {
+  return useSuspenseQuery({
+    queryKey: statsKeys.availableBrands(),
+    queryFn: async () => {
+      return apiService.getAvailableBrands();
+    },
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+/**
+ * Suspense-based hook to fetch all available places for the multi-select dropdown.
+ */
+export function useAvailablePlaces() {
+  return useSuspenseQuery({
+    queryKey: statsKeys.availablePlaces(),
+    queryFn: async () => {
+      return apiService.getAvailablePlaces();
+    },
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+/**
+ * Suspense-based hook to fetch entities derived from user's favourites.
+ */
+export function useFavoriteEntities() {
+  return useSuspenseQuery({
+    queryKey: statsKeys.favoriteEntities(),
+    queryFn: async () => {
+      return apiService.getFavoriteEntities();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes (can change when user adds/removes favourites)
+  });
+}
+
+/**
  * Suspense-based hook to fetch monthly brand aggregates for a given date and fuel type.
  * Must be used inside a <Suspense> boundary.
  */
@@ -54,14 +110,16 @@ export function useMonthlyBrandAggregates(
   date: string,
   fuelType: FuelType,
   limit: number = 10,
+  brands?: string[],
 ) {
   return useSuspenseQuery({
-    queryKey: statsKeys.brands(date, fuelType, limit),
+    queryKey: statsKeys.brands(date, fuelType, limit, brands),
     queryFn: async () => {
       const promise = apiService.getMonthlyBrandAggregates(
         fuelType,
         date,
         limit,
+        brands,
       );
       const [data] = await Promise.all([
         promise,
@@ -81,14 +139,16 @@ export function useMonthlyPlaceAggregates(
   date: string,
   fuelType: FuelType,
   limit: number = 10,
+  places?: string[],
 ) {
   return useSuspenseQuery({
-    queryKey: statsKeys.places(date, fuelType, limit),
+    queryKey: statsKeys.places(date, fuelType, limit, places),
     queryFn: async () => {
       const promise = apiService.getMonthlyPlaceAggregates(
         fuelType,
         date,
         limit,
+        places,
       );
       const [data] = await Promise.all([
         promise,
@@ -108,14 +168,16 @@ export function useMonthlyStationAggregates(
   date: string,
   fuelType: FuelType,
   limit: number = 10,
+  stationIds?: string[],
 ) {
   return useSuspenseQuery({
-    queryKey: statsKeys.stations(date, fuelType, limit),
+    queryKey: statsKeys.stations(date, fuelType, limit, stationIds),
     queryFn: async () => {
       const promise = apiService.getMonthlyStationAggregates(
         fuelType,
         date,
         limit,
+        stationIds,
       );
       const [data] = await Promise.all([
         promise,
@@ -128,18 +190,19 @@ export function useMonthlyStationAggregates(
 }
 
 /**
- * Suspense-based hook to fetch multi-month place detail aggregates for the top N cheapest places.
+ * Suspense-based hook to fetch multi-month place detail aggregates.
  * Must be used inside a <Suspense> boundary.
  */
 export function usePlaceDetails(
   fuelType: FuelType,
   months: number = 3,
   limit: number = 10,
+  places?: string[],
 ) {
   return useSuspenseQuery({
-    queryKey: statsKeys.placeDetails(fuelType, months, limit),
+    queryKey: statsKeys.placeDetails(fuelType, months, limit, places),
     queryFn: async () => {
-      const promise = apiService.getPlaceDetails(fuelType, months, limit);
+      const promise = apiService.getPlaceDetails(fuelType, months, limit, places);
       const [data] = await Promise.all([
         promise,
         new Promise((r) => setTimeout(r, MIN_LOAD_TIME_MS)),
@@ -151,18 +214,19 @@ export function usePlaceDetails(
 }
 
 /**
- * Suspense-based hook to fetch multi-month brand detail aggregates for the top N cheapest brands.
+ * Suspense-based hook to fetch multi-month brand detail aggregates.
  * Must be used inside a <Suspense> boundary.
  */
 export function useBrandDetails(
   fuelType: FuelType,
   months: number = 3,
   limit: number = 10,
+  brands?: string[],
 ) {
   return useSuspenseQuery({
-    queryKey: statsKeys.brandDetails(fuelType, months, limit),
+    queryKey: statsKeys.brandDetails(fuelType, months, limit, brands),
     queryFn: async () => {
-      const promise = apiService.getBrandDetails(fuelType, months, limit);
+      const promise = apiService.getBrandDetails(fuelType, months, limit, brands);
       const [data] = await Promise.all([
         promise,
         new Promise((r) => setTimeout(r, MIN_LOAD_TIME_MS)),
@@ -174,21 +238,23 @@ export function useBrandDetails(
 }
 
 /**
- * Suspense-based hook to fetch multi-month station detail aggregates for the top N cheapest stations.
+ * Suspense-based hook to fetch multi-month station detail aggregates.
  * Must be used inside a <Suspense> boundary.
  */
 export function useStationDetails(
   fuelType: FuelType,
   months: number = 3,
   limit: number = 10,
+  stationIds?: string[],
 ) {
   return useSuspenseQuery({
-    queryKey: statsKeys.stationDetails(fuelType, months, limit),
+    queryKey: statsKeys.stationDetails(fuelType, months, limit, stationIds),
     queryFn: async () => {
       const promise = apiService.getStationDetailAggregates(
         fuelType,
         months,
         limit,
+        stationIds,
       );
       const [data] = await Promise.all([
         promise,

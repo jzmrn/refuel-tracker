@@ -527,5 +527,20 @@ export interface TranslationStructure {
     last30Days: string;
     last60Days: string;
     last90Days: string;
+    dataSource: {
+      label: string;
+      favourites: string;
+      manual: string;
+      all: string;
+      top10: string;
+      selectEntities: string;
+      selectAll: string;
+      deselectAll: string;
+      nSelected: (n: number) => string;
+      noFavourites: string;
+      stations: string;
+      brands: string;
+      places: string;
+    };
   };
 }

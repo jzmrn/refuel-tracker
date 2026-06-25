@@ -1,7 +1,8 @@
 import React, { useCallback } from "react";
-import { BrandDetailAggregate } from "@/lib/api";
+import { BrandDetailAggregate, FuelType } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { useBrandDetails } from "@/lib/hooks/useStats";
+import { useBrandDetails, useAvailableBrands } from "@/lib/hooks/useStats";
+import { FilterMultiSelectOption } from "@/components/common/FilterMultiSelect";
 import { DetailAggregate } from "@/components/stats/chartUtils";
 import DetailContent from "@/components/stats/DetailContent";
 
@@ -26,15 +27,26 @@ const BrandsContent: React.FC = () => {
   const { t } = useTranslation();
 
   const useDetailData = useCallback(
-    (fuelType: Parameters<typeof useBrandDetails>[0], months: number) =>
-      useBrandDetails(fuelType, months),
+    (fuelType: FuelType, months: number, entityFilter?: string[]) =>
+      useBrandDetails(fuelType, months, 10, entityFilter),
     [],
   );
+
+  const useAvailableEntitiesHook = useCallback(() => {
+    const { data } = useAvailableBrands();
+    const options: FilterMultiSelectOption[] = data.map((b) => ({
+      value: b.brand,
+      label: b.brand,
+    }));
+    return { data: options };
+  }, []);
 
   return (
     <DetailContent
       storageKeyPrefix="brandsDetails"
+      entityType="brand"
       useDetailData={useDetailData}
+      useAvailableEntities={useAvailableEntitiesHook}
       mapToDetail={mapBrandToDetail}
       chartLabels={{
         avgPrice: t.statistics.avgPriceByBrand,

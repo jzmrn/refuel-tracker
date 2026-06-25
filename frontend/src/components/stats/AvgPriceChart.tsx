@@ -15,7 +15,7 @@ import {
   useAxisColor,
   useChartKey,
 } from "@/lib/chartConfig";
-import { DetailAggregate, buildColorMap, ChartTooltip } from "./chartUtils";
+import { DetailAggregate, ChartTooltip } from "./chartUtils";
 
 interface ChartEntry {
   date: string;
@@ -24,9 +24,10 @@ interface ChartEntry {
 
 interface AvgPriceChartProps {
   data: DetailAggregate[];
+  colorMap: Map<string, string>;
 }
 
-export default function AvgPriceChart({ data }: AvgPriceChartProps) {
+export default function AvgPriceChart({ data, colorMap }: AvgPriceChartProps) {
   const { formatMonthLabel } = useLocalization();
   const gridConfig = useGridConfig();
   const axisColor = useAxisColor();
@@ -57,8 +58,6 @@ export default function AvgPriceChart({ data }: AvgPriceChartProps) {
 
     return { chartData, entities };
   }, [data]);
-
-  const colorMap = useMemo(() => buildColorMap(entities), [entities]);
 
   if (chartData.length === 0) return null;
 

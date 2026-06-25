@@ -14,7 +14,7 @@ import {
   useAxisColor,
   useChartKey,
 } from "@/lib/chartConfig";
-import { DetailAggregate, buildColorMap, ChartTooltip } from "./chartUtils";
+import { DetailAggregate, ChartTooltip } from "./chartUtils";
 import { useLocalization } from "@/lib/i18n/LanguageContext";
 
 interface ChartEntry {
@@ -27,6 +27,7 @@ type Direction = "increased" | "decreased";
 interface PriceDirectionChartProps {
   data: DetailAggregate[];
   direction: Direction;
+  colorMap: Map<string, string>;
 }
 
 /**
@@ -36,6 +37,7 @@ interface PriceDirectionChartProps {
 export default function PriceDirectionChart({
   data,
   direction,
+  colorMap,
 }: PriceDirectionChartProps) {
   const gridConfig = useGridConfig();
   const axisColor = useAxisColor();
@@ -75,8 +77,6 @@ export default function PriceDirectionChart({
 
     return { chartData, entities };
   }, [data, direction]);
-
-  const colorMap = useMemo(() => buildColorMap(entities), [entities]);
 
   if (chartData.length === 0) return null;
 

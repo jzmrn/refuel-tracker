@@ -7,12 +7,16 @@ import FuelTypeSelector from "@/components/fuel/FuelTypeSelector";
 import MonthSelector from "@/components/stats/MonthSelector";
 import { getFuelTypeLabel } from "@/lib/fuelType";
 
+export type OverviewDataSource = "favourites" | "top";
+
 interface StatsFiltersProps {
   selectedMonth: string | null;
   onMonthChange: (month: string) => void;
   availableMonths: AvailableMonth[];
   selectedFuelType: FuelType;
   onFuelTypeChange: (fuelType: FuelType) => void;
+  dataSource?: OverviewDataSource;
+  onDataSourceChange?: (source: OverviewDataSource) => void;
 }
 
 const StatsFilters: React.FC<StatsFiltersProps> = ({
@@ -21,6 +25,8 @@ const StatsFilters: React.FC<StatsFiltersProps> = ({
   availableMonths,
   selectedFuelType,
   onFuelTypeChange,
+  dataSource,
+  onDataSourceChange,
 }) => {
   const { t } = useTranslation();
   const { formatDate } = useLocalization();
@@ -32,6 +38,7 @@ const StatsFilters: React.FC<StatsFiltersProps> = ({
         })
       : "",
     getFuelTypeLabel(selectedFuelType, t),
+    dataSource === "favourites" ? t.statistics.dataSource.favourites : "",
   ].filter(Boolean);
 
   return (
@@ -53,6 +60,32 @@ const StatsFilters: React.FC<StatsFiltersProps> = ({
           onFuelTypeChange={onFuelTypeChange}
         />
       </FilterRow>
+      {dataSource !== undefined && onDataSourceChange && (
+        <FilterRow label={t.statistics.dataSource.label}>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => onDataSourceChange("favourites")}
+              className={
+                dataSource === "favourites"
+                  ? "btn-toggle-active"
+                  : "btn-toggle-inactive"
+              }
+            >
+              {t.statistics.dataSource.favourites}
+            </button>
+            <button
+              onClick={() => onDataSourceChange("top")}
+              className={
+                dataSource === "top"
+                  ? "btn-toggle-active"
+                  : "btn-toggle-inactive"
+              }
+            >
+              {t.statistics.dataSource.top10}
+            </button>
+          </div>
+        </FilterRow>
+      )}
     </FilterPanel>
   );
 };

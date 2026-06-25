@@ -14,7 +14,7 @@ import {
   useAxisColor,
   useChartKey,
 } from "@/lib/chartConfig";
-import { DetailAggregate, buildColorMap, ChartTooltip } from "./chartUtils";
+import { DetailAggregate, ChartTooltip } from "./chartUtils";
 import { useLocalization } from "@/lib/i18n/LanguageContext";
 
 interface ChartEntry {
@@ -24,9 +24,13 @@ interface ChartEntry {
 
 interface PriceActivityChartProps {
   data: DetailAggregate[];
+  colorMap: Map<string, string>;
 }
 
-export default function PriceActivityChart({ data }: PriceActivityChartProps) {
+export default function PriceActivityChart({
+  data,
+  colorMap,
+}: PriceActivityChartProps) {
   const gridConfig = useGridConfig();
   const axisColor = useAxisColor();
   const { formatMonthLabel } = useLocalization();
@@ -57,8 +61,6 @@ export default function PriceActivityChart({ data }: PriceActivityChartProps) {
 
     return { chartData, entities };
   }, [data]);
-
-  const colorMap = useMemo(() => buildColorMap(entities), [entities]);
 
   if (chartData.length === 0) return null;
 

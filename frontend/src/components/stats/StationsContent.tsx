@@ -1,7 +1,8 @@
-import React, { useCallback } from "react";
-import { StationDetailAggregate } from "@/lib/api";
+import React, { useCallback, useMemo } from "react";
+import { StationDetailAggregate, FuelType } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { useStationDetails } from "@/lib/hooks/useStats";
+import { useStationDetails, useAvailableStations } from "@/lib/hooks/useStats";
+import { FilterMultiSelectOption } from "@/components/common/FilterMultiSelect";
 import { DetailAggregate } from "@/components/stats/chartUtils";
 import DetailContent from "@/components/stats/DetailContent";
 
@@ -30,15 +31,30 @@ const StationsContent: React.FC = () => {
   const { t } = useTranslation();
 
   const useDetailData = useCallback(
-    (fuelType: Parameters<typeof useStationDetails>[0], months: number) =>
-      useStationDetails(fuelType, months),
+    (fuelType: FuelType, months: number, entityFilter?: string[]) =>
+      useStationDetails(fuelType, months, 10, entityFilter),
     [],
   );
+
+  const useAvailableEntitiesHook = useCallback(() => {
+    const { data } = useAvailableStations();
+    const options: FilterMultiSelectOption[] = data.map((s) => ({
+      value: s.station_id,
+      label: s.brand
+        ? s.place
+          ? `${s.brand} (${s.place})`
+          : s.brand
+        : s.name || s.station_id,
+    }));
+    return { data: options };
+  }, []);
 
   return (
     <DetailContent
       storageKeyPrefix="stationsDetails"
+      entityType="station"
       useDetailData={useDetailData}
+      useAvailableEntities={useAvailableEntitiesHook}
       mapToDetail={mapStationToDetail}
       chartLabels={{
         avgPrice: t.statistics.avgPriceByStation,

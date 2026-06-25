@@ -1,7 +1,8 @@
 import React, { useCallback } from "react";
-import { PlaceDetailAggregate } from "@/lib/api";
+import { PlaceDetailAggregate, FuelType } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { usePlaceDetails } from "@/lib/hooks/useStats";
+import { usePlaceDetails, useAvailablePlaces } from "@/lib/hooks/useStats";
+import { FilterMultiSelectOption } from "@/components/common/FilterMultiSelect";
 import { DetailAggregate } from "@/components/stats/chartUtils";
 import DetailContent from "@/components/stats/DetailContent";
 
@@ -26,15 +27,26 @@ const PlacesContent: React.FC = () => {
   const { t } = useTranslation();
 
   const useDetailData = useCallback(
-    (fuelType: Parameters<typeof usePlaceDetails>[0], months: number) =>
-      usePlaceDetails(fuelType, months),
+    (fuelType: FuelType, months: number, entityFilter?: string[]) =>
+      usePlaceDetails(fuelType, months, 10, entityFilter),
     [],
   );
+
+  const useAvailableEntitiesHook = useCallback(() => {
+    const { data } = useAvailablePlaces();
+    const options: FilterMultiSelectOption[] = data.map((p) => ({
+      value: p.place,
+      label: p.place,
+    }));
+    return { data: options };
+  }, []);
 
   return (
     <DetailContent
       storageKeyPrefix="placesDetails"
+      entityType="place"
       useDetailData={useDetailData}
+      useAvailableEntities={useAvailableEntitiesHook}
       mapToDetail={mapPlaceToDetail}
       chartLabels={{
         avgPrice: t.statistics.avgPriceByPlace,

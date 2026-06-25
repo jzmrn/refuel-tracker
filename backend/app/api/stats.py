@@ -3,7 +3,7 @@ from collections import defaultdict
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fueldata.aggregates import (
     AggregatedFuelDataClient,
     DailyBrandAggregateClient,
@@ -18,10 +18,14 @@ from fueldata.stations import FuelStationClient
 
 from app.auth import CurrentUser
 from app.models import (
+    AvailableBrandItem,
     AvailableMonth,
+    AvailablePlaceItem,
+    AvailableStationItem,
     BrandDetailAggregateResponse,
     ComparisonDailyPoint,
     DailyPricePoint,
+    FavoriteEntitiesResponse,
     MonthlyBrandAggregateResponse,
     MonthlyPlaceAggregateResponse,
     MonthlyStationAggregateResponse,
@@ -118,6 +122,131 @@ async def get_available_months(request: Request):
     return [AvailableMonth(date=d) for d in dates]
 
 
+@router.get("/available-stations", response_model=list[AvailableStationItem])
+async def get_available_stations(
+    user: CurrentUser,
+    station_client: MonthlyStationAggregateClient = Depends(get_monthly_station_client),
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+):
+    """Return all stations that have aggregate data available (from most recent month)."""
+    # Get unique station_ids from the most recent month of data
+    aggregates = station_client.get_monthly_station_aggregates(fuel_type="e5")
+
+    if not aggregates:
+        return []
+
+    # Get most recent date's stations
+    latest_date = max(a.date for a in aggregates)
+    station_ids = list({a.station_id for a in aggregates if a.date == latest_date})
+
+    # Enrich with station info
+    result = []
+    for sid in sorted(station_ids):
+        info_list = fuel_station_client.get_gas_station_info(station_id=sid)
+        if info_list:
+            info = info_list[0]
+            result.append(
+                AvailableStationItem(
+                    station_id=sid,
+                    name=info.name,
+                    brand=info.brand,
+                    place=info.place,
+                )
+            )
+        else:
+            result.append(AvailableStationItem(station_id=sid))
+
+    logger.info(
+        "Available stations requested",
+        extra={"result_count": len(result)},
+    )
+
+    return result
+
+
+@router.get("/available-brands", response_model=list[AvailableBrandItem])
+async def get_available_brands(
+    user: CurrentUser,
+    brand_client: MonthlyBrandAggregateClient = Depends(get_monthly_brand_client),
+):
+    """Return all brands that have aggregate data available (from most recent month)."""
+    aggregates = brand_client.get_monthly_brand_aggregates(fuel_type="e5")
+
+    if not aggregates:
+        return []
+
+    # Get most recent date's brands
+    latest_date = max(a.date for a in aggregates)
+    brands = sorted({a.brand for a in aggregates if a.date == latest_date})
+
+    logger.info(
+        "Available brands requested",
+        extra={"result_count": len(brands)},
+    )
+
+    return [AvailableBrandItem(brand=b) for b in brands]
+
+
+@router.get("/available-places", response_model=list[AvailablePlaceItem])
+async def get_available_places(
+    user: CurrentUser,
+    place_client: MonthlyPlaceAggregateClient = Depends(get_monthly_place_client),
+):
+    """Return all places that have aggregate data available (from most recent month)."""
+    aggregates = place_client.get_monthly_place_aggregates(fuel_type="e5")
+
+    if not aggregates:
+        return []
+
+    # Get most recent date's places
+    latest_date = max(a.date for a in aggregates)
+    places = sorted(
+        {(a.place, a.post_code) for a in aggregates if a.date == latest_date}
+    )
+
+    logger.info(
+        "Available places requested",
+        extra={"result_count": len(places)},
+    )
+
+    return [AvailablePlaceItem(place=p, post_code=pc) for p, pc in places]
+
+
+@router.get("/favorites/entities", response_model=FavoriteEntitiesResponse)
+async def get_favorite_entities(
+    user: CurrentUser,
+    fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
+):
+    """Return entities derived from user's favourite stations (station_ids, brands, places).
+
+    For the 'Favourites' mode in stats views, this returns:
+    - station_ids: IDs of all favourite stations
+    - brands: unique brands of favourite stations
+    - places: unique places of favourite stations
+    """
+    favorites = fuel_station_client.get_favorite_stations_with_info(user.id)
+
+    station_ids = [f.station_id for f in favorites]
+    brands = sorted({f.brand for f in favorites if f.brand})
+    places = sorted({f.place for f in favorites if f.place})
+
+    logger.info(
+        "Favorite entities requested",
+        extra={
+            "user_id": user.id,
+            "n_stations": len(station_ids),
+            "n_brands": len(brands),
+            "n_places": len(places),
+        },
+    )
+
+    return FavoriteEntitiesResponse(
+        station_ids=station_ids,
+        brands=brands,
+        places=places,
+    )
+
+
 @router.get("/brands/{fuel_type}", response_model=list[MonthlyBrandAggregateResponse])
 async def get_monthly_brands(
     fuel_type: str,
@@ -125,8 +254,13 @@ async def get_monthly_brands(
     brand_client: MonthlyBrandAggregateClient = Depends(get_monthly_brand_client),
     date: str | None = None,
     limit: int = 10,
+    brands: list[str] | None = Query(None),
 ):
-    """Return monthly brand aggregates for a given fuel type and date, sorted by average price."""
+    """Return monthly brand aggregates for a given fuel type and date, sorted by average price.
+
+    If `brands` query param is provided, return data for those specific brands
+    instead of using limit-based top N selection.
+    """
     _validate_fuel_type(fuel_type)
 
     if date is None:
@@ -136,11 +270,15 @@ async def get_monthly_brands(
         start_date=date, end_date=date, fuel_type=fuel_type
     )
 
-    # Sort by price_mean ascending (cheapest first)
-    aggregates.sort(key=lambda a: a.price_mean)
-
-    if limit > 0:
-        aggregates = aggregates[:limit]
+    if brands:
+        # Filter to only requested brands
+        brands_set = set(brands)
+        aggregates = [a for a in aggregates if a.brand in brands_set]
+    else:
+        # Sort by price_mean ascending (cheapest first)
+        aggregates.sort(key=lambda a: a.price_mean)
+        if limit > 0:
+            aggregates = aggregates[:limit]
 
     logger.info(
         "Monthly brand aggregates requested",
@@ -148,6 +286,7 @@ async def get_monthly_brands(
             "fuel_type": fuel_type,
             "date": date,
             "limit": limit,
+            "brands_filter": brands,
             "result_count": len(aggregates),
         },
     )
@@ -174,8 +313,13 @@ async def get_monthly_places(
     place_client: MonthlyPlaceAggregateClient = Depends(get_monthly_place_client),
     date: str | None = None,
     limit: int = 10,
+    places: list[str] | None = Query(None),
 ):
-    """Return monthly place aggregates for a given fuel type and date, sorted by average price."""
+    """Return monthly place aggregates for a given fuel type and date, sorted by average price.
+
+    If `places` query param is provided, return data for those specific places
+    instead of using limit-based top N selection.
+    """
     _validate_fuel_type(fuel_type)
 
     if date is None:
@@ -185,11 +329,15 @@ async def get_monthly_places(
         start_date=date, end_date=date, fuel_type=fuel_type
     )
 
-    # Sort by price_mean ascending (cheapest first)
-    aggregates.sort(key=lambda a: a.price_mean)
-
-    if limit > 0:
-        aggregates = aggregates[:limit]
+    if places:
+        # Filter to only requested places
+        places_set = set(places)
+        aggregates = [a for a in aggregates if a.place in places_set]
+    else:
+        # Sort by price_mean ascending (cheapest first)
+        aggregates.sort(key=lambda a: a.price_mean)
+        if limit > 0:
+            aggregates = aggregates[:limit]
 
     logger.info(
         "Monthly place aggregates requested",
@@ -197,6 +345,7 @@ async def get_monthly_places(
             "fuel_type": fuel_type,
             "date": date,
             "limit": limit,
+            "places_filter": places,
             "result_count": len(aggregates),
         },
     )
@@ -226,10 +375,13 @@ async def get_monthly_stations(
     fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
     date: str | None = None,
     limit: int = 10,
+    station_ids: list[str] | None = Query(None),
 ):
     """Return monthly station aggregates for a given fuel type and date, sorted by average price.
 
     Enriches station_id with name, brand, and place from the gas_station_info table.
+    If `station_ids` query param is provided, return data for those specific stations
+    instead of using limit-based top N selection.
     """
     _validate_fuel_type(fuel_type)
 
@@ -240,16 +392,20 @@ async def get_monthly_stations(
         start_date=date, end_date=date, fuel_type=fuel_type
     )
 
-    # Sort by price_mean ascending (cheapest first)
-    aggregates.sort(key=lambda a: a.price_mean)
-
-    if limit > 0:
-        aggregates = aggregates[:limit]
+    if station_ids:
+        # Filter to only requested stations
+        station_ids_set = set(station_ids)
+        aggregates = [a for a in aggregates if a.station_id in station_ids_set]
+    else:
+        # Sort by price_mean ascending (cheapest first)
+        aggregates.sort(key=lambda a: a.price_mean)
+        if limit > 0:
+            aggregates = aggregates[:limit]
 
     # Build a lookup map for station metadata
-    station_ids = [a.station_id for a in aggregates]
+    result_station_ids = [a.station_id for a in aggregates]
     station_info_map: dict[str, dict] = {}
-    for sid in station_ids:
+    for sid in result_station_ids:
         info_list = fuel_station_client.get_gas_station_info(station_id=sid)
         if info_list:
             station_info_map[sid] = {
@@ -266,6 +422,7 @@ async def get_monthly_stations(
             "fuel_type": fuel_type,
             "date": date,
             "limit": limit,
+            "station_ids_filter": station_ids,
             "result_count": len(aggregates),
             "enriched_count": len(station_info_map),
         },
@@ -300,11 +457,13 @@ async def get_place_details(
     place_client: MonthlyPlaceAggregateClient = Depends(get_monthly_place_client),
     months: int = 3,
     limit: int = 10,
+    places: list[str] | None = Query(None),
 ):
     """Return multi-month place aggregates for the top N cheapest places.
 
     The `months` parameter selects how many months of history to include (3 or 12).
-    The top N places are determined by their average price_mean across all months.
+    If `places` query param is provided, return data for those specific places.
+    Otherwise, the top N places are determined by their average price_mean across all months.
     All monthly rows for those places are returned.
     """
     _validate_fuel_type(fuel_type)
@@ -335,21 +494,27 @@ async def get_place_details(
     if not aggregates:
         return []
 
-    # Compute average price_mean per place across all months
-    place_totals: dict[str, list[float]] = defaultdict(list)
-    for a in aggregates:
-        place_totals[a.place].append(a.price_mean)
+    if places:
+        # Filter to only requested places
+        places_set = set(places)
+        result = [a for a in aggregates if a.place in places_set]
+    else:
+        # Compute average price_mean per place across all months
+        place_totals: dict[str, list[float]] = defaultdict(list)
+        for a in aggregates:
+            place_totals[a.place].append(a.price_mean)
 
-    place_avg = {
-        place: sum(prices) / len(prices) for place, prices in place_totals.items()
-    }
+        place_avg = {
+            place: sum(prices) / len(prices) for place, prices in place_totals.items()
+        }
 
-    # Select top N cheapest places
-    top_places = sorted(place_avg, key=lambda p: place_avg[p])[:limit]
-    top_places_set = set(top_places)
+        # Select top N cheapest places
+        top_places = sorted(place_avg, key=lambda p: place_avg[p])[:limit]
+        top_places_set = set(top_places)
 
-    # Filter and sort: by date then place
-    result = [a for a in aggregates if a.place in top_places_set]
+        result = [a for a in aggregates if a.place in top_places_set]
+
+    # Sort: by date then place
     result.sort(key=lambda a: (a.date.isoformat(), a.place))
 
     logger.info(
@@ -358,8 +523,8 @@ async def get_place_details(
             "fuel_type": fuel_type,
             "months": months,
             "limit": limit,
+            "places_filter": places,
             "result_count": len(result),
-            "top_places": len(top_places_set),
         },
     )
 
@@ -413,11 +578,13 @@ async def get_brand_details(
     brand_client: MonthlyBrandAggregateClient = Depends(get_monthly_brand_client),
     months: int = 3,
     limit: int = 10,
+    brands: list[str] | None = Query(None),
 ):
     """Return multi-month brand aggregates for the top N cheapest brands.
 
     The `months` parameter selects how many months of history to include (3 or 12).
-    The top N brands are determined by their average price_mean across all months.
+    If `brands` query param is provided, return data for those specific brands.
+    Otherwise, the top N brands are determined by their average price_mean across all months.
     All monthly rows for those brands are returned.
     """
     _validate_fuel_type(fuel_type)
@@ -446,21 +613,27 @@ async def get_brand_details(
     if not aggregates:
         return []
 
-    # Compute average price_mean per brand across all months
-    brand_totals: dict[str, list[float]] = defaultdict(list)
-    for a in aggregates:
-        brand_totals[a.brand].append(a.price_mean)
+    if brands:
+        # Filter to only requested brands
+        brands_set = set(brands)
+        result = [a for a in aggregates if a.brand in brands_set]
+    else:
+        # Compute average price_mean per brand across all months
+        brand_totals: dict[str, list[float]] = defaultdict(list)
+        for a in aggregates:
+            brand_totals[a.brand].append(a.price_mean)
 
-    brand_avg = {
-        brand: sum(prices) / len(prices) for brand, prices in brand_totals.items()
-    }
+        brand_avg = {
+            brand: sum(prices) / len(prices) for brand, prices in brand_totals.items()
+        }
 
-    # Select top N cheapest brands
-    top_brands = sorted(brand_avg, key=lambda b: brand_avg[b])[:limit]
-    top_brands_set = set(top_brands)
+        # Select top N cheapest brands
+        top_brands = sorted(brand_avg, key=lambda b: brand_avg[b])[:limit]
+        top_brands_set = set(top_brands)
 
-    # Filter and sort: by date then brand
-    result = [a for a in aggregates if a.brand in top_brands_set]
+        result = [a for a in aggregates if a.brand in top_brands_set]
+
+    # Sort: by date then brand
     result.sort(key=lambda a: (a.date.isoformat(), a.brand))
 
     logger.info(
@@ -469,8 +642,8 @@ async def get_brand_details(
             "fuel_type": fuel_type,
             "months": months,
             "limit": limit,
+            "brands_filter": brands,
             "result_count": len(result),
-            "top_brands": len(top_brands_set),
         },
     )
 
@@ -524,11 +697,13 @@ async def get_station_details(
     fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
     months: int = 3,
     limit: int = 10,
+    station_ids: list[str] | None = Query(None),
 ):
     """Return multi-month station aggregates for the top N cheapest stations.
 
     The `months` parameter selects how many months of history to include (3 or 12).
-    The top N stations are determined by their average price_mean across all months.
+    If `station_ids` query param is provided, return data for those specific stations.
+    Otherwise, the top N stations are determined by their average price_mean across all months.
     All monthly rows for those stations are returned.
     """
     _validate_fuel_type(fuel_type)
@@ -557,21 +732,28 @@ async def get_station_details(
     if not aggregates:
         return []
 
-    # Compute average price_mean per station across all months
-    station_totals: dict[str, list[float]] = defaultdict(list)
-    for a in aggregates:
-        station_totals[a.station_id].append(a.price_mean)
+    if station_ids:
+        # Filter to only requested stations
+        station_ids_set = set(station_ids)
+        result = [a for a in aggregates if a.station_id in station_ids_set]
+        top_stations = list(station_ids_set)
+    else:
+        # Compute average price_mean per station across all months
+        station_totals: dict[str, list[float]] = defaultdict(list)
+        for a in aggregates:
+            station_totals[a.station_id].append(a.price_mean)
 
-    station_avg = {
-        sid: sum(prices) / len(prices) for sid, prices in station_totals.items()
-    }
+        station_avg = {
+            sid: sum(prices) / len(prices) for sid, prices in station_totals.items()
+        }
 
-    # Select top N cheapest stations
-    top_stations = sorted(station_avg, key=lambda s: station_avg[s])[:limit]
-    top_stations_set = set(top_stations)
+        # Select top N cheapest stations
+        top_stations = sorted(station_avg, key=lambda s: station_avg[s])[:limit]
+        top_stations_set = set(top_stations)
 
-    # Filter and sort: by date then station_id
-    result = [a for a in aggregates if a.station_id in top_stations_set]
+        result = [a for a in aggregates if a.station_id in top_stations_set]
+
+    # Sort: by date then station_id
     result.sort(key=lambda a: (a.date.isoformat(), a.station_id))
 
     # Build a lookup map for station metadata
@@ -596,8 +778,9 @@ async def get_station_details(
             "fuel_type": fuel_type,
             "months": months,
             "limit": limit,
+            "station_ids_filter": station_ids,
             "result_count": len(result),
-            "top_stations": len(top_stations_set),
+            "top_stations": len(top_stations),
         },
     )
 

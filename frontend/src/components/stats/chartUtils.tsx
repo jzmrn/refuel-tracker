@@ -203,3 +203,67 @@ export function ChartLegend({ data }: ChartLegendProps) {
     </div>
   );
 }
+
+interface InteractiveLegendProps {
+  /** All entities available in the data set */
+  entities: string[];
+  /** Currently enabled/visible entities */
+  enabledEntities: Set<string>;
+  /** Called when user toggles an entity */
+  onToggle: (entity: string) => void;
+}
+
+/**
+ * Interactive legend where each entity is a clickable pill.
+ * Enabled items show a colored background; disabled items are muted.
+ */
+export function InteractiveLegend({
+  entities,
+  enabledEntities,
+  onToggle,
+}: InteractiveLegendProps) {
+  const sorted = [...entities].sort();
+  const colorMap = buildColorMap(sorted);
+
+  return (
+    <div className="flex flex-wrap justify-center gap-2 px-3 py-2">
+      {sorted.map((entity) => {
+        const color = colorMap.get(entity)!;
+        const enabled = enabledEntities.has(entity);
+
+        return (
+          <button
+            key={entity}
+            type="button"
+            onClick={() => onToggle(entity)}
+            className={`
+              inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm
+              transition-all duration-150 cursor-pointer select-none
+              border
+              ${
+                enabled
+                  ? "border-transparent shadow-sm font-medium"
+                  : "border-gray-300 dark:border-gray-600 opacity-50 hover:opacity-75"
+              }
+            `}
+            style={
+              enabled
+                ? {
+                    backgroundColor: color + "20",
+                    color,
+                    borderColor: color + "60",
+                  }
+                : undefined
+            }
+          >
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+              style={{ backgroundColor: enabled ? color : "#9ca3af" }}
+            />
+            <span className={enabled ? "" : "text-secondary"}>{entity}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}

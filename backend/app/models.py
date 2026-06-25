@@ -838,3 +838,38 @@ class StationComparisonResponse(BaseModel):
     station: StationComparisonSeries
     place: StationComparisonSeries
     brand: StationComparisonSeries
+
+
+# ---------------------------------------------------------------------------
+# Available Entities (for multi-select dropdowns in stats views)
+# ---------------------------------------------------------------------------
+
+
+class AvailableStationItem(BaseModel):
+    """A station available in aggregate data."""
+
+    station_id: str
+    name: str | None = None
+    brand: str | None = None
+    place: str | None = None
+
+
+class AvailableBrandItem(BaseModel):
+    """A brand available in aggregate data."""
+
+    brand: str
+
+
+class AvailablePlaceItem(BaseModel):
+    """A place available in aggregate data."""
+
+    place: str
+    post_code: int
+
+
+class FavoriteEntitiesResponse(BaseModel):
+    """Response model for entities derived from user's favourite stations."""
+
+    station_ids: list[str] = Field(default_factory=list)
+    brands: list[str] = Field(default_factory=list)
+    places: list[str] = Field(default_factory=list)
