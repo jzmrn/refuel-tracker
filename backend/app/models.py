@@ -115,6 +115,10 @@ class RefuelMetricCreate(BaseModel):
         None,
         description="Fuel type used (e5, e10, diesel) - optional for backward compatibility",
     )
+    is_full_tank: bool = Field(
+        True,
+        description="Whether this was a full fill-up (True) or partial fill (False)",
+    )
 
     @field_validator("timestamp")
     @classmethod
@@ -164,6 +168,10 @@ class RefuelMetricUpdate(BaseModel):
         None,
         description="Fuel type used (e5, e10, diesel)",
     )
+    is_full_tank: bool | None = Field(
+        None,
+        description="Whether this was a full fill-up (True) or partial fill (False)",
+    )
 
 
 class RefuelMetricResponse(BaseModel):
@@ -181,6 +189,10 @@ class RefuelMetricResponse(BaseModel):
         None, description="ID of the gas station where refuel occurred"
     )
     fuel_type: str | None = Field(None, description="Fuel type used (e5, e10, diesel)")
+    is_full_tank: bool = Field(
+        True,
+        description="Whether this was a full fill-up (True) or partial fill (False)",
+    )
     remaining_range_km: float | None = Field(
         None,
         description="Estimated remaining range (km) based on fuel left in tank and per-entry consumption",

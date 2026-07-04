@@ -207,6 +207,22 @@ export const en: TranslationStructure = {
     unknownStation: "Unknown",
     noDistributionDataAvailable: "No distribution data available",
 
+    // Partial fill tracking
+    fullTank: "Full Tank",
+    partialFill: "Partial Fill",
+    fullTankToggle: "Full tank",
+    partialFillHint:
+      "Partial fills are combined with the next full fill for accurate consumption calculation.",
+    combinedConsumption: "Combined Consumption",
+    combinedCost: "Combined Cost",
+    partialFillCount: "Partial Fills",
+    fullFillCount: "Full Fills",
+    incompleteGroup:
+      "Incomplete — no closing full fill yet, consumption is estimated",
+    combinedEntries: "Combined Entries",
+    combinedLabel: "(combined)",
+    partialFillIndicator: "Partial fill — consumption from combined group",
+
     // Placeholders
     placeholders: {
       notes: "e.g. Shell gas station, A1 rest stop...",

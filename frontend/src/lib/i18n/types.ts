@@ -208,6 +208,20 @@ export interface TranslationStructure {
     unknownStation: string;
     noDistributionDataAvailable: string;
 
+    // Partial fill tracking
+    fullTank: string;
+    partialFill: string;
+    fullTankToggle: string;
+    partialFillHint: string;
+    combinedConsumption: string;
+    combinedCost: string;
+    partialFillCount: string;
+    fullFillCount: string;
+    incompleteGroup: string;
+    combinedEntries: string;
+    combinedLabel: string;
+    partialFillIndicator: string;
+
     // Placeholders
     placeholders: {
       notes: string;

@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   Legend,
   Rectangle,
+  Cell,
 } from "recharts";
 import SummaryCard from "../common/SummaryCard";
 import Panel from "../common/Panel";
@@ -32,6 +33,7 @@ interface RefuelDataForChart {
   estimated_fuel_consumption: number;
   notes?: string;
   remaining_range_km?: number | null;
+  is_full_tank?: boolean;
 }
 
 interface RefuelDistanceChartProps {
@@ -74,23 +76,29 @@ export default function RefuelDistanceChart({
   }
 
   // Process data and filter entries with valid distance
+  // For partial fills: show bar but no remaining range
   const chartData = refuelData
     .filter((item) => item.kilometers_since_last_refuel > 0)
     .sort(
       (a, b) =>
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
     )
-    .map((item) => ({
-      ...item,
-      timestampMs: new Date(item.timestamp).getTime(),
-      displayDate: formatDate(new Date(item.timestamp), {
-        month: "short",
-        day: "numeric",
-        year: "2-digit",
-      }),
-      distance: item.kilometers_since_last_refuel,
-      remainingRange: item.remaining_range_km ?? 0,
-    }));
+    .map((item) => {
+      const isFullTank = item.is_full_tank !== false;
+      return {
+        ...item,
+        timestampMs: new Date(item.timestamp).getTime(),
+        displayDate: formatDate(new Date(item.timestamp), {
+          month: "short",
+          day: "numeric",
+          year: "2-digit",
+        }),
+        distance: item.kilometers_since_last_refuel,
+        // Show remaining range for full fills only
+        remainingRange: isFullTank ? item.remaining_range_km ?? 0 : 0,
+        isFullTank,
+      };
+    });
 
   if (chartData.length === 0) {
     return (
@@ -141,21 +149,27 @@ export default function RefuelDistanceChart({
                 {formatDistance(data.distance)} km
               </span>
             </p>
-            <p className="flex justify-between gap-4">
-              <span className="text-gray-400">{t.refuels.remainingRange}:</span>
-              <span className={`${remainingRangeClassName} font-semibold`}>
-                {formatDistance(data.remainingRange)} km
-              </span>
-            </p>
-            <hr className="border-gray-200 dark:border-gray-600 my-1" />
-            <p className="flex justify-between gap-4">
-              <span className="text-gray-400">
-                {t.refuels.theoreticalMaxRange}:
-              </span>
-              <span className="font-semibold">
-                {formatDistance(totalRange)} km
-              </span>
-            </p>
+            {data.isFullTank && (
+              <>
+                <p className="flex justify-between gap-4">
+                  <span className="text-gray-400">
+                    {t.refuels.remainingRange}:
+                  </span>
+                  <span className={`${remainingRangeClassName} font-semibold`}>
+                    {formatDistance(data.remainingRange)} km
+                  </span>
+                </p>
+                <hr className="border-gray-200 dark:border-gray-600 my-1" />
+                <p className="flex justify-between gap-4">
+                  <span className="text-gray-400">
+                    {t.refuels.theoreticalMaxRange}:
+                  </span>
+                  <span className="font-semibold">
+                    {formatDistance(totalRange)} km
+                  </span>
+                </p>
+              </>
+            )}
           </div>
         </div>
       );
@@ -163,8 +177,13 @@ export default function RefuelDistanceChart({
     return null;
   };
 
-  // Calculate statistics
-  const distances = chartData.map((item) => item.distance);
+  // Calculate statistics (use only full fill data for accuracy)
+  const fullFillData = chartData.filter((item) => item.isFullTank);
+  const hasPartialFills = chartData.some((item) => !item.isFullTank);
+  const distances =
+    fullFillData.length > 0
+      ? fullFillData.map((item) => item.distance)
+      : chartData.map((item) => item.distance);
   const minDistance = Math.min(...distances);
   const maxDistance = Math.max(...distances);
   const avgDistance =
@@ -172,7 +191,12 @@ export default function RefuelDistanceChart({
 
   // Calculate average tank usage
   const consumptions = chartData
-    .filter((item) => item.amount > 0 && item.kilometers_since_last_refuel > 0)
+    .filter(
+      (item) =>
+        item.isFullTank &&
+        item.amount > 0 &&
+        item.kilometers_since_last_refuel > 0,
+    )
     .map((item) => (item.amount / item.kilometers_since_last_refuel) * 100);
   const avgConsumption =
     consumptions.length > 0
@@ -183,6 +207,36 @@ export default function RefuelDistanceChart({
     fuelTankSize && fuelTankSize > 0
       ? ((avgDistance * avgConsumption) / (fuelTankSize * 100)) * 100
       : null;
+
+  const renderCustomLegend = () => (
+    <div className="flex justify-center gap-4 mt-2 text-xs text-secondary">
+      <div className="flex items-center gap-1.5">
+        <span
+          className="inline-block w-3 h-3 rounded-sm"
+          style={{ backgroundColor: chartTheme.primaryLine }}
+        />
+        <span>{t.refuels.distance}</span>
+      </div>
+      {hasPartialFills && (
+        <div className="flex items-center gap-1.5">
+          <span
+            className="inline-block w-3 h-3 rounded-sm"
+            style={{ backgroundColor: "#f59e0b" }}
+          />
+          <span>{t.refuels.partialFill}</span>
+        </div>
+      )}
+      {hasRemainingRange && (
+        <div className="flex items-center gap-1.5">
+          <span
+            className="inline-block w-3 h-3 rounded-sm opacity-50"
+            style={{ backgroundColor: chartTheme.secondaryLine }}
+          />
+          <span>{t.refuels.remainingRange}</span>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <Panel title={t.refuels.distanceSinceLastRefuel}>
@@ -209,14 +263,21 @@ export default function RefuelDistanceChart({
             {...axisConfig.yAxis}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend />
+          <Legend content={renderCustomLegend} />
           <Bar
             dataKey="distance"
             stackId="range"
             fill={chartTheme.primaryLine}
             name={t.refuels.distance}
             shape={<DistanceBarShape />}
-          />
+          >
+            {chartData.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={entry.isFullTank ? chartTheme.primaryLine : "#f59e0b"}
+              />
+            ))}
+          </Bar>
           {hasRemainingRange && (
             <Bar
               dataKey="remainingRange"

@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  Cell,
 } from "recharts";
 import SummaryCard from "../common/SummaryCard";
 import Panel from "../common/Panel";
@@ -22,19 +23,12 @@ import {
 } from "../../lib/i18n/LanguageContext";
 import { useChartTheme } from "../../lib/theme";
 import { axisConfig, useGridConfig, useChartKey } from "../../lib/chartConfig";
-import { renderSvgFuelPrice } from "../../lib/formatPrice";
 
-interface RefuelDataForChart {
-  timestamp: string;
-  price: number;
-  amount: number;
-  kilometers_since_last_refuel: number;
-  estimated_fuel_consumption: number;
-  notes?: string;
-}
+import { RefuelMetric } from "../../lib/api";
+import { getCombinedChartData } from "../../lib/refuelCombination";
 
 interface RefuelCostPer100kmChartProps {
-  refuelData: RefuelDataForChart[];
+  refuelData: RefuelMetric[];
 }
 
 export default function RefuelCostPer100kmChart({
@@ -59,43 +53,23 @@ export default function RefuelCostPer100kmChart({
     );
   }
 
-  // Process data and calculate cost per 100km
-  // Cost per 100km = (amount * price / distance) * 100
+  // Use combined chart data for accurate cost/100km
   const chartData = useMemo(() => {
-    return refuelData
+    return getCombinedChartData(refuelData)
       .filter(
         (item) =>
-          item.amount > 0 &&
-          item.price > 0 &&
-          item.kilometers_since_last_refuel > 0,
+          item.totalLiters > 0 &&
+          item.totalKilometers > 0 &&
+          item.averagePricePerLiter > 0,
       )
-      .sort(
-        (a, b) =>
-          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-      )
-      .map((item) => {
-        // Total fuel cost for this refuel
-        const totalCost = item.amount * item.price;
-        // Cost per 100km = total cost / distance * 100
-        const costPer100km =
-          (totalCost / item.kilometers_since_last_refuel) * 100;
-        // Actual consumption in L/100km
-        const actualConsumption =
-          (item.amount / item.kilometers_since_last_refuel) * 100;
-
-        return {
-          ...item,
-          timestampMs: new Date(item.timestamp).getTime(),
-          displayDate: formatDate(new Date(item.timestamp), {
-            month: "short",
-            day: "numeric",
-            year: "2-digit",
-          }),
-          costPer100km: parseFloat(costPer100km.toFixed(2)),
-          consumption: parseFloat(actualConsumption.toFixed(2)),
-          pricePerLiter: item.price,
-        };
-      });
+      .map((item) => ({
+        ...item,
+        displayDate: formatDate(new Date(item.timestamp), {
+          month: "short",
+          day: "numeric",
+          year: "2-digit",
+        }),
+      }));
   }, [refuelData, formatDate]);
 
   if (chartData.length === 0) {
@@ -131,25 +105,32 @@ export default function RefuelCostPer100kmChart({
         <div className="panel">
           <div className="mb-2">
             <p className="text-primary font-medium">{formattedDate}</p>
-            <p className="text-sm text-secondary">{formattedTime}</p>
+            <p className="text-sm text-secondary">
+              {formattedTime}
+              {data.isCombined && (
+                <span className="text-amber-500 ml-1">
+                  {t.refuels.combinedLabel}
+                </span>
+              )}
+            </p>
           </div>
           <div className="space-y-1 text-sm">
             <p className="flex justify-between gap-4">
               <span className="text-gray-400">{t.refuels.fuel}:</span>
               <span className="text-secondary font-semibold">
-                {data.amount.toFixed(2)} L
+                {data.totalLiters.toFixed(2)} L
               </span>
             </p>
             <p className="flex justify-between gap-4">
-              <span className="text-gray-400">{t.refuels.pricePerLiter}:</span>
+              <span className="text-gray-400">{t.refuels.totalCost}:</span>
               <span className="text-secondary font-semibold">
-                {renderSvgFuelPrice(data.pricePerLiter)}
+                {formatCost(data.totalCost)} €
               </span>
             </p>
             <p className="flex justify-between gap-4">
               <span className="text-gray-400">{t.refuels.distance}:</span>
               <span className="text-secondary font-semibold">
-                {data.kilometers_since_last_refuel} km
+                {data.totalKilometers.toFixed(0)} km
               </span>
             </p>
             <div className="border-t pt-2 mt-2">
@@ -167,9 +148,60 @@ export default function RefuelCostPer100kmChart({
     return null;
   };
 
-  // Calculate statistics
+  // Determine which bar types exist in the data for the legend
+  const hasCombined = chartData.some((d) => d.isCombined);
+  const hasPartial = chartData.some((d) => !d.isComplete && !d.isCombined);
+
+  const renderCustomLegend = () => (
+    <div className="flex justify-center gap-4 mt-2 text-xs text-secondary">
+      <div className="flex items-center gap-1.5">
+        <span
+          className="inline-block w-3 h-3 rounded-sm"
+          style={{ backgroundColor: chartTheme.primaryLine }}
+        />
+        <span>{t.refuels.costPer100km}</span>
+      </div>
+      {hasCombined && (
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rounded-sm overflow-hidden relative">
+            <svg width="12" height="12" className="absolute inset-0">
+              <defs>
+                <pattern
+                  id="legend-stripe"
+                  patternUnits="userSpaceOnUse"
+                  width="6"
+                  height="6"
+                  patternTransform="rotate(45)"
+                >
+                  <rect width="3" height="6" fill={chartTheme.primaryLine} />
+                  <rect x="3" width="3" height="6" fill="#f59e0b" />
+                </pattern>
+              </defs>
+              <rect width="12" height="12" fill="url(#legend-stripe)" />
+            </svg>
+          </span>
+          <span>{t.refuels.combinedEntries}</span>
+        </div>
+      )}
+      {hasPartial && (
+        <div className="flex items-center gap-1.5">
+          <span
+            className="inline-block w-3 h-3 rounded-sm"
+            style={{ backgroundColor: "#f59e0b" }}
+          />
+          <span>{t.refuels.partialFill}</span>
+        </div>
+      )}
+    </div>
+  );
+
+  // Calculate statistics from complete data only
   const { minCost, maxCost, avgCost, costRange } = useMemo(() => {
-    const costs = chartData.map((item) => item.costPer100km);
+    const completeData = chartData.filter((item) => item.isComplete);
+    const costs =
+      completeData.length > 0
+        ? completeData.map((item) => item.costPer100km)
+        : chartData.map((item) => item.costPer100km);
     const min = Math.min(...costs);
     const max = Math.max(...costs);
     const avg = costs.reduce((sum, c) => sum + c, 0) / costs.length;
@@ -194,6 +226,18 @@ export default function RefuelCostPer100kmChart({
             bottom: 20,
           }}
         >
+          <defs>
+            <pattern
+              id="combined-stripe"
+              patternUnits="userSpaceOnUse"
+              width="8"
+              height="8"
+              patternTransform="rotate(45)"
+            >
+              <rect width="4" height="8" fill={chartTheme.primaryLine} />
+              <rect x="4" width="4" height="8" fill="#f59e0b" />
+            </pattern>
+          </defs>
           <CartesianGrid {...gridConfig} />
           <XAxis
             dataKey="displayDate"
@@ -206,13 +250,26 @@ export default function RefuelCostPer100kmChart({
             {...axisConfig.yAxis}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend />
+          <Legend content={renderCustomLegend} />
           <Bar
             dataKey="costPer100km"
-            fill={chartTheme.primaryLine}
             name={t.refuels.costPer100km}
+            fill={chartTheme.primaryLine}
             radius={[4, 4, 0, 0]}
-          />
+          >
+            {chartData.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={
+                  entry.isCombined
+                    ? "url(#combined-stripe)"
+                    : !entry.isComplete
+                    ? "#f59e0b"
+                    : chartTheme.primaryLine
+                }
+              />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
 

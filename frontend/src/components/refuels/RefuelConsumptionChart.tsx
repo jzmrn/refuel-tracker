@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -23,18 +23,11 @@ import {
 } from "../../lib/i18n/LanguageContext";
 import { useChartTheme } from "../../lib/theme";
 import { axisConfig, useGridConfig, useChartKey } from "../../lib/chartConfig";
-
-interface RefuelDataForChart {
-  timestamp: string;
-  price: number;
-  amount: number;
-  kilometers_since_last_refuel: number;
-  estimated_fuel_consumption: number;
-  notes?: string;
-}
+import { RefuelMetric } from "../../lib/api";
+import { combineRefuelEntries } from "../../lib/refuelCombination";
 
 interface RefuelConsumptionChartProps {
-  refuelData: RefuelDataForChart[];
+  refuelData: RefuelMetric[];
 }
 
 export default function RefuelConsumptionChart({
@@ -59,33 +52,90 @@ export default function RefuelConsumptionChart({
     );
   }
 
-  // Process data and calculate actual consumption
-  const chartData = refuelData
-    .filter((item) => item.kilometers_since_last_refuel > 0 && item.amount > 0)
-    .sort(
+  // Process data: show ALL entries with estimated consumption,
+  // actual consumption only at closing full fills (using combined value for groups)
+  const chartData = useMemo(() => {
+    const groups = combineRefuelEntries(refuelData);
+
+    // Build a lookup: timestamp -> { isAnchor, isCombined, combinedConsumption, group }
+    const entryInfo = new Map<
+      string,
+      {
+        isAnchor: boolean;
+        isCombined: boolean;
+        isComplete: boolean;
+        combinedConsumption: number;
+        totalLiters: number;
+        totalKilometers: number;
+      }
+    >();
+
+    for (const group of groups) {
+      const anchor = group.entries[group.entries.length - 1];
+      for (const entry of group.entries) {
+        const isAnchor = entry.timestamp === anchor.timestamp;
+        entryInfo.set(entry.timestamp, {
+          isAnchor,
+          isCombined: group.isCombined,
+          isComplete: group.isComplete,
+          combinedConsumption: group.combinedConsumption,
+          totalLiters: group.totalLiters,
+          totalKilometers: group.totalKilometers,
+        });
+      }
+    }
+
+    // Sort all entries by timestamp
+    const sorted = [...refuelData].sort(
       (a, b) =>
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-    )
-    .map((item) => {
-      const actualConsumption =
-        (item.amount / item.kilometers_since_last_refuel) * 100;
-      return {
-        ...item,
-        timestampMs: new Date(item.timestamp).getTime(),
-        displayDate: formatDate(new Date(item.timestamp), {
-          month: "short",
-          day: "numeric",
-          year: "2-digit",
-        }),
-        actualConsumption: parseFloat(actualConsumption.toFixed(2)),
-        estimatedConsumption: parseFloat(
-          item.estimated_fuel_consumption.toFixed(2),
-        ),
-        difference: parseFloat(
-          (actualConsumption - item.estimated_fuel_consumption).toFixed(2),
-        ),
-      };
-    });
+    );
+
+    return sorted
+      .filter(
+        (entry) => entry.amount > 0 && entry.kilometers_since_last_refuel > 0,
+      )
+      .map((entry) => {
+        const info = entryInfo.get(entry.timestamp);
+        const isAnchor = info?.isAnchor ?? false;
+        const isCombined = info?.isCombined ?? false;
+        const isComplete = info?.isComplete ?? false;
+        const isFull = entry.is_full_tank !== false;
+
+        // Actual consumption only shown at closing full fills
+        let actualConsumption: number | null = null;
+        if (isAnchor && isComplete) {
+          actualConsumption = parseFloat(info!.combinedConsumption.toFixed(2));
+        }
+
+        const estimatedConsumption = entry.estimated_fuel_consumption ?? 0;
+
+        return {
+          timestamp: entry.timestamp,
+          timestampMs: new Date(entry.timestamp).getTime(),
+          displayDate: formatDate(new Date(entry.timestamp), {
+            month: "short",
+            day: "numeric",
+            year: "2-digit",
+          }),
+          actualConsumption,
+          estimatedConsumption: parseFloat(estimatedConsumption.toFixed(2)),
+          difference:
+            actualConsumption !== null
+              ? parseFloat(
+                  (actualConsumption - estimatedConsumption).toFixed(2),
+                )
+              : null,
+          isFullTank: isFull,
+          isCombined: isAnchor && isCombined,
+          isPartialInGroup: !isFull && isCombined,
+          amount: isAnchor ? info?.totalLiters ?? entry.amount : entry.amount,
+          kilometers_since_last_refuel: isAnchor
+            ? info?.totalKilometers ?? entry.kilometers_since_last_refuel
+            : entry.kilometers_since_last_refuel,
+        };
+      });
+  }, [refuelData, formatDate]);
 
   if (chartData.length === 0) {
     return (
@@ -120,34 +170,45 @@ export default function RefuelConsumptionChart({
         <div className="panel">
           <div className="mb-2">
             <p className="text-primary font-medium">{formattedDate}</p>
-            <p className="text-sm text-secondary">{formattedTime}</p>
+            <p className="text-sm text-secondary">
+              {formattedTime}
+              {data.isCombined && (
+                <span className="text-amber-500 ml-1">
+                  {t.refuels.combinedLabel}
+                </span>
+              )}
+            </p>
           </div>
           <div className="space-y-1 text-sm">
             <p className="flex justify-between gap-4">
               <span className="text-gray-400">{t.refuels.estimated}:</span>
               <span className="text-blue-600 dark:text-blue-400 font-semibold">
-                {formatConsumption(data.estimatedConsumption)} L
+                {formatConsumption(data.estimatedConsumption)} L/100km
               </span>
             </p>
-            <p className="flex justify-between gap-4">
-              <span className="text-gray-400">{t.refuels.actual}:</span>
-              <span className="text-green-600 dark:text-green-400 font-semibold">
-                {formatConsumption(data.actualConsumption)} L
-              </span>
-            </p>
-            <p className="flex justify-between gap-4">
-              <span className="text-gray-400">{t.refuels.difference}:</span>
-              <span
-                className={`font-semibold ${
-                  data.difference > 0
-                    ? "text-red-600 dark:text-red-400"
-                    : "text-green-600 dark:text-green-400"
-                }`}
-              >
-                {data.difference > 0 ? "+" : "-"}
-                {formatConsumption(Math.abs(data.difference))} L
-              </span>
-            </p>
+            {data.actualConsumption !== null && (
+              <>
+                <p className="flex justify-between gap-4">
+                  <span className="text-gray-400">{t.refuels.actual}:</span>
+                  <span className="text-green-600 dark:text-green-400 font-semibold">
+                    {formatConsumption(data.actualConsumption)} L/100km
+                  </span>
+                </p>
+                <p className="flex justify-between gap-4">
+                  <span className="text-gray-400">{t.refuels.difference}:</span>
+                  <span
+                    className={`font-semibold ${
+                      data.difference > 0
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-green-600 dark:text-green-400"
+                    }`}
+                  >
+                    {data.difference > 0 ? "+" : "-"}
+                    {formatConsumption(Math.abs(data.difference))} L/100km
+                  </span>
+                </p>
+              </>
+            )}
             <div className="border-t pt-2 mt-2 space-y-1">
               <p className="flex justify-between gap-4">
                 <span className="text-gray-400">{t.refuels.distance}:</span>
@@ -173,18 +234,23 @@ export default function RefuelConsumptionChart({
     return null;
   };
 
-  // Calculate statistics
+  // Calculate statistics (only from full fills for accuracy)
+  const fullFillData = chartData.filter(
+    (item) => item.isFullTank && item.actualConsumption !== null,
+  );
+  const statsData = fullFillData.length > 0 ? fullFillData : chartData;
+
   const avgActual =
-    chartData.reduce((sum, item) => sum + item.actualConsumption, 0) /
-    chartData.length;
+    statsData.reduce((sum, item) => sum + (item.actualConsumption ?? 0), 0) /
+    statsData.length;
   const avgEstimated =
-    chartData.reduce((sum, item) => sum + item.estimatedConsumption, 0) /
-    chartData.length;
+    statsData.reduce((sum, item) => sum + item.estimatedConsumption, 0) /
+    statsData.length;
   const avgDifference = avgActual - avgEstimated;
-  const accurateEntries = chartData.filter(
-    (item) => Math.abs(item.difference) <= 0.5,
+  const accurateEntries = statsData.filter(
+    (item) => item.difference !== null && Math.abs(item.difference) <= 0.5,
   ).length;
-  const accuracyPercentage = (accurateEntries / chartData.length) * 100;
+  const accuracyPercentage = (accurateEntries / statsData.length) * 100;
 
   return (
     <Panel title={t.refuels.fuelConsumptionEstimatedVsActual}>
@@ -230,10 +296,21 @@ export default function RefuelConsumptionChart({
             stroke={chartTheme.primaryLine}
             strokeWidth={2}
             strokeDasharray="5 5"
-            dot={{
-              fill: chartTheme.primaryDot,
-              strokeWidth: 2,
-              r: 3,
+            dot={(props: any) => {
+              const { cx, cy, payload } = props;
+              if (cx == null || cy == null) return <></>;
+              const isPartial = !payload?.isFullTank;
+              const color = isPartial ? "#f59e0b" : chartTheme.primaryDot;
+              return (
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={3}
+                  fill={color}
+                  stroke={color}
+                  strokeWidth={2}
+                />
+              );
             }}
             name={t.refuels.estimatedConsumption}
           />
@@ -242,8 +319,10 @@ export default function RefuelConsumptionChart({
             dataKey="actualConsumption"
             stroke={chartTheme.secondaryLine}
             strokeWidth={3}
+            connectNulls={true}
             dot={{
               fill: chartTheme.secondaryDot,
+              stroke: chartTheme.secondaryDot,
               strokeWidth: 2,
               r: 4,
             }}

@@ -22,6 +22,7 @@ class RefuelMetric(BaseModel):
     fuel_type: str | None = (
         None  # e5, e10, diesel - optional for backward compatibility
     )
+    is_full_tank: bool = True  # True = full fill-up, False = partial fill
 
 
 class KilometerEntry(BaseModel):

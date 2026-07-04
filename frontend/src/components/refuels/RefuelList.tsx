@@ -78,6 +78,7 @@ export default function RefuelList({
             const refuelDate = new Date(refuel.timestamp);
             const now = new Date();
             const isToday = refuelDate.toDateString() === now.toDateString();
+            const isPartial = refuel.is_full_tank === false;
 
             return (
               <tr
@@ -88,7 +89,19 @@ export default function RefuelList({
                 } ${isClickable ? "cursor-pointer" : ""}`}
               >
                 <td className="px-1 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-primary">
-                  <ResponsiveDate date={new Date(refuel.timestamp)} />
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
+                        isPartial
+                          ? "bg-amber-400 dark:bg-amber-500"
+                          : "bg-blue-500 dark:bg-blue-400"
+                      }`}
+                      title={
+                        isPartial ? t.refuels.partialFill : t.refuels.fullTank
+                      }
+                    />
+                    <ResponsiveDate date={new Date(refuel.timestamp)} />
+                  </div>
                 </td>
                 <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-secondary hidden lg:table-cell">
                   {refuel.station_brand || "—"}
@@ -96,12 +109,19 @@ export default function RefuelList({
                 <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary hidden md:table-cell">
                   {refuel.kilometers_since_last_refuel.toFixed(0)}
                 </td>
-                <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary hidden sm:table-cell">
-                  <div className="font-medium">
-                    {(
-                      (refuel.amount / refuel.kilometers_since_last_refuel) *
-                      100
-                    ).toFixed(1)}
+                <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm hidden sm:table-cell">
+                  <div
+                    className={`font-medium ${
+                      isPartial ? "text-primary italic" : "text-primary"
+                    }`}
+                  >
+                    {isPartial
+                      ? refuel.estimated_fuel_consumption.toFixed(1)
+                      : (
+                          (refuel.amount /
+                            refuel.kilometers_since_last_refuel) *
+                          100
+                        ).toFixed(1)}
                   </div>
                 </td>
                 <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm text-primary font-medium">

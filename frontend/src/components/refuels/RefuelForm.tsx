@@ -92,6 +92,7 @@ interface FormData {
   notes: string;
   station_id?: string;
   fuel_type?: string;
+  is_full_tank: boolean;
 }
 
 interface RefuelFormBaseProps {
@@ -163,6 +164,7 @@ export default function RefuelForm({
         notes: initialData.notes || "",
         station_id: initialData.station_id,
         fuel_type: initialData.fuel_type,
+        is_full_tank: initialData.is_full_tank !== false,
       };
     }
     return {
@@ -174,6 +176,7 @@ export default function RefuelForm({
       notes: "",
       station_id: undefined,
       fuel_type: undefined,
+      is_full_tank: true,
     };
   }, [initialData]);
 
@@ -200,7 +203,8 @@ export default function RefuelForm({
       formData.estimated_fuel_consumption !==
         originalData.estimated_fuel_consumption ||
       formData.notes !== originalData.notes ||
-      formData.fuel_type !== originalData.fuel_type
+      formData.fuel_type !== originalData.fuel_type ||
+      formData.is_full_tank !== originalData.is_full_tank
     );
   }, [formData, originalData, isEditMode]);
 
@@ -469,6 +473,9 @@ export default function RefuelForm({
       if (formData.fuel_type !== originalData.fuel_type) {
         updateData.fuel_type = formData.fuel_type as FuelType;
       }
+      if (formData.is_full_tank !== originalData.is_full_tank) {
+        updateData.is_full_tank = formData.is_full_tank;
+      }
 
       await onSubmit(updateData);
     } else {
@@ -485,6 +492,7 @@ export default function RefuelForm({
         notes: formData.notes?.trim() || undefined,
         station_id: formData.station_id || undefined,
         fuel_type: formData.fuel_type || undefined,
+        is_full_tank: formData.is_full_tank,
       };
 
       await onSubmit(createData);
@@ -600,8 +608,41 @@ export default function RefuelForm({
               {t.refuels.refuelData}
             </h3>
 
-            {/* Row 2: Fuel Type, Price per Liter, and Amount */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Row 1: Full Tank + Fuel Type */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Full Tank - Segmented Control */}
+              <div className="form-group">
+                <label className="label">{t.refuels.fullTankToggle}</label>
+                <div className="flex w-full rounded-md border border-gray-300 dark:border-gray-600 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, is_full_tank: true }))
+                    }
+                    className={`flex-1 px-4 py-2 text-sm font-medium transition-colors duration-150 ${
+                      formData.is_full_tank
+                        ? "bg-blue-500 text-white"
+                        : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    {t.refuels.fullTank}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, is_full_tank: false }))
+                    }
+                    className={`flex-1 px-4 py-2 text-sm font-medium border-l border-gray-300 dark:border-gray-600 transition-colors duration-150 ${
+                      !formData.is_full_tank
+                        ? "bg-amber-500 text-white"
+                        : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    {t.refuels.partialFill}
+                  </button>
+                </div>
+              </div>
+
               {/* Fuel Type */}
               <div className="form-group">
                 <label htmlFor="fuel_type" className="label">
@@ -630,7 +671,10 @@ export default function RefuelForm({
                   </p>
                 )}
               </div>
+            </div>
 
+            {/* Row 2: Price per Liter + Amount */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Price per Liter */}
               <div className="form-group">
                 <label htmlFor="price" className="label">
@@ -775,7 +819,7 @@ export default function RefuelForm({
                     {totalCost > 0 ? totalCost.toFixed(2) : "—"}
                   </span>
                   <span className="text-xs text-gray-600 dark:text-gray-400 text-left">
-                    {totalCost > 0 ? "€" : ""}
+                    €
                   </span>
 
                   {/* Actual Consumption Row */}
@@ -788,10 +832,17 @@ export default function RefuelForm({
                       : "—"}
                   </span>
                   <span className="text-xs text-gray-600 dark:text-gray-400 text-left">
-                    {actualConsumption !== null ? "L/100km" : ""}
+                    L/100km
                   </span>
                 </div>
               </div>
+            )}
+
+            {/* Partial fill warning - shown below overview */}
+            {!formData.is_full_tank && (
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                {t.refuels.partialFillHint}
+              </p>
             )}
 
             {/* Action Buttons */}

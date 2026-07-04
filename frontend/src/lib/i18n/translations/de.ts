@@ -209,6 +209,23 @@ export const de: TranslationStructure = {
     unknownStation: "Unbekannt",
     noDistributionDataAvailable: "Keine Verteilungsdaten verfügbar",
 
+    // Partial fill tracking
+    fullTank: "Volltankung",
+    partialFill: "Teilbetankung",
+    fullTankToggle: "Voll getankt",
+    partialFillHint:
+      "Teilbetankungen werden mit der nächsten Volltankung für eine genaue Verbrauchsberechnung kombiniert.",
+    combinedConsumption: "Kombinierter Verbrauch",
+    combinedCost: "Kombinierte Kosten",
+    partialFillCount: "Teilbetankungen",
+    fullFillCount: "Volltankungen",
+    incompleteGroup:
+      "Unvollständig — noch keine abschließende Volltankung, Verbrauch ist geschätzt",
+    combinedEntries: "Kombinierte Einträge",
+    combinedLabel: "(kombiniert)",
+    partialFillIndicator:
+      "Teilbetankung — Verbrauch aus kombinierter Gruppe",
+
     // Placeholders
     placeholders: {
       notes: "z.B. Shell Tankstelle, A1 Raststätte...",

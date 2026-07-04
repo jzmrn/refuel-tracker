@@ -36,7 +36,7 @@ class RefuelDataClient:
                     price REAL NOT NULL,
                     amount REAL NOT NULL,
                     kilometers_since_last_refuel REAL NOT NULL,
-                    estimated_fuel_consumption REAL NOT NULL,
+                    estimated_fuel_consumption REAL,
                     notes TEXT,
                     station_id TEXT,
                     fuel_type TEXT,
@@ -58,6 +58,11 @@ class RefuelDataClient:
             if "fuel_type" not in columns:
                 logger.info("Migrating refuel_metrics: adding fuel_type column")
                 con.execute("ALTER TABLE refuel_metrics ADD COLUMN fuel_type TEXT")
+            if "is_full_tank" not in columns:
+                logger.info("Migrating refuel_metrics: adding is_full_tank column")
+                con.execute(
+                    "ALTER TABLE refuel_metrics ADD COLUMN is_full_tank BOOLEAN DEFAULT 1"
+                )
 
     def add_metric(self, metric: RefuelMetric, user_id: str) -> bool:
         """Add a single refuel metric."""
@@ -73,8 +78,8 @@ class RefuelDataClient:
                 con.execute(
                     """
                     INSERT INTO refuel_metrics (timestamp, user_id, car_id, price, amount,
-                    kilometers_since_last_refuel, estimated_fuel_consumption, notes, station_id, fuel_type)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    kilometers_since_last_refuel, estimated_fuel_consumption, notes, station_id, fuel_type, is_full_tank)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     [
                         to_utc_iso(metric.timestamp),
@@ -87,6 +92,7 @@ class RefuelDataClient:
                         metric.notes,
                         metric.station_id,
                         metric.fuel_type,
+                        1 if metric.is_full_tank else 0,
                     ],
                 )
         return True
@@ -174,6 +180,7 @@ class RefuelDataClient:
             "estimated_fuel_consumption",
             "notes",
             "fuel_type",
+            "is_full_tank",
         }
 
         # Filter to only allowed fields with non-None values

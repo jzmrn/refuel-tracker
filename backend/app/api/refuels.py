@@ -90,6 +90,7 @@ async def create_refuel_metric(
         notes=metric_data.notes,
         station_id=metric_data.station_id,
         fuel_type=metric_data.fuel_type,
+        is_full_tank=metric_data.is_full_tank,
     )
 
     success = client.add_metric(metric, user.id)
@@ -147,6 +148,8 @@ async def update_refuel_metric(
         updates["notes"] = update_data.notes
     if update_data.fuel_type is not None:
         updates["fuel_type"] = update_data.fuel_type.value
+    if update_data.is_full_tank is not None:
+        updates["is_full_tank"] = 1 if update_data.is_full_tank else 0
 
     # Update the metric
     updated_metric = client.update_metric(user.id, update_data.timestamp, updates)
@@ -160,10 +163,11 @@ async def update_refuel_metric(
     if car is not None:
         fuel_tank_size = car.fuel_tank_size
 
-    # Calculate remaining range
+    # Calculate remaining range (only for full fill-ups)
     remaining_range_km: float | None = None
     if (
-        fuel_tank_size is not None
+        updated_metric.is_full_tank
+        and fuel_tank_size is not None
         and updated_metric.amount > 0
         and updated_metric.kilometers_since_last_refuel > 0
         and updated_metric.amount < fuel_tank_size
@@ -194,6 +198,7 @@ async def update_refuel_metric(
         notes=updated_metric.notes,
         station_id=updated_metric.station_id,
         fuel_type=updated_metric.fuel_type,
+        is_full_tank=updated_metric.is_full_tank,
         remaining_range_km=remaining_range_km,
         station_brand=station_info.brand if station_info else None,
         station_place=station_info.place if station_info else None,
@@ -296,7 +301,8 @@ async def get_refuel_metrics(
     for metric in metrics:
         remaining_range_km: float | None = None
         if (
-            fuel_tank_size is not None
+            metric.is_full_tank
+            and fuel_tank_size is not None
             and metric.amount > 0
             and metric.kilometers_since_last_refuel > 0
             and metric.amount < fuel_tank_size
@@ -327,6 +333,7 @@ async def get_refuel_metrics(
                 notes=metric.notes,
                 station_id=metric.station_id,
                 fuel_type=metric.fuel_type,
+                is_full_tank=metric.is_full_tank,
                 remaining_range_km=remaining_range_km,
                 station_brand=station_info.brand if station_info else None,
                 station_place=station_info.place if station_info else None,
@@ -404,7 +411,8 @@ async def get_refuel_metrics_paginated(
     for metric in metrics:
         remaining_range_km: float | None = None
         if (
-            fuel_tank_size is not None
+            metric.is_full_tank
+            and fuel_tank_size is not None
             and metric.amount > 0
             and metric.kilometers_since_last_refuel > 0
             and metric.amount < fuel_tank_size
@@ -432,6 +440,7 @@ async def get_refuel_metrics_paginated(
                 notes=metric.notes,
                 station_id=metric.station_id,
                 fuel_type=metric.fuel_type,
+                is_full_tank=metric.is_full_tank,
                 remaining_range_km=remaining_range_km,
                 station_brand=station_info.brand if station_info else None,
                 station_place=station_info.place if station_info else None,

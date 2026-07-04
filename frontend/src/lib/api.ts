@@ -105,6 +105,7 @@ export interface RefuelMetric {
   notes?: string;
   station_id?: string;
   fuel_type?: string;
+  is_full_tank: boolean;
   remaining_range_km?: number | null;
   // Station metadata
   station_brand?: string;
@@ -124,6 +125,7 @@ export interface RefuelMetricCreate {
   notes?: string;
   station_id?: string;
   fuel_type?: string; // e5, e10, diesel - optional for backward compatibility
+  is_full_tank?: boolean; // true = full fill-up, false = partial fill
 }
 
 export interface RefuelMetricUpdate {
@@ -135,6 +137,7 @@ export interface RefuelMetricUpdate {
   estimated_fuel_consumption?: number;
   notes?: string;
   fuel_type?: FuelType;
+  is_full_tank?: boolean;
 }
 
 export interface RefuelFilterStation {
