@@ -187,6 +187,18 @@ export const de: TranslationStructure = {
     avgDistance: "Ø Strecke",
     avgTankUsage: "Ø Tanknutzung",
 
+    // RefuelDaysBetweenChart labels
+    daysBetweenRefuels: "Tage zwischen Tankungen",
+    noDaysBetweenDataAvailable: "Nicht genügend Daten verfügbar",
+    addMoreRefuelEntriesToSeeDaysBetweenTrends:
+      "Mindestens zwei Tankeinträge hinzufügen, um Tage zwischen Tankungen zu sehen",
+    days: "Tage",
+    daysUnit: "Tage",
+    minDaysBetween: "Min. Tage",
+    maxDaysBetween: "Max. Tage",
+    avgDaysBetween: "Ø Tage",
+    medianDaysBetween: "Median Tage",
+
     // RefuelCostPer100kmChart labels
     costPer100km: "Kosten pro 100km",
     noCostDataAvailable: "Keine Kostendaten verfügbar",

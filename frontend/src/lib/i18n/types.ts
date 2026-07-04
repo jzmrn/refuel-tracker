@@ -188,6 +188,17 @@ export interface TranslationStructure {
     avgDistance: string;
     avgTankUsage: string;
 
+    // RefuelDaysBetweenChart labels
+    daysBetweenRefuels: string;
+    noDaysBetweenDataAvailable: string;
+    addMoreRefuelEntriesToSeeDaysBetweenTrends: string;
+    days: string;
+    daysUnit: string;
+    minDaysBetween: string;
+    maxDaysBetween: string;
+    avgDaysBetween: string;
+    medianDaysBetween: string;
+
     // RefuelCostPer100kmChart labels
     costPer100km: string;
     noCostDataAvailable: string;
