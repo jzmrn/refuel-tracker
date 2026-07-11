@@ -149,7 +149,12 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
                 {places.map((p) => (
                   <tr
                     key={`${p.place}-${p.post_code}`}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    onClick={() =>
+                      router.push(
+                        `/prices/places/${encodeURIComponent(p.place)}/stats`,
+                      )
+                    }
                   >
                     <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-primary">
                       <div className="font-medium">{p.place}</div>
@@ -215,7 +220,12 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
                 {brands.map((b) => (
                   <tr
                     key={b.brand}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    onClick={() =>
+                      router.push(
+                        `/prices/brands/${encodeURIComponent(b.brand)}/stats`,
+                      )
+                    }
                   >
                     <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-primary">
                       <div className="font-medium">{b.brand}</div>

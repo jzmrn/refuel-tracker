@@ -28,6 +28,7 @@ interface PriceDirectionChartProps {
   data: DetailAggregate[];
   direction: Direction;
   colorMap: Map<string, string>;
+  overlayEntities?: Set<string>;
 }
 
 /**
@@ -38,6 +39,7 @@ export default function PriceDirectionChart({
   data,
   direction,
   colorMap,
+  overlayEntities,
 }: PriceDirectionChartProps) {
   const gridConfig = useGridConfig();
   const axisColor = useAxisColor();
@@ -103,18 +105,22 @@ export default function PriceDirectionChart({
             />
           }
         />
-        {entities.map((entity) => (
-          <Line
-            key={entity}
-            type="monotone"
-            dataKey={entity}
-            stroke={colorMap.get(entity)}
-            name={entity}
-            strokeWidth={2}
-            dot={{ r: 3 }}
-            connectNulls
-          />
-        ))}
+        {entities.map((entity) => {
+          const isOverlay = overlayEntities?.has(entity);
+          return (
+            <Line
+              key={entity}
+              type="monotone"
+              dataKey={entity}
+              stroke={colorMap.get(entity)}
+              name={entity}
+              strokeWidth={isOverlay ? 3 : 2}
+              strokeDasharray={isOverlay ? "6 3" : undefined}
+              dot={isOverlay ? false : { r: 3 }}
+              connectNulls
+            />
+          );
+        })}
       </LineChart>
     </ResponsiveContainer>
   );

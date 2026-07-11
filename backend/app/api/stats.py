@@ -769,6 +769,8 @@ async def get_station_details(
                 "name": info.name,
                 "brand": info.brand,
                 "place": info.place,
+                "street": info.street,
+                "house_number": info.house_number,
                 "label": label,
             }
 
@@ -791,6 +793,8 @@ async def get_station_details(
             station_name=station_info_map.get(a.station_id, {}).get("name"),
             brand=station_info_map.get(a.station_id, {}).get("brand"),
             place=station_info_map.get(a.station_id, {}).get("place"),
+            street=station_info_map.get(a.station_id, {}).get("street"),
+            house_number=station_info_map.get(a.station_id, {}).get("house_number"),
             price_mean=a.price_mean,
             price_min=a.price_min,
             price_max=a.price_max,

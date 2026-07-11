@@ -492,6 +492,8 @@ export interface StationDetailAggregate {
   station_name: string | null;
   brand: string | null;
   place: string | null;
+  street: string | null;
+  house_number: string | null;
   price_mean: number;
   price_min: number;
   price_max: number;

@@ -25,9 +25,15 @@ interface ChartEntry {
 interface AvgPriceChartProps {
   data: DetailAggregate[];
   colorMap: Map<string, string>;
+  /** Entities to render as dashed overlay lines */
+  overlayEntities?: Set<string>;
 }
 
-export default function AvgPriceChart({ data, colorMap }: AvgPriceChartProps) {
+export default function AvgPriceChart({
+  data,
+  colorMap,
+  overlayEntities,
+}: AvgPriceChartProps) {
   const { formatMonthLabel } = useLocalization();
   const gridConfig = useGridConfig();
   const axisColor = useAxisColor();
@@ -82,18 +88,22 @@ export default function AvgPriceChart({ data, colorMap }: AvgPriceChartProps) {
           tickFormatter={(v: number) => v.toFixed(2)}
         />
         <Tooltip content={<ChartTooltip labelFormatter={formatMonthLabel} />} />
-        {entities.map((entity) => (
-          <Line
-            key={entity}
-            type="monotone"
-            dataKey={entity}
-            stroke={colorMap.get(entity)}
-            name={entity}
-            strokeWidth={2}
-            dot={{ r: 3 }}
-            connectNulls
-          />
-        ))}
+        {entities.map((entity) => {
+          const isOverlay = overlayEntities?.has(entity);
+          return (
+            <Line
+              key={entity}
+              type="monotone"
+              dataKey={entity}
+              stroke={colorMap.get(entity)}
+              name={entity}
+              strokeWidth={isOverlay ? 3 : 2}
+              strokeDasharray={isOverlay ? "6 3" : undefined}
+              dot={isOverlay ? false : { r: 3 }}
+              connectNulls
+            />
+          );
+        })}
       </LineChart>
     </ResponsiveContainer>
   );

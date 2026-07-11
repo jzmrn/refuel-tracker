@@ -796,6 +796,8 @@ class StationDetailAggregateResponse(BaseModel):
     station_name: str | None = None
     brand: str | None = None
     place: str | None = None
+    street: str | None = None
+    house_number: str | None = None
     price_mean: float
     price_min: float
     price_max: float

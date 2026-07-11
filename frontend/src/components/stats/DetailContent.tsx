@@ -60,7 +60,20 @@ interface DetailContentProps<T> {
   useAvailableEntities: () => { data: FilterMultiSelectOption[] };
   mapToDetail: (item: T) => DetailAggregate;
   chartLabels: ChartLabels;
+  /** When set, forces single-entity mode: no data source toggle, only this entity shown */
+  fixedEntity?: string;
+  /** Hook to fetch overlay data (e.g., brand/place average), rendered as dashed lines */
+  useOverlayData?: (
+    fuelType: FuelType,
+    months: number,
+  ) => { data: DetailAggregate[] };
+  /** Default data source mode (defaults to "favourites") */
+  defaultDataSourceMode?: DetailDataSourceMode;
+  /** When true, enable all entities on init instead of only favourites (useful for filtered views) */
+  enableAllOnInit?: boolean;
 }
+
+const noOverlay = () => ({ data: [] as DetailAggregate[] });
 
 /**
  * Inner component that fetches data and renders interactive legend + charts.
@@ -77,6 +90,9 @@ function DetailCharts<T>({
   dataSourceMode,
   enabledEntities,
   onEntitiesChanged,
+  fixedEntity,
+  useOverlayData,
+  enableAllOnInit,
 }: {
   entityType: EntityType;
   useDetailData: DetailContentProps<T>["useDetailData"];
@@ -88,13 +104,26 @@ function DetailCharts<T>({
   dataSourceMode: DetailDataSourceMode;
   enabledEntities: Set<string>;
   onEntitiesChanged: (entities: Set<string>, allEntities: string[]) => void;
+  fixedEntity?: string;
+  useOverlayData: (
+    fuelType: FuelType,
+    months: number,
+  ) => { data: DetailAggregate[] };
+  enableAllOnInit: boolean;
 }) {
   const { t } = useTranslation();
   const { data: favoriteEntities } = useFavoriteEntities();
   const { data: availableOptions } = useAvailableEntities();
+  const { data: overlayData } = useOverlayData(
+    selectedFuelType,
+    selectedMonths,
+  );
 
   // Determine which entities to request from the backend
   const entityFilter = useMemo(() => {
+    if (fixedEntity) {
+      return [fixedEntity];
+    }
     if (dataSourceMode === "favourites") {
       switch (entityType) {
         case "station":
@@ -107,7 +136,13 @@ function DetailCharts<T>({
     }
     // "all" mode: request all available entities
     return availableOptions.map((o) => o.value);
-  }, [dataSourceMode, entityType, favoriteEntities, availableOptions]);
+  }, [
+    fixedEntity,
+    dataSourceMode,
+    entityType,
+    favoriteEntities,
+    availableOptions,
+  ]);
 
   const { data: rawData } = useDetailData(
     selectedFuelType,
@@ -167,8 +202,8 @@ function DetailCharts<T>({
     if (allEntities.length === 0) return;
 
     if (enabledEntities.size === 0) {
-      // Enable all entities initially (favourites mode) or just favourites (all mode)
-      if (dataSourceMode === "favourites") {
+      // Enable all entities initially (favourites mode or enableAllOnInit) or just favourites (all mode)
+      if (dataSourceMode === "favourites" || enableAllOnInit) {
         onEntitiesChanged(new Set(allEntities), allEntities);
       } else {
         // In "all" mode, enable only entities that match favourites
@@ -198,9 +233,20 @@ function DetailCharts<T>({
     [detailData, enabledEntities],
   );
 
+  // Merge overlay data (e.g., brand/place average) into visible data for charts
+  const overlayEntityNames = useMemo(
+    () => new Set<string>(overlayData.map((d) => d.entity)),
+    [overlayData],
+  );
+
+  const chartData = useMemo(
+    () => (overlayData ? [...visibleData, ...overlayData] : visibleData),
+    [visibleData, overlayData],
+  );
+
   const showPriceDirectionCharts = useMemo(
-    () => hasPriceDirectionData(visibleData),
-    [visibleData],
+    () => hasPriceDirectionData(chartData),
+    [chartData],
   );
 
   const handleToggle = useCallback(
@@ -221,7 +267,10 @@ function DetailCharts<T>({
 
   // Build a stable color map from ALL entities (not just visible ones)
   // so colors stay consistent between legend and charts
-  const colorMap = useMemo(() => buildColorMap(allEntities), [allEntities]);
+  const colorMap = useMemo(() => {
+    const allWithOverlay = [...allEntities, ...Array.from(overlayEntityNames)];
+    return buildColorMap(allWithOverlay);
+  }, [allEntities, overlayEntityNames]);
 
   // Determine legend panel title and icon based on entity type
   const legendTitle = useMemo(() => {
@@ -277,7 +326,7 @@ function DetailCharts<T>({
         />
       </Panel>
 
-      {visibleData.length > 0 && (
+      {chartData.length > 0 && (
         <>
           <Panel
             variant="compact"
@@ -285,7 +334,11 @@ function DetailCharts<T>({
             icon={PlaceIcon}
             iconBackground="orange"
           >
-            <AvgPriceChart data={visibleData} colorMap={colorMap} />
+            <AvgPriceChart
+              data={chartData}
+              colorMap={colorMap}
+              overlayEntities={overlayEntityNames}
+            />
           </Panel>
 
           <Panel
@@ -294,7 +347,11 @@ function DetailCharts<T>({
             icon={TrendingDownIcon}
             iconBackground="purple"
           >
-            <VarianceChart data={visibleData} colorMap={colorMap} />
+            <VarianceChart
+              data={chartData}
+              colorMap={colorMap}
+              overlayEntities={overlayEntityNames}
+            />
           </Panel>
 
           {showPriceDirectionCharts ? (
@@ -306,9 +363,10 @@ function DetailCharts<T>({
                 iconBackground="red"
               >
                 <PriceDirectionChart
-                  data={visibleData}
+                  data={chartData}
                   direction="increased"
                   colorMap={colorMap}
+                  overlayEntities={overlayEntityNames}
                 />
               </Panel>
 
@@ -319,9 +377,10 @@ function DetailCharts<T>({
                 iconBackground="green"
               >
                 <PriceDirectionChart
-                  data={visibleData}
+                  data={chartData}
                   direction="decreased"
                   colorMap={colorMap}
+                  overlayEntities={overlayEntityNames}
                 />
               </Panel>
             </>
@@ -332,7 +391,11 @@ function DetailCharts<T>({
               icon={SwapVertIcon}
               iconBackground="indigo"
             >
-              <PriceActivityChart data={visibleData} colorMap={colorMap} />
+              <PriceActivityChart
+                data={chartData}
+                colorMap={colorMap}
+                overlayEntities={overlayEntityNames}
+              />
             </Panel>
           )}
         </>
@@ -348,6 +411,10 @@ export default function DetailContent<T>({
   useAvailableEntities,
   mapToDetail,
   chartLabels,
+  fixedEntity,
+  useOverlayData = noOverlay,
+  defaultDataSourceMode = "favourites",
+  enableAllOnInit = false,
 }: DetailContentProps<T>) {
   const { t } = useTranslation();
   const monthsKey = `${storageKeyPrefix}.months`;
@@ -357,8 +424,9 @@ export default function DetailContent<T>({
   const { fuelType: selectedFuelType, setFuelType: setSelectedFuelType } =
     useFuelType();
   const [selectedMonths, setSelectedMonths] = useState<number>(3);
-  const [dataSourceMode, setDataSourceMode] =
-    useState<DetailDataSourceMode>("favourites");
+  const [dataSourceMode, setDataSourceMode] = useState<DetailDataSourceMode>(
+    defaultDataSourceMode,
+  );
   const [enabledEntities, setEnabledEntities] = useState<Set<string>>(
     new Set(),
   );
@@ -371,20 +439,24 @@ export default function DetailContent<T>({
         setSelectedMonths(parseInt(storedMonths, 10));
       }
 
-      const storedMode = localStorage.getItem(modeKey);
-      if (storedMode === "favourites" || storedMode === "all") {
-        setDataSourceMode(storedMode);
+      if (!enableAllOnInit) {
+        const storedMode = localStorage.getItem(modeKey);
+        if (storedMode === "favourites" || storedMode === "all") {
+          setDataSourceMode(storedMode);
+        }
       }
 
-      const storedEnabled = localStorage.getItem(enabledKey);
-      if (storedEnabled) {
-        try {
-          const parsed = JSON.parse(storedEnabled);
-          if (Array.isArray(parsed)) {
-            setEnabledEntities(new Set(parsed));
+      if (!enableAllOnInit) {
+        const storedEnabled = localStorage.getItem(enabledKey);
+        if (storedEnabled) {
+          try {
+            const parsed = JSON.parse(storedEnabled);
+            if (Array.isArray(parsed)) {
+              setEnabledEntities(new Set(parsed));
+            }
+          } catch {
+            // Ignore malformed stored data
           }
-        } catch {
-          // Ignore malformed stored data
         }
       }
     });
@@ -428,9 +500,13 @@ export default function DetailContent<T>({
   };
 
   const summary = [
-    dataSourceMode === "favourites"
-      ? t.statistics.dataSource.favourites
-      : t.statistics.dataSource.all,
+    ...(fixedEntity
+      ? []
+      : [
+          dataSourceMode === "favourites"
+            ? t.statistics.dataSource.favourites
+            : t.statistics.dataSource.all,
+        ]),
     timeRangeLabels[selectedMonths] ?? `${selectedMonths}M`,
     fuelTypeLabels[selectedFuelType],
   ];
@@ -442,30 +518,32 @@ export default function DetailContent<T>({
         collapsedSummary={summary}
         storageKey={`${storageKeyPrefix}-filter`}
       >
-        <FilterRow label={t.statistics.dataSource.label}>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => handleModeChange("favourites")}
-              className={
-                dataSourceMode === "favourites"
-                  ? "btn-toggle-active"
-                  : "btn-toggle-inactive"
-              }
-            >
-              {t.statistics.dataSource.favourites}
-            </button>
-            <button
-              onClick={() => handleModeChange("all")}
-              className={
-                dataSourceMode === "all"
-                  ? "btn-toggle-active"
-                  : "btn-toggle-inactive"
-              }
-            >
-              {t.statistics.dataSource.all}
-            </button>
-          </div>
-        </FilterRow>
+        {!fixedEntity && (
+          <FilterRow label={t.statistics.dataSource.label}>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => handleModeChange("favourites")}
+                className={
+                  dataSourceMode === "favourites"
+                    ? "btn-toggle-active"
+                    : "btn-toggle-inactive"
+                }
+              >
+                {t.statistics.dataSource.favourites}
+              </button>
+              <button
+                onClick={() => handleModeChange("all")}
+                className={
+                  dataSourceMode === "all"
+                    ? "btn-toggle-active"
+                    : "btn-toggle-inactive"
+                }
+              >
+                {t.statistics.dataSource.all}
+              </button>
+            </div>
+          </FilterRow>
+        )}
         <FilterRow label={t.statistics.timeRange}>
           <TimeRangeSelector
             selectedMonths={selectedMonths}
@@ -489,9 +567,12 @@ export default function DetailContent<T>({
           chartLabels={chartLabels}
           selectedFuelType={selectedFuelType}
           selectedMonths={selectedMonths}
-          dataSourceMode={dataSourceMode}
+          dataSourceMode={fixedEntity ? "all" : dataSourceMode}
           enabledEntities={enabledEntities}
           onEntitiesChanged={handleEntitiesChanged}
+          fixedEntity={fixedEntity}
+          useOverlayData={useOverlayData}
+          enableAllOnInit={enableAllOnInit}
         />
       </Suspense>
     </StackLayout>
