@@ -117,7 +117,7 @@ export default function StationMetaInfo({
       className="btn-icon"
       title={t.statistics.viewStationStats}
     >
-      <BarChartIcon fontSize="small" />
+      <BarChartIcon className="icon" />
     </button>
   );
 

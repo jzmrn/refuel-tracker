@@ -56,7 +56,7 @@ export default function RefuelStats({
 
   return (
     <StackLayout>
-      {/* Summary Statistics Panel */}
+      {/* Summary Statistics */}
       <Panel title={t.common.statistics}>
         <GridLayout variant="stats">
           <SummaryCard

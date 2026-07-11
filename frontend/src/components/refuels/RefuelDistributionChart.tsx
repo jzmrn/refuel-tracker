@@ -192,9 +192,7 @@ function PieChartSection({
   if (data.length === 0) {
     return (
       <div className="flex-1 min-w-[200px]">
-        <h3 className="text-sm font-medium text-center mb-2 text-gray-600 dark:text-gray-400">
-          {title}
-        </h3>
+        <h3 className="text-base font-semibold text-center mb-2">{title}</h3>
         <div className="h-[260px] flex items-center justify-center text-sm text-gray-400">
           {noDataLabel}
         </div>
@@ -231,9 +229,7 @@ function PieChartSection({
 
   return (
     <div className="flex-1 min-w-[200px]">
-      <h3 className="text-sm font-medium text-center mb-2 text-gray-600 dark:text-gray-400">
-        {title}
-      </h3>
+      <h3 className="text-base font-semibold text-center mb-2">{title}</h3>
       {/* xs (default): chart on top, legend below */}
       <div className="block sm:hidden">
         <div className="flex justify-center">
