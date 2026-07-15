@@ -23,7 +23,12 @@ import {
   useLocalization,
 } from "../../lib/i18n/LanguageContext";
 import { useChartTheme } from "../../lib/theme";
-import { axisConfig, useGridConfig, useChartKey } from "../../lib/chartConfig";
+import {
+  axisConfig,
+  chartClassNames,
+  useGridConfig,
+  useChartKey,
+} from "../../lib/chartConfig";
 
 interface RefuelDataForChart {
   timestamp: string;
@@ -209,30 +214,34 @@ export default function RefuelDistanceChart({
       : null;
 
   const renderCustomLegend = () => (
-    <div className="flex justify-center gap-4 mt-2 text-xs text-secondary">
-      <div className="flex items-center gap-1.5">
+    <div className={chartClassNames.legendContainer}>
+      <div className={chartClassNames.legendItem}>
         <span
-          className="inline-block w-3 h-3 rounded-sm"
+          className={chartClassNames.legendSwatch}
           style={{ backgroundColor: chartTheme.primaryLine }}
         />
-        <span>{t.refuels.distance}</span>
+        <span className={chartClassNames.legendText}>{t.refuels.distance}</span>
       </div>
       {hasPartialFills && (
-        <div className="flex items-center gap-1.5">
+        <div className={chartClassNames.legendItem}>
           <span
-            className="inline-block w-3 h-3 rounded-sm"
+            className={chartClassNames.legendSwatch}
             style={{ backgroundColor: "#f59e0b" }}
           />
-          <span>{t.refuels.partialFill}</span>
+          <span className={chartClassNames.legendText}>
+            {t.refuels.partialFill}
+          </span>
         </div>
       )}
       {hasRemainingRange && (
-        <div className="flex items-center gap-1.5">
+        <div className={chartClassNames.legendItem}>
           <span
-            className="inline-block w-3 h-3 rounded-sm opacity-50"
+            className={`${chartClassNames.legendSwatch} opacity-50`}
             style={{ backgroundColor: chartTheme.secondaryLine }}
           />
-          <span>{t.refuels.remainingRange}</span>
+          <span className={chartClassNames.legendText}>
+            {t.refuels.remainingRange}
+          </span>
         </div>
       )}
     </div>

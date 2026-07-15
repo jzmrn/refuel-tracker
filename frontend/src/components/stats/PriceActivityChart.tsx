@@ -14,7 +14,7 @@ import {
   useAxisColor,
   useChartKey,
 } from "@/lib/chartConfig";
-import { DetailAggregate, ChartTooltip } from "./chartUtils";
+import { DetailAggregate, ChartTooltip, ChartLegend } from "./chartUtils";
 import { useLocalization } from "@/lib/i18n/LanguageContext";
 
 interface ChartEntry {
@@ -67,45 +67,56 @@ export default function PriceActivityChart({
   if (chartData.length === 0) return null;
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart
-        key={chartKey}
-        data={chartData}
-        margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
-      >
-        <CartesianGrid {...gridConfig} />
-        <XAxis
-          dataKey="date"
-          {...axisConfig.xAxis}
-          stroke={axisColor}
-          tickFormatter={formatMonthLabel}
-        />
-        <YAxis {...axisConfig.yAxis} stroke={axisColor} domain={[0, "auto"]} />
-        <Tooltip
-          content={
-            <ChartTooltip
-              labelFormatter={formatMonthLabel}
-              isFuelPrice={false}
-            />
-          }
-        />
-        {entities.map((entity) => {
-          const isOverlay = overlayEntities?.has(entity);
-          return (
-            <Line
-              key={entity}
-              type="monotone"
-              dataKey={entity}
-              stroke={colorMap.get(entity)}
-              name={entity}
-              strokeWidth={isOverlay ? 3 : 2}
-              strokeDasharray={isOverlay ? "6 3" : undefined}
-              dot={isOverlay ? false : { r: 3 }}
-              connectNulls
-            />
-          );
-        })}
-      </LineChart>
-    </ResponsiveContainer>
+    <>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart
+          key={chartKey}
+          data={chartData}
+          margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
+        >
+          <CartesianGrid {...gridConfig} />
+          <XAxis
+            dataKey="date"
+            {...axisConfig.xAxis}
+            stroke={axisColor}
+            tickFormatter={formatMonthLabel}
+          />
+          <YAxis
+            {...axisConfig.yAxis}
+            stroke={axisColor}
+            domain={[0, "auto"]}
+          />
+          <Tooltip
+            content={
+              <ChartTooltip
+                labelFormatter={formatMonthLabel}
+                isFuelPrice={false}
+              />
+            }
+          />
+          {entities.map((entity) => {
+            const isOverlay = overlayEntities?.has(entity);
+            return (
+              <Line
+                key={entity}
+                type="monotone"
+                dataKey={entity}
+                stroke={colorMap.get(entity)}
+                name={entity}
+                strokeWidth={isOverlay ? 3 : 2}
+                strokeDasharray={isOverlay ? "6 3" : undefined}
+                dot={isOverlay ? false : { r: 3 }}
+                connectNulls
+              />
+            );
+          })}
+        </LineChart>
+      </ResponsiveContainer>
+      <ChartLegend
+        data={data}
+        colorMap={colorMap}
+        overlayEntities={overlayEntities}
+      />
+    </>
   );
 }

@@ -46,6 +46,13 @@ export default function DailyPriceChangesChart({
       point.n_price_increased != null && point.n_price_decreased != null,
   );
 
+  // Check if any days only have aggregated price changes (no increase/decrease detail)
+  const hasPriceChangesOnly = data.some(
+    (point) =>
+      point.n_price_changes != null &&
+      (point.n_price_increased == null || point.n_price_decreased == null),
+  );
+
   if (!hasValidData) {
     return <ChartNoData />;
   }
@@ -53,13 +60,18 @@ export default function DailyPriceChangesChart({
   // Convert data to chart format and sort by date ascending
   const chartData = [...data]
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .map((point) => ({
-      date: new Date(point.date).getTime(),
-      n_price_changes: point.n_price_changes,
-      n_unique_prices: point.n_unique_prices,
-      n_price_increased: point.n_price_increased,
-      n_price_decreased: point.n_price_decreased,
-    }));
+    .map((point) => {
+      const hasDetail =
+        point.n_price_increased != null && point.n_price_decreased != null;
+      return {
+        date: new Date(point.date).getTime(),
+        // Only show price_changes for days without increase/decrease detail
+        n_price_changes: hasDetail ? undefined : point.n_price_changes,
+        n_unique_prices: point.n_unique_prices,
+        n_price_increased: point.n_price_increased,
+        n_price_decreased: point.n_price_decreased,
+      };
+    });
 
   // Calculate domain for X axis
   const dates = chartData.map((d) => d.date);
@@ -122,22 +134,15 @@ export default function DailyPriceChangesChart({
                           {dataPoint.n_unique_prices}
                         </span>
                       </p>
-                      <p className="text-amber-400 flex justify-between gap-4">
-                        <span className="text-gray-400">
-                          {t.fuelPrices.priceChanges}:
-                        </span>
-                        <span className="font-semibold">
-                          {dataPoint.n_price_changes}
-                        </span>
-                      </p>
-                      {hasIncreasedDecreased && (
+                      {dataPoint.n_price_increased != null &&
+                      dataPoint.n_price_decreased != null ? (
                         <>
                           <p className="text-red-400 flex justify-between gap-4">
                             <span className="text-gray-400">
                               {t.fuelPrices.priceIncreased}:
                             </span>
                             <span className="font-semibold">
-                              {dataPoint.n_price_increased ?? "-"}
+                              {dataPoint.n_price_increased}
                             </span>
                           </p>
                           <p className="text-green-400 flex justify-between gap-4">
@@ -145,10 +150,21 @@ export default function DailyPriceChangesChart({
                               {t.fuelPrices.priceDecreased}:
                             </span>
                             <span className="font-semibold">
-                              {dataPoint.n_price_decreased ?? "-"}
+                              {dataPoint.n_price_decreased}
                             </span>
                           </p>
                         </>
+                      ) : (
+                        dataPoint.n_price_changes != null && (
+                          <p className="text-amber-400 flex justify-between gap-4">
+                            <span className="text-gray-400">
+                              {t.fuelPrices.priceChanges}:
+                            </span>
+                            <span className="font-semibold">
+                              {dataPoint.n_price_changes}
+                            </span>
+                          </p>
+                        )
                       )}
                     </div>
                   </div>
@@ -158,16 +174,18 @@ export default function DailyPriceChangesChart({
             }}
           />
           <Legend iconType="line" formatter={renderLegendText} />
-          {/* Line for price changes */}
-          <Line
-            type="linear"
-            dataKey="n_price_changes"
-            stroke="#f59e0b"
-            strokeWidth={2}
-            dot={{ fill: "#f59e0b", r: 3 }}
-            name={t.fuelPrices.priceChanges}
-            connectNulls={false}
-          />
+          {/* Line for price changes (only if some days lack increase/decrease detail) */}
+          {hasPriceChangesOnly && (
+            <Line
+              type="linear"
+              dataKey="n_price_changes"
+              stroke="#f59e0b"
+              strokeWidth={2}
+              dot={{ fill: "#f59e0b", r: 3 }}
+              name={t.fuelPrices.priceChanges}
+              connectNulls={false}
+            />
+          )}
           {/* Line for price increases (only if data available) */}
           {hasIncreasedDecreased && (
             <Line

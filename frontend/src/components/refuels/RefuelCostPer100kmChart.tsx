@@ -22,7 +22,12 @@ import {
   useLocalization,
 } from "../../lib/i18n/LanguageContext";
 import { useChartTheme } from "../../lib/theme";
-import { axisConfig, useGridConfig, useChartKey } from "../../lib/chartConfig";
+import {
+  axisConfig,
+  chartClassNames,
+  useGridConfig,
+  useChartKey,
+} from "../../lib/chartConfig";
 
 import { RefuelMetric } from "../../lib/api";
 import { getCombinedChartData } from "../../lib/refuelCombination";
@@ -153,17 +158,21 @@ export default function RefuelCostPer100kmChart({
   const hasPartial = chartData.some((d) => !d.isComplete && !d.isCombined);
 
   const renderCustomLegend = () => (
-    <div className="flex justify-center gap-4 mt-2 text-xs text-secondary">
-      <div className="flex items-center gap-1.5">
+    <div className={chartClassNames.legendContainer}>
+      <div className={chartClassNames.legendItem}>
         <span
-          className="inline-block w-3 h-3 rounded-sm"
+          className={chartClassNames.legendSwatch}
           style={{ backgroundColor: chartTheme.primaryLine }}
         />
-        <span>{t.refuels.costPer100km}</span>
+        <span className={chartClassNames.legendText}>
+          {t.refuels.costPer100km}
+        </span>
       </div>
       {hasCombined && (
-        <div className="flex items-center gap-1.5">
-          <span className="inline-block w-3 h-3 rounded-sm overflow-hidden relative">
+        <div className={chartClassNames.legendItem}>
+          <span
+            className={`${chartClassNames.legendSwatch} overflow-hidden relative`}
+          >
             <svg width="12" height="12" className="absolute inset-0">
               <defs>
                 <pattern
@@ -180,16 +189,20 @@ export default function RefuelCostPer100kmChart({
               <rect width="12" height="12" fill="url(#legend-stripe)" />
             </svg>
           </span>
-          <span>{t.refuels.combinedEntries}</span>
+          <span className={chartClassNames.legendText}>
+            {t.refuels.combinedEntries}
+          </span>
         </div>
       )}
       {hasPartial && (
-        <div className="flex items-center gap-1.5">
+        <div className={chartClassNames.legendItem}>
           <span
-            className="inline-block w-3 h-3 rounded-sm"
+            className={chartClassNames.legendSwatch}
             style={{ backgroundColor: "#f59e0b" }}
           />
-          <span>{t.refuels.partialFill}</span>
+          <span className={chartClassNames.legendText}>
+            {t.refuels.partialFill}
+          </span>
         </div>
       )}
     </div>

@@ -160,7 +160,9 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
                       <div className="font-medium">{p.place}</div>
                       <div className="text-secondary text-xs sm:hidden">
                         {p.post_code} · {p.n_stations}{" "}
-                        {t.statistics.numStations.toLowerCase()}
+                        {p.n_stations === 1
+                          ? t.refuels.station
+                          : t.statistics.numStations}
                       </div>
                     </td>
                     <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-primary hidden sm:table-cell">
@@ -230,7 +232,10 @@ const StatsAggregateTables: React.FC<StatsAggregateTablesProps> = ({
                     <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-primary">
                       <div className="font-medium">{b.brand}</div>
                       <div className="text-secondary text-xs sm:hidden">
-                        {b.n_stations} {t.statistics.numStations.toLowerCase()}
+                        {b.n_stations}{" "}
+                        {b.n_stations === 1
+                          ? t.refuels.station
+                          : t.statistics.numStations}
                       </div>
                     </td>
                     <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-primary hidden sm:table-cell">

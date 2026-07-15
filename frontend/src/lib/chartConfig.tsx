@@ -13,6 +13,14 @@ export const chartClassNames = {
   gridStroke: "stroke-gray-300 dark:stroke-gray-800",
   /** Legend text styling */
   legendText: "text-sm text-gray-600 dark:text-gray-400",
+  /** Legend container layout (wrapping row of items, centered) */
+  legendContainer: "flex flex-wrap justify-center gap-x-5 gap-y-1.5 px-3 py-2",
+  /** Single legend item layout */
+  legendItem: "flex items-center gap-1.5",
+  /** Solid color swatch for legend items */
+  legendSwatch: "inline-block w-3 h-3 rounded-sm shrink-0",
+  /** Thin line swatch for legend items (line charts) */
+  legendLine: "inline-block w-3 h-0.5 shrink-0",
 } as const;
 
 // Grid colors (matching Tailwind gray-300 and gray-700)

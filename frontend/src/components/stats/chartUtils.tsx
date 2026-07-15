@@ -1,6 +1,9 @@
 import React from "react";
 import { TooltipProps } from "recharts";
-import { customTooltipContainerStyle } from "@/lib/chartConfig";
+import {
+  chartClassNames,
+  customTooltipContainerStyle,
+} from "@/lib/chartConfig";
 import { renderSvgFuelPrice } from "@/lib/formatPrice";
 import { useLocalization, useTranslation } from "@/lib/i18n/LanguageContext";
 
@@ -165,10 +168,24 @@ export function ChartTooltip({
             className="flex justify-between items-center gap-4"
           >
             <span className="flex items-center gap-1.5 text-gray-400">
-              <span
-                className="inline-block w-3 h-0.5 shrink-0"
-                style={{ backgroundColor: entry.color }}
-              />
+              {entry.strokeDasharray ? (
+                <svg width="12" height="10" className="shrink-0">
+                  <line
+                    x1="0"
+                    y1="5"
+                    x2="12"
+                    y2="5"
+                    stroke={entry.color}
+                    strokeWidth="2"
+                    strokeDasharray={entry.strokeDasharray}
+                  />
+                </svg>
+              ) : (
+                <span
+                  className="inline-block w-3 h-0.5 shrink-0"
+                  style={{ backgroundColor: entry.color }}
+                />
+              )}
               {entry.name}
             </span>
             <span className="font-semibold" style={{ color: entry.color }}>
@@ -183,21 +200,60 @@ export function ChartTooltip({
 
 interface ChartLegendProps {
   data: DetailAggregate[];
+  colorMap?: Map<string, string>;
+  /** Overlay entities rendered with a dashed swatch, placed first in the legend */
+  overlayEntities?: Set<string>;
 }
 
-export function ChartLegend({ data }: ChartLegendProps) {
-  const entities = Array.from(new Set(data.map((d) => d.entity))).sort();
-  const colorMap = buildColorMap(entities);
+/**
+ * Unified chart legend. Overlay (average) entities are shown first with a
+ * dashed line swatch; regular entities follow with a solid line swatch.
+ */
+export function ChartLegend({
+  data,
+  colorMap: externalColorMap,
+  overlayEntities,
+}: ChartLegendProps) {
+  const allEntities = Array.from(new Set(data.map((d) => d.entity))).sort();
+  const colorMap = externalColorMap ?? buildColorMap(allEntities);
+
+  const overlays = overlayEntities
+    ? allEntities.filter((e) => overlayEntities.has(e))
+    : [];
+  const regular = overlayEntities
+    ? allEntities.filter((e) => !overlayEntities.has(e))
+    : allEntities;
+
+  if (allEntities.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 px-3 py-2">
-      {entities.map((entity) => (
-        <div key={entity} className="flex items-center gap-1.5">
+    <div className={chartClassNames.legendContainer}>
+      {overlays.map((entity) => {
+        const color = colorMap.get(entity) ?? "#888";
+        return (
+          <div key={entity} className={chartClassNames.legendItem}>
+            <svg width="20" height="10" className="shrink-0">
+              <line
+                x1="0"
+                y1="5"
+                x2="20"
+                y2="5"
+                stroke={color}
+                strokeWidth="3"
+                strokeDasharray="4 2"
+              />
+            </svg>
+            <span className={chartClassNames.legendText}>{entity}</span>
+          </div>
+        );
+      })}
+      {regular.map((entity) => (
+        <div key={entity} className={chartClassNames.legendItem}>
           <span
-            className="inline-block w-3 h-0.5 shrink-0"
+            className={chartClassNames.legendLine}
             style={{ backgroundColor: colorMap.get(entity) }}
           />
-          <span className="text-sm text-secondary">{entity}</span>
+          <span className={chartClassNames.legendText}>{entity}</span>
         </div>
       ))}
     </div>

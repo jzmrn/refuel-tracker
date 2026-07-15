@@ -14,8 +14,10 @@ import {
   useGridConfig,
   useAxisColor,
   useChartKey,
+  createYAxisTick,
 } from "@/lib/chartConfig";
-import { DetailAggregate, ChartTooltip } from "./chartUtils";
+import { renderSvgFuelPrice } from "@/lib/formatPrice";
+import { DetailAggregate, ChartTooltip, ChartLegend } from "./chartUtils";
 
 interface ChartEntry {
   date: string;
@@ -68,43 +70,52 @@ export default function AvgPriceChart({
   if (chartData.length === 0) return null;
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart
-        key={chartKey}
-        data={chartData}
-        margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
-      >
-        <CartesianGrid {...gridConfig} />
-        <XAxis
-          dataKey="date"
-          {...axisConfig.xAxis}
-          stroke={axisColor}
-          tickFormatter={formatMonthLabel}
-        />
-        <YAxis
-          {...axisConfig.yAxis}
-          stroke={axisColor}
-          domain={["auto", "auto"]}
-          tickFormatter={(v: number) => v.toFixed(2)}
-        />
-        <Tooltip content={<ChartTooltip labelFormatter={formatMonthLabel} />} />
-        {entities.map((entity) => {
-          const isOverlay = overlayEntities?.has(entity);
-          return (
-            <Line
-              key={entity}
-              type="monotone"
-              dataKey={entity}
-              stroke={colorMap.get(entity)}
-              name={entity}
-              strokeWidth={isOverlay ? 3 : 2}
-              strokeDasharray={isOverlay ? "6 3" : undefined}
-              dot={isOverlay ? false : { r: 3 }}
-              connectNulls
-            />
-          );
-        })}
-      </LineChart>
-    </ResponsiveContainer>
+    <>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart
+          key={chartKey}
+          data={chartData}
+          margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
+        >
+          <CartesianGrid {...gridConfig} />
+          <XAxis
+            dataKey="date"
+            {...axisConfig.xAxis}
+            stroke={axisColor}
+            tickFormatter={formatMonthLabel}
+          />
+          <YAxis
+            {...axisConfig.yAxis}
+            stroke={axisColor}
+            domain={["auto", "auto"]}
+            tick={createYAxisTick(axisColor, renderSvgFuelPrice)}
+          />
+          <Tooltip
+            content={<ChartTooltip labelFormatter={formatMonthLabel} />}
+          />
+          {entities.map((entity) => {
+            const isOverlay = overlayEntities?.has(entity);
+            return (
+              <Line
+                key={entity}
+                type="monotone"
+                dataKey={entity}
+                stroke={colorMap.get(entity)}
+                name={entity}
+                strokeWidth={isOverlay ? 3 : 2}
+                strokeDasharray={isOverlay ? "6 3" : undefined}
+                dot={isOverlay ? false : { r: 3 }}
+                connectNulls
+              />
+            );
+          })}
+        </LineChart>
+      </ResponsiveContainer>
+      <ChartLegend
+        data={data}
+        colorMap={colorMap}
+        overlayEntities={overlayEntities}
+      />
+    </>
   );
 }

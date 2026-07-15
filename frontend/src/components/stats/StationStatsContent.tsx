@@ -19,6 +19,7 @@ import TimelineIcon from "@mui/icons-material/Timeline";
 import StationAllFuelsDailyChart from "./StationAllFuelsDailyChart";
 import StationComparisonChart from "./StationComparisonChart";
 import { COMPARISON_TYPE_COLORS } from "./chartUtils";
+import { chartClassNames } from "@/lib/chartConfig";
 
 const DAYS_OPTIONS = [30, 60, 90] as const;
 
@@ -72,16 +73,14 @@ function ComparisonLegend({
   entries: { key: string; label: string }[];
 }) {
   return (
-    <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 px-3 py-2">
+    <div className={chartClassNames.legendContainer}>
       {entries.map((entry) => (
-        <div key={entry.key} className="flex items-center gap-1.5">
+        <div key={entry.key} className={chartClassNames.legendItem}>
           <span
-            className="inline-block w-3 h-0.5 shrink-0"
+            className={chartClassNames.legendLine}
             style={{ backgroundColor: COMPARISON_TYPE_COLORS[entry.key] }}
           />
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            {entry.label}
-          </span>
+          <span className={chartClassNames.legendText}>{entry.label}</span>
         </div>
       ))}
     </div>
