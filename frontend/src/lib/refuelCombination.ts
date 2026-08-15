@@ -134,6 +134,8 @@ export function getPendingPartials(refuels: RefuelMetric[]): RefuelMetric[] {
 export interface CombinedChartDataPoint {
   timestamp: string;
   timestampMs: number;
+  /** Timestamps of all entries contained in this data point (ascending) */
+  entryTimestamps: string[];
   consumption: number;
   costPer100km: number;
   totalCost: number;
@@ -157,6 +159,7 @@ export function getCombinedChartData(
       chartData.push({
         timestamp: group.anchorTimestamp,
         timestampMs: new Date(group.anchorTimestamp).getTime(),
+        entryTimestamps: group.entries.map((e) => e.timestamp),
         consumption: parseFloat(group.combinedConsumption.toFixed(2)),
         costPer100km: parseFloat(group.combinedCostPer100km.toFixed(2)),
         totalCost: parseFloat(group.totalCost.toFixed(2)),
@@ -183,6 +186,7 @@ export function getCombinedChartData(
         chartData.push({
           timestamp: entry.timestamp,
           timestampMs: new Date(entry.timestamp).getTime(),
+          entryTimestamps: [entry.timestamp],
           consumption: parseFloat(consumption.toFixed(2)),
           costPer100km: parseFloat(costPer100km.toFixed(2)),
           totalCost: parseFloat(cost.toFixed(2)),
@@ -213,6 +217,8 @@ export function getCombinedChartData(
 export interface TankUsageChartDataPoint {
   timestamp: string;
   timestampMs: number;
+  /** Timestamps of all entries contained in this data point (ascending) */
+  entryTimestamps: string[];
   /** Total liters refuelled in the group */
   totalLiters: number;
   /** Average liters per refuel in the group */
@@ -235,6 +241,7 @@ export function getTankUsageChartData(
 
   const toPoint = (
     timestamp: string,
+    entryTimestamps: string[],
     totalLiters: number,
     entryCount: number,
     isCombined: boolean,
@@ -244,6 +251,7 @@ export function getTankUsageChartData(
     return {
       timestamp,
       timestampMs: new Date(timestamp).getTime(),
+      entryTimestamps,
       totalLiters: parseFloat(totalLiters.toFixed(2)),
       averageLiters: parseFloat(averageLiters.toFixed(2)),
       tankUsage: parseFloat(((averageLiters / fuelTankSize) * 100).toFixed(1)),
@@ -258,6 +266,7 @@ export function getTankUsageChartData(
       chartData.push(
         toPoint(
           group.anchorTimestamp,
+          group.entries.map((e) => e.timestamp),
           group.totalLiters,
           group.entries.length,
           group.isCombined,
@@ -268,7 +277,9 @@ export function getTankUsageChartData(
       // Incomplete trailing group — no closing full fill yet, show entries
       // individually and exclude them from the statistics.
       for (const entry of group.entries) {
-        chartData.push(toPoint(entry.timestamp, entry.amount, 1, false, false));
+        chartData.push(
+          toPoint(entry.timestamp, [entry.timestamp], entry.amount, 1, false, false),
+        );
       }
     }
   }

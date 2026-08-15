@@ -154,6 +154,9 @@ export default function RefuelDistanceChart({
       minute: "2-digit",
     });
     const totalRange = data.distance + data.remainingRange;
+    const distanceClassName = data.isFullTank
+      ? "text-blue-600 dark:text-blue-400"
+      : "text-amber-500";
     const remainingRangeClassName =
       data.remainingRange > 0
         ? "text-emerald-600 dark:text-emerald-400"
@@ -167,7 +170,7 @@ export default function RefuelDistanceChart({
         <div className="space-y-1 text-sm">
           <p className="flex justify-between gap-4">
             <span className="text-gray-400">{t.refuels.distance}:</span>
-            <span className="text-blue-600 dark:text-blue-400 font-semibold">
+            <span className={`${distanceClassName} font-semibold`}>
               {formatDistance(data.distance)} km
             </span>
           </p>

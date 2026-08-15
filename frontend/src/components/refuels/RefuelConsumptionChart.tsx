@@ -13,6 +13,7 @@ import SummaryCard from "../common/SummaryCard";
 import Panel from "../common/Panel";
 import { GridLayout } from "../common/GridLayout";
 import { MobileChartCard } from "../common/MobileChartCard";
+import ChartTooltipHeader from "../common/ChartTooltipHeader";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import NumbersIcon from "@mui/icons-material/Numbers";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
@@ -76,6 +77,7 @@ export default function RefuelConsumptionChart({
         combinedConsumption: number;
         totalLiters: number;
         totalKilometers: number;
+        entryTimestamps: string[];
       }
     >();
 
@@ -90,6 +92,7 @@ export default function RefuelConsumptionChart({
           combinedConsumption: group.combinedConsumption,
           totalLiters: group.totalLiters,
           totalKilometers: group.totalKilometers,
+          entryTimestamps: group.entries.map((e) => e.timestamp),
         });
       }
     }
@@ -122,6 +125,10 @@ export default function RefuelConsumptionChart({
         return {
           timestamp: entry.timestamp,
           timestampMs: new Date(entry.timestamp).getTime(),
+          entryTimestamps:
+            isAnchor && isCombined
+              ? info?.entryTimestamps ?? [entry.timestamp]
+              : [entry.timestamp],
           displayDate: formatDate(new Date(entry.timestamp), {
             month: "short",
             day: "numeric",
@@ -162,30 +169,11 @@ export default function RefuelConsumptionChart({
   const formatConsumption = (value: number) => `${value.toFixed(1)}`;
 
   const renderTooltipContent = (data: any) => {
-    const date = new Date(data.timestamp);
-    const formattedDate = formatDate(date, {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-    const formattedTime = formatDate(date, {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
     return (
       <>
-        <div className="mb-2">
-          <p className="text-primary font-medium">{formattedDate}</p>
-          <p className="text-sm text-secondary">
-            {formattedTime}
-            {data.isCombined && (
-              <span className="text-amber-500 ml-1">
-                {t.refuels.combinedLabel}
-              </span>
-            )}
-          </p>
-        </div>
+        <ChartTooltipHeader
+          timestamps={data.entryTimestamps ?? [data.timestamp]}
+        />
         <div className="space-y-1 text-sm">
           <p className="flex justify-between gap-4">
             <span className="text-gray-400">{t.refuels.estimated}:</span>

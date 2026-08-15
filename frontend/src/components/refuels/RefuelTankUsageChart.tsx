@@ -14,6 +14,9 @@ import SummaryCard from "../common/SummaryCard";
 import Panel from "../common/Panel";
 import { GridLayout } from "../common/GridLayout";
 import { MobileChartCard } from "../common/MobileChartCard";
+import ChartTooltipHeader, {
+  formatChartDateLabel,
+} from "../common/ChartTooltipHeader";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import BarChartIcon from "@mui/icons-material/BarChart";
@@ -56,11 +59,7 @@ export default function RefuelTankUsageChart({
       .filter((item) => item.totalLiters > 0)
       .map((item) => ({
         ...item,
-        displayDate: formatDate(new Date(item.timestamp), {
-          month: "short",
-          day: "numeric",
-          year: "2-digit",
-        }),
+        displayDate: formatChartDateLabel(item.entryTimestamps, formatDate),
       }));
   }, [refuelData, fuelTankSize, formatDate]);
 
@@ -114,30 +113,11 @@ export default function RefuelTankUsageChart({
     });
 
   const renderTooltipContent = (data: any) => {
-    const date = new Date(data.timestamp);
-    const formattedDate = formatDate(date, {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-    const formattedTime = formatDate(date, {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
     return (
       <>
-        <div className="mb-2">
-          <p className="text-primary font-medium">{formattedDate}</p>
-          <p className="text-sm text-secondary">
-            {formattedTime}
-            {data.isCombined && (
-              <span className="text-amber-500 ml-1">
-                {t.refuels.combinedLabel}
-              </span>
-            )}
-          </p>
-        </div>
+        <ChartTooltipHeader
+          timestamps={data.entryTimestamps ?? [data.timestamp]}
+        />
         <div className="space-y-1 text-sm">
           <p className="flex justify-between gap-4">
             <span className="text-gray-400">{t.refuels.fuel}:</span>
