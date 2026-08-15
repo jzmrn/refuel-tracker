@@ -68,9 +68,16 @@ class FuelPriceCache:
 fuel_price_cache = FuelPriceCache()
 
 
-def get_tankerkoenig_client(request: Request):
+def get_tankerkoenig_client(request: Request) -> TankerkoenigClient:
     """Dependency to get the tankerkoenig client from app state"""
-    return request.app.state.tankerkoenig_client
+    client = request.app.state.tankerkoenig_client
+    if client is None:
+        logger.error("Tankerkoenig client unavailable: TANKERKOENIG_API_KEY not set")
+        raise HTTPException(
+            status_code=503,
+            detail="Gas station service is unavailable (TANKERKOENIG_API_KEY not configured)",
+        )
+    return client
 
 
 def get_fuel_station_client(request: Request):

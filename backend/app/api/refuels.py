@@ -55,7 +55,14 @@ def get_fuel_price_data_client(request: Request) -> FuelPriceDataClient:
 
 def get_tankerkoenig_client(request: Request) -> TankerkoenigClient:
     """Dependency to get the tankerkoenig client from app state"""
-    return request.app.state.tankerkoenig_client
+    client = request.app.state.tankerkoenig_client
+    if client is None:
+        logger.error("Tankerkoenig client unavailable: TANKERKOENIG_API_KEY not set")
+        raise HTTPException(
+            status_code=503,
+            detail="Gas station service is unavailable (TANKERKOENIG_API_KEY not configured)",
+        )
+    return client
 
 
 # Refuel-specific endpoints
