@@ -23,7 +23,12 @@ import {
   useLocalization,
 } from "../../lib/i18n/LanguageContext";
 import { useChartTheme } from "../../lib/theme";
-import { axisConfig, useGridConfig, useChartKey } from "../../lib/chartConfig";
+import {
+  axisConfig,
+  useGridConfig,
+  useChartKey,
+  legendConfig,
+} from "../../lib/chartConfig";
 import { RefuelMetric } from "../../lib/api";
 import { combineRefuelEntries } from "../../lib/refuelCombination";
 import { useIsMobile } from "../../lib/hooks/useIsMobile";
@@ -365,7 +370,7 @@ export default function RefuelConsumptionChart({
             {...axisConfig.yAxis}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend />
+          <Legend {...legendConfig} />
           <Line
             type="monotone"
             dataKey="estimatedConsumption"

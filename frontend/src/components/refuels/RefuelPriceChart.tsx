@@ -23,7 +23,11 @@ import {
 } from "../../lib/i18n/LanguageContext";
 import { useChartTheme } from "../../lib/theme";
 import { renderSvgFuelPrice } from "../../lib/formatPrice";
-import { useChartKey, calculateFuelPriceTicks } from "../../lib/chartConfig";
+import {
+  useChartKey,
+  calculateFuelPriceTicks,
+  legendConfig,
+} from "../../lib/chartConfig";
 import { useIsMobile } from "../../lib/hooks/useIsMobile";
 
 interface PriceTrend {
@@ -275,7 +279,7 @@ export default function RefuelPriceChart({ priceData }: RefuelPriceChartProps) {
             }}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend />
+          <Legend {...legendConfig} />
           <Line
             type="monotone"
             dataKey="priceFormatted"

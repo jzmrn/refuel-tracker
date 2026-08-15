@@ -20,6 +20,7 @@ import {
   tooltipStyle,
   useChartKey,
   calculateFuelPriceTicks,
+  legendConfig,
 } from "@/lib/chartConfig";
 import { useIsMobile } from "@/lib/hooks/useIsMobile";
 
@@ -180,6 +181,7 @@ export default function FuelPriceChart({
             wrapperStyle={{ paddingTop: "10px" }}
             iconType="line"
             formatter={renderLegendText}
+            {...legendConfig}
           />
           {segments.map((segment, index) => (
             <Line

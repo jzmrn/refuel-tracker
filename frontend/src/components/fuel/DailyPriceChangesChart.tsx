@@ -17,6 +17,7 @@ import {
   useAxisColor,
   customTooltipContainerStyle,
   renderLegendText,
+  legendConfig,
   useChartKey,
 } from "@/lib/chartConfig";
 import { ChartNoData, CHART_HEIGHT } from "@/components/stats/chartUtils";
@@ -175,7 +176,11 @@ export default function DailyPriceChangesChart({
               );
             }}
           />
-          <Legend iconType="line" formatter={renderLegendText} />
+          <Legend
+            iconType="line"
+            formatter={renderLegendText}
+            {...legendConfig}
+          />
           {/* Line for price changes (only if some days lack increase/decrease detail) */}
           {hasPriceChangesOnly && (
             <Line

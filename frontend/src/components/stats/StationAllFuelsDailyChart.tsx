@@ -17,6 +17,7 @@ import {
   useAxisColor,
   useChartKey,
   renderLegendText,
+  legendConfig,
   createYAxisTick,
   calculateFuelPriceTicks,
 } from "@/lib/chartConfig";
@@ -114,7 +115,11 @@ export default function StationAllFuelsDailyChart({
               <ChartTooltip labelFormatter={formatTooltipDate} isFuelPrice />
             }
           />
-          <Legend iconType="plainline" formatter={renderLegendText} />
+          <Legend
+            iconType="plainline"
+            formatter={renderLegendText}
+            {...legendConfig}
+          />
           {FUEL_KEYS.map((key) => {
             const label = fuelLabels[key];
             return (

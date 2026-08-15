@@ -20,6 +20,7 @@ import {
   customTooltipContainerStyle,
   tooltipStyle,
   renderLegendText,
+  legendConfig,
   useChartKey,
   calculateFuelPriceTicks,
 } from "@/lib/chartConfig";
@@ -147,7 +148,11 @@ export default function DailyStatsChart({
               );
             }}
           />
-          <Legend iconType="line" formatter={renderLegendText} />
+          <Legend
+            iconType="line"
+            formatter={renderLegendText}
+            {...legendConfig}
+          />
           {/* Area showing the range between min and max */}
           <Area
             type="linear"
