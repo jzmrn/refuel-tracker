@@ -183,7 +183,20 @@ export const en: TranslationStructure = {
     minDistance: "Min Distance",
     maxDistance: "Max Distance",
     avgDistance: "Avg Distance",
+    medianDistance: "Median Distance",
+
+    // RefuelTankUsageChart labels
+    tankUsage: "Tank Usage",
+    noTankUsageDataAvailable: "No tank usage data available",
+    addMoreRefuelEntriesToSeeTankUsageTrends:
+      "Add more refuel entries to see tank usage trends",
+    tankSizeRequiredForUsage:
+      "Set the fuel tank size of your car to see the tank usage",
+    minTankUsage: "Min Tank Usage",
+    maxTankUsage: "Max Tank Usage",
     avgTankUsage: "Avg Tank Usage",
+    medianTankUsage: "Median Tank Usage",
+    avgPerRefuel: "Avg per Refuel",
 
     // RefuelDaysBetweenChart labels
     daysBetweenRefuels: "Days Between Refuels",
@@ -233,6 +246,15 @@ export const en: TranslationStructure = {
       "Incomplete — no closing full fill yet, consumption is estimated",
     combinedEntries: "Combined Entries",
     combinedLabel: "(combined)",
+    combinedWithPendingPartials: (
+      count: number,
+      liters: string,
+      km: string,
+      cost: string,
+    ) =>
+      `Combined with ${count} previous partial ${
+        count === 1 ? "fill" : "fills"
+      }: ${liters} L over ${km} km (${cost} €).`,
     partialFillIndicator: "Partial fill — consumption from combined group",
 
     // Placeholders

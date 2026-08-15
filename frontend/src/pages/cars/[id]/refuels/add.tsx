@@ -3,7 +3,11 @@ import { useRouter } from "next/router";
 import Snackbar from "@/components/common/Snackbar";
 import { useSnackbar } from "@/lib/useSnackbar";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { useCreateRefuelMetric, useCar } from "@/lib/hooks/useCars";
+import {
+  useCreateRefuelMetric,
+  useCar,
+  useRefuelMetrics,
+} from "@/lib/hooks/useCars";
 import { RefuelMetricCreate, RefuelMetricUpdate } from "@/lib/api";
 import { DynamicPage, PageHeader } from "@/components/common";
 import RefuelForm from "@/components/refuels/RefuelForm";
@@ -12,6 +16,7 @@ function AddRefuelContent({ carId }: { carId: string }) {
   const { t } = useTranslation();
   const router = useRouter();
   const { data: car } = useCar(carId);
+  const { data: previousRefuels } = useRefuelMetrics(carId, { limit: 20 });
   const createRefuel = useCreateRefuelMetric();
   const { snackbar, showError, hideSnackbar } = useSnackbar();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,6 +50,7 @@ function AddRefuelContent({ carId }: { carId: string }) {
         mode="add"
         carId={carId}
         car={car}
+        previousRefuels={previousRefuels}
         isSubmitting={isSubmitting}
         onSubmit={
           handleSubmit as (

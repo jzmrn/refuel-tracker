@@ -1,6 +1,7 @@
 import RefuelPriceChart from "./RefuelPriceChart";
 import RefuelConsumptionChart from "./RefuelConsumptionChart";
 import RefuelDistanceChart from "./RefuelDistanceChart";
+import RefuelTankUsageChart from "./RefuelTankUsageChart";
 import RefuelDistributionChart from "./RefuelDistributionChart";
 import RefuelCostPer100kmChart from "./RefuelCostPer100kmChart";
 import RefuelDaysBetweenChart from "./RefuelDaysBetweenChart";
@@ -107,7 +108,8 @@ export default function RefuelStats({
       </Panel>
 
       <RefuelPriceChart priceData={statistics.price_trends} />
-      <RefuelDistanceChart refuelData={refuels} fuelTankSize={fuelTankSize} />
+      <RefuelDistanceChart refuelData={refuels} />
+      <RefuelTankUsageChart refuelData={refuels} fuelTankSize={fuelTankSize} />
       <RefuelDaysBetweenChart refuelData={refuels} />
       <RefuelCostPer100kmChart refuelData={refuels} />
       <RefuelConsumptionChart refuelData={refuels} />

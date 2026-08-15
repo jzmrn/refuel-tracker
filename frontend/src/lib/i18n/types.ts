@@ -186,7 +186,18 @@ export interface TranslationStructure {
     minDistance: string;
     maxDistance: string;
     avgDistance: string;
+    medianDistance: string;
+
+    // RefuelTankUsageChart labels
+    tankUsage: string;
+    noTankUsageDataAvailable: string;
+    addMoreRefuelEntriesToSeeTankUsageTrends: string;
+    tankSizeRequiredForUsage: string;
+    minTankUsage: string;
+    maxTankUsage: string;
     avgTankUsage: string;
+    medianTankUsage: string;
+    avgPerRefuel: string;
 
     // RefuelDaysBetweenChart labels
     daysBetweenRefuels: string;
@@ -231,6 +242,12 @@ export interface TranslationStructure {
     incompleteGroup: string;
     combinedEntries: string;
     combinedLabel: string;
+    combinedWithPendingPartials: (
+      count: number,
+      liters: string,
+      km: string,
+      cost: string,
+    ) => string;
     partialFillIndicator: string;
 
     // Placeholders

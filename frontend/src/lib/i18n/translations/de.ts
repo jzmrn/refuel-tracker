@@ -185,7 +185,20 @@ export const de: TranslationStructure = {
     minDistance: "Min. Strecke",
     maxDistance: "Max. Strecke",
     avgDistance: "Ø Strecke",
+    medianDistance: "Median Strecke",
+
+    // RefuelTankUsageChart labels
+    tankUsage: "Tanknutzung",
+    noTankUsageDataAvailable: "Keine Daten zur Tanknutzung verfügbar",
+    addMoreRefuelEntriesToSeeTankUsageTrends:
+      "Mehr Tankeinträge hinzufügen, um Trends der Tanknutzung zu sehen",
+    tankSizeRequiredForUsage:
+      "Hinterlegen Sie die Tankgröße Ihres Autos, um die Tanknutzung zu sehen",
+    minTankUsage: "Min. Tanknutzung",
+    maxTankUsage: "Max. Tanknutzung",
     avgTankUsage: "Ø Tanknutzung",
+    medianTankUsage: "Median Tanknutzung",
+    avgPerRefuel: "Ø pro Tankung",
 
     // RefuelDaysBetweenChart labels
     daysBetweenRefuels: "Tage zwischen Tankungen",
@@ -235,6 +248,15 @@ export const de: TranslationStructure = {
       "Unvollständig — noch keine abschließende Volltankung, Verbrauch ist geschätzt",
     combinedEntries: "Kombinierte Einträge",
     combinedLabel: "(kombiniert)",
+    combinedWithPendingPartials: (
+      count: number,
+      liters: string,
+      km: string,
+      cost: string,
+    ) =>
+      `Kombiniert mit ${count} vorherigen ${
+        count === 1 ? "Teilbetankung" : "Teilbetankungen"
+      }: ${liters} L auf ${km} km (${cost} €).`,
     partialFillIndicator:
       "Teilbetankung — Verbrauch aus kombinierter Gruppe",
 

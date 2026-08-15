@@ -18,6 +18,7 @@ import {
   FuelType,
 } from "@/lib/api";
 import { getLocalDateTimeString } from "@/lib/dateUtils";
+import { getPendingPartials } from "@/lib/refuelCombination";
 import { Car } from "@/lib/api";
 
 // Map car fuel_type (free text) to FuelType (e5/e10/diesel)
@@ -105,6 +106,8 @@ interface RefuelFormBaseProps {
 interface RefuelFormAddProps extends RefuelFormBaseProps {
   mode: "add";
   initialData?: undefined;
+  /** Existing refuels of the car, used to combine pending partial fills */
+  previousRefuels?: RefuelMetric[];
   onSubmit: (data: RefuelMetricCreate) => Promise<void>;
   onDelete?: never;
 }
@@ -112,6 +115,7 @@ interface RefuelFormAddProps extends RefuelFormBaseProps {
 interface RefuelFormEditProps extends RefuelFormBaseProps {
   mode: "edit";
   initialData: RefuelMetric;
+  previousRefuels?: never;
   onSubmit: (data: RefuelMetricUpdate) => Promise<void>;
   onDelete?: () => void;
 }
@@ -128,6 +132,8 @@ export default function RefuelForm({
   onCancel,
   ...rest
 }: RefuelFormProps) {
+  const previousRefuels =
+    mode === "add" ? (rest as RefuelFormAddProps).previousRefuels : undefined;
   const onDelete =
     mode === "edit" ? (rest as RefuelFormEditProps).onDelete : undefined;
   const { t } = useTranslation();
@@ -500,9 +506,42 @@ export default function RefuelForm({
   };
 
   const totalCost = formData.price * formData.amount;
+
+  // Partial fills that have not been closed by a full fill yet. They have to be
+  // combined with this entry to get an accurate consumption.
+  const pendingPartials = useMemo(() => {
+    if (isEditMode || !previousRefuels) return [];
+    const entryTime = new Date(formData.timestamp).getTime();
+    const earlier = previousRefuels.filter(
+      (entry) => new Date(entry.timestamp).getTime() < entryTime,
+    );
+    return getPendingPartials(earlier);
+  }, [isEditMode, previousRefuels, formData.timestamp]);
+
+  const pendingLiters = pendingPartials.reduce(
+    (sum, entry) => sum + entry.amount,
+    0,
+  );
+  const pendingKilometers = pendingPartials.reduce(
+    (sum, entry) => sum + entry.kilometers_since_last_refuel,
+    0,
+  );
+  const pendingCost = pendingPartials.reduce(
+    (sum, entry) => sum + entry.price * entry.amount,
+    0,
+  );
+
+  const combinedLiters = pendingLiters + formData.amount;
+  const combinedKilometers =
+    pendingKilometers + formData.kilometers_since_last_refuel;
+  const combinedCost = pendingCost + totalCost;
+  const isCombinedConsumption = formData.is_full_tank && pendingLiters > 0;
+
+  // Consumption can only be calculated for a full fill: a partial fill leaves an
+  // unknown amount of fuel in the tank, so the liters do not match the distance.
   const actualConsumption =
-    formData.amount > 0 && formData.kilometers_since_last_refuel > 0
-      ? (formData.amount / formData.kilometers_since_last_refuel) * 100
+    formData.is_full_tank && combinedLiters > 0 && combinedKilometers > 0
+      ? (combinedLiters / combinedKilometers) * 100
       : null;
 
   // Format station name for edit mode display
@@ -825,6 +864,11 @@ export default function RefuelForm({
                   {/* Actual Consumption Row */}
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate min-w-0">
                     {t.refuels.actualConsumption}
+                    {isCombinedConsumption && (
+                      <span className="text-amber-600 dark:text-amber-400 ml-1">
+                        {t.refuels.combinedLabel}
+                      </span>
+                    )}
                   </span>
                   <span className="text-lg font-bold text-primary-600 dark:text-blue-400 text-right tabular-nums">
                     {actualConsumption !== null
@@ -835,6 +879,17 @@ export default function RefuelForm({
                     L/100km
                   </span>
                 </div>
+
+                {isCombinedConsumption && (
+                  <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
+                    {t.refuels.combinedWithPendingPartials(
+                      pendingPartials.length,
+                      combinedLiters.toFixed(2),
+                      combinedKilometers.toFixed(0),
+                      combinedCost.toFixed(2),
+                    )}
+                  </p>
+                )}
               </div>
             )}
 

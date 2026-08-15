@@ -18,7 +18,7 @@ import { MobileChartCard } from "../common/MobileChartCard";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import BarChartIcon from "@mui/icons-material/BarChart";
-import LocalGasStationIcon from "@mui/icons-material/LocalGasStation";
+import FilterListIcon from "@mui/icons-material/FilterList";
 import {
   useTranslation,
   useLocalization,
@@ -45,7 +45,6 @@ interface RefuelDataForChart {
 
 interface RefuelDistanceChartProps {
   refuelData: RefuelDataForChart[];
-  fuelTankSize?: number;
 }
 
 // Custom shape for the distance bar so the rounded top corners are decided
@@ -61,7 +60,6 @@ function DistanceBarShape(props: any) {
 
 export default function RefuelDistanceChart({
   refuelData,
-  fuelTankSize,
 }: RefuelDistanceChartProps) {
   const { t } = useTranslation();
   const { formatDate, formatNumber } = useLocalization();
@@ -84,16 +82,33 @@ export default function RefuelDistanceChart({
     );
   }
 
+  // Timestamps of full fills that close a group containing partial fills.
+  // Their remaining range cannot be estimated because the tank level before the
+  // partial fills is unknown.
+  const sortedData = [...refuelData].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+  );
+  const combinedAnchors = new Set<string>();
+  let hasPendingPartial = false;
+  for (const item of sortedData) {
+    if (item.is_full_tank === false) {
+      hasPendingPartial = true;
+    } else {
+      if (hasPendingPartial) combinedAnchors.add(item.timestamp);
+      hasPendingPartial = false;
+    }
+  }
+
   // Process data and filter entries with valid distance
   // For partial fills: show bar but no remaining range
-  const chartData = refuelData
+  const chartData = sortedData
     .filter((item) => item.kilometers_since_last_refuel > 0)
-    .sort(
-      (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-    )
     .map((item) => {
       const isFullTank = item.is_full_tank !== false;
+      // Remaining range is only meaningful for a full fill that follows another
+      // full fill — after partial fills the tank level is unknown.
+      const showRemainingRange =
+        isFullTank && !combinedAnchors.has(item.timestamp);
       return {
         ...item,
         timestampMs: new Date(item.timestamp).getTime(),
@@ -103,8 +118,8 @@ export default function RefuelDistanceChart({
           year: "2-digit",
         }),
         distance: item.kilometers_since_last_refuel,
-        // Show remaining range for full fills only
-        remainingRange: isFullTank ? item.remaining_range_km ?? 0 : 0,
+        remainingRange: showRemainingRange ? item.remaining_range_km ?? 0 : 0,
+        showRemainingRange,
         isFullTank,
       };
     });
@@ -156,7 +171,7 @@ export default function RefuelDistanceChart({
               {formatDistance(data.distance)} km
             </span>
           </p>
-          {data.isFullTank && (
+          {data.showRemainingRange && (
             <>
               <p className="flex justify-between gap-4">
                 <span className="text-gray-400">
@@ -200,25 +215,13 @@ export default function RefuelDistanceChart({
   const maxDistance = Math.max(...distances);
   const avgDistance =
     distances.reduce((sum, d) => sum + d, 0) / distances.length;
-
-  // Calculate average tank usage
-  const consumptions = chartData
-    .filter(
-      (item) =>
-        item.isFullTank &&
-        item.amount > 0 &&
-        item.kilometers_since_last_refuel > 0,
-    )
-    .map((item) => (item.amount / item.kilometers_since_last_refuel) * 100);
-  const avgConsumption =
-    consumptions.length > 0
-      ? consumptions.reduce((sum, c) => sum + c, 0) / consumptions.length
-      : 0;
-
-  const avgTankUsage =
-    fuelTankSize && fuelTankSize > 0
-      ? ((avgDistance * avgConsumption) / (fuelTankSize * 100)) * 100
-      : null;
+  const sortedDistances = [...distances].sort((a, b) => a - b);
+  const medianDistance =
+    sortedDistances.length % 2 === 0
+      ? (sortedDistances[sortedDistances.length / 2 - 1] +
+          sortedDistances[sortedDistances.length / 2]) /
+        2
+      : sortedDistances[Math.floor(sortedDistances.length / 2)];
 
   const renderCustomLegend = () => (
     <div className={chartClassNames.legendContainer}>
@@ -296,20 +299,18 @@ export default function RefuelDistanceChart({
           iconBgColor="yellow"
         />
 
-        {avgTankUsage !== null && (
-          <SummaryCard
-            title={t.refuels.avgTankUsage}
-            value={{
-              value: avgTankUsage,
-              formatter: (value) => value.toFixed(1),
-              unit: "%",
-            }}
-            icon={
-              <LocalGasStationIcon className="icon-lg text-purple-600 dark:text-purple-400" />
-            }
-            iconBgColor="purple"
-          />
-        )}
+        <SummaryCard
+          title={t.refuels.medianDistance}
+          value={{
+            value: medianDistance,
+            formatter: (value) => formatDistance(value),
+            unit: "km",
+          }}
+          icon={
+            <FilterListIcon className="icon-lg text-purple-600 dark:text-purple-400" />
+          }
+          iconBgColor="purple"
+        />
       </GridLayout>
 
       <ResponsiveContainer width="100%" height={350}>

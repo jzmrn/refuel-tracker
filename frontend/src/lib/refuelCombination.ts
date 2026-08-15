@@ -115,6 +115,18 @@ function buildGroup(
 }
 
 /**
+ * Returns the partial refuel entries that have not been closed by a full fill
+ * yet. Those entries have to be combined with the next full fill to get an
+ * accurate consumption.
+ */
+export function getPendingPartials(refuels: RefuelMetric[]): RefuelMetric[] {
+  const groups = combineRefuelEntries(refuels);
+  const last = groups[groups.length - 1];
+  if (!last || last.isComplete) return [];
+  return last.entries;
+}
+
+/**
  * Returns chart data for consumption/cost charts.
  * Shows combined bars by default. Only shows individual entries when they are
  * trailing partials with no closing full fill (incomplete group).
@@ -183,6 +195,80 @@ export function getCombinedChartData(
           isComplete: false,
           entryCount: 1,
         });
+      }
+    }
+  }
+
+  return chartData;
+}
+
+/**
+ * Data point for the tank usage chart.
+ *
+ * Tank usage describes how much of the tank capacity was refuelled. Partial
+ * fills are combined with the following full fill: the bar then shows the
+ * *average* tank usage per refuel of that group (e.g. a 10 L partial fill
+ * followed by a 40 L full fill on a 50 L tank results in 50 %).
+ */
+export interface TankUsageChartDataPoint {
+  timestamp: string;
+  timestampMs: number;
+  /** Total liters refuelled in the group */
+  totalLiters: number;
+  /** Average liters per refuel in the group */
+  averageLiters: number;
+  /** Average tank usage per refuel in the group, in percent */
+  tankUsage: number;
+  isCombined: boolean;
+  isComplete: boolean;
+  entryCount: number;
+}
+
+export function getTankUsageChartData(
+  refuels: RefuelMetric[],
+  fuelTankSize: number,
+): TankUsageChartDataPoint[] {
+  if (!fuelTankSize || fuelTankSize <= 0) return [];
+
+  const groups = combineRefuelEntries(refuels);
+  const chartData: TankUsageChartDataPoint[] = [];
+
+  const toPoint = (
+    timestamp: string,
+    totalLiters: number,
+    entryCount: number,
+    isCombined: boolean,
+    isComplete: boolean,
+  ): TankUsageChartDataPoint => {
+    const averageLiters = entryCount > 0 ? totalLiters / entryCount : 0;
+    return {
+      timestamp,
+      timestampMs: new Date(timestamp).getTime(),
+      totalLiters: parseFloat(totalLiters.toFixed(2)),
+      averageLiters: parseFloat(averageLiters.toFixed(2)),
+      tankUsage: parseFloat(((averageLiters / fuelTankSize) * 100).toFixed(1)),
+      isCombined,
+      isComplete,
+      entryCount,
+    };
+  };
+
+  for (const group of groups) {
+    if (group.isComplete) {
+      chartData.push(
+        toPoint(
+          group.anchorTimestamp,
+          group.totalLiters,
+          group.entries.length,
+          group.isCombined,
+          true,
+        ),
+      );
+    } else {
+      // Incomplete trailing group — no closing full fill yet, show entries
+      // individually and exclude them from the statistics.
+      for (const entry of group.entries) {
+        chartData.push(toPoint(entry.timestamp, entry.amount, 1, false, false));
       }
     }
   }
