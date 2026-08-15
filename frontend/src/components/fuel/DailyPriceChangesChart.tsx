@@ -7,6 +7,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  LabelList,
 } from "recharts";
 import { DailyStatsPoint } from "@/lib/api";
 import { useTranslation, useLocalization } from "@/lib/i18n/LanguageContext";
@@ -19,6 +20,7 @@ import {
   useChartKey,
 } from "@/lib/chartConfig";
 import { ChartNoData, CHART_HEIGHT } from "@/components/stats/chartUtils";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 
 interface DailyPriceChangesChartProps {
   data: DailyStatsPoint[];
@@ -32,6 +34,7 @@ export default function DailyPriceChangesChart({
   const gridConfig = useGridConfig();
   const axisColor = useAxisColor();
   const chartKey = useChartKey(data);
+  const isMobile = useIsMobile();
 
   // Check if we have valid data
   const hasValidData =
@@ -110,67 +113,66 @@ export default function DailyPriceChangesChart({
           />
           <Tooltip
             content={({ active, payload, label: tooltipLabel }) => {
-              if (active && payload && payload.length > 0) {
-                const dataPoint = payload[0].payload;
-                return (
-                  <div
-                    className="p-3 rounded-lg shadow-lg"
-                    style={customTooltipContainerStyle}
-                  >
-                    <p className="text-gray-300 text-sm mb-2">
-                      {formatDate(new Date(tooltipLabel), {
-                        weekday: "long",
-                        day: "2-digit",
-                        month: "long",
-                        year: "numeric",
-                      })}
+              if (isMobile || !active || !payload || payload.length === 0)
+                return null;
+              const dataPoint = payload[0].payload;
+              return (
+                <div
+                  className="p-3 rounded-lg shadow-lg"
+                  style={customTooltipContainerStyle}
+                >
+                  <p className="text-gray-300 text-sm mb-2">
+                    {formatDate(new Date(tooltipLabel), {
+                      weekday: "long",
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </p>
+                  <div className="space-y-1 text-sm">
+                    <p className="text-purple-400 flex justify-between gap-4">
+                      <span className="text-gray-400">
+                        {t.fuelPrices.uniquePrices}:
+                      </span>
+                      <span className="font-semibold">
+                        {dataPoint.n_unique_prices}
+                      </span>
                     </p>
-                    <div className="space-y-1 text-sm">
-                      <p className="text-purple-400 flex justify-between gap-4">
-                        <span className="text-gray-400">
-                          {t.fuelPrices.uniquePrices}:
-                        </span>
-                        <span className="font-semibold">
-                          {dataPoint.n_unique_prices}
-                        </span>
-                      </p>
-                      {dataPoint.n_price_increased != null &&
-                      dataPoint.n_price_decreased != null ? (
-                        <>
-                          <p className="text-red-400 flex justify-between gap-4">
-                            <span className="text-gray-400">
-                              {t.fuelPrices.priceIncreased}:
-                            </span>
-                            <span className="font-semibold">
-                              {dataPoint.n_price_increased}
-                            </span>
-                          </p>
-                          <p className="text-green-400 flex justify-between gap-4">
-                            <span className="text-gray-400">
-                              {t.fuelPrices.priceDecreased}:
-                            </span>
-                            <span className="font-semibold">
-                              {dataPoint.n_price_decreased}
-                            </span>
-                          </p>
-                        </>
-                      ) : (
-                        dataPoint.n_price_changes != null && (
-                          <p className="text-amber-400 flex justify-between gap-4">
-                            <span className="text-gray-400">
-                              {t.fuelPrices.priceChanges}:
-                            </span>
-                            <span className="font-semibold">
-                              {dataPoint.n_price_changes}
-                            </span>
-                          </p>
-                        )
-                      )}
-                    </div>
+                    {dataPoint.n_price_increased != null &&
+                    dataPoint.n_price_decreased != null ? (
+                      <>
+                        <p className="text-red-400 flex justify-between gap-4">
+                          <span className="text-gray-400">
+                            {t.fuelPrices.priceIncreased}:
+                          </span>
+                          <span className="font-semibold">
+                            {dataPoint.n_price_increased}
+                          </span>
+                        </p>
+                        <p className="text-green-400 flex justify-between gap-4">
+                          <span className="text-gray-400">
+                            {t.fuelPrices.priceDecreased}:
+                          </span>
+                          <span className="font-semibold">
+                            {dataPoint.n_price_decreased}
+                          </span>
+                        </p>
+                      </>
+                    ) : (
+                      dataPoint.n_price_changes != null && (
+                        <p className="text-amber-400 flex justify-between gap-4">
+                          <span className="text-gray-400">
+                            {t.fuelPrices.priceChanges}:
+                          </span>
+                          <span className="font-semibold">
+                            {dataPoint.n_price_changes}
+                          </span>
+                        </p>
+                      )
+                    )}
                   </div>
-                );
-              }
-              return null;
+                </div>
+              );
             }}
           />
           <Legend iconType="line" formatter={renderLegendText} />

@@ -23,6 +23,7 @@ import {
   useChartKey,
   calculateFuelPriceTicks,
 } from "@/lib/chartConfig";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 
 interface DailyStatsChartProps {
   data: DailyStatsPoint[];
@@ -41,6 +42,7 @@ export default function DailyStatsChart({
   const gridConfig = useGridConfig();
   const axisColor = useAxisColor();
   const chartKey = useChartKey(data);
+  const isMobile = useIsMobile();
 
   // Convert data to chart format and sort by date ascending
   const chartData = [...data]
@@ -105,45 +107,44 @@ export default function DailyStatsChart({
           <Tooltip
             contentStyle={tooltipStyle.contentStyle}
             content={({ active, payload, label: tooltipLabel }) => {
-              if (active && payload && payload.length > 0) {
-                const dataPoint = payload[0].payload;
-                return (
-                  <div
-                    className="p-3 rounded-lg shadow-lg"
-                    style={customTooltipContainerStyle}
-                  >
-                    <p className="text-gray-300 text-sm mb-2">
-                      {formatDate(new Date(tooltipLabel), {
-                        weekday: "long",
-                        day: "2-digit",
-                        month: "long",
-                        year: "numeric",
-                      })}
+              if (isMobile || !active || !payload || payload.length === 0)
+                return null;
+              const dataPoint = payload[0].payload;
+              return (
+                <div
+                  className="p-3 rounded-lg shadow-lg"
+                  style={customTooltipContainerStyle}
+                >
+                  <p className="text-gray-300 text-sm mb-2">
+                    {formatDate(new Date(tooltipLabel), {
+                      weekday: "long",
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </p>
+                  <div className="space-y-1 text-sm">
+                    <p className="text-red-400 flex justify-between gap-4">
+                      <span className="text-gray-400">Max</span>
+                      <span className="font-semibold">
+                        {renderSvgFuelPrice(dataPoint.price_max)}
+                      </span>
                     </p>
-                    <div className="space-y-1 text-sm">
-                      <p className="text-red-400 flex justify-between gap-4">
-                        <span className="text-gray-400">Max</span>
-                        <span className="font-semibold">
-                          {renderSvgFuelPrice(dataPoint.price_max)}
-                        </span>
-                      </p>
-                      <p className="text-white flex justify-between gap-4">
-                        <span className="text-gray-400">Ø</span>
-                        <span className="font-semibold">
-                          {renderSvgFuelPrice(dataPoint.price_mean)}
-                        </span>
-                      </p>
-                      <p className="text-green-400 flex justify-between gap-4">
-                        <span className="text-gray-400">Min</span>
-                        <span className="font-semibold">
-                          {renderSvgFuelPrice(dataPoint.price_min)}
-                        </span>
-                      </p>
-                    </div>
+                    <p className="text-white flex justify-between gap-4">
+                      <span className="text-gray-400">Ø</span>
+                      <span className="font-semibold">
+                        {renderSvgFuelPrice(dataPoint.price_mean)}
+                      </span>
+                    </p>
+                    <p className="text-green-400 flex justify-between gap-4">
+                      <span className="text-gray-400">Min</span>
+                      <span className="font-semibold">
+                        {renderSvgFuelPrice(dataPoint.price_min)}
+                      </span>
+                    </p>
                   </div>
-                );
-              }
-              return null;
+                </div>
+              );
             }}
           />
           <Legend iconType="line" formatter={renderLegendText} />

@@ -21,6 +21,7 @@ import {
   useChartKey,
   calculateFuelPriceTicks,
 } from "@/lib/chartConfig";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 
 interface PriceHistoryPoint {
   timestamp: string;
@@ -62,6 +63,7 @@ export default function FuelPriceChart({
   const gridConfig = useGridConfig();
   const axisColor = useAxisColor();
   const chartKey = useChartKey(data);
+  const isMobile = useIsMobile();
 
   // Convert data to chart format based on data type
   const chartData = isMultiFuelData(data)
@@ -149,30 +151,29 @@ export default function FuelPriceChart({
           <Tooltip
             contentStyle={tooltipStyle.contentStyle}
             content={({ active, payload, label: timestamp }) => {
-              if (active && payload && payload.length > 0) {
-                const price = payload[0].value as number;
-                return (
-                  <div
-                    className="p-3 rounded-lg shadow-lg"
-                    style={customTooltipContainerStyle}
-                  >
-                    <p className="text-gray-300 text-sm mb-2">
-                      {formatDate(new Date(timestamp), {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                    <p className="text-sm text-white font-semibold flex justify-between gap-4">
-                      <span className="text-gray-400 font-normal">{label}</span>
-                      <span>{renderSvgFuelPrice(price)}</span>
-                    </p>
-                  </div>
-                );
-              }
-              return null;
+              if (isMobile || !active || !payload || payload.length === 0)
+                return null;
+              const price = payload[0].value as number;
+              return (
+                <div
+                  className="p-3 rounded-lg shadow-lg"
+                  style={customTooltipContainerStyle}
+                >
+                  <p className="text-gray-300 text-sm mb-2">
+                    {formatDate(new Date(timestamp), {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                  <p className="text-sm text-white font-semibold flex justify-between gap-4">
+                    <span className="text-gray-400 font-normal">{label}</span>
+                    <span>{renderSvgFuelPrice(price)}</span>
+                  </p>
+                </div>
+              );
             }}
           />
           <Legend

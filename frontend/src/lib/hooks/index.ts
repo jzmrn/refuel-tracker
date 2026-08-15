@@ -5,3 +5,4 @@ export * from "./useFuelPrices";
 // Utility hooks
 export { useDelayedLoading } from "./useDelayedLoading";
 export { useDebounce } from "./useDebounce";
+export { useIsMobile } from "./useIsMobile";

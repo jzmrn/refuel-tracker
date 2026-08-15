@@ -14,7 +14,8 @@ export const chartClassNames = {
   /** Legend text styling */
   legendText: "text-sm text-gray-600 dark:text-gray-400",
   /** Legend container layout (wrapping row of items, centered) */
-  legendContainer: "flex flex-wrap justify-center gap-x-5 gap-y-1.5 px-3 py-2",
+  legendContainer:
+    "flex flex-wrap justify-center items-center gap-x-6 gap-y-2 px-3 py-2",
   /** Single legend item layout */
   legendItem: "flex items-center gap-1.5",
   /** Solid color swatch for legend items */

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   BarChart,
   Bar,
@@ -14,6 +14,7 @@ import {
 import SummaryCard from "../common/SummaryCard";
 import Panel from "../common/Panel";
 import { GridLayout } from "../common/GridLayout";
+import { MobileChartCard } from "../common/MobileChartCard";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import BarChartIcon from "@mui/icons-material/BarChart";
@@ -29,6 +30,7 @@ import {
   useGridConfig,
   useChartKey,
 } from "../../lib/chartConfig";
+import { useIsMobile } from "../../lib/hooks/useIsMobile";
 
 interface RefuelDataForChart {
   timestamp: string;
@@ -66,6 +68,8 @@ export default function RefuelDistanceChart({
   const chartTheme = useChartTheme();
   const gridConfig = useGridConfig();
   const chartKey = useChartKey(refuelData);
+  const isMobile = useIsMobile();
+  const [selectedPoint, setSelectedPoint] = useState<any>(null);
 
   if (!refuelData || refuelData.length === 0) {
     return (
@@ -122,64 +126,67 @@ export default function RefuelDistanceChart({
 
   const formatDistance = (value: number) => `${value.toFixed(0)}`;
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      const date = new Date(data.timestamp);
-      const formattedDate = formatDate(date, {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      });
-      const formattedTime = formatDate(date, {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      const totalRange = data.distance + data.remainingRange;
-      const remainingRangeClassName =
-        data.remainingRange > 0
-          ? "text-emerald-600 dark:text-emerald-400"
-          : "text-red-600 dark:text-red-400";
-      return (
-        <div className="panel">
-          <div className="mb-2">
-            <p className="text-primary font-medium">{formattedDate}</p>
-            <p className="text-sm text-secondary">{formattedTime}</p>
-          </div>
-          <div className="space-y-1 text-sm">
-            <p className="flex justify-between gap-4">
-              <span className="text-gray-400">{t.refuels.distance}:</span>
-              <span className="text-blue-600 dark:text-blue-400 font-semibold">
-                {formatDistance(data.distance)} km
-              </span>
-            </p>
-            {data.isFullTank && (
-              <>
-                <p className="flex justify-between gap-4">
-                  <span className="text-gray-400">
-                    {t.refuels.remainingRange}:
-                  </span>
-                  <span className={`${remainingRangeClassName} font-semibold`}>
-                    {formatDistance(data.remainingRange)} km
-                  </span>
-                </p>
-                <hr className="border-gray-200 dark:border-gray-600 my-1" />
-                <p className="flex justify-between gap-4">
-                  <span className="text-gray-400">
-                    {t.refuels.theoreticalMaxRange}:
-                  </span>
-                  <span className="font-semibold">
-                    {formatDistance(totalRange)} km
-                  </span>
-                </p>
-              </>
-            )}
-          </div>
+  const renderTooltipContent = (data: any) => {
+    const date = new Date(data.timestamp);
+    const formattedDate = formatDate(date, {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+    const formattedTime = formatDate(date, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const totalRange = data.distance + data.remainingRange;
+    const remainingRangeClassName =
+      data.remainingRange > 0
+        ? "text-emerald-600 dark:text-emerald-400"
+        : "text-red-600 dark:text-red-400";
+    return (
+      <>
+        <div className="mb-2">
+          <p className="text-primary font-medium">{formattedDate}</p>
+          <p className="text-sm text-secondary">{formattedTime}</p>
         </div>
-      );
-    }
-    return null;
+        <div className="space-y-1 text-sm">
+          <p className="flex justify-between gap-4">
+            <span className="text-gray-400">{t.refuels.distance}:</span>
+            <span className="text-blue-600 dark:text-blue-400 font-semibold">
+              {formatDistance(data.distance)} km
+            </span>
+          </p>
+          {data.isFullTank && (
+            <>
+              <p className="flex justify-between gap-4">
+                <span className="text-gray-400">
+                  {t.refuels.remainingRange}:
+                </span>
+                <span className={`${remainingRangeClassName} font-semibold`}>
+                  {formatDistance(data.remainingRange)} km
+                </span>
+              </p>
+              <hr className="border-gray-200 dark:border-gray-600 my-1" />
+              <p className="flex justify-between gap-4">
+                <span className="text-gray-400">
+                  {t.refuels.theoreticalMaxRange}:
+                </span>
+                <span className="font-semibold">
+                  {formatDistance(totalRange)} km
+                </span>
+              </p>
+            </>
+          )}
+        </div>
+      </>
+    );
+  };
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (isMobile || !active || !payload || !payload.length) return null;
+    return (
+      <div className="panel">{renderTooltipContent(payload[0].payload)}</div>
+    );
   };
 
   // Calculate statistics (use only full fill data for accuracy)
@@ -249,58 +256,7 @@ export default function RefuelDistanceChart({
 
   return (
     <Panel title={t.refuels.distanceSinceLastRefuel}>
-      <ResponsiveContainer width="100%" height={350}>
-        <BarChart
-          key={chartKey}
-          data={chartData}
-          margin={{
-            top: 20,
-            right: 30,
-            left: 20,
-            bottom: 20,
-          }}
-        >
-          <CartesianGrid {...gridConfig} />
-          <XAxis
-            dataKey="displayDate"
-            stroke={chartTheme.axis}
-            {...axisConfig.xAxis}
-          />
-          <YAxis
-            stroke={chartTheme.axis}
-            tickFormatter={(value) => `${value.toFixed(0)} km`}
-            {...axisConfig.yAxis}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend content={renderCustomLegend} />
-          <Bar
-            dataKey="distance"
-            stackId="range"
-            fill={chartTheme.primaryLine}
-            name={t.refuels.distance}
-            shape={<DistanceBarShape />}
-          >
-            {chartData.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={entry.isFullTank ? chartTheme.primaryLine : "#f59e0b"}
-              />
-            ))}
-          </Bar>
-          {hasRemainingRange && (
-            <Bar
-              dataKey="remainingRange"
-              stackId="range"
-              fill={chartTheme.secondaryLine}
-              fillOpacity={0.5}
-              name={t.refuels.remainingRange}
-              radius={[4, 4, 0, 0]}
-            />
-          )}
-        </BarChart>
-      </ResponsiveContainer>
-
-      <GridLayout variant="stats" className="mt-4 text-sm">
+      <GridLayout variant="stats" className="mb-4 text-sm">
         <SummaryCard
           title={t.refuels.minDistance}
           value={{
@@ -355,6 +311,73 @@ export default function RefuelDistanceChart({
           />
         )}
       </GridLayout>
+
+      <ResponsiveContainer width="100%" height={350}>
+        <BarChart
+          key={chartKey}
+          data={chartData}
+          margin={{
+            top: 20,
+            right: 30,
+            left: 20,
+            bottom: 20,
+          }}
+          onMouseMove={(state: any) => {
+            if (isMobile && state.activePayload?.[0]?.payload) {
+              setSelectedPoint(state.activePayload[0].payload);
+            }
+          }}
+          onClick={(state: any) => {
+            if (isMobile && state?.activePayload?.[0]?.payload) {
+              setSelectedPoint(state.activePayload[0].payload);
+            }
+          }}
+        >
+          <CartesianGrid {...gridConfig} />
+          <XAxis
+            dataKey="displayDate"
+            stroke={chartTheme.axis}
+            {...axisConfig.xAxis}
+          />
+          <YAxis
+            stroke={chartTheme.axis}
+            tickFormatter={(value) => `${value.toFixed(0)} km`}
+            {...axisConfig.yAxis}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend content={renderCustomLegend} />
+          <Bar
+            dataKey="distance"
+            stackId="range"
+            fill={chartTheme.primaryLine}
+            name={t.refuels.distance}
+            shape={<DistanceBarShape />}
+          >
+            {chartData.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={entry.isFullTank ? chartTheme.primaryLine : "#f59e0b"}
+              />
+            ))}
+          </Bar>
+          {hasRemainingRange && (
+            <Bar
+              dataKey="remainingRange"
+              stackId="range"
+              fill={chartTheme.secondaryLine}
+              fillOpacity={0.5}
+              name={t.refuels.remainingRange}
+              radius={[4, 4, 0, 0]}
+            />
+          )}
+        </BarChart>
+      </ResponsiveContainer>
+
+      {isMobile && (
+        <MobileChartCard>
+          {renderTooltipContent(selectedPoint ?? chartData[0])}
+        </MobileChartCard>
+      )}
     </Panel>
   );
 }

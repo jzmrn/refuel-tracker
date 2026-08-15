@@ -11,6 +11,7 @@ import {
 import { axisConfig, useGridConfig, useChartKey } from "@/lib/chartConfig";
 import { useTranslation, useLocalization } from "@/lib/i18n/LanguageContext";
 import type { KilometerPeriodAggregate } from "@/lib/api";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 
 interface KilometerAggregationChartProps {
   data: KilometerPeriodAggregate[];
@@ -25,6 +26,7 @@ const KilometerAggregationChart: React.FC<KilometerAggregationChartProps> = ({
   const { formatDate } = useLocalization();
   const gridConfig = useGridConfig();
   const chartKey = useChartKey(data);
+  const isMobile = useIsMobile();
 
   const chartData = useMemo(
     () =>
@@ -47,20 +49,18 @@ const KilometerAggregationChart: React.FC<KilometerAggregationChartProps> = ({
   };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="panel">
-          <p className="font-medium text-primary mb-1">{label}</p>
-          <p className="text-sm">
-            {`${t.kilometers.kilometersDriven}: `}
-            <span className="text-blue-600 dark:text-blue-400 font-semibold">
-              {formatKilometers(payload[0].value)}
-            </span>
-          </p>
-        </div>
-      );
-    }
-    return null;
+    if (isMobile || !active || !payload || !payload.length) return null;
+    return (
+      <div className="panel">
+        <p className="font-medium text-primary mb-1">{label}</p>
+        <p className="text-sm">
+          {`${t.kilometers.kilometersDriven}: `}
+          <span className="text-blue-600 dark:text-blue-400 font-semibold">
+            {formatKilometers(payload[0].value)}
+          </span>
+        </p>
+      </div>
+    );
   };
 
   return (

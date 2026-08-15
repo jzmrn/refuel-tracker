@@ -6,6 +6,7 @@ import {
 } from "@/lib/chartConfig";
 import { renderSvgFuelPrice } from "@/lib/formatPrice";
 import { useLocalization, useTranslation } from "@/lib/i18n/LanguageContext";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 
 /** Consistent chart height across all stats charts */
 export const CHART_HEIGHT = "h-72 sm:h-64";
@@ -142,7 +143,8 @@ export function ChartTooltip({
   labelFormatter,
   isFuelPrice = true,
 }: ChartTooltipProps) {
-  if (!active || !payload?.length) return null;
+  const isMobile = useIsMobile();
+  if (isMobile || !active || !payload?.length) return null;
 
   const sorted = [...payload]
     .filter((entry) => entry.value != null)

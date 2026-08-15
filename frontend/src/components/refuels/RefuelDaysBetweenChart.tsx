@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   BarChart,
   Bar,
@@ -11,6 +11,7 @@ import {
 import SummaryCard from "../common/SummaryCard";
 import Panel from "../common/Panel";
 import { GridLayout } from "../common/GridLayout";
+import { MobileChartCard } from "../common/MobileChartCard";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import BarChartIcon from "@mui/icons-material/BarChart";
@@ -21,6 +22,7 @@ import {
 } from "../../lib/i18n/LanguageContext";
 import { useChartTheme } from "../../lib/theme";
 import { axisConfig, useGridConfig, useChartKey } from "../../lib/chartConfig";
+import { useIsMobile } from "../../lib/hooks/useIsMobile";
 
 interface RefuelDataForChart {
   timestamp: string;
@@ -38,6 +40,8 @@ export default function RefuelDaysBetweenChart({
   const chartTheme = useChartTheme();
   const gridConfig = useGridConfig();
   const chartKey = useChartKey(refuelData);
+  const isMobile = useIsMobile();
+  const [selectedPoint, setSelectedPoint] = useState<any>(null);
 
   if (!refuelData || refuelData.length < 2) {
     return (
@@ -90,41 +94,44 @@ export default function RefuelDaysBetweenChart({
     );
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      const currentDate = new Date(data.currentTimestamp);
-      const previousDate = new Date(data.previousTimestamp);
-      const formattedCurrent = formatDate(currentDate, {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      });
-      const formattedPrevious = formatDate(previousDate, {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      });
-      return (
-        <div className="panel">
-          <div className="mb-2">
-            <p className="text-primary font-medium">{formattedCurrent}</p>
-            <p className="text-sm text-secondary">{formattedPrevious}</p>
-          </div>
-          <div className="space-y-1 text-sm">
-            <p className="flex justify-between gap-4">
-              <span className="text-gray-400">{t.refuels.days}:</span>
-              <span className="text-blue-600 dark:text-blue-400 font-semibold">
-                {data.days} {t.refuels.daysUnit}
-              </span>
-            </p>
-          </div>
+  const renderTooltipContent = (data: any) => {
+    const currentDate = new Date(data.currentTimestamp);
+    const previousDate = new Date(data.previousTimestamp);
+    const formattedCurrent = formatDate(currentDate, {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+    const formattedPrevious = formatDate(previousDate, {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+    return (
+      <>
+        <div className="mb-2">
+          <p className="text-primary font-medium">{formattedCurrent}</p>
+          <p className="text-sm text-secondary">{formattedPrevious}</p>
         </div>
-      );
-    }
-    return null;
+        <div className="space-y-1 text-sm">
+          <p className="flex justify-between gap-4">
+            <span className="text-gray-400">{t.refuels.days}:</span>
+            <span className="text-blue-600 dark:text-blue-400 font-semibold">
+              {data.days} {t.refuels.daysUnit}
+            </span>
+          </p>
+        </div>
+      </>
+    );
+  };
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (isMobile || !active || !payload || !payload.length) return null;
+    return (
+      <div className="panel">{renderTooltipContent(payload[0].payload)}</div>
+    );
   };
 
   // Calculate statistics
@@ -142,38 +149,7 @@ export default function RefuelDaysBetweenChart({
 
   return (
     <Panel title={t.refuels.daysBetweenRefuels}>
-      <ResponsiveContainer width="100%" height={350}>
-        <BarChart
-          key={chartKey}
-          data={chartData}
-          margin={{
-            top: 20,
-            right: 30,
-            left: 20,
-            bottom: 20,
-          }}
-        >
-          <CartesianGrid {...gridConfig} />
-          <XAxis
-            dataKey="displayDate"
-            stroke={chartTheme.axis}
-            {...axisConfig.xAxis}
-          />
-          <YAxis
-            stroke={chartTheme.axis}
-            tickFormatter={(value) => `${value}`}
-            {...axisConfig.yAxis}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Bar
-            dataKey="days"
-            fill={chartTheme.primaryLine}
-            radius={[4, 4, 0, 0]}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-
-      <GridLayout variant="stats" className="mt-4 text-sm">
+      <GridLayout variant="stats" className="mb-4 text-sm">
         <SummaryCard
           title={t.refuels.minDaysBetween}
           value={{
@@ -226,6 +202,53 @@ export default function RefuelDaysBetweenChart({
           iconBgColor="purple"
         />
       </GridLayout>
+
+      <ResponsiveContainer width="100%" height={350}>
+        <BarChart
+          key={chartKey}
+          data={chartData}
+          margin={{
+            top: 20,
+            right: 30,
+            left: 20,
+            bottom: 20,
+          }}
+          onMouseMove={(state: any) => {
+            if (isMobile && state.activePayload?.[0]?.payload) {
+              setSelectedPoint(state.activePayload[0].payload);
+            }
+          }}
+          onClick={(state: any) => {
+            if (isMobile && state?.activePayload?.[0]?.payload) {
+              setSelectedPoint(state.activePayload[0].payload);
+            }
+          }}
+        >
+          <CartesianGrid {...gridConfig} />
+          <XAxis
+            dataKey="displayDate"
+            stroke={chartTheme.axis}
+            {...axisConfig.xAxis}
+          />
+          <YAxis
+            stroke={chartTheme.axis}
+            tickFormatter={(value) => `${value}`}
+            {...axisConfig.yAxis}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Bar
+            dataKey="days"
+            fill={chartTheme.primaryLine}
+            radius={[4, 4, 0, 0]}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+
+      {isMobile && (
+        <MobileChartCard>
+          {renderTooltipContent(selectedPoint ?? chartData[0])}
+        </MobileChartCard>
+      )}
     </Panel>
   );
 }
