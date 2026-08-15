@@ -72,8 +72,8 @@ export default function RefuelDaysBetweenChart({
       formatDate(date, { day: "2-digit", month: "2-digit" });
 
     return {
-      displayDate: `${formatShortDate(currentDate)} - ${formatShortDate(
-        previousDate,
+      displayDate: `${formatShortDate(previousDate)} - ${formatShortDate(
+        currentDate,
       )}`,
       days,
       currentTimestamp: item.timestamp,
