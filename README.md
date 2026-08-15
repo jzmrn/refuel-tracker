@@ -1,198 +1,99 @@
-# Refuel Tracker
+# ⛽ Refuel Tracker
 
-A self-hosted application for tracking refueling events and monitoring gas station fuel prices in Germany, powered by the [Tankerkönig API](https://creativecommons.tankerkoenig.de).
+**Know what you really pay for driving.**
 
-## Features
+Refuel Tracker is a small, self-hosted app that logs every fill-up, tracks your
+cars' mileage and keeps an eye on German fuel prices — so you can stop guessing
+where and when to refuel.
 
-- **Refuel Logging** — Record price per liter, amount, distance driven, and fuel consumption per car
-- **Multi-Car Support** — Manage multiple vehicles with car sharing between users
-- **Live Fuel Prices** — Search and monitor real-time E5, E10, and Diesel prices from German gas stations
-- **Favorite Stations** — Save stations and automatically track their price history
-- **Price Analytics** — Daily aggregates, compression of raw price data, and historical price charts
-- **Consumption Statistics** — Monthly summaries, cost breakdowns, and efficiency trends
-- **Odometer Tracking** — Log kilometer readings per car with charts and stats
-- **Google OAuth** — Authentication via Google with user allowlist authorization (OPA)
-- **Mobile-First UI** — Responsive design with bottom navigation, FABs, and modal forms
+Fuel prices come from the [Tankerkönig API](https://creativecommons.tankerkoenig.de).
 
-## Architecture
+---
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/mobile-distance-since-refuel.png" width="185" alt="Distance since last refuel" />
+  <img src="docs/screenshots/mobile-station-comparison.png" width="185" alt="Station vs city vs brand prices" />
+  <img src="docs/screenshots/mobile-cost-per-100km.png" width="185" alt="Cost per 100 km" />
+  <img src="docs/screenshots/mobile-kilometer-history.png" width="185" alt="Kilometer history" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/desktop-refuel-list.png" width="820" alt="Refuel list on desktop" />
+</p>
+
+---
+
+## What it does
+
+- 📝 **Log refuels** — price, litres, distance and consumption per car
+- 🚗 **Multiple cars** — share a car with family or flatmates
+- 💶 **Live fuel prices** — E5, E10 and Diesel from stations across Germany
+- ⭐ **Favourite stations** — their price history is tracked automatically
+- 📊 **Real insights** — cost per 100 km, tank usage, consumption trends,
+  and how your station compares to its brand and city average
+- 🛣️ **Odometer log** — kilometres per month and year at a glance
+- 📱 **Made for phones** — and just as comfortable on a big screen
+
+## Getting started
+
+You need [Docker](https://www.docker.com), [just](https://github.com/casey/just),
+a free [Tankerkönig API key](https://creativecommons.tankerkoenig.de) and Google
+OAuth credentials.
+
+```bash
+just render-envoy-config app development   # generate proxy & auth config
+just up app                                # start the app
+just up analytics                          # start the price pipeline
+```
+
+The app is then available at <http://localhost:9090>, the Dagster pipeline at
+<http://localhost:8080>.
+
+Prefer running things locally?
+
+```bash
+just install   # backend + frontend dependencies
+just dev       # backend on :8001, frontend on :3000
+just test      # tests and type checks
+```
+
+## How it is built
+
+| Layer     | Technology                                |
+| --------- | ----------------------------------------- |
+| Frontend  | Next.js, React, TypeScript, MUI, Tailwind |
+| Backend   | Python, FastAPI, Pydantic                 |
+| Analytics | Dagster, Pandas, DuckDB                   |
+| Storage   | SQLite + Hive-partitioned Parquet         |
+| Auth      | Google OAuth2 via Envoy, OPA allowlist    |
+
+Envoy handles login and routing, FastAPI serves the API, and a Dagster pipeline
+fetches fuel prices every ten minutes and compresses them into daily and monthly
+aggregates. Everything lives in a single `data/` directory — no external
+database required.
 
 ```text
-       ┌────────────────────────────────────────────────┐
-       │                 Envoy Proxy                    │
-       │  (Google OAuth2 · JWT validation · routing)    │
-       └──┬─────────────┬─────────────┬───────────┬──--─┘
-          │             │             │           │
-      ┌───▼──────┐ ┌───▼──────┐ ┌────▼──────┐ ┌──▼──────┐
-      │ Frontend │ │ Backend  │ │  Dagster  │ │   OPA   │
-      │ Next.js  │ │ FastAPI  │ │ Analytics │ │Allowlist│
-      └──────────┘ └────┬─────┘ └─────┬─────┘ └─────────┘
-                        │             │
-                        │      Tankerkönig API
-                        │
-              ┌─────────▼─────────┐
-              │  SQLite + Parquet │
-              │ userdata.sqlite   │
-              │ fueldata.sqlite   │
-              │ *.parquet (Hive)  │
-              └───────────────────┘
+                    ┌──────────────┐
+                    │ Envoy Proxy  │  Google login · routing
+                    └──┬────┬───┬──┘
+             ┌─────────┘    │   └──────────┐
+        ┌────▼─────┐  ┌─────▼────┐  ┌──────▼─────┐
+        │ Frontend │  │ Backend  │  │  Dagster   │──► Tankerkönig API
+        └──────────┘  └────┬─────┘  └──────┬─────┘
+                           └───────┬───────┘
+                            ┌──────▼───────┐
+                            │ SQLite +     │
+                            │ Parquet data │
+                            └──────────────┘
 ```
 
-### Tech Stack
-
-| Layer     | Technology                                                              |
-| --------- | ----------------------------------------------------------------------- |
-| Backend   | Python 3.11+, FastAPI, Pydantic v2, SQLite                              |
-| Frontend  | Next.js 14, React 18, TypeScript, MUI 7, Tailwind CSS, Recharts         |
-| Analytics | Dagster, Pandas, DuckDB, Parquet                                        |
-| Auth      | Google OAuth2 (via Envoy), OPA user allowlist                           |
-| Proxy     | Envoy Proxy (OAuth2 flow, JWT validation, routing)                      |
-| Storage   | SQLite (`userdata.sqlite`, `fueldata.sqlite`), Hive-partitioned Parquet |
-| Build     | `just`, `uv` (Python), npm, Docker Compose                              |
-
-### Data Storage
-
-SQLite databases and Hive-partitioned Parquet datasets in the `data/` directory:
-
-- **`userdata.sqlite`** — Users, cars, car sharing, refuel metrics, kilometer entries, favorite stations, gas station info
-- **`fueldata.sqlite`** — Raw fuel prices (wide format: E5, E10, Diesel per station)
-- **`compressed_fuel_prices/`** — Hive-partitioned Parquet with deduplicated price changes (long format)
-- **`daily_aggregates/`** — Hive-partitioned Parquet with per-station per-fuel-type daily statistics
-- **`monthly_agg_price_by_*/`** — Monthly Parquet aggregates by station, brand, and place
-
-## Quick Start
-
-### Prerequisites
-
-- Docker and Docker Compose
-- [just](https://github.com/casey/just) command runner
-- A [Tankerkönig API key](https://creativecommons.tankerkoenig.de) (for fuel price fetching)
-- Google OAuth2 credentials (for authentication)
-
-### Configuration
-
-1. **Render Envoy configuration** from templates:
-
-   ```bash
-   just render-envoy-config app development
-   just render-envoy-config analytics development
-   ```
-
-   Config variables are defined in `config/variables.*.yaml` files. Jinja2 templates in `config/templates/` generate Envoy, OPA, and secret configs.
-
-2. **Set up environment variables** — See the per-stack compose files for required env vars (Tankerkönig API key, Google OAuth client ID/secret, etc.).
-
-### Running
-
-```bash
-# Start the main app (frontend + backend + envoy + opa)
-just up app
-
-# Start the analytics pipeline (dagster + envoy + opa)
-just up analytics
-
-# Or run both
-just up app && just up analytics
-```
-
-**Access points:**
-
-| Service                         | URL                          |
-| ------------------------------- | ---------------------------- |
-| App (via Envoy)                 | <http://localhost:9090>      |
-| Analytics / Dagster (via Envoy) | <http://localhost:8080>      |
-| Backend API (direct, dev only)  | <http://localhost:8000>      |
-| API Docs                        | <http://localhost:8000/docs> |
-
-### Development Setup
-
-```bash
-# Backend
-cd backend
-uv sync --group dev
-uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
-# Frontend
-cd frontend
-npm install
-npm run dev
-
-# Analytics
-cd analytics
-uv sync
-dagster dev
-```
-
-Or use the `just` shortcuts:
-
-```bash
-just dev            # Run backend + frontend
-just dev-backend    # Backend only
-just dev-frontend   # Frontend only
-just dev-analytics  # Dagster dev
-```
-
-## Analytics Pipeline
-
-The Dagster pipeline fetches and processes fuel price data on a schedule:
-
-| Schedule                 | Frequency     | Description                                                         |
-| ------------------------ | ------------- | ------------------------------------------------------------------- |
-| `fetch_fuel_prices`      | Every 10 min  | Fetch live prices from Tankerkönig for all favorite stations        |
-| `compressed_fuel_prices` | Daily 6:00 AM | Deduplicate consecutive identical prices (~80% compression)         |
-| `daily_aggregates`       | Daily 7:00 AM | Compute per-station per-fuel-type daily stats (mean, min, max, std) |
-| `cleanup_raw_fuel_data`  | Daily 8:00 AM | Delete raw data older than 28 days (after compression is verified)  |
-
-## API Endpoints
-
-| Resource    | Prefix             | Key Operations                                                |
-| ----------- | ------------------ | ------------------------------------------------------------- |
-| Cars        | `/api/cars`        | CRUD, share with other users                                  |
-| Refuels     | `/api/metrics`     | Log refuels, statistics, monthly summaries, favorite stations |
-| Kilometers  | `/api/kilometers`  | Log odometer readings                                         |
-| Fuel Prices | `/api/fuel-prices` | Search stations, manage favorites, price history, daily stats |
-| Auth        | `/api/auth`        | Current user info                                             |
-
-## Project Structure
-
-```text
-refuel-tracker/
-├── analytics/    # Dagster pipeline for fuel price ingestion and aggregation
-├── backend/      # FastAPI application with SQLite + Parquet storage
-├── config/       # Envoy, OPA, and secret templates per environment
-├── data/         # SQLite databases and Parquet datasets (runtime, git-ignored)
-├── frontend/     # Next.js application (React, TypeScript, MUI)
-├── lib/          # Shared Python packages (Tankerkönig client, fuel data clients)
-└── scripts/      # One-time data migration scripts (DuckDB → SQLite/Parquet)
-```
-
-## Auth Flow
-
-1. User hits the app through Envoy proxy
-2. Envoy redirects to Google OAuth2 login (if no valid session)
-3. On success, Envoy sets `IdToken` and `BearerToken` cookies
-4. Envoy's JWT filter validates the token on each request
-5. OPA checks the user's Google `sub` claim against the allowlist
-6. Backend reads the `IdToken` cookie, verifies it with Google's public keys, and upserts the user in SQLite
-
-## Development
-
-```bash
-# Run tests
-just test
-
-# Lint & format
-just lint
-just format
-
-# Build Docker images
-just build app
-just build analytics
-```
-
-## Migration from v1.x (DuckDB)
-
-Version 2.0.0 replaces DuckDB with SQLite + Parquet for storage. If upgrading from v1.x with existing data, see [`scripts/README.md`](scripts/README.md) for one-time migration instructions.
+More detail lives close to the code: [`backend/`](backend), [`frontend/`](frontend),
+[`analytics/`](analytics) and [`lib/`](lib) each have their own README, and
+[`scripts/README.md`](scripts/README.md) covers the one-time migration from v1.x
+(DuckDB).
 
 ## License
 
-This project is open source and available under the [MIT License](LICENSE).
+MIT — have fun with it.

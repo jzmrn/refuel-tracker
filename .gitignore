@@ -50,6 +50,7 @@ out/
 
 # Data and backups (keep these local)
 data/
+data-demo/
 /backups/
 *.parquet
 *.zip
