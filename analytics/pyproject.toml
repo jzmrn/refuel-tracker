@@ -11,22 +11,22 @@ authors = [
     {name = "Jan Zimmermann", email = "jzmrn@gmx.de"},
 ]
 dependencies = [
-    "dagster>=1.13.1",
+    "dagster>=1.13.17",
     "dagster-webserver>=1.5.0",
     "pandas>=2.0.0",
     "pyarrow>=14.0.0",
     "requests>=2.34.2",
-    "pydantic>=2.10.6",
+    "pydantic>=2.13.4",
     "tankerkoenig-client @ {root:uri}/../lib/tankerkoenig",
     "metrics @ {root:uri}/../lib/metrics",
-    "duckdb>=1.4.2",
+    "duckdb>=1.5.5",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest>=9.0.3",
+    "pytest>=9.1.1",
     "black>=26.5.1",
-    "ruff>=0.1.0",
+    "ruff>=0.16.2",
 ]
 
 [tool.hatch.metadata]
