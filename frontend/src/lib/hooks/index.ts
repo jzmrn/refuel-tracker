@@ -1,6 +1,7 @@
 // Data fetching hooks
 export * from "./useCars";
 export * from "./useFuelPrices";
+export * from "./usePlaces";
 
 // Utility hooks
 export { useDelayedLoading } from "./useDelayedLoading";

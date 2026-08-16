@@ -27,12 +27,14 @@ from app.api import (
     cars,
     fuel_prices,
     kilometers,
+    places,
     refuels,
     stats,
 )
 from app.auth import CurrentUser
 from app.storage.car_client import CarClient
 from app.storage.kilometer_client import KilometerClient
+from app.storage.place_client import PlaceClient
 from app.storage.refuel_client import RefuelDataClient
 from app.storage.sqlite_resource import BackendSQLiteResource
 from app.storage.user_store import UserStore
@@ -170,8 +172,8 @@ async def lifespan(app: FastAPI):
     if not tankerkoenig_api_key:
         logger.warning("TANKERKOENIG_API_KEY not set")
         tankerkoenig_client = None
-
-    tankerkoenig_client = TankerkoenigClient(tankerkoenig_api_key)
+    else:
+        tankerkoenig_client = TankerkoenigClient(tankerkoenig_api_key)
 
     # Initialize FuelStationClient for favorites/station info (userdata.sqlite)
     fuel_station_client = FuelStationClient(sqlite_resource)
@@ -191,6 +193,9 @@ async def lifespan(app: FastAPI):
     monthly_brand_client = MonthlyBrandAggregateClient(data_path)
     monthly_place_client = MonthlyPlaceAggregateClient(data_path)
     monthly_station_client = MonthlyStationAggregateClient(data_path)
+
+    # Static reference dataset mapping city names to coordinates
+    place_client = PlaceClient()
 
     logger.info(
         f"Clients initialized (userdata: {db_path}, fueldata: {fueldata_db_path})"
@@ -213,6 +218,7 @@ async def lifespan(app: FastAPI):
     app.state.monthly_brand_client = monthly_brand_client
     app.state.monthly_place_client = monthly_place_client
     app.state.monthly_station_client = monthly_station_client
+    app.state.place_client = place_client
 
     yield
 
@@ -355,6 +361,7 @@ app.include_router(cars.router, prefix="/api", tags=["cars"])
 app.include_router(refuels.router, prefix="/api/metrics", tags=["metrics"])
 app.include_router(kilometers.router, prefix="/api", tags=["kilometers"])
 app.include_router(fuel_prices.router, prefix="/api/fuel-prices", tags=["fuel-prices"])
+app.include_router(places.router, prefix="/api/places", tags=["places"])
 app.include_router(stats.router, prefix="/api/stats", tags=["stats"])
 
 

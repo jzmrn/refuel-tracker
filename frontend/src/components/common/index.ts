@@ -22,5 +22,6 @@ export { default as PageContainer } from "./PageContainer";
 export { default as PageHeader } from "./PageHeader";
 export { default as DynamicPage } from "./DynamicPage";
 export { default as FavoriteToggleButton } from "./FavoriteToggleButton";
+export { default as PlaceAutocomplete } from "./PlaceAutocomplete";
 export { default as ResponsiveDate } from "./ResponsiveDate";
 export { MobileChartCard } from './MobileChartCard';

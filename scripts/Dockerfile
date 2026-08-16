@@ -31,6 +31,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy migration scripts
 COPY --chown=app:app scripts/migrations/ ./migrations/
+COPY --chown=app:app scripts/places/ ./places/
 
 USER app
 

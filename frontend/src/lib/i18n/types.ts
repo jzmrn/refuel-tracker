@@ -484,6 +484,14 @@ export interface TranslationStructure {
     avgDiesel: string;
     statisticsDescription: string;
     radiusKm: string;
+    city: string;
+    cityPlaceholder: string;
+    cityMinChars: string;
+    cityRequired: string;
+    searchByCity: string;
+    searchByCoordinates: string;
+    noCitiesFound: string;
+    coordinatesHint: string;
     latitudeRequired: string;
     longitudeRequired: string;
     radiusRequired: string;

@@ -303,6 +303,22 @@ export interface KilometerFilterOptions {
   years: number[];
 }
 
+// Places (city name -> coordinates)
+export interface PlaceResponse {
+  id: string;
+  name: string;
+  label: string;
+  postal_code: string;
+  district: string;
+  state: string;
+  lat: number;
+  lng: number;
+}
+
+export interface PlaceSearchResponse {
+  places: PlaceResponse[];
+}
+
 // Fuel Prices interfaces
 export interface GasStationSearchRequest {
   lat: number;
@@ -911,6 +927,22 @@ class ApiService {
     const response = await this.api.get("/api/metrics/refuel/paginated", {
       params,
     });
+    return response.data;
+  }
+
+  // Places endpoints
+  async searchPlaces(query: string, limit = 10): Promise<PlaceResponse[]> {
+    const response = await this.api.get<PlaceSearchResponse>(
+      "/api/places/search",
+      { params: { q: query, limit } },
+    );
+    return response.data.places;
+  }
+
+  async getPlace(placeId: string): Promise<PlaceResponse> {
+    const response = await this.api.get<PlaceResponse>(
+      `/api/places/${encodeURIComponent(placeId)}`,
+    );
     return response.data;
   }
 

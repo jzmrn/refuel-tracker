@@ -429,7 +429,7 @@ wheels = [
 [[package]]
 name = "metrics"
 version = "0.1.0"
-source = { directory = "/home/dependabot/dependabot-updater/repo/lib/metrics" }
+source = { directory = "/Users/janzimmermann/Developer/privat/refuel-tracker/lib/metrics" }
 dependencies = [
     { name = "duckdb" },
     { name = "pandas" },
@@ -1054,10 +1054,10 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.141.1" },
     { name = "google-api-python-client", specifier = ">=2.198.0" },
     { name = "httpx", specifier = ">=0.25.0" },
-    { name = "metrics", directory = "/home/dependabot/dependabot-updater/repo/lib/metrics" },
+    { name = "metrics", directory = "/Users/janzimmermann/Developer/privat/refuel-tracker/lib/metrics" },
     { name = "pydantic", specifier = ">=2.13.4" },
     { name = "python-multipart", specifier = ">=0.0.32" },
-    { name = "tankerkoenig-client", directory = "/home/dependabot/dependabot-updater/repo/lib/tankerkoenig" },
+    { name = "tankerkoenig-client", directory = "/Users/janzimmermann/Developer/privat/refuel-tracker/lib/tankerkoenig" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.52.1" },
 ]
 
@@ -1155,7 +1155,7 @@ wheels = [
 [[package]]
 name = "tankerkoenig-client"
 version = "0.1.0"
-source = { directory = "/home/dependabot/dependabot-updater/repo/lib/tankerkoenig" }
+source = { directory = "/Users/janzimmermann/Developer/privat/refuel-tracker/lib/tankerkoenig" }
 dependencies = [
     { name = "pydantic" },
     { name = "requests" },

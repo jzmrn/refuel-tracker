@@ -1,18 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
-import { GasStationSearchRequest, GasStationResponse } from "@/lib/api";
+import {
+  GasStationSearchRequest,
+  GasStationResponse,
+  PlaceResponse,
+} from "@/lib/api";
 import { StandardForm } from "@/components/common/StandardForm";
+import PlaceAutocomplete from "@/components/common/PlaceAutocomplete";
+import { usePlace } from "@/lib/hooks/usePlaces";
 import CircularProgress from "@mui/material/CircularProgress";
+
+export interface StationSearchParams {
+  sortBy: string;
+  lat: number;
+  lng: number;
+  rad: number;
+  placeId?: string;
+}
 
 interface SearchStationsFormProps {
   onSearch: (
     results: GasStationResponse[],
-    searchParams: {
-      sortBy: string;
-      lat: number;
-      lng: number;
-      rad: number;
-    },
+    searchParams: StationSearchParams,
   ) => void;
   onError: (error: string) => void;
   isSubmitting?: boolean;
@@ -21,6 +30,7 @@ interface SearchStationsFormProps {
     lng?: number;
     rad?: number;
     sortBy?: string;
+    placeId?: string;
   };
 }
 
@@ -31,15 +41,35 @@ export default function SearchStationsForm({
   initialValues,
 }: SearchStationsFormProps) {
   const { t } = useTranslation();
+  const [selectedPlace, setSelectedPlace] = useState<PlaceResponse | null>(
+    null,
+  );
   const [latitude, setLatitude] = useState(
     initialValues?.lat?.toString() || "",
   );
   const [longitude, setLongitude] = useState(
     initialValues?.lng?.toString() || "",
   );
-  const [radius, setRadius] = useState(initialValues?.rad?.toString() || "10");
+  const [radius, setRadius] = useState(initialValues?.rad?.toString() || "5");
   const [isSearching, setIsSearching] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+
+  // Restore the previously selected city when returning to the form via URL
+  const { data: initialPlace } = usePlace(initialValues?.placeId);
+
+  useEffect(() => {
+    if (initialPlace) {
+      setSelectedPlace(initialPlace);
+    }
+  }, [initialPlace]);
+
+  const handlePlaceChange = (place: PlaceResponse | null) => {
+    setSelectedPlace(place);
+    if (place) {
+      setLatitude(place.lat.toFixed(6));
+      setLongitude(place.lng.toFixed(6));
+    }
+  };
 
   const handleUseMyLocation = () => {
     if (!navigator.geolocation) {
@@ -50,6 +80,8 @@ export default function SearchStationsForm({
     setIsGettingLocation(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        // Coordinates no longer belong to the selected city
+        setSelectedPlace(null);
         setLatitude(position.coords.latitude.toFixed(6));
         setLongitude(position.coords.longitude.toFixed(6));
         setIsGettingLocation(false);
@@ -66,12 +98,8 @@ export default function SearchStationsForm({
     e.preventDefault();
 
     // Validation
-    if (!latitude) {
-      onError(t.fuelPrices.latitudeRequired);
-      return;
-    }
-    if (!longitude) {
-      onError(t.fuelPrices.longitudeRequired);
+    if (!latitude || !longitude) {
+      onError(t.fuelPrices.cityRequired);
       return;
     }
     if (!radius) {
@@ -109,7 +137,13 @@ export default function SearchStationsForm({
       };
 
       const results = await apiService.searchGasStations(searchParams);
-      onSearch(results, { sortBy: "dist", lat, lng, rad });
+      onSearch(results, {
+        sortBy: "dist",
+        lat,
+        lng,
+        rad,
+        placeId: selectedPlace?.id,
+      });
     } catch (error) {
       console.error("Search error:", error);
       onError(t.fuelPrices.failedToSearch);
@@ -135,43 +169,31 @@ export default function SearchStationsForm({
 
   return (
     <StandardForm
-      title={t.fuelPrices.searchStations}
       onSubmit={handleSubmit}
       actions={formActions}
       containerClass="panel"
+      className="max-w-3xl mx-auto"
     >
-      {/* Location Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="field-group">
-          <label htmlFor="latitude" className="label">
-            {t.fuelPrices.latitude}
-          </label>
-          <input
-            type="number"
-            id="latitude"
-            step="0.000001"
-            value={latitude}
-            onChange={(e) => setLatitude(e.target.value)}
-            className="input"
-            placeholder="48.137154"
-            required
-          />
-        </div>
+      {/* Section: Search by City */}
+      <h3 className="text-base font-semibold text-gray-700 dark:text-gray-300">
+        {t.fuelPrices.searchByCity}
+      </h3>
 
-        <div className="field-group">
-          <label htmlFor="longitude" className="label">
-            {t.fuelPrices.longitude}
+      {/* City Search and Radius */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="field-group md:col-span-2">
+          <label htmlFor="city" className="label">
+            {t.fuelPrices.city}
           </label>
-          <input
-            type="number"
-            id="longitude"
-            step="0.000001"
-            value={longitude}
-            onChange={(e) => setLongitude(e.target.value)}
-            className="input"
-            placeholder="11.576124"
-            required
+          <PlaceAutocomplete
+            id="city"
+            value={selectedPlace}
+            onChange={handlePlaceChange}
+            disabled={isLoading}
           />
+          <p className="mt-1 text-xs text-secondary">
+            {t.fuelPrices.coordinatesHint}
+          </p>
         </div>
 
         <div className="field-group">
@@ -192,6 +214,11 @@ export default function SearchStationsForm({
         </div>
       </div>
 
+      {/* Section: Search by Coordinates */}
+      <h3 className="text-base font-semibold text-gray-700 dark:text-gray-300 mt-4">
+        {t.fuelPrices.searchByCoordinates}
+      </h3>
+
       <div className="field-group">
         <button
           type="button"
@@ -203,6 +230,37 @@ export default function SearchStationsForm({
             ? t.fuelPrices.gettingLocation
             : t.fuelPrices.useMyLocation}
         </button>
+      </div>
+
+      {/* Resolved coordinates */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="field-group">
+          <label htmlFor="latitude" className="label">
+            {t.fuelPrices.latitude}
+          </label>
+          <input
+            type="text"
+            id="latitude"
+            value={latitude}
+            readOnly
+            className="input"
+            placeholder="48.137154"
+          />
+        </div>
+
+        <div className="field-group">
+          <label htmlFor="longitude" className="label">
+            {t.fuelPrices.longitude}
+          </label>
+          <input
+            type="text"
+            id="longitude"
+            value={longitude}
+            readOnly
+            className="input"
+            placeholder="11.576124"
+          />
+        </div>
       </div>
     </StandardForm>
   );

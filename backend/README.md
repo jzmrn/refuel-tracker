@@ -89,6 +89,18 @@ API docs available at <http://localhost:8000/docs>.
 | `GET`    | `/stations/{id}/prices/{fuel_type}`      | Compressed price history                   |
 | `GET`    | `/stations/{id}/daily-stats/{fuel_type}` | Daily price aggregates                     |
 
+### Places (`/api/places`)
+
+| Method | Path      | Description                                       |
+| ------ | --------- | ------------------------------------------------- |
+| `GET`  | `/search` | Autocomplete German cities by name or postal code |
+| `GET`  | `/{ars}`  | Resolve a city by its official regional key (ARS) |
+
+Backed by the static dataset `app/resources/places.csv`, which is generated from
+the Destatis "Gemeindeverzeichnis" by `scripts/places/extract_places.py` and
+loaded into memory on startup. It maps city names to the coordinates used for the
+gas station search.
+
 ### Other
 
 | Method | Path           | Description            |

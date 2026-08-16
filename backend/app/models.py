@@ -303,6 +303,27 @@ class FuelPrices(BaseModel):
     diesel: FuelPrice = Field(default_factory=FuelPrice)
 
 
+class PlaceResponse(BaseModel):
+    """Response model for a German municipality with its centre coordinates"""
+
+    id: str = Field(..., description="Official regional key (ARS)")
+    name: str = Field(..., description="Municipality name")
+    label: str = Field(..., description="Disambiguated display label")
+    postal_code: str = Field("", description="Postal code of the administrative seat")
+    district: str = Field(
+        "", description="District (Kreis) the municipality belongs to"
+    )
+    state: str = Field("", description="Federal state (Bundesland)")
+    lat: float = Field(..., description="Latitude of the geographic centre")
+    lng: float = Field(..., description="Longitude of the geographic centre")
+
+
+class PlaceSearchResponse(BaseModel):
+    """Response model for a place autocomplete query"""
+
+    places: list[PlaceResponse]
+
+
 class GasStationSearchRequest(BaseModel):
     """Request model for searching gas stations"""
 

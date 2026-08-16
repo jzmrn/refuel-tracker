@@ -2,7 +2,9 @@ import { Suspense, useState, useEffect, startTransition } from "react";
 import { useRouter } from "next/router";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import TuneIcon from "@mui/icons-material/Tune";
-import SearchStationsForm from "@/components/fuel-prices/SearchStationsForm";
+import SearchStationsForm, {
+  StationSearchParams,
+} from "@/components/fuel-prices/SearchStationsForm";
 import StationsList, {
   SortByType,
 } from "@/components/fuel-prices/StationsList";
@@ -136,12 +138,7 @@ export default function SearchStations() {
 
   const handleSearch = (
     results: GasStationResponse[],
-    searchParams: {
-      sortBy: string;
-      lat: number;
-      lng: number;
-      rad: number;
-    },
+    searchParams: StationSearchParams,
   ) => {
     const params: GasStationSearchRequest = {
       lat: searchParams.lat,
@@ -169,6 +166,7 @@ export default function SearchStations() {
           lng: searchParams.lng,
           rad: searchParams.rad,
           sortBy: searchParams.sortBy,
+          ...(searchParams.placeId ? { placeId: searchParams.placeId } : {}),
         },
       },
       undefined,
@@ -236,28 +234,30 @@ export default function SearchStations() {
   return (
     <PageContainer>
       <Suspense fallback={<LoadingSpinner />}>
-        {/* Header */}
-        <PageHeader title={t.fuelPrices.searchStations} onBack={handleBack} />
-
-        {/* Context action buttons */}
-        {!showForm && searchResults.length > 0 && (
-          <div className="-mt-4 mb-6 flex justify-end">
-            <button onClick={handleRefineSearch} className="btn-soft">
-              <TuneIcon className="w-5 h-5" />
-              <span className="hidden sm:inline">{t.fuelPrices.search}</span>
-            </button>
-          </div>
-        )}
-        {showForm && searchParams !== null && searchResults.length > 0 && (
-          <div className="-mt-4 mb-6 flex justify-end">
-            <button onClick={handleBackToResults} className="btn-soft">
-              <ArrowForwardIcon className="w-5 h-5" />
-              <span className="hidden sm:inline">
-                {t.fuelPrices.backToResults}
-              </span>
-            </button>
-          </div>
-        )}
+        {/* Header with context action */}
+        <PageHeader
+          title={t.fuelPrices.searchStations}
+          onBack={handleBack}
+          actions={
+            searchResults.length > 0 ? (
+              !showForm ? (
+                <button onClick={handleRefineSearch} className="btn-soft">
+                  <TuneIcon className="w-5 h-5" />
+                  <span className="hidden sm:inline">
+                    {t.fuelPrices.search}
+                  </span>
+                </button>
+              ) : searchParams !== null ? (
+                <button onClick={handleBackToResults} className="btn-soft">
+                  <ArrowForwardIcon className="w-5 h-5" />
+                  <span className="hidden sm:inline">
+                    {t.fuelPrices.backToResults}
+                  </span>
+                </button>
+              ) : null
+            ) : null
+          }
+        />
 
         {/* Form or Results */}
         {!isInitialized ? (
@@ -280,6 +280,7 @@ export default function SearchStations() {
                 ? parseFloat(router.query.rad as string)
                 : undefined,
               sortBy: (router.query.sortBy as string) || undefined,
+              placeId: (router.query.placeId as string) || undefined,
             }}
           />
         ) : (
