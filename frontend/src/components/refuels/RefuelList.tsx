@@ -4,6 +4,7 @@ import LoadingSpinner from "../common/LoadingSpinner";
 import ResponsiveDate from "../common/ResponsiveDate";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
 import { renderSvgFuelPrice } from "../../lib/formatPrice";
+import { combineRefuelEntries } from "../../lib/refuelCombination";
 
 interface RefuelListProps {
   refuels: RefuelMetric[];
@@ -44,6 +45,13 @@ export default function RefuelList({
 
   const isClickable = !!onRowClick;
 
+  // ponytail: previous fill must be in this list; last-5/paged windows can miss it
+  const estimatedTimestamps = new Set(
+    combineRefuelEntries(refuels)
+      .filter((g) => g.isCombined)
+      .flatMap((g) => g.entries.map((e) => e.timestamp)),
+  );
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -79,6 +87,8 @@ export default function RefuelList({
             const now = new Date();
             const isToday = refuelDate.toDateString() === now.toDateString();
             const isPartial = refuel.is_full_tank === false;
+            const useEstimated =
+              isPartial || estimatedTimestamps.has(refuel.timestamp);
 
             return (
               <tr
@@ -112,10 +122,10 @@ export default function RefuelList({
                 <td className="px-1 sm:px-2 lg:px-4 py-2 sm:py-3 lg:py-4 whitespace-nowrap text-xs sm:text-sm hidden sm:table-cell">
                   <div
                     className={`font-medium ${
-                      isPartial ? "text-primary italic" : "text-primary"
+                      useEstimated ? "text-primary italic" : "text-primary"
                     }`}
                   >
-                    {isPartial
+                    {useEstimated
                       ? refuel.estimated_fuel_consumption.toFixed(1)
                       : (
                           (refuel.amount /
