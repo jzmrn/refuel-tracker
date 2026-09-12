@@ -4,7 +4,6 @@ from datetime import UTC, datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fueldata.prices import FuelPriceDataClient
 from fueldata.stations import FuelStationClient
-from tankerkoenig import TankerkoenigClient
 
 from ..auth import CurrentUser
 from ..models import (
@@ -51,18 +50,6 @@ def get_fuel_station_client(request: Request) -> FuelStationClient:
 def get_fuel_price_data_client(request: Request) -> FuelPriceDataClient:
     """Dependency to get the fuel price data client from app state"""
     return request.app.state.fuel_price_data_client
-
-
-def get_tankerkoenig_client(request: Request) -> TankerkoenigClient:
-    """Dependency to get the tankerkoenig client from app state"""
-    client = request.app.state.tankerkoenig_client
-    if client is None:
-        logger.error("Tankerkoenig client unavailable: TANKERKOENIG_API_KEY not set")
-        raise HTTPException(
-            status_code=503,
-            detail="Gas station service is unavailable (TANKERKOENIG_API_KEY not configured)",
-        )
-    return client
 
 
 # Refuel-specific endpoints
@@ -553,43 +540,32 @@ async def get_favorite_stations_for_dropdown(
     refuel_client: RefuelDataClient = Depends(get_refuel_client),
     fuel_station_client: FuelStationClient = Depends(get_fuel_station_client),
     fuel_price_data_client: FuelPriceDataClient = Depends(get_fuel_price_data_client),
-    tankerkoenig_client: TankerkoenigClient = Depends(get_tankerkoenig_client),
     lat: float | None = None,
     lng: float | None = None,
 ):
-    """Get user's favorite stations for refuel dropdown with current fuel prices.
+    """Favourite stations for the refuel dropdown. Prices from SQLite only.
 
-    Prices are only included if they are less than 30 minutes old.
-    For favorite stations, prices are fetched from the local database only.
-    For the closest station (if not a favorite), prices are always fetched
-    from the Tankerkoenig API since it's the most likely to be selected.
+    closest is any stored station within 500 m of lat/lng, else None. No Tankerkoenig.
     """
     logger.info(f"Getting favorite stations for dropdown for user {user.id}")
 
-    # Get basic station info
     stations_response = refuel_client.get_favorite_stations_for_dropdown(
         user.id, fuel_station_client, user_lat=lat, user_lng=lng
     )
 
-    favorite_ids = {s.station_id for s in stations_response.favorites}
+    price_ids = {s.station_id for s in stations_response.favorites}
+    if stations_response.closest:
+        price_ids.add(stations_response.closest.station_id)
 
-    # Check if closest station is already in favorites
-    closest_is_favorite = (
-        stations_response.closest is not None
-        and stations_response.closest.station_id in favorite_ids
-    )
-
-    # Fetch prices from SQLite for favorite stations only
     now = datetime.now(UTC)
     max_age = timedelta(minutes=MAX_PRICE_AGE_MINUTES)
 
     sqlite_price_map = {}
-    if favorite_ids:
-        latest_prices = fuel_price_data_client.get_latest_prices(list(favorite_ids))
+    if price_ids:
+        latest_prices = fuel_price_data_client.get_latest_prices(list(price_ids))
         sqlite_price_map = {p.station_id: p for p in latest_prices}
 
     def build_fuel_prices_from_sqlite(station_id: str) -> FuelPrices | None:
-        """Build FuelPrices for a station from SQLite, only if prices are fresh."""
         if station_id in sqlite_price_map:
             sp = sqlite_price_map[station_id]
             if sp.updated_at and (now - sp.updated_at) <= max_age:
@@ -600,9 +576,8 @@ async def get_favorite_stations_for_dropdown(
                 )
         return None
 
-    # Build favorites with prices from SQLite only
-    favorites_with_prices = [
-        StationDropdownItem(
+    def with_prices(s) -> StationDropdownItem:
+        return StationDropdownItem(
             station_id=s.station_id,
             brand=s.brand,
             street=s.street,
@@ -610,55 +585,11 @@ async def get_favorite_stations_for_dropdown(
             place=s.place,
             prices=build_fuel_prices_from_sqlite(s.station_id),
         )
-        for s in stations_response.favorites
-    ]
 
-    # Handle closest station
-    closest_with_prices = None
-    if stations_response.closest:
-        c = stations_response.closest
-
-        if closest_is_favorite:
-            # Closest is a favorite - use SQLite prices
-            closest_with_prices = StationDropdownItem(
-                station_id=c.station_id,
-                brand=c.brand,
-                street=c.street,
-                house_number=c.house_number,
-                place=c.place,
-                prices=build_fuel_prices_from_sqlite(c.station_id),
-            )
-        else:
-            # Closest is not a favorite - fetch from Tankerkoenig API
-            closest_prices = None
-            try:
-                prices = tankerkoenig_client.get_gas_station_prices([c.station_id])
-                if prices:
-                    ap = prices[0]
-                    closest_prices = FuelPrices(
-                        e5=FuelPrice(value=ap.e5, timestamp=ap.timestamp),
-                        e10=FuelPrice(value=ap.e10, timestamp=ap.timestamp),
-                        diesel=FuelPrice(value=ap.diesel, timestamp=ap.timestamp),
-                    )
-            except Exception as e:
-                logger.warning(
-                    "Error fetching price for closest station from Tankerkoenig API",
-                    extra={"station_id": c.station_id, "error": str(e)},
-                )
-                # Don't propagate error - just return station without prices
-
-            closest_with_prices = StationDropdownItem(
-                station_id=c.station_id,
-                brand=c.brand,
-                street=c.street,
-                house_number=c.house_number,
-                place=c.place,
-                prices=closest_prices,
-            )
-
+    closest = stations_response.closest
     return FavoriteStationsDropdownResponse(
-        favorites=favorites_with_prices,
-        closest=closest_with_prices,
+        favorites=[with_prices(s) for s in stations_response.favorites],
+        closest=with_prices(closest) if closest else None,
     )
 
 

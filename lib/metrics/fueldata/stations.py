@@ -9,6 +9,8 @@ from .utils import SQLiteResource, haversine, utc_now_iso
 
 logger = logging.getLogger(__name__)
 
+CLOSEST_STATION_MAX_M = 500
+
 
 class FavoriteStation(BaseModel):
     """Represents a favorite gas station for a user."""
@@ -38,6 +40,20 @@ class GasStationInfo(BaseModel):
         if isinstance(v, float) and np.isnan(v):
             return None
         return v
+
+
+def pick_closest_within(
+    stations: list[GasStationInfo],
+    lat: float,
+    lng: float,
+    max_m: float = CLOSEST_STATION_MAX_M,
+) -> GasStationInfo | None:
+    if not stations:
+        return None
+    closest = min(stations, key=lambda s: haversine(lat, lng, s.lat, s.lng))
+    if haversine(lat, lng, closest.lat, closest.lng) > max_m:
+        return None
+    return closest
 
 
 class FuelStationClient:
@@ -317,22 +333,13 @@ class FuelStationClient:
         return [GasStationInfo.model_validate(record) for record in records]
 
     def find_closest_station(
-        self, user_lat: float, user_lng: float, delta: float = 0.018
+        self,
+        user_lat: float,
+        user_lng: float,
+        max_distance_m: float = CLOSEST_STATION_MAX_M,
     ) -> GasStationInfo | None:
-        """
-        Find the closest gas station to the user's position within a radius.
-
-        Uses a bounding-box pre-filter (~2 km at mid-latitudes) followed by
-        Haversine distance calculation to find the single nearest station.
-
-        Args:
-            user_lat: User's latitude
-            user_lng: User's longitude
-            delta: Bounding-box half-side in degrees (default 0.018 ≈ 2 km)
-
-        Returns:
-            The closest GasStationInfo, or None if no station is within range.
-        """
+        """Closest stored station within max_distance_m, else None."""
+        delta = (max_distance_m / 111_000) * 1.2
         query = """
             SELECT station_id, name, brand, street, place,
                    lat, lng, house_number, post_code
@@ -346,20 +353,14 @@ class FuelStationClient:
             user_lng - delta,
             user_lng + delta,
         ]
-
         with self._db.get_connection() as con:
             df = pd.read_sql_query(query, con, params=params)
-
         if df.empty:
             return None
-
-        records = df.to_dict(orient="records")
-        stations = [GasStationInfo.model_validate(r) for r in records]
-
-        if len(stations) == 1:
-            return stations[0]
-
-        return min(stations, key=lambda s: haversine(user_lat, user_lng, s.lat, s.lng))
+        stations = [
+            GasStationInfo.model_validate(r) for r in df.to_dict(orient="records")
+        ]
+        return pick_closest_within(stations, user_lat, user_lng, max_distance_m)
 
     def get_gas_stations_by_ids(
         self, station_ids: list[str]

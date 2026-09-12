@@ -88,7 +88,8 @@ export const en: TranslationStructure = {
     station: "Station",
     gasStation: "Gas Station",
     selectStation: "Select a station...",
-    favoriteStationsCanBeSelected: "Favourite stations can be selected",
+    favoriteStationsCanBeSelected:
+      "Type a city to find other stations. Favourites can also be managed",
     here: "here",
 
     // Validation messages

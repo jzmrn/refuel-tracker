@@ -89,7 +89,7 @@ export const de: TranslationStructure = {
     gasStation: "Tankstelle",
     selectStation: "Tankstelle auswählen...",
     favoriteStationsCanBeSelected:
-      "Favoritentankstellen können ausgewählt werden",
+      "Ort eingeben, um andere Tankstellen zu finden. Favoriten auch verwalten",
     here: "hier",
 
     // Validation messages

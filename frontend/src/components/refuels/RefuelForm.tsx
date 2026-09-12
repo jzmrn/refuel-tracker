@@ -8,6 +8,7 @@ import {
 } from "react";
 import { useRouter } from "next/router";
 import Panel from "@/components/common/Panel";
+import StationCombobox from "@/components/refuels/StationCombobox";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
 import {
   RefuelMetric,
@@ -348,14 +349,21 @@ export default function RefuelForm({
     }
   };
 
-  const handleStationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStationId = e.target.value || undefined;
-
+  const handleStationChange = (
+    station: FavoriteStationDropdown | undefined,
+  ) => {
     priceAutoFilled.current = false;
+
+    if (
+      station &&
+      !favoriteStations.some((s) => s.station_id === station.station_id)
+    ) {
+      setFavoriteStations((prev) => [station, ...prev]);
+    }
 
     setFormData((prev) => ({
       ...prev,
-      station_id: newStationId,
+      station_id: station?.station_id,
       price: 0,
     }));
 
@@ -604,29 +612,13 @@ export default function RefuelForm({
                   </div>
                 ) : (
                   <>
-                    <select
+                    <StationCombobox
                       id="station_id"
-                      name="station_id"
-                      value={formData.station_id || ""}
+                      stations={favoriteStations}
+                      value={formData.station_id}
                       onChange={handleStationChange}
-                      className="input"
-                      disabled={loadingStations}
-                    >
-                      <option value="">
-                        {loadingStations
-                          ? t.common.loading
-                          : t.refuels.selectStation}
-                      </option>
-                      {favoriteStations.map((station) => (
-                        <option
-                          key={station.station_id}
-                          value={station.station_id}
-                        >
-                          {station.brand} - {station.street}
-                          {station.prices ? " €" : ""}
-                        </option>
-                      ))}
-                    </select>
+                      loading={loadingStations}
+                    />
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                       {t.refuels.favoriteStationsCanBeSelected}{" "}
                       <button
