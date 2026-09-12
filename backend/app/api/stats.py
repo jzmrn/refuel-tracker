@@ -271,14 +271,11 @@ async def get_monthly_brands(
     )
 
     if brands:
-        # Filter to only requested brands
         brands_set = set(brands)
         aggregates = [a for a in aggregates if a.brand in brands_set]
-    else:
-        # Sort by price_mean ascending (cheapest first)
-        aggregates.sort(key=lambda a: a.price_mean)
-        if limit > 0:
-            aggregates = aggregates[:limit]
+    aggregates.sort(key=lambda a: a.price_mean)
+    if not brands and limit > 0:
+        aggregates = aggregates[:limit]
 
     logger.info(
         "Monthly brand aggregates requested",
@@ -330,14 +327,11 @@ async def get_monthly_places(
     )
 
     if places:
-        # Filter to only requested places
         places_set = set(places)
         aggregates = [a for a in aggregates if a.place in places_set]
-    else:
-        # Sort by price_mean ascending (cheapest first)
-        aggregates.sort(key=lambda a: a.price_mean)
-        if limit > 0:
-            aggregates = aggregates[:limit]
+    aggregates.sort(key=lambda a: a.price_mean)
+    if not places and limit > 0:
+        aggregates = aggregates[:limit]
 
     logger.info(
         "Monthly place aggregates requested",
@@ -393,14 +387,11 @@ async def get_monthly_stations(
     )
 
     if station_ids:
-        # Filter to only requested stations
         station_ids_set = set(station_ids)
         aggregates = [a for a in aggregates if a.station_id in station_ids_set]
-    else:
-        # Sort by price_mean ascending (cheapest first)
-        aggregates.sort(key=lambda a: a.price_mean)
-        if limit > 0:
-            aggregates = aggregates[:limit]
+    aggregates.sort(key=lambda a: a.price_mean)
+    if not station_ids and limit > 0:
+        aggregates = aggregates[:limit]
 
     # Build a lookup map for station metadata
     result_station_ids = [a.station_id for a in aggregates]
