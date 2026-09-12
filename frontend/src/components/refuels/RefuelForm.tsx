@@ -9,7 +9,7 @@ import {
 import { useRouter } from "next/router";
 import Panel from "@/components/common/Panel";
 import StationCombobox from "@/components/refuels/StationCombobox";
-import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useLocalization, useTranslation } from "@/lib/i18n/LanguageContext";
 import {
   RefuelMetric,
   RefuelMetricCreate,
@@ -55,34 +55,6 @@ function isoToLocalDateTimeString(isoString: string): string {
   const offset = date.getTimezoneOffset();
   const localDate = new Date(date.getTime() - offset * 60 * 1000);
   return localDate.toISOString().slice(0, 16);
-}
-
-// Format station display name
-function formatStationName(
-  refuel: RefuelMetric | undefined,
-): string | undefined {
-  if (!refuel) return undefined;
-  if (refuel.station_brand && refuel.station_street) {
-    return `${refuel.station_brand} - ${refuel.station_street}`;
-  }
-  if (refuel.station_brand) {
-    return refuel.station_brand;
-  }
-  return undefined;
-}
-
-// Format fuel type label
-function getFuelTypeLabel(fuelType: string | undefined): string {
-  switch (fuelType) {
-    case "e5":
-      return "Super E5";
-    case "e10":
-      return "Super E10";
-    case "diesel":
-      return "Diesel";
-    default:
-      return fuelType || "";
-  }
 }
 
 interface FormData {
@@ -138,6 +110,7 @@ export default function RefuelForm({
   const onDelete =
     mode === "edit" ? (rest as RefuelFormEditProps).onDelete : undefined;
   const { t } = useTranslation();
+  const { formatDate } = useLocalization();
   const router = useRouter();
 
   const isEditMode = mode === "edit";
@@ -192,8 +165,20 @@ export default function RefuelForm({
 
   const [favoriteStations, setFavoriteStations] = useState<
     FavoriteStationDropdown[]
-  >([]);
-  const [loadingStations, setLoadingStations] = useState(!isEditMode);
+  >(() =>
+    initialData?.station_id
+      ? [
+          {
+            station_id: initialData.station_id,
+            brand: initialData.station_brand || "",
+            street: initialData.station_street || "",
+            house_number: initialData.station_house_number || "",
+            place: initialData.station_place || "",
+          },
+        ]
+      : [],
+  );
+  const [loadingStations, setLoadingStations] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const stationDefaultApplied = useRef(false);
   const fuelTypeDefaultApplied = useRef(false);
@@ -210,6 +195,7 @@ export default function RefuelForm({
       formData.estimated_fuel_consumption !==
         originalData.estimated_fuel_consumption ||
       formData.notes !== originalData.notes ||
+      formData.station_id !== originalData.station_id ||
       formData.fuel_type !== originalData.fuel_type ||
       formData.is_full_tank !== originalData.is_full_tank
     );
@@ -267,10 +253,7 @@ export default function RefuelForm({
     isEditMode,
   ]);
 
-  // Fetch favorite stations (add mode only)
   useEffect(() => {
-    if (isEditMode) return;
-
     const fetchStations = async (position?: { lat: number; lng: number }) => {
       try {
         startTransition(() => setLoadingStations(true));
@@ -286,9 +269,16 @@ export default function RefuelForm({
           merged = [closest, ...merged];
         }
 
-        startTransition(() => setFavoriteStations(merged));
+        startTransition(() =>
+          setFavoriteStations((prev) => {
+            const extra = prev.filter(
+              (s) => !merged.some((m) => m.station_id === s.station_id),
+            );
+            return extra.length ? [...extra, ...merged] : merged;
+          }),
+        );
 
-        if (closest && !stationDefaultApplied.current) {
+        if (!isEditMode && closest && !stationDefaultApplied.current) {
           stationDefaultApplied.current = true;
           setFormData((prev) => {
             if (prev.station_id) return prev;
@@ -364,7 +354,7 @@ export default function RefuelForm({
     setFormData((prev) => ({
       ...prev,
       station_id: station?.station_id,
-      price: 0,
+      ...(isEditMode ? {} : { price: 0 }),
     }));
 
     if (errors.station_id) {
@@ -484,6 +474,9 @@ export default function RefuelForm({
       if (formData.notes !== originalData.notes) {
         updateData.notes = formData.notes?.trim() || undefined;
       }
+      if (formData.station_id !== originalData.station_id) {
+        updateData.station_id = formData.station_id || "";
+      }
       if (formData.fuel_type !== originalData.fuel_type) {
         updateData.fuel_type = formData.fuel_type as FuelType;
       }
@@ -552,11 +545,6 @@ export default function RefuelForm({
       ? (combinedLiters / combinedKilometers) * 100
       : null;
 
-  // Format station name for edit mode display
-  const stationDisplayName = isEditMode
-    ? formatStationName(initialData)
-    : undefined;
-
   return (
     <div className="max-w-3xl mx-auto">
       <form onSubmit={handleSubmit}>
@@ -576,7 +564,15 @@ export default function RefuelForm({
                 </label>
                 {isEditMode ? (
                   <div className="input bg-gray-100 dark:bg-gray-700 cursor-not-allowed">
-                    {new Date(initialData?.timestamp || "").toLocaleString()}
+                    {initialData
+                      ? formatDate(new Date(initialData.timestamp), {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : ""}
                   </div>
                 ) : (
                   <>
@@ -606,31 +602,23 @@ export default function RefuelForm({
                 <label htmlFor="station_id" className="label">
                   {t.refuels.station} ({t.refuels.optional})
                 </label>
-                {isEditMode ? (
-                  <div className="input bg-gray-100 dark:bg-gray-700 cursor-not-allowed">
-                    {stationDisplayName || t.refuels.selectStation}
-                  </div>
-                ) : (
-                  <>
-                    <StationCombobox
-                      id="station_id"
-                      stations={favoriteStations}
-                      value={formData.station_id}
-                      onChange={handleStationChange}
-                      loading={loadingStations}
-                    />
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                      {t.refuels.favoriteStationsCanBeSelected}{" "}
-                      <button
-                        type="button"
-                        onClick={() => router.push("/prices/stations")}
-                        className="text-primary-600 dark:text-blue-400 hover:underline"
-                      >
-                        {t.refuels.here}
-                      </button>
-                    </p>
-                  </>
-                )}
+                <StationCombobox
+                  id="station_id"
+                  stations={favoriteStations}
+                  value={formData.station_id}
+                  onChange={handleStationChange}
+                  loading={loadingStations}
+                />
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  {t.refuels.favoriteStationsCanBeSelected}{" "}
+                  <button
+                    type="button"
+                    onClick={() => router.push("/prices/stations")}
+                    className="text-primary-600 dark:text-blue-400 hover:underline"
+                  >
+                    {t.refuels.here}
+                  </button>
+                </p>
               </div>
             </div>
 

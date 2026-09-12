@@ -141,7 +141,6 @@ class RefuelMetricUpdate(BaseModel):
 
     The timestamp and car_id are required to identify the record.
     All other fields are optional - only provided fields will be updated.
-    station_id cannot be changed after creation.
     """
 
     timestamp: datetime = Field(
@@ -164,6 +163,9 @@ class RefuelMetricUpdate(BaseModel):
         description="Car's estimated fuel consumption in L/100km (max 20L/100km)",
     )
     notes: str | None = Field(None, description="Optional notes")
+    station_id: str | None = Field(
+        None, description="Optional ID of the gas station where refuel occurred"
+    )
     fuel_type: RefuelFuelType | None = Field(
         None,
         description="Fuel type used (e5, e10, diesel)",

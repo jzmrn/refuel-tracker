@@ -110,8 +110,7 @@ async def update_refuel_metric(
     """Update an existing refuel entry.
 
     The timestamp is used to identify the record (part of the composite primary key).
-    Only editable fields can be updated (price, amount, km, consumption, notes, fuel_type).
-    station_id cannot be changed after creation.
+    Only provided fields are updated.
     """
     logger.info(
         "Updating refuel metric",
@@ -140,6 +139,8 @@ async def update_refuel_metric(
         updates["estimated_fuel_consumption"] = update_data.estimated_fuel_consumption
     if update_data.notes is not None:
         updates["notes"] = update_data.notes
+    if update_data.station_id is not None:
+        updates["station_id"] = update_data.station_id
     if update_data.fuel_type is not None:
         updates["fuel_type"] = update_data.fuel_type.value
     if update_data.is_full_tank is not None:

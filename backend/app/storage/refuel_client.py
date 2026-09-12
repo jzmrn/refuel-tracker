@@ -172,13 +172,13 @@ class RefuelDataClient:
         Returns:
             The updated RefuelMetric if found and updated, None otherwise
         """
-        # Only allow updating these fields (not primary key fields or station_id)
         allowed_fields = {
             "price",
             "amount",
             "kilometers_since_last_refuel",
             "estimated_fuel_consumption",
             "notes",
+            "station_id",
             "fuel_type",
             "is_full_tank",
         }

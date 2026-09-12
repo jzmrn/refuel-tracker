@@ -136,6 +136,7 @@ export interface RefuelMetricUpdate {
   kilometers_since_last_refuel?: number;
   estimated_fuel_consumption?: number;
   notes?: string;
+  station_id?: string;
   fuel_type?: FuelType;
   is_full_tank?: boolean;
 }
