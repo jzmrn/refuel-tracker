@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -96,11 +96,11 @@ wheels = [
 
 [[package]]
 name = "certifi"
-version = "2025.11.12"
+version = "2026.10.18"
 source = { registry = "https://pypi.python.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a2/8c/58f469717fa48465e4a50c014a0400602d3c437d7c0c468e17ada824da3a/certifi-2025.11.12.tar.gz", hash = "sha256:d8ab5478f2ecd78af242878415affce761ca6bc54a22a27e026d7c25357c3316", size = 160538, upload-time = "2025-11-12T02:54:51.517Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7e/eb/a2aa1ac3ea30dd3f30ca57f40232138b6b0040719316ecb85daf61167771/certifi-2026.10.18.tar.gz", hash = "sha256:b9995d97b64d0431a5af837d8ca8cd6238104d1f319f04bd93ea43124d6c861e", size = 135227, upload-time = "2026-10-18T16:21:07.655Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/70/7d/9bc192684cea499815ff478dfcdc13835ddf401365057044fb721ec6bddb/certifi-2025.11.12-py3-none-any.whl", hash = "sha256:97de8790030bbd5c2d96b7ec782fc2f7820ef8dba6db909ccf95449f2d062d4b", size = 159438, upload-time = "2025-11-12T02:54:49.735Z" },
+    { url = "https://files.pythonhosted.org/packages/08/ba/95dd616042484f7c83a06974388b37b837732740ee70bc5dc715b5fcd55a/certifi-2026.10.18-py3-none-any.whl", hash = "sha256:73191c47aaa79da394e8fee2dbc2ec827432cab56311122c9e47abf79e390f62", size = 134093, upload-time = "2026-10-18T16:21:06.276Z" },
 ]
 
 [[package]]
@@ -429,7 +429,7 @@ wheels = [
 [[package]]
 name = "metrics"
 version = "0.1.0"
-source = { directory = "/Users/janzimmermann/Developer/privat/refuel-tracker/lib/metrics" }
+source = { directory = "/home/dependabot/dependabot-updater/repo/lib/metrics" }
 dependencies = [
     { name = "duckdb" },
     { name = "pandas" },
@@ -1054,10 +1054,10 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.141.1" },
     { name = "google-api-python-client", specifier = ">=2.198.0" },
     { name = "httpx", specifier = ">=0.25.0" },
-    { name = "metrics", directory = "/Users/janzimmermann/Developer/privat/refuel-tracker/lib/metrics" },
+    { name = "metrics", directory = "/home/dependabot/dependabot-updater/repo/lib/metrics" },
     { name = "pydantic", specifier = ">=2.13.4" },
     { name = "python-multipart", specifier = ">=0.0.32" },
-    { name = "tankerkoenig-client", directory = "/Users/janzimmermann/Developer/privat/refuel-tracker/lib/tankerkoenig" },
+    { name = "tankerkoenig-client", directory = "/home/dependabot/dependabot-updater/repo/lib/tankerkoenig" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.52.1" },
 ]
 
@@ -1155,7 +1155,7 @@ wheels = [
 [[package]]
 name = "tankerkoenig-client"
 version = "0.1.0"
-source = { directory = "/Users/janzimmermann/Developer/privat/refuel-tracker/lib/tankerkoenig" }
+source = { directory = "/home/dependabot/dependabot-updater/repo/lib/tankerkoenig" }
 dependencies = [
     { name = "pydantic" },
     { name = "requests" },
